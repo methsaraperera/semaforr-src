@@ -62,6 +62,7 @@ class CountCrowdModel:
 	self.width = width # width of the map
 	self.height = height # height of the map
 	self.division = division # number of positions in the map where the model has to predict
+	self.alpha = 0.7
         
     # calls the callback for each of the subscriber
     def listen(self):
@@ -152,7 +153,7 @@ class CountCrowdModel:
             x_index = int(floor(x / cell_width))
 	    y_index = int(floor(y / cell_height))
 	    if(self.is_grid_active[x_index][y_index] == True):
-	        self.crowd_count[x_index][y_index] += 1
+	        self.crowd_count[x_index][y_index] = (self.crowd_count[x_index][y_index] * self.alpha) + 1
 		print "->", x, y, theta
 		if((theta < (pi/8)) and (theta >= (-pi/8))):
 		    #print "right"
@@ -184,7 +185,7 @@ class CountCrowdModel:
 	for x in range(h_cells):
 	    for y in range(v_cells):
                 if self.is_grid_active[x][y]:
-	            self.crowd_observations[x][y] += 1   
+	            self.crowd_observations[x][y] = (self.crowd_observations[x][y]*self.alpha) + 1   
 	print "finished counting observations:"
 	print self.crowd_observations
 	print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" 
@@ -273,9 +274,9 @@ class CountCrowdModel:
 	crowd_model.height = self.division
 
 	density_list = [density[x][y] for x in range(self.division) for y in range(self.division)]
-	print density_list
-	density_list = self.normalize_float(density_list, 0, 1)
-	print density_list
+	#print density_list
+	#density_list = self.normalize_float(density_list, 0, 1)
+	#print density_list
 	crowd_model.densities = density_list
 	
 	u_list = [u[x][y] for x in range(self.division) for y in range(self.division)]
@@ -350,5 +351,5 @@ class CountCrowdModel:
 	return ((x1-x2)**2 + (y1-y2)**2) ** 0.5 
 
 
-crowd_model = CountCrowdModel(60,60,20)
+crowd_model = CountCrowdModel(120,120,60)
 crowd_model.listen()

@@ -125,12 +125,71 @@ void Graph::generateNavGraph() {
       Edge * e = new Edge( (*iter)->getID(), getNode(*it).getID() );
       //cout << "for each edge "<< endl;
       if ( !isEdge((*e)) ) {
-	double distCost = Map::distance((*iter)->getX(), (*iter)->getY(), getNode(*it).getX(), getNode(*it).getY());
+	int x1,y1,x2,y2;
+	x1 = (*iter)->getX();
+	y1 = (*iter)->getY();
+	x2 = getNode(*it).getX();
+	y2 = getNode(*it).getY();
+	double distCost = Map::distance(x1,y1,x2,y2);
 	int multiplier = 1;
-	if ( (*iter)->getInBuffer() )
+	//std::cout << "Updating edge cost" << std::endl;
+	
+	if ( map->isPathObstructed(x1,y1,x2,y2)){
 	 	multiplier += 20;
-	if ( getNode(*it).getInBuffer() )
-		multiplier += 20;
+	}
+	if ( map->isPointInBuffer( x1, y1+(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x1, y1-(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x1+(proximity*1.5), y1 ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x1-(proximity*1.5), y1 ) ){
+	 	multiplier += 5;
+	}
+	/*
+	if ( map->isPointInBuffer( x1+(proximity*1.5), y1+(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x1-(proximity*1.5), y1-(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x1+(proximity*1.5), y1-(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x1-(proximity*1.5), y1+(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+
+	if ( map->isPointInBuffer( x2+(proximity*1.5), y2+(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x2-(proximity*1.5), y2-(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x2+(proximity*1.5), y2-(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x2-(proximity*1.5), y2+(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	*/
+
+	if ( map->isPointInBuffer( x2, y2+(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x2, y2-(proximity*1.5) ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x2+(proximity*1.5), y2 ) ){
+	 	multiplier += 5;
+	}
+	if ( map->isPointInBuffer( x2-(proximity*1.5), y2 ) ){
+	 	multiplier += 5;
+	}
+	
 	e->setDistCost(multiplier * distCost);
 
 	edges.push_back(e);

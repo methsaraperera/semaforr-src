@@ -189,18 +189,31 @@ namespace Menge {
       					requiredTurn = requiredTurn + (2*M_PI);
 
 				double distance = rbt->_pos.distance(agent->_pos);
-				double attraction = agent->_robotAttraction;
+				double attraction = agent->_robot_attraction;
+				//std::cout << "Attraction " << attraction  << std::endl;
 				//std::cout << "Angle towards robot: " << angleToRobot << " Agent angle: " << agent_angle << " Turn: " << requiredTurn << std::endl;
-				double actualTurn = requiredTurn * attraction / (distance + 1);
-				//newVel.turn(actualTurn);
+				//double actualTurn = requiredTurn * attraction / (distance + 1);
+				if(distance < 1 and attraction == 1){
+					newVel.turn(requiredTurn);
+				}
+				//else if(distance < 2 and attraction == -1){
+				//	requiredTurn = M_PI - requiredTurn;
+					//if(requiredTurn > M_PI)
+      					//	requiredTurn = requiredTurn - (2*M_PI);
+    					//if(requiredTurn < -M_PI)
+      					//	requiredTurn = requiredTurn + (2*M_PI);
+				//	newVel.turn1(requiredTurn);
+				//}
 			}
 
 			if(agent->_isExternal){
 				//std::cout << "External Agent detected : " << ID << std::endl;
 				prefVelMsg.setSpeed(0.0);
+				//std::cout << "Before spin "<< std::endl;
 				ros::spinOnce();
+				//std::cout << "After spin "<< std::endl;
 				newVel = prefVelMsg;
-				//std::cout << (newVel.getPreferred()).x() << " : " << (newVel.getPreferred()).y() << std::endl;
+				std::cout << (newVel.getPreferred()).x() << " : " << (newVel.getPreferred()).y() << std::endl;
 				//std::cout << "Direction Set from the ROS message!" << std::endl;
 			}
 
@@ -259,7 +272,7 @@ namespace Menge {
 				//std::cout << "Generating obstacle distance " << angle; 
 				//for each angle compute the distance from the obstacle
 				float distance =  distanceFromObstacle(angles[i],range_max, agent);
-				float distance_agent = distanceFromAgent(angles[i], range_max, agent);
+				float distance_agent = distanceFromAgent(angles[i],range_max, agent);
 				if(distance > distance_agent){
 					distance = distance_agent;
 				}
@@ -488,6 +501,7 @@ namespace Menge {
 			ros::Time current_time;
   			current_time = ros::Time::now();
 			geometry_msgs::PoseArray crowd;
+			geometry_msgs::PoseArray crowd_all;
 			Vector2 robot_pos;
 			Vector2 robot_orient;
 			float robot_angle;
@@ -569,6 +583,13 @@ namespace Menge {
 				Agents::BaseAgent * agt = this->_sim->getAgent( a );
 				Vector2 agent_pos = agt->_pos;
 				Vector2 agent_orient = agt->_orient;
+				geometry_msgs::Pose pose;
+				pose.position.x = agent_pos._x;
+				pose.position.y = agent_pos._y;
+				pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, atan2(agt->_orient._y, agt->_orient._x));
+				if(!agt->_isExternal){
+					crowd_all.poses.push_back(pose);
+				}
 				if(_sim->queryVisibility(agent_pos,robot_pos, 0.1) and !agt->_isExternal){
 					double dx = agent_pos._x - robot_pos._x;
 					double dy = agent_pos._y - robot_pos._y;
@@ -590,12 +611,7 @@ namespace Menge {
 					else if(difference < -6.283){
 						difference = difference + 6.283;
 					}
-					 
 					if(distance < 25 and abs(difference) < 1.9198){
-						geometry_msgs::Pose pose;
-						pose.position.x = agent_pos._x;
-						pose.position.y = agent_pos._y;
-						pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, atan2(agt->_orient._y, agt->_orient._x));
 						crowd.poses.push_back(pose);
 					}
 				}
@@ -604,6 +620,10 @@ namespace Menge {
 			crowd.header.stamp = current_time;
 			crowd.header.frame_id = "map";
 			_pub_crowd.publish(crowd);
+
+			crowd_all.header.stamp = current_time;
+			crowd_all.header.frame_id = "map";
+			_pub_crowd_all.publish(crowd_all);
 
 			if ( exceptionCount > 0 ) {
 				throw FSMFatalException();
