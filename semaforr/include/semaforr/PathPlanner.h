@@ -65,6 +65,8 @@ public:
 
   Graph* getGraph(){ return navGraph; }
 
+  Map* getMap() { return &map;}
+
   Node getSource(){ return source; }
 
   void setSource(Node s){ source = s; } 
@@ -72,6 +74,8 @@ public:
   Node getClosestNode(Node n, Node ref);
 
   Node getTarget(){ return target; }
+
+  double cellCost(int sx, int sy, int buffer);
 
   void setTarget(Node t){ target = t; }
 

@@ -29,19 +29,21 @@ class Wall{
 class Map {
 public:
   Map();
-  Map(double, double, double);
+  Map(double, double);
   
   void addWall(double, double, double, double); 
   vector<Wall> getWalls() { return walls; }
   
   double getLength() { return length; }
   double getHeight() { return height; }
-  double getBufferSize() { return bufferSize; }
-
+  
   bool isWithinBorders( double, double );
   bool isPathObstructed( double, double, double, double );
   bool isAccessible(double x, double y);
   bool isPointInBuffer(double x, double y); 
+
+  vector< vector <bool> > getOccupancyGrid() {return occupancyGrid;}
+  int getOccupancySize() { return occupancySize; }
 
   bool readMapFromXML(string);
   
@@ -51,11 +53,11 @@ public:
   
 protected:
   vector<Wall> walls;
+  vector< vector <bool> > occupancyGrid;
+  int occupancySize;
   
   double length;
   double height;  
-  double bufferSize;
- 
   
 };
 

@@ -26,6 +26,7 @@
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <sensor_msgs/LaserScan.h>
+#include <geometry_msgs/PoseArray.h>
 
 using namespace std;
 
@@ -101,12 +102,18 @@ public:
   }
   
   Task *getCurrentTask() { return currentTask; }
-  void setCurrentTask(Task *task) { 
+  void setCurrentTask(Task *task, Position current, PathPlanner *planner, bool aStarOn) { 
     currentTask = task; 
+    if(aStarOn){
+    	currentTask->generateWaypoints(current, planner);
+    } 
   }
 
 
-  set<FORRAction> *getVetoedActions() { return vetoedActions;}
+  set<FORRAction> *getVetoedActions() { 
+	//std::cout << "returning vetoed action list " << vetoedActions->size() << std::endl;
+	return vetoedActions;
+  }
   void clearVetoedActions() { vetoedActions->clear();}
   
   void addTask(float x, float y) {
@@ -187,6 +194,16 @@ public:
   void setRotateMode(bool mode){rotateMode = mode;}
  
   void setAgentStateParameters(double val1, double val2, double val3, double val4, double val5, double val6, double val7);
+  
+  geometry_msgs::PoseArray getCrowdPose(){ return currentCrowd;}
+  void setCrowdPose(geometry_msgs::PoseArray crowdpose){
+	currentCrowd = crowdpose;
+  }
+
+  geometry_msgs::PoseArray getCrowdPoseAll(){ return allCrowd;}
+  void setCrowdPoseAll(geometry_msgs::PoseArray crowdposeall){
+	allCrowd = crowdposeall;
+  }
 
  private:
 
@@ -248,6 +265,12 @@ public:
 
   //Converts current laser range scanner to endpoints
   void transformToEndpoints();
+
+  // Nearby crowd positions
+  geometry_msgs::PoseArray currentCrowd;
+
+  // All crowd positions
+  geometry_msgs::PoseArray allCrowd;
 
   //Rotate mode tells if the t3 should rotate or move
   bool rotateMode;

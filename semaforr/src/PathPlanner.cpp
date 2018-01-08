@@ -6,6 +6,7 @@
 
 #include "PathPlanner.h"
 #include <limits.h>
+#include <algorithm> 
 
 #define PATH_DEBUG true
 
@@ -46,6 +47,7 @@ int PathPlanner::calcPath(bool cautious){
 	cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
       s = getClosestNode(source, target);
     }
+    //cout << signature << "Checking if source node is invalid" << endl;
     if ( s.getID() == Node::invalid_node_index )
       return 1;
 
@@ -59,9 +61,11 @@ int PathPlanner::calcPath(bool cautious){
 	cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
       t = getClosestNode(target, source);
     }
+    //cout << signature << "Checking if target node is invalid" << endl;
     if ( t.getID() == Node::invalid_node_index )
       return 2;
 
+    //cout << signature << "Completed finding source and destination nodes" << endl;
     if(PATH_DEBUG) {
       cout << signature << "s:"; 
       s.printNode(); 
@@ -70,7 +74,7 @@ int PathPlanner::calcPath(bool cautious){
       t.printNode();
       cout << endl;
     }
-
+    //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights
     updateNavGraph();
     astar newsearch(*navGraph, s, t);
@@ -111,27 +115,57 @@ void PathPlanner::updateNavGraph(){
 			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, true, oldcost);
 			double newEdgeCosttf = computeNewEdgeCost(fromNode, toNode, false, oldcost); 
 			navGraph->updateEdgeCost(i, newEdgeCostft, newEdgeCosttf);
-			//cout << "Edge Cost " << oldcost << " -> " << newEdgeCostft << " -> " << newEdgeCosttf << endl;  
+			cout << "Edge Cost " << oldcost << " -> " << newEdgeCostft << " -> " << newEdgeCosttf << endl;  
 		}
 	}
 }
 
 
 double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double oldcost){
-	int s_x_index = (int)((s.getX()/100.0)/crowdModel.resolution);
-	int s_y_index = (int)((s.getY()/100.0)/crowdModel.resolution);
-	int d_x_index = (int)((d.getX()/100.0)/crowdModel.resolution);
-	int d_y_index = (int)((d.getY()/100.0)/crowdModel.resolution);
-	//Assuming crowd densities are normalized between 0 and 1
-	double s_density = crowdModel.densities[(s_y_index * crowdModel.width) + s_x_index] + 1;
-	double d_density = crowdModel.densities[(d_y_index * crowdModel.width) + d_x_index] + 1;
-	//double flowcost = computeCrowdFlow(s,d) + 2;
-	//cout << "Node flow cost " << flowcost << endl;
+	int b = 30;
+	double s_cost = cellCost(s.getX(), s.getY(), b);
+	double d_cost = cellCost(d.getX(), d.getY(), b);
+	// weights that balance distance, crowd density and crowd flow
+	int w1 = 1;
+	int w2 = 50;
+	int w3 = 50;
+
+	double flowcost = computeCrowdFlow(s,d);
+	if(direction == false){
+		flowcost = flowcost * (-1);
+	}
+	cout << "Flow cost --------- " << endl;
+	cout << "Flow cost    :" << flowcost << endl;
 	//cout << "Node penalty : " << d_density << " * " << s_density << endl;
-	//double newEdgeCost = (oldcost * flowcost);
-	double newEdgeCost = (oldcost * d_density * s_density);
+	//double newEdgeCost = (oldcost * flowcost); 
+	double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost);
+	//cout << "Old cost : " << oldcost << " new cost : " << newEdgeCost << std::endl; 
 	return newEdgeCost;
-} 
+}
+
+
+double PathPlanner::cellCost(int nodex, int nodey, int buffer){
+	int x = (int)((nodex/100.0)/crowdModel.resolution);
+	int x1 = (int)(((nodex+buffer)/100.0)/crowdModel.resolution);
+	int x2 = (int)(((nodex-buffer)/100.0)/crowdModel.resolution);
+	int y = (int)((nodey/100.0)/crowdModel.resolution);
+	int y1 = (int)(((nodey+buffer)/100.0)/crowdModel.resolution);
+	int y2 = (int)(((nodey-buffer)/100.0)/crowdModel.resolution);
+
+	//std::cout << "x " << x << " y " << y;
+	double d = crowdModel.densities[(y * crowdModel.width) + x];
+	double d1 = crowdModel.densities[(y1 * crowdModel.width) + x];
+	double d2 = crowdModel.densities[(y2 * crowdModel.width) + x];
+	double d3 = crowdModel.densities[(y * crowdModel.width) + x1];
+	double d4 = crowdModel.densities[(y * crowdModel.width) + x2];
+	//std::cout << " Cell cost " << d << std::endl;
+	//return (d + d1 + d2 + d3 + d4)/5;
+	double da = std::max(std::max(d, d1),d2);
+	double db = std::max(d3, d4);
+	return std::max(da,db);
+	//return d;
+}
+
 
 // Projection of crowd flow vectors on vector at s and d and then take the average
 double PathPlanner::computeCrowdFlow(Node s, Node d){
@@ -167,31 +201,28 @@ double PathPlanner::computeCrowdFlow(Node s, Node d){
 	//cout << "Down-right : " << d_dr << " * " << s_dr << endl;
 	//cout << "Down-left : " << d_dl << " * " << s_dl << endl;
 
+
+	double l_avg = (s_l + d_l) / 2;
+	double r_avg = (s_r + d_r) / 2;
+	double u_avg = (s_u + d_u) / 2;
+	double d_avg = (s_d + d_d) / 2;
+	double ul_avg = (s_ul + d_ul) / 2;
+	double dl_avg = (s_dl + d_dl) / 2;
+	double ur_avg = (s_ur + d_ur) / 2;
+	double dr_avg = (s_dr + d_dr) / 2;
+
 	double pi = 3.145;
-	double u1 = projection(pi/2, d_u, s.getX(), s.getY(), d.getX(), d.getY()); 
-	double d1 = projection(3*pi/2, d_d, s.getX(), s.getY(), d.getX(), d.getY()); 
-	double r1 = projection(0, d_r, s.getX(), s.getY(), d.getX(), d.getY()); 
-	double l1 = projection(pi, d_l, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_u = projection(pi/2, u_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_d = projection(3*pi/2, d_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_r = projection(0, r_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_l = projection(pi, l_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
 
-	double ur1 = projection(pi/4, d_ur, s.getX(), s.getY(), d.getX(), d.getY()); 
-	double ul1 = projection(3*pi/4, d_ul, s.getX(), s.getY(), d.getX(), d.getY()); 
-	double dr1 = projection(7*pi/4, d_dr, s.getX(), s.getY(), d.getX(), d.getY()); 
-	double dl1 = projection(5*pi/4, d_dl, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_ur = projection(pi/4, ur_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_ul = projection(3*pi/4, ul_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_dr = projection(7*pi/4, dr_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
+	double cost_dl = projection(5*pi/4, dl_avg, s.getX(), s.getY(), d.getX(), d.getY()); 
 
-	double final1 = u1 + d1 + r1 + l1 + ur1 + ul1 + dr1 + dl1;
-	
-	double u2 = projection(pi/2, d_u, d.getX(), d.getY(), s.getX(), s.getY()); 
-	double d2 = projection(3*pi/2, d_d, d.getX(), d.getY(), s.getX(), s.getY()); 
-	double r2 = projection(0, d_r, d.getX(), d.getY(), s.getX(), s.getY()); 
-	double l2 = projection(pi, d_l, d.getX(), d.getY(), s.getX(), s.getY()); 
-
-	double ur2 = projection(pi/4, d_ur, d.getX(), d.getY(), s.getX(), s.getY()); 
-	double ul2 = projection(3*pi/3, d_ul, d.getX(), d.getY(), s.getX(), s.getY()); 
-	double dr2 = projection(7*pi/4, d_dr, d.getX(), d.getY(), s.getX(), s.getY()); 
-	double dl2 = projection(5*pi/4, d_dl, d.getX(), d.getY(), s.getX(), s.getY());
-
-	double final2 = u2 + d2 + r2 + l2 + ur2 + ul2 + dr2 + dl2;
-	double cost = (final1 + final2)/2;
+	double cost = cost_u + cost_d + cost_r + cost_l + cost_ur + cost_ul + cost_dr + cost_dl;
 	return cost;
 }
 
@@ -464,7 +495,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref){
     vector<Node*>::iterator iter;
     for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
       double d = Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() );
-
+      
       if(PATH_DEBUG){
 	cout << "\tChecking ";
 	(*iter)->printNode();
@@ -482,6 +513,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref){
       if (( d < dist ) &&
 	  !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) &&
 	  (*iter)->isAccessible()) {
+	//cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl; 
 	dist = d + d_t;
 	temp = (*(*iter));
 	if(PATH_DEBUG) {

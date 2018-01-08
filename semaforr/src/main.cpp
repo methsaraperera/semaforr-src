@@ -1,7 +1,7 @@
 /* \mainpage ROSiffied semaforr Documentation
  * \brief RobotDriver governs low-level actions of a robot.
  *
- * \author Anoop Aroor.
+ * \author Anoop Aroor, Raj Korpan and others.
  *
  * \version SEMAFORR ROS 1.0
  *
@@ -22,6 +22,7 @@
 #include <ros/console.h>
 #include <geometry_msgs/Twist.h> 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_datatypes.h>
 #include <semaforr/CrowdModel.h>
@@ -37,20 +38,24 @@ private:
 	ros::NodeHandle nh_;
 	//! We will be publishing to the "cmd_vel" topic to issue commands
 	ros::Publisher cmd_vel_pub_;
-	//! We will be listening to \pose, \laserscan and \crowd_model topics
+	//! We will be listening to /pose, /laserscan and /crowd_model and /crowd_pose topics
 	ros::Subscriber sub_pose_;
 	ros::Subscriber sub_laser_;
 	ros::Subscriber sub_crowd_model_;
+	ros::Subscriber sub_crowd_pose_;
+	ros::Subscriber sub_crowd_pose_all_;
 	// Current position and previous stopping position of the robot
 	Position current, previous;
 	// Current and previous laser scan
 	sensor_msgs::LaserScan laserscan;
 	// Current crowd_model
 	semaforr::CrowdModel crowdModel;
+	// Current crowd_pose
+	geometry_msgs::PoseArray crowdPose, crowdPoseAll;
 	// Controller
 	Controller *controller;
 	// Pos received
-	bool init_pos_received;
+	bool init_pos_received, init_laser_received;
 	// Visualization 
 	Visualizer *viz_;
 public:
@@ -63,17 +68,35 @@ public:
 		sub_pose_ = nh_.subscribe("pose", 1000, &RobotDriver::updatePose, this);
 		sub_laser_ = nh_.subscribe("base_scan", 1000, &RobotDriver::updateLaserScan, this);
 		sub_crowd_model_ = nh_.subscribe("crowd_model", 1000, &RobotDriver::updateCrowdModel, this);
+		sub_crowd_pose_ = nh_.subscribe("crowd_pose", 1000, &RobotDriver::updateCrowdPose, this);
+		sub_crowd_pose_all_ = nh_.subscribe("crowd_pose_all", 1000, &RobotDriver::updateCrowdPoseAll, this);
 		//declare and create a controller with task, action and advisor configuration
 		controller = con;
 		init_pos_received = false;
+ 		init_laser_received = false;
 		current.setX(0);current.setY(0);current.setTheta(0);
 		previous.setX(0);previous.setY(0);previous.setTheta(0);
 		viz_ = new Visualizer(&nh_, con);
 	}
 
 	// Callback function for pose message
+	void updateCrowdPose(const geometry_msgs::PoseArray &crowd_pose){
+		//ROS_DEBUG("Inside callback for crowd pose");
+		//update the crowd model of the belief
+		crowdPose = crowd_pose;
+	}
+
+
+	// Callback function for pose message
+	void updateCrowdPoseAll(const geometry_msgs::PoseArray &crowd_pose_all){
+		//ROS_DEBUG("Inside callback for crowd pose");
+		//update the crowd model of the belief
+		crowdPoseAll = crowd_pose_all;
+	}
+
+	// Callback function for pose message
 	void updateCrowdModel(const semaforr::CrowdModel & crowd_model){
-		ROS_DEBUG("Inside callback for crowd model");
+		//ROS_DEBUG("Inside callback for crowd model");
 		cout << crowd_model.height << " " << crowd_model.width << endl;
 		//update the crowd model of the belief
 		controller->getPlanner()->setCrowdModel(crowd_model);
@@ -102,6 +125,7 @@ public:
 	void updateLaserScan(const sensor_msgs::LaserScan & scan){ 
 		//ROS_DEBUG("Inside callback for base_scan message");
 		laserscan = scan; 
+		init_laser_received = true;
 		//ROS_INFO_STREAM("Recieved base_scan message from menge ");
 	}
  
@@ -118,7 +142,7 @@ public:
 		geometry_msgs::Twist base_cmd;
 
 		ros::Rate rate(30.0);
-		double epsilon_move = 0.5; //Meters
+		double epsilon_move = 0.2; //Meters
 		double epsilon_turn = 0.1; //Radians
 		bool action_complete = true;
 		bool mission_complete = false;
@@ -132,8 +156,8 @@ public:
 		// Run the loop , the input sensing and the output beaming is asynchrounous
 		while(nh_.ok()) {
 			// If pos value is not received from menge wait
-			while(init_pos_received == false){
-				ROS_DEBUG("Waiting for first message");
+			while(init_pos_received == false or init_laser_received == false){
+				ROS_DEBUG("Waiting for first message or laser");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -148,7 +172,7 @@ public:
 				viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
 				gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
-				controller->updateState(current, laserscan);
+				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
 				viz_->publish();
 				previous = current;
 				ROS_DEBUG("Check if mission is complete");
@@ -280,28 +304,32 @@ public:
 };
 
 
-
-
-
-
 // Main file : Load configuration files and create a controller, Initialize and run robot driver! 
 // Stops when the mission is complete or when a mission aborts
 int main(int argc, char **argv) {
-
 		//init the ROS node
+		ROS_INFO("Starting... semaforr ");
 		ros::init(argc, argv, "semaforr");
 		if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
 			ros::console::notifyLoggerLevelsChanged();
 		}
 		ros::NodeHandle nh;
 
-		string path = ros::package::getPath("semaforr");
+		std::cout << argc << endl;
+
+		if(argc != 5){
+			ROS_INFO_STREAM("not have all parameters" << argc);
+		}
+
+		string path(argv[1]);
+		string target_set(argv[2]);
+		string map_config(argv[3]);
+		string map_dimensions(argv[4]);
+
 		string advisor_config = path + "/config/advisors.conf";
 		string params_config = path + "/config/params.conf";
-		string tasks_config = path + "/config/target.conf";
-		string planner_config = path;
 
-		Controller *controller = new Controller(advisor_config,tasks_config,params_config,planner_config); 
+		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions); 
 
 		ROS_INFO("Controller Initialized");
 		RobotDriver driver(nh, controller);
