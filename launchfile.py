@@ -8,7 +8,7 @@ import time
 import subprocess
 
 def experiment():
-    project_home = "/home/anoop/catkin_ws/src"
+    project_home = "/home/rajkochhar/catkin_ws1/src"
     menge_path = project_home+"/examples/core"
     semaforr_path = project_home+"/semaforr"
 
@@ -20,16 +20,16 @@ def experiment():
     map_dimensions = map_folder+"/dimensions.conf"
     target_set = map_folder+"/" + target_file_name
     density = "on"
-    flow = "on"
+    flow = "off"
     risk = "off"
     cusum = "off"
     discount = "off"
-    explore = "on"
+    explore = "off"
 
     print target_set
     print map_config
     print map_xml
-    print map_dimensions 
+    print map_dimensions
     print log_name
     #start roscore
     roscore = subprocess.Popen(['roscore'])
@@ -89,11 +89,11 @@ def experiment():
     time.sleep(10)
     print "roscore terminated!"
 
-map_name = "openOfficeFlow"
+map_name = "gradcenter-4"
 
 
 for i in range(0,1):
-    for mode in [5]:
+    for mode in [1]:
         target_file_name = "target.conf"
         log_name = map_name + "_" + str(mode) + "_" + str(i) + ".txt"
         experiment()
