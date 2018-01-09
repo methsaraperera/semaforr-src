@@ -270,6 +270,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
 	Node n;
         planner = new PathPlanner(navGraph, *map, n,n);
 	cout << "initialized planner" << endl;
+  planner->setOriginalNavGraph(navGraph);
 }
 
 
@@ -365,6 +366,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
     beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
   } 
+  beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
   // otherwise if task Decision limit reached, skip task 
   if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
     ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");

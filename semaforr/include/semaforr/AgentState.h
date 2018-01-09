@@ -108,6 +108,11 @@ public:
     	currentTask->generateWaypoints(current, planner);
     } 
   }
+  void generateOrigWaypoints(Position current, PathPlanner *planner, bool aStarOn) { 
+    if(aStarOn){
+      currentTask->generateOriginalWaypoints(current, planner);
+    } 
+  }
 
 
   set<FORRAction> *getVetoedActions() { 

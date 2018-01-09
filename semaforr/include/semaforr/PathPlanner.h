@@ -8,6 +8,8 @@
 #define PATH_PLANNER_H
 
 #include "astar.h"
+#include "Position.h"
+#include "FORRGeometry.h"
 #include <semaforr/CrowdModel.h>
 #include <math.h>
 
@@ -20,17 +22,24 @@
 class PathPlanner {
 private: 
   Graph * navGraph; 
+  Graph * originalNavGraph;
   Map map;
   semaforr::CrowdModel crowdModel;
   Node source, target; 
   list<int> path; 
   double pathCost;
+  list<int> origPath; 
+  double origPathCost;
 
   //list<int>::iterator head;
   Node waypoint; 
   bool objectiveSet;
   bool pathCompleted;
   bool pathCalculated;
+  bool origObjectiveSet;
+  bool origPathCompleted;
+  bool origPathCalculated;
+
 
   void smoothPath(list<int>&, Node, Node);
   double computeCrowdFlow(Node s, Node d);
@@ -45,9 +54,11 @@ public:
  PathPlanner(Graph * g, Map& m, Node s, Node t): navGraph(g), map(m), source(s), target(t), pathCalculated(false){}
 
   int calcPath(bool cautious = false); 
+  int calcOrigPath(bool cautious = false);
 
   /*! \return list of node indexes of waypoints */
   list<int> getPath(){ return path; }
+  list<int> getOrigPath(){ return origPath; }
 
   void resetPath() { 
     path.clear();
@@ -55,15 +66,26 @@ public:
     pathCalculated = false;
   }
 
+  void resetOrigPath() { 
+    origPath.clear();
+    origPathCompleted = true; 
+    origPathCalculated = false;
+  }
+
   void setCrowdModel(semaforr::CrowdModel c){ 
 	crowdModel = c;
   }
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
+  void setOriginalNavGraph(Graph * navGraph){ 
+  originalNavGraph = navGraph;
+  }
+
   void updateNavGraph();
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
 
   Graph* getGraph(){ return navGraph; }
+  Graph* getOrigGraph(){ return originalNavGraph; }
 
   Map* getMap() { return &map;}
 
@@ -136,6 +158,7 @@ public:
   double getRemainingPathLength(double x, double y);  
     
   double calcPathCost(list<int>);
+  double calcPathCost(vector<CartesianPoint> waypoints, Position source, Position target);
 
   double estimateCost(Node, Node, int); 
 
