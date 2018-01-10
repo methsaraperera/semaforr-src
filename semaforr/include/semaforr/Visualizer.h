@@ -730,8 +730,8 @@ public:
 			planStream << ";";		
 		}
 
-		double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
-		planStream << "\t" << plancost;
+		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
+		//planStream << "\t" << plancost;
 	}
 	ROS_DEBUG("After planStream");
 
@@ -744,8 +744,8 @@ public:
 			origPlanStream << ";";		
 		}
 		
-		double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
-		origPlanStream << "\t" << plancost;
+		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
+		//origPlanStream << "\t" << plancost;
 	}
 	ROS_DEBUG("After origPlanStream");
 

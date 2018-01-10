@@ -483,10 +483,10 @@ double PathPlanner::calcPathCost(vector<CartesianPoint> waypoints, Position sour
   vector<CartesianPoint>::iterator it;
   for (it = waypoints.begin(); it != waypoints.end(); it++ ){
     Node s;
-    int s_id = navGraph->getNodeID((*it).get_x(), (*it).get_y());
+    int s_id = navGraph->getNodeID((*it).get_x()*100.0, (*it).get_y()*100.0);
     if(s_id == Node::invalid_node_index) {
-      Node temp_s(1, (*it).get_x(), (*it).get_y()); 
-      Node temp_t(1, (*it).get_x(), (*it).get_y());
+      Node temp_s(1, (*it).get_x()*100.0, (*it).get_y()*100.0); 
+      Node temp_t(1, (*it).get_x()*100.0, (*it).get_y()*100.0);
       s = getClosestNode(temp_s, temp_t);
       s_id = navGraph->getNodeID(s.getX(), s.getY());
     }

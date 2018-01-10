@@ -31,6 +31,7 @@ def experiment():
     print map_xml
     print map_dimensions
     print log_name
+    print why_log_name
     #start roscore
     roscore = subprocess.Popen(['roscore'])
     time.sleep(1)
@@ -57,10 +58,16 @@ def experiment():
     log_file = open(log_name,"w")
     log_process = subprocess.Popen(['rostopic','echo','/decision_log'],stdout=log_file)
 
+    why_log_file = open(why_log_name,"w")
+    why_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=why_log_file)
+
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions])
     print "waiting,,"
 
+    # start why_plan
+    why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
+    print "waiting,,"
    
     # Wait till semaforr completes the process
     while semaforr_process.poll() is None:
@@ -76,11 +83,13 @@ def experiment():
     	time.sleep(1)
 
     print "Menge terminated!"
-    if mode == 1 or mode == 2 or mode == 3 or mode == 4:
+    if mode == 1 or mode == 2 or mode == 3 or mode == 4 or mode == 5:
 	print "Terminating crowd model"
         crowd_process.terminate()
     log_process.terminate()
     log_file.close()
+    why_log_process.terminate()
+    why_log_file.close()
     time.sleep(1)
     #why_process.terminate()
     #print "Why terminated!"
@@ -96,6 +105,7 @@ for i in range(0,1):
     for mode in [5]:
         target_file_name = "target.conf"
         log_name = map_name + "_" + str(mode) + "_" + str(i) + ".txt"
+        why_log_name = map_name + "_" + str(mode) + "_" + str(i) + "_why_plan.txt"
         experiment()
 
 
