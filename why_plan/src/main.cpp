@@ -154,7 +154,7 @@ public:
 		double start_timecv, end_timecv;
 		while(nh_.ok()) {
 			while(log_message_received == false or plan_message_received == false or orig_plan_message_received == false or density_message_received == false){
-				ROS_DEBUG("Waiting for all messages");
+				//ROS_DEBUG("Waiting for all messages");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -362,7 +362,7 @@ public:
 		std_msgs::String logData;
 		
 		std::stringstream output;
-		output << sameplan << "\t" << planLength << "\t" << originalPlanLength << "\t" << (planLength - originalPlanLength) << "\t" << planCrowdDensity << "\t" << originalPlanCrowdDensity << "\t" << (planCrowdDensity - originalPlanCrowdDensity);
+		output << atof(parseText(current_log)[0].c_str()) << "\t" << atof(parseText(current_log)[1].c_str()) << "\t" << atof(parseText(current_log)[2].c_str()) << "\t" << computationTimeSec << "\t" << sameplan << "\t" << planLength << "\t" << originalPlanLength << "\t" << (planLength - originalPlanLength) << "\t" << planCrowdDensity << "\t" << originalPlanCrowdDensity << "\t" << (planCrowdDensity - originalPlanCrowdDensity);
 		
 		logData.data = output.str();
 		plan_explanations_log_pub_.publish(logData);

@@ -78,7 +78,7 @@ public:
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
   void setOriginalNavGraph(Graph * navGraph){ 
-  originalNavGraph = navGraph;
+    originalNavGraph = navGraph;
   }
 
   void updateNavGraph();

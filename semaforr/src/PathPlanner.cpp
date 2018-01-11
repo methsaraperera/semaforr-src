@@ -184,7 +184,7 @@ void PathPlanner::updateNavGraph(){
 			Node toNode = navGraph->getNode(edges[i]->getTo());
 			Node fromNode = navGraph->getNode(edges[i]->getFrom());
 			double oldcost = edges[i]->getDistCost();
-			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, true, oldcost);
+			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, false, oldcost);
 			double newEdgeCosttf = computeNewEdgeCost(fromNode, toNode, false, oldcost); 
 			navGraph->updateEdgeCost(i, newEdgeCostft, newEdgeCosttf);
 			cout << "Edge Cost " << oldcost << " -> " << newEdgeCostft << " -> " << newEdgeCosttf << endl;  
@@ -200,14 +200,14 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	// weights that balance distance, crowd density and crowd flow
 	int w1 = 1;
 	int w2 = 50;
-	int w3 = 50;
+	int w3 = 0;
 
 	double flowcost = computeCrowdFlow(s,d);
 	if(direction == false){
 		flowcost = flowcost * (-1);
 	}
-	cout << "Flow cost --------- " << endl;
-	cout << "Flow cost    :" << flowcost << endl;
+	//cout << "Flow cost --------- " << endl;
+	//cout << "Flow cost    :" << flowcost << endl;
 	//cout << "Node penalty : " << d_density << " * " << s_density << endl;
 	//double newEdgeCost = (oldcost * flowcost); 
 	double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost);

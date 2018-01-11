@@ -32,6 +32,7 @@ def experiment():
     print map_dimensions
     print log_name
     print why_log_name
+    print whyplan_log_name
     #start roscore
     roscore = subprocess.Popen(['roscore'])
     time.sleep(1)
@@ -61,6 +62,9 @@ def experiment():
     why_log_file = open(why_log_name,"w")
     why_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=why_log_file)
 
+    whyplan_log_file = open(whyplan_log_name,"w")
+    whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_log_file)
+
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions])
     print "waiting,,"
@@ -86,10 +90,13 @@ def experiment():
     if mode == 1 or mode == 2 or mode == 3 or mode == 4 or mode == 5:
 	print "Terminating crowd model"
         crowd_process.terminate()
+    why_plan_process.terminate()
     log_process.terminate()
     log_file.close()
     why_log_process.terminate()
     why_log_file.close()
+    whyplan_log_process.terminate()
+    whyplan_log_file.close()
     time.sleep(1)
     #why_process.terminate()
     #print "Why terminated!"
@@ -105,7 +112,8 @@ for i in range(0,1):
     for mode in [5]:
         target_file_name = "target.conf"
         log_name = map_name + "_" + str(mode) + "_" + str(i) + ".txt"
-        why_log_name = map_name + "_" + str(mode) + "_" + str(i) + "_why_plan.txt"
+        why_log_name = map_name + "_" + str(mode) + "_" + str(i) + "_why_plan_log.txt"
+        whyplan_log_name = map_name + "_" + str(mode) + "_" + str(i) + "_why_plan.txt"
         experiment()
 
 

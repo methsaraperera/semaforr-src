@@ -145,12 +145,12 @@ namespace Menge {
 		 
 		void FSM::setPrefVelFromMsg( const geometry_msgs::Twist& msg){
 			//copy from message and into PrefVelmsg
-			ROS_INFO("I heard: x :[%f]", msg.linear.x);
-   			ROS_INFO("I heard: y :[%f]", msg.linear.y);
-   			ROS_INFO("I heard: z :[%f]", msg.linear.z);
-   			ROS_INFO("I heard: x :[%f]", msg.angular.x);
-   			ROS_INFO("I heard: y :[%f]", msg.angular.y);
-   			ROS_INFO("I heard: z :[%f]", msg.angular.z);
+			//ROS_INFO("I heard: x :[%f]", msg.linear.x);
+   			//ROS_INFO("I heard: y :[%f]", msg.linear.y);
+   			//ROS_INFO("I heard: z :[%f]", msg.linear.z);
+   			//ROS_INFO("I heard: x :[%f]", msg.angular.x);
+   			//ROS_INFO("I heard: y :[%f]", msg.angular.y);
+   			//ROS_INFO("I heard: z :[%f]", msg.angular.z);
 
 			float speed = msg.linear.x;
 			if(speed == 0) speed = 0.0001;

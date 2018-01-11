@@ -270,7 +270,9 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
 	Node n;
         planner = new PathPlanner(navGraph, *map, n,n);
 	cout << "initialized planner" << endl;
-  planner->setOriginalNavGraph(navGraph);
+
+  Graph *origNavGraph = new Graph(map,(int)(p*100.0));
+  planner->setOriginalNavGraph(origNavGraph);
 }
 
 
@@ -344,6 +346,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
       firstTaskAssigned = true;
   }
   bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
@@ -359,13 +362,21 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
   } 
   // else if subtask is complete
   else if(waypointReached == true and aStarOn){
     ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
     beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
-    beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
+    //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+    if (beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() > 0) {
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+    }
+    else {
+      beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
+    }
+    
   } 
   // otherwise if task Decision limit reached, skip task 
   if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
@@ -375,6 +386,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
   }
 }

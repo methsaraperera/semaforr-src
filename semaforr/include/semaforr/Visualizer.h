@@ -101,10 +101,10 @@ public:
 		visualized++;
 	}*/
 	publish_edges_cost();
-	//publish_conveyor();
-	//publish_region();
-	//publish_trails();
-	//publish_doors();
+	publish_conveyor();
+	publish_region();
+	publish_trails();
+	publish_doors();
 	publish_walls();
 	publish_occupancy();
   }

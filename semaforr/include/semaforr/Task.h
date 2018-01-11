@@ -126,19 +126,21 @@ class Task {
    }
 
   bool generateOriginalWaypoints(Position source, PathPlanner *planner){
+  	cout << "inside generate original waypoints" << endl;
 	origWaypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
-        Node s(1, source.getX()*100, source.getY()*100);
+	cout << "before set source and target" << endl;
+	Node s(1, source.getX()*100, source.getY()*100);
 	planner->setSource(s);
 	Node t(1, x*100, y*100);
 	planner->setTarget(t);
 
-        cout << "plan generation status" << planner->calcOrigPath(true) << endl;
-
+	cout << "plan generation status" << planner->calcOrigPath(true) << endl;
+	cout << "plan generation complete" << endl;
 	list<int> path = planner->getOrigPath();
 	Graph *navGraph = planner->getOrigGraph();
-
+	cout << "before waypoint creation" << endl;
 	list<int>::iterator it;
 	for ( it = path.begin(); it != path.end(); it++ ){
 		double x = navGraph->getNode(*it).getX()/100.0;
@@ -152,7 +154,7 @@ class Task {
   	}
 	//setupNextWaypoint(source);
 	planner->resetOrigPath();
-	cout << "plan generation complete" << endl;
+	cout << "waypoint generation complete" << endl;
    }  
 
    double planCost(vector<CartesianPoint> waypoints, PathPlanner *planner, Position source, Position target){
@@ -161,24 +163,29 @@ class Task {
    }
 
    void setupNextWaypoint(Position currentPosition){
+   	cout << "inside setup next waypoint" << endl;
 	double dis;
 	while(waypoints.size() >= 1){
+		cout << "inside while" << endl;
 		wx = waypoints[0].get_x();
 		wy = waypoints[0].get_y();
 		dis = currentPosition.getDistance(wx, wy);
 		if(dis < 0.75){
+			cout << "found waypoing with dist < 0.75" << endl;
 			waypoints.erase(waypoints.begin());
 		}
 		else{
 			break;
 		} 	
-	}	
+	}
+	cout << "check plan active: " << waypoints.size() << endl;
 	if(waypoints.size() > 0){
 		isPlanActive = true;
 	}
 	else{
 		isPlanActive = false;
 	}
+	cout << "end setup next waypoint" << endl;
    }
 
   
