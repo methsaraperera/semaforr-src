@@ -96,6 +96,78 @@ int PathPlanner::calcPath(bool cautious){
   return 0;
 }
 
+int PathPlanner::calcOrigPath(bool cautious){
+  const string signature = "PathPlanner::calcOrigPath()> ";
+  
+  if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
+    
+    if(PATH_DEBUG) {
+      cout << signature << "Source:"; 
+      source.printNode(); 
+      cout << endl;
+      cout << signature << "Target:"; 
+      target.printNode();
+      cout << endl;
+    }
+
+    Node s, t;
+    if ( originalNavGraph->isNode(source) ) {
+      if(PATH_DEBUG)
+  cout << signature << "Source is a valid Node in the navigation graph" << endl; 
+      s = source ;
+    }
+    else {
+      if(PATH_DEBUG)
+  cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
+      s = getClosestNode(source, target);
+    }
+    //cout << signature << "Checking if source node is invalid" << endl;
+    if ( s.getID() == Node::invalid_node_index )
+      return 1;
+
+    if ( originalNavGraph->isNode(target) ) {
+      if(PATH_DEBUG)
+  cout << signature << "Target is a valid Node in the navigation graph" << endl; 
+      t = target ;
+    }
+    else {
+      if(PATH_DEBUG)
+  cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
+      t = getClosestNode(target, source);
+    }
+    //cout << signature << "Checking if target node is invalid" << endl;
+    if ( t.getID() == Node::invalid_node_index )
+      return 2;
+
+    //cout << signature << "Completed finding source and destination nodes" << endl;
+    if(PATH_DEBUG) {
+      cout << signature << "s:"; 
+      s.printNode(); 
+      cout << endl;
+      cout << signature << "t:"; 
+      t.printNode();
+      cout << endl;
+    }
+
+    astar newsearch(*originalNavGraph, s, t);
+    if ( newsearch.isPathFound() ) {
+      origPath = newsearch.getPathToTarget();
+      origObjectiveSet = false;
+      origPathCompleted = false;
+      
+      if(!cautious)
+  smoothPath(origPath, s, t);
+      
+      origPathCost = calcPathCost(origPath); 
+      origPathCalculated = true;
+    }
+    else {
+      return 3;
+    }
+  }
+  return 0;
+}
+
 void PathPlanner::updateNavGraph(){
 	cout << "Updating nav graph before with the current crowd model" << endl;
 	if(crowdModel.densities.size() == 0){
@@ -112,7 +184,7 @@ void PathPlanner::updateNavGraph(){
 			Node toNode = navGraph->getNode(edges[i]->getTo());
 			Node fromNode = navGraph->getNode(edges[i]->getFrom());
 			double oldcost = edges[i]->getDistCost();
-			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, true, oldcost);
+			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, false, oldcost);
 			double newEdgeCosttf = computeNewEdgeCost(fromNode, toNode, false, oldcost); 
 			navGraph->updateEdgeCost(i, newEdgeCostft, newEdgeCosttf);
 			cout << "Edge Cost " << oldcost << " -> " << newEdgeCostft << " -> " << newEdgeCosttf << endl;  
@@ -128,14 +200,14 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	// weights that balance distance, crowd density and crowd flow
 	int w1 = 1;
 	int w2 = 50;
-	int w3 = 50;
+	int w3 = 0;
 
 	double flowcost = computeCrowdFlow(s,d);
 	if(direction == false){
 		flowcost = flowcost * (-1);
 	}
-	cout << "Flow cost --------- " << endl;
-	cout << "Flow cost    :" << flowcost << endl;
+	//cout << "Flow cost --------- " << endl;
+	//cout << "Flow cost    :" << flowcost << endl;
 	//cout << "Node penalty : " << d_density << " * " << s_density << endl;
 	//double newEdgeCost = (oldcost * flowcost); 
 	double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost);
@@ -400,6 +472,41 @@ double PathPlanner::calcPathCost(list<int> p){
       pcost += Map::distance(source.getX(), source.getY(),
 					     target.getX(), target.getY());
   }
+
+  return pcost;
+}
+
+double PathPlanner::calcPathCost(vector<CartesianPoint> waypoints, Position source, Position target){
+  double pcost = 0;
+  list<int> p;
+
+  vector<CartesianPoint>::iterator it;
+  for (it = waypoints.begin(); it != waypoints.end(); it++ ){
+    Node s;
+    int s_id = navGraph->getNodeID((*it).get_x()*100.0, (*it).get_y()*100.0);
+    if(s_id == Node::invalid_node_index) {
+      Node temp_s(1, (*it).get_x()*100.0, (*it).get_y()*100.0); 
+      Node temp_t(1, (*it).get_x()*100.0, (*it).get_y()*100.0);
+      s = getClosestNode(temp_s, temp_t);
+      s_id = navGraph->getNodeID(s.getX(), s.getY());
+    }
+    p.push_back(s_id);
+  }
+
+  list<int>::iterator iter;
+  int first;
+  Edge * e;
+
+  for( iter = p.begin(); iter != p.end() ; iter++ ){
+    first = *iter++;
+    if (iter != p.end()){
+      e = navGraph->getEdge(first, *iter);
+      pcost += e->getCost(true);
+    }
+    iter--;
+  }
+  
+  pcost += (estimateCost(source.getX(), source.getY(), waypoints[0].get_x(), waypoints[0].get_y()) + estimateCost(target.getX(), target.getY(), waypoints[waypoints.size()-1].get_x(), waypoints[waypoints.size()-1].get_y()));
 
   return pcost;
 }
