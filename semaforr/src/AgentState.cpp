@@ -78,6 +78,21 @@ double AgentState::getDistanceToNearestObstacle(Position pos){
    return min_dis;
 }
 
+//return the nearest obstacle when the robot is in POS using the current laser scan
+Position AgentState::getNearestObstacle(Position pos){ 
+  double min_dis = 1000000;
+  Position min_pos = Position(0,0,0);
+  for(int i = 0; i < laserEndpoints.size(); i++){
+    double x = laserEndpoints[i].get_x();
+    double y = laserEndpoints[i].get_y();
+    double dist = pos.getDistance(Position(x,y,0));
+    if(dist < min_dis){
+      min_dis = dist;
+      min_pos = Position(x,y,0);
+    }
+  }
+  return min_pos;
+}
 
 //Sees if the laser scan intersects with a segment created by 2
 //trailpoints

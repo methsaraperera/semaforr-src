@@ -263,10 +263,24 @@ Tier3Advisor* Tier3Advisor::makeAdvisor(Beliefs *beliefs, string name, string de
     return new Tier3LearnSpatialModel(beliefs, name, description, weight, magic_init, is_active);
   else if(name == "LearnSpatialModelRotation")
     return new Tier3LearnSpatialModelRotation(beliefs, name, description, weight, magic_init, is_active);
-  else if(name == "ActiveLearner")
-    return new Tier3ActiveLearner(beliefs, name, description, weight, magic_init, is_active);
-  else if(name == "ActiveLearnerRotation")
-    return new Tier3ActiveLearnerRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Curiosity")
+    return new Tier3Curiosity(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "CuriosityRotation")
+    return new Tier3CuriosityRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Enfilade")
+    return new Tier3Enfilade(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "EnfiladeRotation")
+    return new Tier3EnfiladeRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Thigmotaxis")
+    return new Tier3Thigmotaxis(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "ThigmotaxisRotation")
+    return new Tier3ThigmotaxisRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "VisualScanRotation")
+    return new Tier3VisualScanRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "LeastAngle")
+    return new Tier3LeastAngle(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "LeastAngleRotation")
+    return new Tier3LeastAngleRotation(beliefs, name, description, weight, magic_init, is_active);
   else 
     std::cout << "No such advisor " << std::endl;
 }
@@ -320,8 +334,16 @@ Tier3AccessRotation::Tier3AccessRotation (Beliefs *beliefs, string name, string 
 //Tier3NeighborDoorRotation::Tier3NeighborDoorRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3LearnSpatialModel::Tier3LearnSpatialModel (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3LearnSpatialModelRotation::Tier3LearnSpatialModelRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
-Tier3ActiveLearner::Tier3ActiveLearner (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
-Tier3ActiveLearnerRotation::Tier3ActiveLearnerRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Curiosity::Tier3Curiosity (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3CuriosityRotation::Tier3CuriosityRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Enfilade::Tier3Enfilade (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3EnfiladeRotation::Tier3EnfiladeRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Thigmotaxis::Tier3Thigmotaxis (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3ThigmotaxisRotation::Tier3ThigmotaxisRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3VisualScanRotation::Tier3VisualScanRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3LeastAngle::Tier3LeastAngle (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3LeastAngleRotation::Tier3LeastAngleRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+
  
 
 
@@ -374,8 +396,15 @@ Tier3AccessRotation::Tier3AccessRotation(): Tier3Advisor() {};
 //Tier3NeighborDoorRotation::Tier3NeighborDoorRotation(): Tier3Advisor() {};
 Tier3LearnSpatialModel::Tier3LearnSpatialModel(): Tier3Advisor() {};
 Tier3LearnSpatialModelRotation::Tier3LearnSpatialModelRotation(): Tier3Advisor() {};
-Tier3ActiveLearner::Tier3ActiveLearner(): Tier3Advisor() {};
-Tier3ActiveLearnerRotation::Tier3ActiveLearnerRotation(): Tier3Advisor() {};
+Tier3Curiosity::Tier3Curiosity(): Tier3Advisor() {};
+Tier3CuriosityRotation::Tier3CuriosityRotation(): Tier3Advisor() {};
+Tier3Enfilade::Tier3Enfilade(): Tier3Advisor() {};
+Tier3EnfiladeRotation::Tier3EnfiladeRotation(): Tier3Advisor() {};
+Tier3Thigmotaxis::Tier3Thigmotaxis(): Tier3Advisor() {};
+Tier3ThigmotaxisRotation::Tier3ThigmotaxisRotation(): Tier3Advisor() {};
+Tier3VisualScanRotation::Tier3VisualScanRotation(): Tier3Advisor() {};
+Tier3LeastAngle::Tier3LeastAngle(): Tier3Advisor() {};
+Tier3LeastAngleRotation::Tier3LeastAngleRotation(): Tier3Advisor() {};
 
 
 // vote to go through an extrance to a region containing the target
@@ -2448,11 +2477,11 @@ double Tier3LearnSpatialModelRotation::actionComment(FORRAction action){
   return result;
 }
 
-void Tier3ActiveLearner::set_commenting(){
+void Tier3Curiosity::set_commenting(){
   advisor_commenting = true;
 }
 
-double Tier3ActiveLearner::actionComment(FORRAction action){
+double Tier3Curiosity::actionComment(FORRAction action){
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
@@ -2476,11 +2505,11 @@ double Tier3ActiveLearner::actionComment(FORRAction action){
   return totalForce * (-1);
 }
 
-void Tier3ActiveLearnerRotation::set_commenting(){
+void Tier3CuriosityRotation::set_commenting(){
   advisor_commenting = true;
 }
 
-double Tier3ActiveLearnerRotation::actionComment(FORRAction action){
+double Tier3CuriosityRotation::actionComment(FORRAction action){
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
@@ -2502,4 +2531,271 @@ double Tier3ActiveLearnerRotation::actionComment(FORRAction action){
   }
 
   return totalForce * (-1);
+}
+
+void Tier3Enfilade::set_commenting(){
+  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+  if(positionHis->size() > 1){
+    advisor_commenting = true;
+  }
+  else{
+    advisor_commenting = false;
+  }
+}
+
+double Tier3Enfilade::actionComment(FORRAction action){
+  cout << "Inside Enfilade" << endl;
+  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double totalForce = 0, distance = 0; 
+  int startPosition = 0;
+  if (positionHis->size() > 10){
+    startPosition = positionHis->size() - 10;
+  }
+  cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
+  for(int i = startPosition; i < positionHis->size(); i++){
+    distance = expectedPosition.getDistance((*positionHis)[i]);
+    cout << "distance = " << distance << endl;
+    totalForce += distance;
+  }
+  cout << "totalForce = " << totalForce << endl;
+  return totalForce * (-1);
+}
+
+void Tier3EnfiladeRotation::set_commenting(){
+  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+  if(positionHis->size() > 1){
+    advisor_commenting = true;
+  }
+  else{
+    advisor_commenting = false;
+  }
+}
+
+double Tier3EnfiladeRotation::actionComment(FORRAction action){
+  cout << "Inside EnfiladeRotation" << endl;
+  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double totalForce = 0, distance = 0; 
+  int startPosition = 0;
+  if (positionHis->size() > 10){
+    startPosition = positionHis->size() - 10;
+  }
+  cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
+  for(int i = startPosition; i < positionHis->size(); i++){
+    distance = expectedPosition.getDistance((*positionHis)[i]);
+    cout << "distance = " << distance << endl;
+    totalForce += distance;
+  }
+  cout << "totalForce = " << totalForce << endl;
+  return totalForce * (-1);
+}
+
+void Tier3Thigmotaxis::set_commenting(){
+  advisor_commenting = true;
+}
+
+double Tier3Thigmotaxis::actionComment(FORRAction action){
+  cout << "Inside Thigmotaxis" << endl;
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position nearestObstacle = beliefs->getAgentState()->getNearestObstacle(curr_pos);
+  double distanceToObstacle = expectedPosition.getDistance(nearestObstacle);
+  cout << "distanceToObstacle = " << distanceToObstacle << endl;
+  return distanceToObstacle * (-1);
+}
+
+void Tier3ThigmotaxisRotation::set_commenting(){
+  advisor_commenting = true;
+}
+
+double Tier3ThigmotaxisRotation::actionComment(FORRAction action){
+  cout << "Inside ThigmotaxisRotation" << endl;
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position nearestObstacle = beliefs->getAgentState()->getNearestObstacle(curr_pos);
+  double distanceToObstacle = expectedPosition.getDistance(nearestObstacle);
+  cout << "distanceToObstacle = " << distanceToObstacle << endl;
+  return distanceToObstacle * (-1);
+}
+
+void Tier3VisualScanRotation::set_commenting(){
+  advisor_commenting = true;
+}
+
+double Tier3VisualScanRotation::actionComment(FORRAction action){
+  cout << "Inside VisualScanRotation" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  vector<Position> nearby_points;
+  nearby_points.push_back(curr_pos);
+  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+
+  for(int i = 0; i < positionHis->size(); i++){
+    double distance = curr_pos.getDistance((*positionHis)[i]);
+    if(distance <= 1){
+      nearby_points.push_back((*positionHis)[i]);
+    }
+  }
+  cout << "nearby_points.size() = " << nearby_points.size() << endl;
+  double totalX=0, totalY=0;
+  for(int i = 0; i < nearby_points.size(); i++){
+    totalX += cos(nearby_points[i].getTheta());
+    totalY += sin(nearby_points[i].getTheta());
+  }
+  cout << "totalX = " << totalX << " totalY = " << totalY << endl;
+  double desiredangle = atan2(totalY,totalX);
+  double angleDiff = min(abs(desiredangle - expectedPosition.getTheta()),(2*M_PI) - abs(desiredangle - expectedPosition.getTheta()));
+  cout << "desiredangle = " << desiredangle << " angleDiff = " << angleDiff << endl;
+  return angleDiff * (-1);
+}
+
+void Tier3LeastAngle::set_commenting(){
+  cout << "In least angle set commenting " << endl;
+  vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+  CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
+  bool targetInRegion = false;
+  bool currPosInRegionWithExit = false;
+  int robotRegion=-1, targetRegion = -1;
+  
+  // check the preconditions for activating the advisor
+  for(int i = 0; i < regions.size() ; i++){
+    // check if the target point is in region
+    if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
+      targetInRegion = true;
+      targetRegion = i;
+    }
+    // check if the rob_pos is in a region and the region has atleast one exit
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
+      currPosInRegionWithExit = true;
+      robotRegion = i;
+    }
+  }
+
+  if(currPosInRegionWithExit == true and ((targetInRegion == true and robotRegion != targetRegion) or (targetInRegion == false)))
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3LeastAngle::actionComment(FORRAction action){
+  cout << "Inside LeastAngle" << endl;
+  vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+  int robotRegion=-1, desiredRegion=-1;
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+
+  // check the preconditions for activating the advisor
+  for(int i = 0; i < regions.size() ; i++){
+    // check if the rob_pos is in a region and the region has atleast one exit
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and (regions[i]).getExits().size() >= 1){
+      robotRegion = i;
+    }
+  }
+  cout << "robotRegion = " << robotRegion << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  vector<FORRExit> exits = regions[robotRegion].getExits();
+
+  vector<FORRRegion> nearRegions;
+  for(int i = 0; i < exits.size() ; i++){
+    FORRRegion test = regions[exits[i].getExitRegion()];
+    std::vector<FORRRegion>::iterator it = std::find(nearRegions.begin(),nearRegions.end(), test);
+    if(nearRegions.empty() or (it == nearRegions.end())){
+      nearRegions.push_back(test);
+    }
+  }
+  cout << "nearRegions.size() = " << nearRegions.size() << endl;
+  double target_direction = atan2((curr_pos.getY() - targetPoint.get_y()), (curr_pos.getX() - targetPoint.get_x()));
+  cout << "target_direction = " << target_direction << endl;
+  double minAngleDiff = 20, metric = 0;
+  for(int i = 0; i < nearRegions.size(); i++){
+    double region_direction = atan2((curr_pos.getY() - nearRegions[i].getCenter().get_y()), (curr_pos.getX() - nearRegions[i].getCenter().get_x()));
+    double angleDiff = min(abs(target_direction - region_direction),(2*M_PI) - abs(target_direction - region_direction));
+    cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
+    if(angleDiff < minAngleDiff){
+      minAngleDiff = angleDiff;
+      metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y());
+      cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
+    }
+  }
+  return metric * (-1);
+}
+
+void Tier3LeastAngleRotation::set_commenting(){
+  cout << "In least angle set commenting " << endl;
+  vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+  CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
+  bool targetInRegion = false;
+  bool currPosInRegionWithExit = false;
+  int robotRegion=-1, targetRegion = -1;
+  
+  // check the preconditions for activating the advisor
+  for(int i = 0; i < regions.size() ; i++){
+    // check if the target point is in region
+    if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
+      targetInRegion = true;
+      targetRegion = i;
+    }
+    // check if the rob_pos is in a region and the region has atleast one exit
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
+      currPosInRegionWithExit = true;
+      robotRegion = i;
+    }
+  }
+
+  if(currPosInRegionWithExit == true and ((targetInRegion == true and robotRegion != targetRegion) or (targetInRegion == false)))
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3LeastAngleRotation::actionComment(FORRAction action){
+  cout << "Inside LeastAngleRotation" << endl;
+  vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+  int robotRegion=-1, desiredRegion=-1;
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+
+  // check the preconditions for activating the advisor
+  for(int i = 0; i < regions.size() ; i++){
+    // check if the rob_pos is in a region and the region has atleast one exit
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and (regions[i]).getExits().size() >= 1){
+      robotRegion = i;
+    }
+  }
+  cout << "robotRegion = " << robotRegion << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  vector<FORRExit> exits = regions[robotRegion].getExits();
+
+  vector<FORRRegion> nearRegions;
+  for(int i = 0; i < exits.size() ; i++){
+    FORRRegion test = regions[exits[i].getExitRegion()];
+    std::vector<FORRRegion>::iterator it = std::find(nearRegions.begin(),nearRegions.end(), test);
+    if(nearRegions.empty() or (it == nearRegions.end())){
+      nearRegions.push_back(test);
+    }
+  }
+  cout << "nearRegions.size() = " << nearRegions.size() << endl;
+  double target_direction = atan2((curr_pos.getY() - targetPoint.get_y()), (curr_pos.getX() - targetPoint.get_x()));
+  cout << "target_direction = " << target_direction << endl;
+  double minAngleDiff = 20, metric = 0;
+  for(int i = 0; i < nearRegions.size(); i++){
+    double region_direction = atan2((curr_pos.getY() - nearRegions[i].getCenter().get_y()), (curr_pos.getX() - nearRegions[i].getCenter().get_x()));
+    double angleDiff = min(abs(target_direction - region_direction),(2*M_PI) - abs(target_direction - region_direction));
+    cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
+    if(angleDiff < minAngleDiff){
+      minAngleDiff = angleDiff;
+      metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y());
+      cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
+    }
+  }
+  return metric * (-1);
 }

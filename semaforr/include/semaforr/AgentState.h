@@ -173,6 +173,9 @@ public:
   // Returns distance from obstacle 
   double getDistanceToNearestObstacle(Position pos);
 
+  // Returns nearest obstacle 
+  Position getNearestObstacle(Position pos);
+
   // returns distance to obstacle in the direction of rotation
   double getDistanceToObstacle(double rotation_angle);
   double getDistanceToForwardObstacle(){
