@@ -52,10 +52,10 @@ def experiment():
         crowd_process = subprocess.Popen(['rosrun','crowd_behavior','learn.py'])
     if mode == 4:
 	print "Starting crowd model with Thompson-A* "
-        crowd_process = subprocess.Popen(['rosrun','crowd_count_thompson','learn.py'])	
+        crowd_process = subprocess.Popen(['rosrun','crowd_count_thompson','learn.py'])
     if mode == 5:
         crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
-    
+
     log_file = open(log_name,"w")
     log_process = subprocess.Popen(['rostopic','echo','/decision_log'],stdout=log_file)
 
@@ -77,7 +77,7 @@ def experiment():
     while semaforr_process.poll() is None:
         print "Semaforr process still running ..."
         time.sleep(1)
-   
+
     print "Semaforr process has ended ..."
     print "Terminating the simulator"
 
@@ -119,4 +119,7 @@ for i in range(0,1):
 
 
 
-
+#for i in range(10,20):
+#    target_file_name = "target.conf"
+#    log_name = map_name + "_" + "flow-csastar" + "_" + "orca" + "_" + "crowdsize60" + "_" + "trial" + str(i) + ".txt"
+#    experiment()
