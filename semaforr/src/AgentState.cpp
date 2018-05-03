@@ -469,3 +469,17 @@ FORRAction AgentState::moveTowards(){
     maxForwardActionBuffer = val6;
     maxForwardActionSweepAngle = val7;
   }
+
+vector <Position> AgentState::getCrowdPositions(geometry_msgs::PoseArray crowdpose){
+  vector <Position> crowdPositions;
+  for(int i = 0; i < crowdpose.poses.size(); i++){
+    double x = crowdpose.poses[i].position.x;
+    double y = crowdpose.poses[i].position.y;
+    tf::Quaternion q(crowdpose.poses[i].orientation.x,crowdpose.poses[i].orientation.y,crowdpose.poses[i].orientation.z,crowdpose.poses[i].orientation.w);
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    crowdPositions.push_back(Position(x,y,yaw));
+  }
+  return crowdPositions;
+}

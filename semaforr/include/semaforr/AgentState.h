@@ -27,6 +27,7 @@
 #include <ros/console.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/PoseArray.h>
+#include <tf/transform_datatypes.h>
 
 using namespace std;
 
@@ -207,6 +208,8 @@ public:
   void setCrowdPose(geometry_msgs::PoseArray crowdpose){
 	currentCrowd = crowdpose;
   }
+
+  vector <Position> getCrowdPositions(geometry_msgs::PoseArray crowdpose);
 
   geometry_msgs::PoseArray getCrowdPoseAll(){ return allCrowd;}
   void setCrowdPoseAll(geometry_msgs::PoseArray crowdposeall){

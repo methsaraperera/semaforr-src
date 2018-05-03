@@ -281,6 +281,58 @@ Tier3Advisor* Tier3Advisor::makeAdvisor(Beliefs *beliefs, string name, string de
     return new Tier3LeastAngle(beliefs, name, description, weight, magic_init, is_active);
   else if(name == "LeastAngleRotation")
     return new Tier3LeastAngleRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Interpersonal")
+    return new Tier3Interpersonal(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "InterpersonalRotation")
+    return new Tier3InterpersonalRotation(beliefs, name, description, weight, magic_init, is_active);
+  //else if(name == "Formation")
+  //  return new Tier3Formation(beliefs, name, description, weight, magic_init, is_active);
+  //else if(name == "FormationRotation")
+  //  return new Tier3FormationRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Front")
+    return new Tier3Front(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FrontRotation")
+    return new Tier3FrontRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Rear")
+    return new Tier3Rear(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "RearRotation")
+    return new Tier3RearRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Side")
+    return new Tier3Side(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "SideRotation")
+    return new Tier3SideRotation(beliefs, name, description, weight, magic_init, is_active);
+  /*else if(name == "Visible")
+    return new Tier3Visible(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "VisibleRotation")
+    return new Tier3VisibleRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Wait")
+    return new Tier3Wait(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "WaitRotation")
+    return new Tier3WaitRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "CrowdAvoid")
+    return new Tier3CrowdAvoid(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "CrowdAvoidRotation")
+    return new Tier3CrowdAvoidRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FindTheCrowd")
+    return new Tier3FindTheCrowd(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FindTheCrowdRotation")
+    return new Tier3FindTheCrowdRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "RiskAvoid")
+    return new Tier3RiskAvoid(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "RiskAvoidRotation")
+    return new Tier3RiskAvoidRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FindTheRisk")
+    return new Tier3FindTheRisk(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FindTheRiskRotation")
+    return new Tier3FindTheRiskRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FlowAvoid")
+    return new Tier3FlowAvoid(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FlowAvoidRotation")
+    return new Tier3FlowAvoidRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FindTheFlow")
+    return new Tier3FindTheFlow(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FindTheFlowRotation")
+    return new Tier3FindTheFlowRotation(beliefs, name, description, weight, magic_init, is_active);*/
   else 
     std::cout << "No such advisor " << std::endl;
 }
@@ -343,7 +395,33 @@ Tier3ThigmotaxisRotation::Tier3ThigmotaxisRotation (Beliefs *beliefs, string nam
 Tier3VisualScanRotation::Tier3VisualScanRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
 Tier3LeastAngle::Tier3LeastAngle (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3LeastAngleRotation::Tier3LeastAngleRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
-
+Tier3Interpersonal::Tier3Interpersonal (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3InterpersonalRotation::Tier3InterpersonalRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+//Tier3Formation::Tier3Formation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+//Tier3FormationRotation::Tier3FormationRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Front::Tier3Front (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FrontRotation::Tier3FrontRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Rear::Tier3Rear (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3RearRotation::Tier3RearRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Side::Tier3Side (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3SideRotation::Tier3SideRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+/*Tier3Visible::Tier3Visible (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3VisibleRotation::Tier3VisibleRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Wait::Tier3Wait (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3WaitRotation::Tier3WaitRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3CrowdAvoid::Tier3CrowdAvoid (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3CrowdAvoidRotation::Tier3CrowdAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3FindTheCrowd::Tier3FindTheCrowd (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FindTheCrowdRotation::Tier3FindTheCrowdRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3RiskAvoid::Tier3RiskAvoid (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3RiskAvoidRotation::Tier3RiskAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3FindTheRisk::Tier3FindTheRisk (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FindTheRiskRotation::Tier3FindTheRiskRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3FlowAvoid::Tier3FlowAvoid (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FlowAvoidRotation::Tier3FlowAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3FindTheFlow::Tier3FindTheFlow (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FindTheFlowRotation::Tier3FindTheFlowRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+*/
  
 
 
@@ -405,6 +483,32 @@ Tier3ThigmotaxisRotation::Tier3ThigmotaxisRotation(): Tier3Advisor() {};
 Tier3VisualScanRotation::Tier3VisualScanRotation(): Tier3Advisor() {};
 Tier3LeastAngle::Tier3LeastAngle(): Tier3Advisor() {};
 Tier3LeastAngleRotation::Tier3LeastAngleRotation(): Tier3Advisor() {};
+Tier3Interpersonal::Tier3Interpersonal(): Tier3Advisor() {};
+Tier3InterpersonalRotation::Tier3InterpersonalRotation(): Tier3Advisor() {};
+//Tier3Formation::Tier3Formation(): Tier3Advisor() {};
+//Tier3FormationRotation::Tier3FormationRotation(): Tier3Advisor() {};
+Tier3Front::Tier3Front(): Tier3Advisor() {};
+Tier3FrontRotation::Tier3FrontRotation(): Tier3Advisor() {};
+Tier3Rear::Tier3Rear(): Tier3Advisor() {};
+Tier3RearRotation::Tier3RearRotation(): Tier3Advisor() {};
+Tier3Side::Tier3Side(): Tier3Advisor() {};
+Tier3SideRotation::Tier3SideRotation(): Tier3Advisor() {};
+/*Tier3Visible::Tier3Visible(): Tier3Advisor() {};
+Tier3VisibleRotation::Tier3VisibleRotation(): Tier3Advisor() {};
+Tier3Wait::Tier3Wait(): Tier3Advisor() {};
+Tier3WaitRotation::Tier3WaitRotation(): Tier3Advisor() {};
+Tier3CrowdAvoid::Tier3CrowdAvoid(): Tier3Advisor() {};
+Tier3CrowdAvoidRotation::Tier3CrowdAvoidRotation(): Tier3Advisor() {};
+Tier3FindTheCrowd::Tier3FindTheCrowd(): Tier3Advisor() {};
+Tier3FindTheCrowdRotation::Tier3FindTheCrowdRotation(): Tier3Advisor() {};
+Tier3RiskAvoid::Tier3RiskAvoid(): Tier3Advisor() {};
+Tier3RiskAvoidRotation::Tier3RiskAvoidRotation(): Tier3Advisor() {};
+Tier3FindTheRisk::Tier3FindTheRisk(): Tier3Advisor() {};
+Tier3FindTheRiskRotation::Tier3FindTheRiskRotation(): Tier3Advisor() {};
+Tier3FlowAvoid::Tier3FlowAvoid(): Tier3Advisor() {};
+Tier3FlowAvoidRotation::Tier3FlowAvoidRotation(): Tier3Advisor() {};
+Tier3FindTheFlow::Tier3FindTheFlow(): Tier3Advisor() {};
+Tier3FindTheFlowRotation::Tier3FindTheFlowRotation(): Tier3Advisor() {};*/
 
 
 // vote to go through an extrance to a region containing the target
@@ -2544,7 +2648,7 @@ void Tier3Enfilade::set_commenting(){
 }
 
 double Tier3Enfilade::actionComment(FORRAction action){
-  cout << "Inside Enfilade" << endl;
+  //cout << "Inside Enfilade" << endl;
   vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double totalForce = 0, distance = 0; 
@@ -2552,13 +2656,13 @@ double Tier3Enfilade::actionComment(FORRAction action){
   if (positionHis->size() > 10){
     startPosition = positionHis->size() - 10;
   }
-  cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
+  //cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
   for(int i = startPosition; i < positionHis->size(); i++){
     distance = expectedPosition.getDistance((*positionHis)[i]);
-    cout << "distance = " << distance << endl;
+    //cout << "distance = " << distance << endl;
     totalForce += distance;
   }
-  cout << "totalForce = " << totalForce << endl;
+  //cout << "totalForce = " << totalForce << endl;
   return totalForce * (-1);
 }
 
@@ -2573,7 +2677,7 @@ void Tier3EnfiladeRotation::set_commenting(){
 }
 
 double Tier3EnfiladeRotation::actionComment(FORRAction action){
-  cout << "Inside EnfiladeRotation" << endl;
+  //cout << "Inside EnfiladeRotation" << endl;
   vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double totalForce = 0, distance = 0; 
@@ -2581,13 +2685,13 @@ double Tier3EnfiladeRotation::actionComment(FORRAction action){
   if (positionHis->size() > 10){
     startPosition = positionHis->size() - 10;
   }
-  cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
+  //cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
   for(int i = startPosition; i < positionHis->size(); i++){
     distance = expectedPosition.getDistance((*positionHis)[i]);
-    cout << "distance = " << distance << endl;
+    //cout << "distance = " << distance << endl;
     totalForce += distance;
   }
-  cout << "totalForce = " << totalForce << endl;
+  //cout << "totalForce = " << totalForce << endl;
   return totalForce * (-1);
 }
 
@@ -2596,12 +2700,12 @@ void Tier3Thigmotaxis::set_commenting(){
 }
 
 double Tier3Thigmotaxis::actionComment(FORRAction action){
-  cout << "Inside Thigmotaxis" << endl;
+  //cout << "Inside Thigmotaxis" << endl;
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   Position nearestObstacle = beliefs->getAgentState()->getNearestObstacle(curr_pos);
   double distanceToObstacle = expectedPosition.getDistance(nearestObstacle);
-  cout << "distanceToObstacle = " << distanceToObstacle << endl;
+  //cout << "distanceToObstacle = " << distanceToObstacle << endl;
   return distanceToObstacle * (-1);
 }
 
@@ -2610,12 +2714,12 @@ void Tier3ThigmotaxisRotation::set_commenting(){
 }
 
 double Tier3ThigmotaxisRotation::actionComment(FORRAction action){
-  cout << "Inside ThigmotaxisRotation" << endl;
+  //cout << "Inside ThigmotaxisRotation" << endl;
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   Position nearestObstacle = beliefs->getAgentState()->getNearestObstacle(curr_pos);
   double distanceToObstacle = expectedPosition.getDistance(nearestObstacle);
-  cout << "distanceToObstacle = " << distanceToObstacle << endl;
+  //cout << "distanceToObstacle = " << distanceToObstacle << endl;
   return distanceToObstacle * (-1);
 }
 
@@ -2644,14 +2748,25 @@ double Tier3VisualScanRotation::actionComment(FORRAction action){
     totalY += sin(nearby_points[i].getTheta());
   }
   cout << "totalX = " << totalX << " totalY = " << totalY << endl;
-  double desiredangle = atan2(totalY,totalX);
+  double totalVectorAngle = atan2(totalY,totalX);
+  cout << "totalVectorAngle = " << totalVectorAngle << endl;
+  double desiredangle = 0;
+  if(totalVectorAngle>0){
+    desiredangle = -(M_PI-totalVectorAngle);
+  }
+  else if(totalVectorAngle<0){
+    desiredangle = M_PI+totalVectorAngle;
+  }
+  else if(totalVectorAngle==0){
+    desiredangle = M_PI;
+  }
   double angleDiff = min(abs(desiredangle - expectedPosition.getTheta()),(2*M_PI) - abs(desiredangle - expectedPosition.getTheta()));
   cout << "desiredangle = " << desiredangle << " angleDiff = " << angleDiff << endl;
   return angleDiff * (-1);
 }
 
 void Tier3LeastAngle::set_commenting(){
-  cout << "In least angle set commenting " << endl;
+  //cout << "In least angle set commenting " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
@@ -2682,7 +2797,7 @@ void Tier3LeastAngle::set_commenting(){
 }
 
 double Tier3LeastAngle::actionComment(FORRAction action){
-  cout << "Inside LeastAngle" << endl;
+  //cout << "Inside LeastAngle" << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   int robotRegion=-1, desiredRegion=-1;
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -2696,7 +2811,7 @@ double Tier3LeastAngle::actionComment(FORRAction action){
       robotRegion = i;
     }
   }
-  cout << "robotRegion = " << robotRegion << endl;
+  //cout << "robotRegion = " << robotRegion << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   vector<FORRExit> exits = regions[robotRegion].getExits();
 
@@ -2708,25 +2823,25 @@ double Tier3LeastAngle::actionComment(FORRAction action){
       nearRegions.push_back(test);
     }
   }
-  cout << "nearRegions.size() = " << nearRegions.size() << endl;
+  //cout << "nearRegions.size() = " << nearRegions.size() << endl;
   double target_direction = atan2((curr_pos.getY() - targetPoint.get_y()), (curr_pos.getX() - targetPoint.get_x()));
-  cout << "target_direction = " << target_direction << endl;
+  //cout << "target_direction = " << target_direction << endl;
   double minAngleDiff = 20, metric = 0;
   for(int i = 0; i < nearRegions.size(); i++){
     double region_direction = atan2((curr_pos.getY() - nearRegions[i].getCenter().get_y()), (curr_pos.getX() - nearRegions[i].getCenter().get_x()));
     double angleDiff = min(abs(target_direction - region_direction),(2*M_PI) - abs(target_direction - region_direction));
-    cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
+    //cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
     if(angleDiff < minAngleDiff){
       minAngleDiff = angleDiff;
       metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y());
-      cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
+      //cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
     }
   }
   return metric * (-1);
 }
 
 void Tier3LeastAngleRotation::set_commenting(){
-  cout << "In least angle set commenting " << endl;
+  //cout << "In least angle set commenting " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
@@ -2757,7 +2872,7 @@ void Tier3LeastAngleRotation::set_commenting(){
 }
 
 double Tier3LeastAngleRotation::actionComment(FORRAction action){
-  cout << "Inside LeastAngleRotation" << endl;
+  //cout << "Inside LeastAngleRotation" << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   int robotRegion=-1, desiredRegion=-1;
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -2771,7 +2886,7 @@ double Tier3LeastAngleRotation::actionComment(FORRAction action){
       robotRegion = i;
     }
   }
-  cout << "robotRegion = " << robotRegion << endl;
+  //cout << "robotRegion = " << robotRegion << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   vector<FORRExit> exits = regions[robotRegion].getExits();
 
@@ -2783,19 +2898,329 @@ double Tier3LeastAngleRotation::actionComment(FORRAction action){
       nearRegions.push_back(test);
     }
   }
-  cout << "nearRegions.size() = " << nearRegions.size() << endl;
+  //cout << "nearRegions.size() = " << nearRegions.size() << endl;
   double target_direction = atan2((curr_pos.getY() - targetPoint.get_y()), (curr_pos.getX() - targetPoint.get_x()));
-  cout << "target_direction = " << target_direction << endl;
+  //cout << "target_direction = " << target_direction << endl;
   double minAngleDiff = 20, metric = 0;
   for(int i = 0; i < nearRegions.size(); i++){
     double region_direction = atan2((curr_pos.getY() - nearRegions[i].getCenter().get_y()), (curr_pos.getX() - nearRegions[i].getCenter().get_x()));
     double angleDiff = min(abs(target_direction - region_direction),(2*M_PI) - abs(target_direction - region_direction));
-    cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
+    //cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
     if(angleDiff < minAngleDiff){
       minAngleDiff = angleDiff;
       metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y());
-      cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
+      //cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
     }
   }
   return metric * (-1);
+}
+
+void Tier3Interpersonal::set_commenting(){
+  cout << "In Interpersonal set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Interpersonal::actionComment(FORRAction action){
+  cout << "Inside Interpersonal" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double distanceToPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    cout << "distance to pedestrian = " << distanceToPedestrian << endl;
+    if(distanceToPedestrian<=3.6){
+      metric += -log(-distanceToPedestrian+4.22)+0.44;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+void Tier3InterpersonalRotation::set_commenting(){
+  cout << "In InterpersonalRotation set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3InterpersonalRotation::actionComment(FORRAction action){
+  cout << "Inside InterpersonalRotation" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double distanceToPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    cout << "distance to pedestrian = " << distanceToPedestrian << endl;
+    if(distanceToPedestrian<=3.6){
+      metric += -log(-distanceToPedestrian+4.22)+0.44;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+/*void Tier3Formation::set_commenting(){
+  cout << "In Interpersonal set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Formation::actionComment(FORRAction action){
+  cout << "Inside Interpersonal" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double distanceToPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    cout << "distance to pedestrian = " << distanceToPedestrian << endl;
+    if(distanceToPedestrian<=3.6){
+      metric += -log(-distanceToPedestrian+4.22)+0.44;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+void Tier3FormationRotation::set_commenting(){
+  cout << "In InterpersonalRotation set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FormationRotation::actionComment(FORRAction action){
+  cout << "Inside InterpersonalRotation" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double distanceToPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    cout << "distance to pedestrian = " << distanceToPedestrian << endl;
+    if(distanceToPedestrian<=3.6){
+      metric += -log(-distanceToPedestrian+4.22)+0.44;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}*/
+
+void Tier3Front::set_commenting(){
+  cout << "In Front set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Front::actionComment(FORRAction action){
+  cout << "Inside Front" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  double facingAngle = 0;
+  if(currentPosition.getTheta()>0){
+    facingAngle = -(M_PI-currentPosition.getTheta());
+  }
+  else if(currentPosition.getTheta()<0){
+    facingAngle = M_PI+currentPosition.getTheta();
+  }
+  else if(currentPosition.getTheta()==0){
+    facingAngle = M_PI;
+  }
+  cout << "current Theta = " << currentPosition.getTheta() << " facingAngle = " << facingAngle << endl;
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double pedestrianTheta = crowdPositions[i].getTheta();
+    double angleDiff = min(abs(pedestrianTheta - facingAngle),(2*M_PI) - abs(pedestrianTheta - facingAngle));
+    cout << "pedestrianTheta = " << pedestrianTheta << " angleDiff = " << angleDiff << endl;
+    double currentDistPedestrian = currentPosition.getDistance(crowdPositions[i]);
+    double expectedDistPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    double changeDist = expectedDistPedestrian - currentDistPedestrian;
+    cout << "currentDistPedestrian = " << currentDistPedestrian << " expectedDistPedestrian = " << expectedDistPedestrian << " changeDist = " << changeDist << endl;
+    if(angleDiff<=M_PI/6 and changeDist < 0){
+      metric += changeDist;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+void Tier3FrontRotation::set_commenting(){
+  cout << "In FrontRotation set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FrontRotation::actionComment(FORRAction action){
+  cout << "Inside FrontRotation" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  double facingAngle = 0;
+  if(currentPosition.getTheta()>0){
+    facingAngle = -(M_PI-currentPosition.getTheta());
+  }
+  else if(currentPosition.getTheta()<0){
+    facingAngle = M_PI+currentPosition.getTheta();
+  }
+  else if(currentPosition.getTheta()==0){
+    facingAngle = M_PI;
+  }
+  cout << "current Theta = " << currentPosition.getTheta() << " facingAngle = " << facingAngle << endl;
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double pedestrianTheta = crowdPositions[i].getTheta();
+    double angleDiff = min(abs(pedestrianTheta - facingAngle),(2*M_PI) - abs(pedestrianTheta - facingAngle));
+    cout << "pedestrianTheta = " << pedestrianTheta << " angleDiff = " << angleDiff << endl;
+    double currentDistPedestrian = currentPosition.getDistance(crowdPositions[i]);
+    double expectedDistPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    double changeDist = expectedDistPedestrian - currentDistPedestrian;
+    cout << "currentDistPedestrian = " << currentDistPedestrian << " expectedDistPedestrian = " << expectedDistPedestrian << " changeDist = " << changeDist << endl;
+    if(angleDiff<=M_PI/6 and changeDist < 0){
+      metric += changeDist;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+void Tier3Rear::set_commenting(){
+  cout << "In Rear set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Rear::actionComment(FORRAction action){
+  cout << "Inside Rear" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  double facingAngle = currentPosition.getTheta();
+  cout << "facingAngle = " << facingAngle << endl;
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double pedestrianTheta = crowdPositions[i].getTheta();
+    double angleDiff = min(abs(pedestrianTheta - facingAngle),(2*M_PI) - abs(pedestrianTheta - facingAngle));
+    cout << "pedestrianTheta = " << pedestrianTheta << " angleDiff = " << angleDiff << endl;
+    double currentDistPedestrian = currentPosition.getDistance(crowdPositions[i]);
+    double expectedDistPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    double changeDist = expectedDistPedestrian - currentDistPedestrian;
+    cout << "currentDistPedestrian = " << currentDistPedestrian << " expectedDistPedestrian = " << expectedDistPedestrian << " changeDist = " << changeDist << endl;
+    if(angleDiff<=M_PI/6 and changeDist < 0){
+      metric += changeDist;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+void Tier3RearRotation::set_commenting(){
+  cout << "In RearRotation set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3RearRotation::actionComment(FORRAction action){
+  cout << "Inside RearRotation" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  double facingAngle = currentPosition.getTheta();
+  cout << "facingAngle = " << facingAngle << endl;
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double pedestrianTheta = crowdPositions[i].getTheta();
+    double angleDiff = min(abs(pedestrianTheta - facingAngle),(2*M_PI) - abs(pedestrianTheta - facingAngle));
+    cout << "pedestrianTheta = " << pedestrianTheta << " angleDiff = " << angleDiff << endl;
+    double currentDistPedestrian = currentPosition.getDistance(crowdPositions[i]);
+    double expectedDistPedestrian = expectedPosition.getDistance(crowdPositions[i]);
+    double changeDist = expectedDistPedestrian - currentDistPedestrian;
+    cout << "currentDistPedestrian = " << currentDistPedestrian << " expectedDistPedestrian = " << expectedDistPedestrian << " changeDist = " << changeDist << endl;
+    if(angleDiff<=M_PI/6 and changeDist < 0){
+      metric += changeDist;
+      cout << "metric = " << metric << endl;
+    }
+  }
+  return metric;
+}
+
+void Tier3Side::set_commenting(){
+  cout << "In Side set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Side::actionComment(FORRAction action){
+  cout << "Inside Side" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  cout << "current Theta = " << currentPosition.getTheta() << endl;
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double pedestrianTheta = crowdPositions[i].getTheta();
+    double angleDiff = min(abs(pedestrianTheta - currentPosition.getTheta()),(2*M_PI) - abs(pedestrianTheta - currentPosition.getTheta()));
+    cout << "pedestrianTheta = " << pedestrianTheta << " angleDiff = " << angleDiff << endl;
+    if(angleDiff <= 5*M_PI/8 and angleDiff >= 3*M_PI/8){
+      LineSegment robotLineSegment(CartesianPoint(currentPosition.getX(),currentPosition.getY()),CartesianPoint(currentPosition.getX()+5*cos(currentPosition.getTheta()),currentPosition.getY()+5*sin(currentPosition.getTheta())));
+      LineSegment pedestrianLineSegment(CartesianPoint(crowdPositions[i].getX(),crowdPositions[i].getY()),CartesianPoint(crowdPositions[i].getX()+5*cos(pedestrianTheta),crowdPositions[i].getY()+5*sin(pedestrianTheta)));
+      CartesianPoint intersectionPoint;
+      if(do_intersect(robotLineSegment, pedestrianLineSegment, intersectionPoint)){
+        double distPedestrian = crowdPositions[i].getDistance(intersectionPoint.get_x(), intersectionPoint.get_y());
+        double expectedDistRobot = expectedPosition.getDistance(intersectionPoint.get_x(), intersectionPoint.get_y());
+        metric += (-1) * min(distPedestrian,expectedDistRobot)/max(distPedestrian,expectedDistRobot);
+        cout << "distPedestrian = " << distPedestrian << " expectedDistRobot = " << expectedDistRobot << " metric = " << metric << endl;
+      }
+    }
+  }
+  return metric;
+}
+
+void Tier3SideRotation::set_commenting(){
+  cout << "In SideRotation set commenting " << endl;
+  if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3SideRotation::actionComment(FORRAction action){
+  cout << "Inside SideRotation" << endl;
+  vector <Position> crowdPositions = beliefs->getAgentState()->getCrowdPositions(beliefs->getAgentState()->getCrowdPose());
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  cout << "current Theta = " << currentPosition.getTheta() << endl;
+  double metric = 0;
+  for(int i = 0; i < crowdPositions.size(); i++){
+    double pedestrianTheta = crowdPositions[i].getTheta();
+    double angleDiff = min(abs(pedestrianTheta - currentPosition.getTheta()),(2*M_PI) - abs(pedestrianTheta - currentPosition.getTheta()));
+    cout << "pedestrianTheta = " << pedestrianTheta << " angleDiff = " << angleDiff << endl;
+    if(angleDiff <= 5*M_PI/8 and angleDiff >= 3*M_PI/8){
+      LineSegment robotLineSegment(CartesianPoint(currentPosition.getX(),currentPosition.getY()),CartesianPoint(currentPosition.getX()+5*cos(currentPosition.getTheta()),currentPosition.getY()+5*sin(currentPosition.getTheta())));
+      LineSegment pedestrianLineSegment(CartesianPoint(crowdPositions[i].getX(),crowdPositions[i].getY()),CartesianPoint(crowdPositions[i].getX()+5*cos(pedestrianTheta),crowdPositions[i].getY()+5*sin(pedestrianTheta)));
+      CartesianPoint intersectionPoint;
+      if(do_intersect(robotLineSegment, pedestrianLineSegment, intersectionPoint)){
+        double distPedestrian = crowdPositions[i].getDistance(intersectionPoint.get_x(), intersectionPoint.get_y());
+        double expectedDistRobot = expectedPosition.getDistance(intersectionPoint.get_x(), intersectionPoint.get_y());
+        metric += (-1) * min(distPedestrian,expectedDistRobot)/max(distPedestrian,expectedDistRobot);
+        cout << "distPedestrian = " << distPedestrian << " expectedDistRobot = " << expectedDistRobot << " metric = " << metric << endl;
+      }
+    }
+  }
+  return metric;
 }
