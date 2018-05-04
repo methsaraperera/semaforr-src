@@ -949,7 +949,7 @@ class Tier3SideRotation : public Tier3Advisor{
 
 };
 
-/*class Tier3Visible : public Tier3Advisor{
+class Tier3Visible : public Tier3Advisor{
  public: 
   Tier3Visible(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
   Tier3Visible();
@@ -995,7 +995,7 @@ class Tier3WaitRotation : public Tier3Advisor{
 
 };
 
-class Tier3CrowdAvoid : public Tier3Advisor{
+/*class Tier3CrowdAvoid : public Tier3Advisor{
  public: 
   Tier3CrowdAvoid(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
   Tier3CrowdAvoid();
