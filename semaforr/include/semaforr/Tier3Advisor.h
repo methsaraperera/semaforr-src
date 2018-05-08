@@ -972,7 +972,7 @@ class Tier3VisibleRotation : public Tier3Advisor{
 
 };
 
-class Tier3Wait : public Tier3Advisor{
+/*class Tier3Wait : public Tier3Advisor{
  public: 
   Tier3Wait(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
   Tier3Wait();
@@ -993,9 +993,9 @@ class Tier3WaitRotation : public Tier3Advisor{
   virtual double actionComment(FORRAction action);
   virtual void set_commenting();
 
-};
+};*/
 
-/*class Tier3CrowdAvoid : public Tier3Advisor{
+class Tier3CrowdAvoid : public Tier3Advisor{
  public: 
   Tier3CrowdAvoid(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
   Tier3CrowdAvoid();
@@ -1018,7 +1018,7 @@ class Tier3CrowdAvoidRotation : public Tier3Advisor{
 
 };
 
-class Tier3FindTheCrowd : public Tier3Advisor{
+/*class Tier3FindTheCrowd : public Tier3Advisor{
  public: 
   Tier3FindTheCrowd(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
   Tier3FindTheCrowd();

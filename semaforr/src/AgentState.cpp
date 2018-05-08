@@ -483,3 +483,23 @@ vector <Position> AgentState::getCrowdPositions(geometry_msgs::PoseArray crowdpo
   }
   return crowdPositions;
 }
+
+bool AgentState::crowdModelLearned(){
+  std::vector<double> densities = crowdModel.densities;
+  for(int i = 0; i < densities.size() ; i++){
+    if(densities[i]>0){
+      return true;
+    }
+  }
+  return false;
+}
+
+double AgentState::getGridValue(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  std::vector<double> densities = crowdModel.densities;
+  double gridValue = densities[(floor(y/resolution)*width)+floor(x/resolution)];
+  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " gridValue = " << gridValue << endl;
+  return gridValue;
+}

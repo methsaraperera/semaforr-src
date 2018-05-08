@@ -346,7 +346,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
       firstTaskAssigned = true;
   }
   bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
@@ -362,7 +362,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
   } 
   // else if subtask is complete
@@ -371,10 +371,10 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
     //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
     if (beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() > 0) {
-      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
     else {
-      beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
+      //beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
     }
     
   } 
@@ -386,7 +386,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
   }
 }
@@ -651,7 +651,6 @@ void Controller::tierThreeAdvisorInfluence(){
   // vector of all the actions that got max comment strength in iteration
   vector<FORRAction> best_decisions;
   
-  std::stringstream advisorsInfluence;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     Tier3Advisor *advisor = *it; 
 
@@ -684,7 +683,7 @@ void Controller::tierThreeAdvisorInfluence(){
   // Loop through map advisor created and find command with the highest vote
   double maxAdviceStrength = -1000;
   for(mapIt iterator = allComments.begin(); iterator != allComments.end(); iterator++){
-    //cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << endl;
+    cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << endl;
     if(iterator->second > maxAdviceStrength){
       maxAdviceStrength = iterator->second;
     }
@@ -696,6 +695,7 @@ void Controller::tierThreeAdvisorInfluence(){
       best_decisions.push_back(iterator->first);
   }
   
+  /*std::stringstream advisorsInfluence;
   std::map<FORRAction, double> takeOneOutComments;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     takeOneOutComments = allComments;
@@ -751,5 +751,6 @@ void Controller::tierThreeAdvisorInfluence(){
     }
   }
   decisionStats->advisorInfluence = advisorsInfluence.str();
-  cout << "advisorInfluence = " << decisionStats->advisorInfluence << endl;
+  cout << "advisorInfluence = " << decisionStats->advisorInfluence << endl;*/
+  decisionStats->advisorInfluence = "";
 }

@@ -216,6 +216,15 @@ public:
 	allCrowd = crowdposeall;
   }
 
+  void setCrowdModel(semaforr::CrowdModel c){ 
+    crowdModel = c;
+  }
+  semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
+
+  bool crowdModelLearned();
+  double getGridValue(double x, double y);
+
+
  private:
 
   // Stores the move and rotate action values
@@ -282,6 +291,9 @@ public:
 
   // All crowd positions
   geometry_msgs::PoseArray allCrowd;
+
+  // Current crowd model
+  semaforr::CrowdModel crowdModel;
 
   //Rotate mode tells if the t3 should rotate or move
   bool rotateMode;

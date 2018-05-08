@@ -100,6 +100,7 @@ public:
 		cout << crowd_model.height << " " << crowd_model.width << endl;
 		//update the crowd model of the belief
 		controller->getPlanner()->setCrowdModel(crowd_model);
+		controller->getBeliefs()->getAgentState()->setCrowdModel(crowd_model);
 	}
 
 	// Callback function for pose message
