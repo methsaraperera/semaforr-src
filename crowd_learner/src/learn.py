@@ -125,9 +125,30 @@ class CountCrowdModel:
 	    # time in seconds since the begin of program, used as a feature in the GP
 	    self.time = (self.message_time - self.init_time).to_sec()
 	    self.crowd_pose_to_density_grid(data.poses)
+	    self.crowd_risk_estimation(data.poses)
 	    # save the current time as previous time
 	    self.prev_message_time = self.message_time
 	    self.predict()
+
+    # estimates the number of risky action < 0.5 in a given grid cell
+    def crowd_risk_estimation(self, poses):
+	rx = self.robot_pose[0]
+	ry = self.robot_pose[1]
+	count = 0
+	cell_width = self.width/self.division
+	cell_height = self.height/self.division
+	for i in poses:
+	    quaternion = (i.orientation.x, i.orientation.y, i.orientation.z, i.orientation.w)
+	    euler = tf.transformations.euler_from_quaternion(quaternion)
+	    theta = euler[2]
+	    x = i.position.x
+	    y = i.position.y
+	    if self.distance(x,y,rx,ry) < 1:
+	        count += 1
+	rx_index = int(floor(rx / cell_width))
+	ry_index = int(floor(ry / cell_height))
+	self.crowd_experiences[rx_index][ry_index] += 1
+	self.crowd_risk_count[rx_index][ry_index] += count
 
     # update the visiblity of grid map based on laser data from the robot
     def update_visibility(self):
@@ -266,6 +287,7 @@ class CountCrowdModel:
 	# if risk is tracked
 	if self.risk == "on":
 	    crowd_count_model = [[((self.crowd_risk_count[x][y]+crowd_count_model[y][x])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
+	    risk_count_model = [[((self.crowd_risk_count[x][y])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
 	# if flow is tracked
 	if self.flow == "on":
 	    u_model = [[(self.crowd_u[x][y]/float(self.crowd_observations[x][y])) for x in range(self.division)] for y in range(self.division)]
@@ -292,7 +314,7 @@ class CountCrowdModel:
 	        crowd_count_model = [[self.sample(self.crowd_risk_count[x][y]+crowd_count_model[y][x],float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
 
 	self.publish_visibility_grid()
-	self.publish_crowd_model(crowd_count_model, u_model, d_model, r_model, l_model, ul_model, ur_model, dl_model, dr_model)
+	self.publish_crowd_model(crowd_count_model, risk_count_model, u_model, d_model, r_model, l_model, ul_model, ur_model, dl_model, dr_model)
 	pi = 3.1416
 	self.publish_crowd_flow(u_model, pi/2, self.pub_crowd_u)
 	self.publish_crowd_flow(d_model, -pi/2, self.pub_crowd_d)
@@ -357,7 +379,7 @@ class CountCrowdModel:
 	    return 0
 
 
-    def publish_crowd_model(self, density, u, d, l, r, ul, ur, dl, dr):
+    def publish_crowd_model(self, density, risk, u, d, l, r, ul, ur, dl, dr):
 	crowd_model = CrowdModel()
 	crowd_model.header.stamp = rospy.Time.now()
 	crowd_model.header.frame_id = "map"
@@ -369,6 +391,9 @@ class CountCrowdModel:
 	#density_list = self.normalize_float(density_list, 0, 1)
 	#print density_list
 	crowd_model.densities = density_list
+
+	risk_list = [risk[x][y] for x in range(self.division) for y in range(self.division)]
+	crowd_model.risk = risk_list
 
 	u_list = [u[x][y] for x in range(self.division) for y in range(self.division)]
 	u_list = self.normalize_float(u_list, 0, 1)
@@ -402,6 +427,14 @@ class CountCrowdModel:
 	ur_list = self.normalize_float(ur_list, 0, 1)
 	crowd_model.up_right = ur_list
 
+	#crowd_model.crowd_count = self.crowd_count
+	#crowd_model.crowd_observations = self.crowd_observations
+	#crowd_model.risk_count = self.crowd_risk_count
+	#crowd_model.risk_experiences = self.crowd_experiences
+	#int64[] crowd_count
+	#int64[] crowd_observations
+	#int64[] risk_count
+	#int64[] risk_experiences
 	self.pub_crowd_model.publish(crowd_model)
 
     # send message for rviz display unsampled data

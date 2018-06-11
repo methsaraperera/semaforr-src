@@ -200,7 +200,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	// weights that balance distance, crowd density and crowd flow
 	int w1 = 1;
 	int w2 = 50;
-	int w3 = 200;
+	int w3 = 100;
 
 	double flowcost = computeCrowdFlow(s,d);
 	if(direction == false){

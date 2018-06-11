@@ -4,6 +4,7 @@ int64 height
 int64 width
 int64 resolution
 float64[] densities
+float64[] risk
 float64[] up
 float64[] down
 float64[] left

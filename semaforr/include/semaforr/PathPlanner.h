@@ -77,8 +77,6 @@ public:
   }
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
-  bool crowdModelLearned();
-
   void setOriginalNavGraph(Graph * navGraph){ 
     originalNavGraph = navGraph;
   }

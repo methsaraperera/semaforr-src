@@ -20,8 +20,8 @@ def experiment():
     map_dimensions = map_folder+"/dimensions.conf"
     target_set = map_folder+"/" + target_file_name
     density = "on"
-    flow = "off"
-    risk = "off"
+    flow = "on"
+    risk = "on"
     cusum = "off"
     discount = "off"
     explore = "off"
