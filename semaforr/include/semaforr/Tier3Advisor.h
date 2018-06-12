@@ -1018,7 +1018,7 @@ class Tier3CrowdAvoidRotation : public Tier3Advisor{
 
 };
 
-/*class Tier3FindTheCrowd : public Tier3Advisor{
+class Tier3FindTheCrowd : public Tier3Advisor{
  public: 
   Tier3FindTheCrowd(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
   Tier3FindTheCrowd();
@@ -1131,7 +1131,7 @@ class Tier3FindTheFlowRotation : public Tier3Advisor{
   virtual double actionComment(FORRAction action);
   virtual void set_commenting();
 
-};*/
+};
 #endif
 
 

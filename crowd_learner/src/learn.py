@@ -286,7 +286,7 @@ class CountCrowdModel:
 	    crowd_count_model = [[0 for x in range(self.division)] for y in range(self.division)]
 	# if risk is tracked
 	if self.risk == "on":
-	    crowd_count_model = [[((self.crowd_risk_count[x][y]+crowd_count_model[y][x])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
+	    #crowd_count_model = [[((self.crowd_risk_count[x][y]+crowd_count_model[y][x])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
 	    risk_count_model = [[((self.crowd_risk_count[x][y])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
 	# if flow is tracked
 	if self.flow == "on":
@@ -427,14 +427,21 @@ class CountCrowdModel:
 	ur_list = self.normalize_float(ur_list, 0, 1)
 	crowd_model.up_right = ur_list
 
-	#crowd_model.crowd_count = self.crowd_count
-	#crowd_model.crowd_observations = self.crowd_observations
-	#crowd_model.risk_count = self.crowd_risk_count
-	#crowd_model.risk_experiences = self.crowd_experiences
-	#int64[] crowd_count
-	#int64[] crowd_observations
-	#int64[] risk_count
-	#int64[] risk_experiences
+	risk_list = [risk[x][y] for x in range(self.division) for y in range(self.division)]
+	crowd_model.risk = risk_list
+
+	crowd_count_list = [float(self.crowd_count[x][y]) for x in range(self.division) for y in range(self.division)]
+	crowd_model.crowd_count = crowd_count_list
+
+	crowd_observations_list = [float(self.crowd_observations[x][y]) for x in range(self.division) for y in range(self.division)]
+	crowd_model.crowd_observations = crowd_observations_list
+
+	risk_count_list = [float(self.crowd_risk_count[x][y]) for x in range(self.division) for y in range(self.division)]
+	crowd_model.risk_count = risk_count_list
+
+	risk_experiences_list = [float(self.crowd_experiences[x][y]) for x in range(self.division) for y in range(self.division)]
+	crowd_model.risk_experiences = risk_experiences_list
+
 	self.pub_crowd_model.publish(crowd_model)
 
     # send message for rviz display unsampled data

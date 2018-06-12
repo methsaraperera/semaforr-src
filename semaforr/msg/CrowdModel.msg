@@ -13,3 +13,7 @@ float64[] up_left
 float64[] up_right
 float64[] down_left
 float64[] down_right
+float64[] crowd_count
+float64[] crowd_observations
+float64[] risk_count
+float64[] risk_experiences

@@ -320,7 +320,7 @@ Tier3Advisor* Tier3Advisor::makeAdvisor(Beliefs *beliefs, string name, string de
     return new Tier3CrowdAvoid(beliefs, name, description, weight, magic_init, is_active);
   else if(name == "CrowdAvoidRotation")
     return new Tier3CrowdAvoidRotation(beliefs, name, description, weight, magic_init, is_active);
-  /*else if(name == "FindTheCrowd")
+  else if(name == "FindTheCrowd")
     return new Tier3FindTheCrowd(beliefs, name, description, weight, magic_init, is_active);
   else if(name == "FindTheCrowdRotation")
     return new Tier3FindTheCrowdRotation(beliefs, name, description, weight, magic_init, is_active);
@@ -339,7 +339,7 @@ Tier3Advisor* Tier3Advisor::makeAdvisor(Beliefs *beliefs, string name, string de
   else if(name == "FindTheFlow")
     return new Tier3FindTheFlow(beliefs, name, description, weight, magic_init, is_active);
   else if(name == "FindTheFlowRotation")
-    return new Tier3FindTheFlowRotation(beliefs, name, description, weight, magic_init, is_active);*/
+    return new Tier3FindTheFlowRotation(beliefs, name, description, weight, magic_init, is_active);
   else 
     std::cout << "No such advisor " << std::endl;
 }
@@ -418,7 +418,7 @@ Tier3VisibleRotation::Tier3VisibleRotation (Beliefs *beliefs, string name, strin
 //Tier3WaitRotation::Tier3WaitRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
 Tier3CrowdAvoid::Tier3CrowdAvoid (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3CrowdAvoidRotation::Tier3CrowdAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
-/*Tier3FindTheCrowd::Tier3FindTheCrowd (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FindTheCrowd::Tier3FindTheCrowd (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3FindTheCrowdRotation::Tier3FindTheCrowdRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
 Tier3RiskAvoid::Tier3RiskAvoid (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3RiskAvoidRotation::Tier3RiskAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
@@ -428,7 +428,7 @@ Tier3FlowAvoid::Tier3FlowAvoid (Beliefs *beliefs, string name, string descriptio
 Tier3FlowAvoidRotation::Tier3FlowAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
 Tier3FindTheFlow::Tier3FindTheFlow (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3FindTheFlowRotation::Tier3FindTheFlowRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
-*/
+
  
 
 
@@ -506,7 +506,7 @@ Tier3VisibleRotation::Tier3VisibleRotation(): Tier3Advisor() {};
 //Tier3WaitRotation::Tier3WaitRotation(): Tier3Advisor() {};
 Tier3CrowdAvoid::Tier3CrowdAvoid(): Tier3Advisor() {};
 Tier3CrowdAvoidRotation::Tier3CrowdAvoidRotation(): Tier3Advisor() {};
-/*Tier3FindTheCrowd::Tier3FindTheCrowd(): Tier3Advisor() {};
+Tier3FindTheCrowd::Tier3FindTheCrowd(): Tier3Advisor() {};
 Tier3FindTheCrowdRotation::Tier3FindTheCrowdRotation(): Tier3Advisor() {};
 Tier3RiskAvoid::Tier3RiskAvoid(): Tier3Advisor() {};
 Tier3RiskAvoidRotation::Tier3RiskAvoidRotation(): Tier3Advisor() {};
@@ -515,7 +515,7 @@ Tier3FindTheRiskRotation::Tier3FindTheRiskRotation(): Tier3Advisor() {};
 Tier3FlowAvoid::Tier3FlowAvoid(): Tier3Advisor() {};
 Tier3FlowAvoidRotation::Tier3FlowAvoidRotation(): Tier3Advisor() {};
 Tier3FindTheFlow::Tier3FindTheFlow(): Tier3Advisor() {};
-Tier3FindTheFlowRotation::Tier3FindTheFlowRotation(): Tier3Advisor() {};*/
+Tier3FindTheFlowRotation::Tier3FindTheFlowRotation(): Tier3Advisor() {};
 
 
 // vote to go through an extrance to a region containing the target
@@ -3440,4 +3440,154 @@ double Tier3CrowdAvoidRotation::actionComment(FORRAction action){
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double grid_value = beliefs->getAgentState()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * grid_value;
+}
+
+void Tier3RiskAvoid::set_commenting(){
+  cout << "In RiskAvoid set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3RiskAvoid::actionComment(FORRAction action){
+  cout << "Inside RiskAvoid" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double risk_value = beliefs->getAgentState()->getRiskValue(expectedPosition.getX(), expectedPosition.getY());
+  return (-1) * risk_value;
+}
+
+void Tier3RiskAvoidRotation::set_commenting(){
+  cout << "In RiskAvoidRotation set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3RiskAvoidRotation::actionComment(FORRAction action){
+  cout << "Inside RiskAvoidRotation" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double risk_value = beliefs->getAgentState()->getRiskValue(expectedPosition.getX(), expectedPosition.getY());
+  return (-1) * risk_value;
+}
+
+void Tier3FlowAvoid::set_commenting(){
+  cout << "In FlowAvoid set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FlowAvoid::actionComment(FORRAction action){
+  cout << "Inside FlowAvoid" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double flow_value = beliefs->getAgentState()->getFlowValue(expectedPosition.getX(), expectedPosition.getY(), expectedPosition.getTheta());
+  return flow_value;
+}
+
+void Tier3FlowAvoidRotation::set_commenting(){
+  cout << "In FlowAvoidRotation set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FlowAvoidRotation::actionComment(FORRAction action){
+  cout << "Inside FlowAvoidRotation" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double flow_value = beliefs->getAgentState()->getFlowValue(expectedPosition.getX(), expectedPosition.getY(), expectedPosition.getTheta());
+  return flow_value;
+}
+
+void Tier3FindTheCrowd::set_commenting(){
+  cout << "In FindTheCrowd set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FindTheCrowd::actionComment(FORRAction action){
+  cout << "Inside FindTheCrowd" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double grid_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
+  return (-1) * grid_value;
+}
+
+void Tier3FindTheCrowdRotation::set_commenting(){
+  cout << "In FindTheCrowdRotation set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FindTheCrowdRotation::actionComment(FORRAction action){
+  cout << "Inside FindTheCrowdRotation" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double grid_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
+  return (-1) * grid_value;
+}
+
+void Tier3FindTheRisk::set_commenting(){
+  cout << "In FindTheRisk set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FindTheRisk::actionComment(FORRAction action){
+  cout << "Inside FindTheRisk" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double risk_value = beliefs->getAgentState()->getRiskExperience(expectedPosition.getX(), expectedPosition.getY());
+  return (-1) * risk_value;
+}
+
+void Tier3FindTheRiskRotation::set_commenting(){
+  cout << "In FindTheRiskRotation set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FindTheRiskRotation::actionComment(FORRAction action){
+  cout << "Inside FindTheRiskRotation" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double risk_value = beliefs->getAgentState()->getRiskExperience(expectedPosition.getX(), expectedPosition.getY());
+  return (-1) * risk_value;
+}
+
+void Tier3FindTheFlow::set_commenting(){
+  cout << "In FindTheFlow set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FindTheFlow::actionComment(FORRAction action){
+  cout << "Inside FindTheFlow" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double flow_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
+  return flow_value;
+}
+
+void Tier3FindTheFlowRotation::set_commenting(){
+  cout << "In FindTheFlowRotation set commenting " << endl;
+  if(beliefs->getAgentState()->crowdModelLearned())
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FindTheFlowRotation::actionComment(FORRAction action){
+  cout << "Inside FindTheFlowRotation" << endl;
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  double flow_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
+  return flow_value;
 }

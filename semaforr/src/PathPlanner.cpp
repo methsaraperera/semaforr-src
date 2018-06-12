@@ -197,21 +197,31 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	int b = 30;
 	double s_cost = cellCost(s.getX(), s.getY(), b);
 	double d_cost = cellCost(d.getX(), d.getY(), b);
+
+  double s_risk_cost = riskCost(s.getX(), s.getY(), b);
+  double d_risk_cost = riskCost(d.getX(), d.getY(), b);
 	// weights that balance distance, crowd density and crowd flow
 	int w1 = 1;
-	int w2 = 50;
-	int w3 = 100;
+	int w2 = 25;
+	int w3 = 25;
+  int w4 = 25;
 
 	double flowcost = computeCrowdFlow(s,d);
 	if(direction == false){
 		flowcost = flowcost * (-1);
 	}
+  //double newEdgeCost = (oldcost * flowcost);
+  double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+
 	//cout << "Flow cost --------- " << endl;
-	//cout << "Flow cost    :" << flowcost << endl;
-	//cout << "Node penalty : " << d_density << " * " << s_density << endl;
-	//double newEdgeCost = (oldcost * flowcost);
-	double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost);
-	//cout << "Old cost : " << oldcost << " new cost : " << newEdgeCost << std::endl;
+  /*if (s_cost > 0 or d_cost > 0 or flowcost > 0 or s_risk_cost > 0 or d_risk_cost > 0){
+    cout << "Dist cost    :" << oldcost << endl;
+  	cout << "Node penalty : " << s_cost << " + " << d_cost << endl;
+    cout << "Flow cost    :" << flowcost << endl;
+    cout << "Risk penalty : " << s_risk_cost << " + " << d_risk_cost << endl;
+  	//cout << "Old cost : " << oldcost << " new cost : " << newEdgeCost << std::endl;
+    cout << "New cost    :" << newEdgeCost << endl;
+  }*/
 	return newEdgeCost;
 }
 
@@ -238,6 +248,28 @@ double PathPlanner::cellCost(int nodex, int nodey, int buffer){
 	//return d;
 }
 
+
+double PathPlanner::riskCost(int nodex, int nodey, int buffer){
+  int x = (int)((nodex/100.0)/crowdModel.resolution);
+  int x1 = (int)(((nodex+buffer)/100.0)/crowdModel.resolution);
+  int x2 = (int)(((nodex-buffer)/100.0)/crowdModel.resolution);
+  int y = (int)((nodey/100.0)/crowdModel.resolution);
+  int y1 = (int)(((nodey+buffer)/100.0)/crowdModel.resolution);
+  int y2 = (int)(((nodey-buffer)/100.0)/crowdModel.resolution);
+
+  //std::cout << "x " << x << " y " << y;
+  double d = crowdModel.risk[(y * crowdModel.width) + x];
+  double d1 = crowdModel.risk[(y1 * crowdModel.width) + x];
+  double d2 = crowdModel.risk[(y2 * crowdModel.width) + x];
+  double d3 = crowdModel.risk[(y * crowdModel.width) + x1];
+  double d4 = crowdModel.risk[(y * crowdModel.width) + x2];
+  //std::cout << " Cell cost " << d << std::endl;
+  //return (d + d1 + d2 + d3 + d4)/5;
+  double da = std::max(std::max(d, d1),d2);
+  double db = std::max(d3, d4);
+  return std::max(da,db);
+  //return d;
+}
 
 // Projection of crowd flow vectors on vector at s and d and then take the average
 double PathPlanner::computeCrowdFlow(Node s, Node d){

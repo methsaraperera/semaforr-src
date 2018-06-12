@@ -498,8 +498,83 @@ double AgentState::getGridValue(double x, double y){
   int resolution = crowdModel.resolution;
   int height = crowdModel.height;
   int width = crowdModel.width;
-  std::vector<double> densities = crowdModel.densities;
-  double gridValue = densities[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> densities = crowdModel.densities;
+  double gridValue = crowdModel.densities[(floor(y/resolution)*width)+floor(x/resolution)];
   cout << "resolution = " << resolution << " height = " << height << " width = " << width << " gridValue = " << gridValue << endl;
   return gridValue;
+}
+
+double AgentState::getRiskValue(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> risk = crowdModel.risk;
+  double riskValue = crowdModel.risk[(floor(y/resolution)*width)+floor(x/resolution)];
+  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskValue = " << riskValue << endl;
+  return riskValue;
+}
+
+double AgentState::getFlowValue(double x, double y, double theta){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> left = crowdModel.left;
+  double leftValue = crowdModel.left[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> right = crowdModel.right;
+  double rightValue = crowdModel.right[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> up = crowdModel.up;
+  double upValue = crowdModel.up[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> down = crowdModel.down;
+  double downValue = crowdModel.down[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> up_left = crowdModel.up_left;
+  double up_leftValue = crowdModel.up_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> up_right = crowdModel.up_right;
+  double up_rightValue = crowdModel.up_right[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> down_left = crowdModel.down_left;
+  double down_leftValue = crowdModel.down_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> down_right = crowdModel.down_right;
+  double down_rightValue = crowdModel.down_right[(floor(y/resolution)*width)+floor(x/resolution)];
+
+  double totalX = leftValue*cos(M_PI) + rightValue*cos(0) + upValue*cos(M_PI/2) + downValue*cos(3*M_PI/2) + up_leftValue*cos(3*M_PI/4) + up_rightValue*cos(M_PI/4) + down_leftValue*cos(5*M_PI/4) + down_rightValue*cos(7*M_PI/4);
+  double totalY = leftValue*sin(M_PI) + rightValue*sin(0) + upValue*sin(M_PI/2) + downValue*sin(3*M_PI/2) + up_leftValue*sin(3*M_PI/4) + up_rightValue*sin(M_PI/4) + down_leftValue*sin(5*M_PI/4) + down_rightValue*sin(7*M_PI/4);
+  double flowMagnitude = sqrt(totalX*totalX + totalY*totalY);
+  double flowTheta = atan2(totalY, totalX);
+
+  double angleDiff = min(abs(flowTheta - theta),(2*M_PI) - abs(flowTheta - theta));
+  double flowValue = 0;
+  if(angleDiff<=M_PI/4){
+    flowValue = flowMagnitude;
+  }
+  else if(angleDiff<=M_PI/2){
+    flowValue = flowMagnitude/2;
+  }
+  else if(angleDiff<=3*M_PI/4){
+    flowValue = -flowMagnitude/2;
+  }
+  else if(angleDiff>3*M_PI/4){
+    flowValue = -flowMagnitude;
+  }
+
+  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " flowValue = " << flowValue << endl;
+  return flowValue;
+}
+
+double AgentState::getCrowdObservation(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> risk = crowdModel.risk;
+  double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
+  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " crowdObservationValue = " << crowdObservationValue << endl;
+  return crowdObservationValue;
+}
+
+double AgentState::getRiskExperience(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> risk = crowdModel.risk;
+  double riskExperienceValue = crowdModel.risk_experiences[(floor(y/resolution)*width)+floor(x/resolution)];
+  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskExperienceValue = " << riskExperienceValue << endl;
+  return riskExperienceValue;
 }
