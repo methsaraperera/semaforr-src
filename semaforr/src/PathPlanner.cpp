@@ -202,7 +202,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   double d_risk_cost = riskCost(d.getX(), d.getY(), b);
 	// weights that balance distance, crowd density and crowd flow
 	int w1 = 1;
-	int w2 = 25;
+	int w2 = 200;
 	int w3 = 25;
   int w4 = 25;
 

@@ -3574,7 +3574,7 @@ double Tier3FindTheFlow::actionComment(FORRAction action){
   cout << "Inside FindTheFlow" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
-  return flow_value;
+  return (-1) * flow_value;
 }
 
 void Tier3FindTheFlowRotation::set_commenting(){
@@ -3589,5 +3589,5 @@ double Tier3FindTheFlowRotation::actionComment(FORRAction action){
   cout << "Inside FindTheFlowRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
-  return flow_value;
+  return (-1) * flow_value;
 }

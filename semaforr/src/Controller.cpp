@@ -346,7 +346,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
       firstTaskAssigned = true;
   }
   bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
@@ -362,19 +362,19 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
   } 
   // else if subtask is complete
   else if(waypointReached == true and aStarOn){
     ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
-    beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
-    //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+    //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
+    beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
     if (beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() > 0) {
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
     else {
-      //beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
     }
     
   } 
@@ -386,7 +386,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
     }
   }
 }
@@ -641,7 +641,7 @@ isAdvisorActive(string advisorName){
 //
 //
 void Controller::tierThreeAdvisorInfluence(){
-  std::map<FORRAction, double> comments;
+  /*std::map<FORRAction, double> comments;
   // This map will aggregate value of all advisers
   std::map<FORRAction, double> allComments;
 
@@ -695,7 +695,7 @@ void Controller::tierThreeAdvisorInfluence(){
       best_decisions.push_back(iterator->first);
   }
   
-  /*std::stringstream advisorsInfluence;
+  std::stringstream advisorsInfluence;
   std::map<FORRAction, double> takeOneOutComments;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     takeOneOutComments = allComments;

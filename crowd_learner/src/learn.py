@@ -288,6 +288,8 @@ class CountCrowdModel:
 	if self.risk == "on":
 	    #crowd_count_model = [[((self.crowd_risk_count[x][y]+crowd_count_model[y][x])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
 	    risk_count_model = [[((self.crowd_risk_count[x][y])/float(self.crowd_experiences[x][y])) for x in range(self.division)] for y in range(self.division)]
+	else:
+		risk_count_model = [[0 for x in range(self.division)] for y in range(self.division)]
 	# if flow is tracked
 	if self.flow == "on":
 	    u_model = [[(self.crowd_u[x][y]/float(self.crowd_observations[x][y])) for x in range(self.division)] for y in range(self.division)]

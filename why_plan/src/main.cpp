@@ -66,6 +66,8 @@ private:
 	double targetX, targetY, robotY, robotX;
 	bool sameplan;
 	double computationTimeSec=0.0;
+	int densityNum = 5;
+	int lengthNum = 5;
 
 public:
 	//! ROS node initialization
@@ -173,15 +175,15 @@ public:
 			computePlanDensities();
 			ROS_INFO_STREAM("Before compare plans");
 			if (comparePlans()) {
-				explanationString.data = "I decided to go this way because I think it is just as short and not that crowded.";
+				explanationString.data = "I decided to go this way because I think it is just as short and not that crowded.\nI think both plans are equally good.\nWe could go that way since it's a bit shorter but it could also be a bit more crowded.\nI'm only somewhat sure because even though my plan is a bit less crowded, it is also a bit longer than your plan.";
 			}
 			else if ((planLength - originalPlanLength) <= 0) {
 				ROS_INFO_STREAM("Before density diff to phrase");
-				explanationString.data = "I think my way is " + densityDifftoPhrase() + " less crowded.";
+				explanationString.data = "I think my way is " + densityDifftoPhrase() + " less crowded.\n" + "I think my way is better because it's " + densityDifftoPhrase() + " less crowded.\n" + "We could go that way since it's a bit shorter but it could also be " + densityDifftoPhrase() + " more crowded.\n" + "I'm " + computeConf() + ".";
 			}
 			else {
 				ROS_INFO_STREAM("Before length diff to phrase");
-				explanationString.data = "Although there may be a " + lengthDiffToPhrase() + " shorter way, I think my way is " + densityDifftoPhrase() + " less crowded.";
+				explanationString.data = "Although there may be a " + lengthDiffToPhrase() + " shorter way, I think my way is " + densityDifftoPhrase() + " less crowded.\n" + "I think my way is better because it's " + densityDifftoPhrase() + " less crowded.\n" + "We could go that way since it's " + lengthDiffToPhrase() + " shorter but it could also be " + densityDifftoPhrase() + " more crowded.\n" + "I'm " + computeConf() + ".";
 			}
 			ROS_INFO_STREAM("After explanation: " << explanationString.data);
 			gettimeofday(&cv,NULL);
@@ -318,9 +320,10 @@ public:
 		for (int i = densityThreshold.size()-1; i >= 0; --i) {
 			if ((planCrowdDensity - originalPlanCrowdDensity) <= densityThreshold[i]) {
 				phrase = densityPhrase[i];
+				densityNum = i;
 			}
 		}
-		ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << phrase);
+		ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << phrase << " " << densityNum);
 		return phrase;
 	}
 
@@ -330,9 +333,28 @@ public:
 		for (int i = lengthThreshold.size()-1; i >= 0; --i) {
 			if ((planLength - originalPlanLength) <= lengthThreshold[i]) {
 				phrase = lengthPhrase[i];
+				lengthNum = i;
 			}
 		}
-		ROS_INFO_STREAM((planLength - originalPlanLength) << " " << phrase);
+		ROS_INFO_STREAM((planLength - originalPlanLength) << " " << phrase << " " << lengthNum);
+		return phrase;
+	}
+
+	std::string computeConf(){
+		ROS_INFO_STREAM("Inside compute conf");
+		std::string phrase, tempphrase;
+		if (densityNum == 5) tempphrase = densityDifftoPhrase();
+		if (lengthNum == 5) tempphrase = lengthDiffToPhrase();
+		ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << densityNum << " " << (planLength - originalPlanLength) << " " << lengthNum);
+		if ((densityNum == 0 and lengthNum == 2) or (densityNum == 1 and lengthNum == 1) or (densityNum == 2 and lengthNum == 0)){
+			phrase = "only somewhat sure because even though my plan is " + densityDifftoPhrase() + " less crowded, it is also " + lengthDiffToPhrase() + " longer than your plan";
+		}
+		else if((densityNum == 1 and lengthNum == 2) or (densityNum == 2 and lengthNum == 2) or (densityNum == 2 and lengthNum == 1)){
+			phrase = "not sure because my plan is " + lengthDiffToPhrase() + " longer than your plan and only " + densityDifftoPhrase() + " less crowded";
+		}
+		else if((densityNum == 0 and lengthNum == 1) or (densityNum == 0 and lengthNum == 0) or (densityNum == 1 and lengthNum == 0)){
+			phrase = "really sure because my plan is " + densityDifftoPhrase() + " less crowded and only " + lengthDiffToPhrase() + " longer than your plan";
+		}
 		return phrase;
 	}
 
@@ -355,6 +377,7 @@ public:
 		targetX=0, targetY=0, robotY=0, robotX=0;
 		sameplan=1;
 		computationTimeSec=0.0;
+		densityNum=5, lengthNum=5;
 	}
 	
 	void logExplanationData() {
