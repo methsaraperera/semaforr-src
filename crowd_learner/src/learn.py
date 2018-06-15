@@ -23,6 +23,7 @@ class CountCrowdModel:
 	rospy.Subscriber("base_scan", LaserScan, self.laser_data)
 	rospy.Subscriber("pose", PoseStamped, self.pose_data)
 	self.pub_crowd_density = rospy.Publisher('crowd_density', OccupancyGrid, queue_size=1)
+	self.pub_crowd_risk = rospy.Publisher('crowd_risk', OccupancyGrid, queue_size=1)
 	self.pub_crowd_u = rospy.Publisher('crowd_u', MarkerArray, queue_size=1)
 	self.pub_crowd_d = rospy.Publisher('crowd_d', MarkerArray, queue_size=1)
 	self.pub_crowd_l = rospy.Publisher('crowd_l', MarkerArray, queue_size=1)
@@ -460,6 +461,20 @@ class CountCrowdModel:
 	print crowd_rviz.data
 	self.pub_crowd_density.publish(crowd_rviz)
 
+	# send message for rviz display unsampled data
+	risk_rviz = OccupancyGrid()
+	risk_rviz.header.stamp = rospy.Time.now()
+	risk_rviz.header.frame_id = "map"
+	risk_rviz.info.resolution = self.height/self.division
+	risk_rviz.info.width = self.division
+	risk_rviz.info.height = self.division
+	risk_rviz.info.origin.orientation.w = 1
+	risk_density_rviz = [risk[x][y] for x in range(self.division) for y in range(self.division)]
+	risk_rviz.data = self.normalize(risk_density_rviz, 0, 100)
+	print "Normalized Risk model sent for rviz:"
+	print risk_rviz.data
+	self.pub_crowd_risk.publish(risk_rviz)
+
 
     def normalize(self, list_of_floats, minimum, maximum):
 	max_number = max(list_of_floats)
@@ -483,5 +498,5 @@ class CountCrowdModel:
 	return ((x1-x2)**2 + (y1-y2)**2) ** 0.5
 
 
-crowd_model = CountCrowdModel(80,80,40, str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4]), str(sys.argv[5]), str(sys.argv[6]) )
+crowd_model = CountCrowdModel(100,100,50, str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4]), str(sys.argv[5]), str(sys.argv[6]) )
 crowd_model.listen()

@@ -21,7 +21,7 @@ def experiment():
     target_set = map_folder+"/" + target_file_name
     density = "on"
     flow = "off"
-    risk = "off"
+    risk = "on"
     cusum = "off"
     discount = "off"
     explore = "off"
