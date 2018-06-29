@@ -19,9 +19,9 @@ def experiment():
     map_config = map_folder+"/"+map_name+"S.xml"
     map_dimensions = map_folder+"/dimensions.conf"
     target_set = map_folder+"/" + target_file_name
-    density = "on"
+    density = "off"
     flow = "off"
-    risk = "on"
+    risk = "off"
     cusum = "off"
     discount = "off"
     explore = "off"
@@ -59,11 +59,11 @@ def experiment():
     log_file = open(log_name,"w")
     log_process = subprocess.Popen(['rostopic','echo','/decision_log'],stdout=log_file)
 
-    why_log_file = open(why_log_name,"w")
-    why_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=why_log_file)
+    #why_log_file = open(why_log_name,"w")
+    #why_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=why_log_file)
 
-    whyplan_log_file = open(whyplan_log_name,"w")
-    whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_log_file)
+    #whyplan_log_file = open(whyplan_log_name,"w")
+    #whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_log_file)
 
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions])
@@ -74,8 +74,8 @@ def experiment():
     #print "waiting,,"
 
     # start why_plan
-    why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
-    print "waiting,,"
+    #why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
+    #print "waiting,,"
    
     # Wait till semaforr completes the process
     while semaforr_process.poll() is None:
@@ -94,13 +94,13 @@ def experiment():
     if mode == 1 or mode == 2 or mode == 3 or mode == 4 or mode == 5:
 	print "Terminating crowd model"
         crowd_process.terminate()
-    why_plan_process.terminate()
+    #why_plan_process.terminate()
     log_process.terminate()
     log_file.close()
-    why_log_process.terminate()
-    why_log_file.close()
-    whyplan_log_process.terminate()
-    whyplan_log_file.close()
+    #why_log_process.terminate()
+    #why_log_file.close()
+    #whyplan_log_process.terminate()
+    #whyplan_log_file.close()
     time.sleep(1)
     #why_process.terminate()
     #print "Why terminated!"

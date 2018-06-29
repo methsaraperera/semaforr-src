@@ -775,9 +775,14 @@ public:
 	int height = model.height;
 	int width = model.width;
 	std::vector<double> densities = model.densities;
+	std::vector<double> risk = model.risk;
 	crowdModel << height << " " << width << " " << resolution << " ";
 	for(int i = 0; i < densities.size() ; i++){
 		crowdModel << densities[i] << " ";
+	}
+	crowdModel << ";";
+	for(int i = 0; i < risk.size() ; i++){
+		crowdModel << risk[i] << " ";
 	}
 
 	ROS_DEBUG("After all crowd model");

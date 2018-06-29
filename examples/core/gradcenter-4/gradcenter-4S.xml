@@ -30,7 +30,7 @@
 	</AgentProfile>
 
 	<AgentProfile name="group3" inherits="group1" >
-		<Common class="3" r="0.18" external="0" pref_speed="0.8" max_speed="2" max_accel="3" robot_attraction="1.0"/>
+		<Common class="3" r="0.18" external="0" pref_speed="0.8" max_speed="2" max_accel="3" robot_attraction="0.0"/>
 		<Helbing mass="320"/>
 	</AgentProfile>
 
@@ -42,7 +42,7 @@
 			<Agent p_x="25" p_y="35"/>
 		</Generator>
     	</AgentGroup>
-
+    <!--
 	<AgentGroup>
         <ProfileSelector type="const" name="group2" />
 		<StateSelector type="const" name="start" />
@@ -68,7 +68,7 @@
 			<Agent p_x="-1" p_y="7"/>
 			<Agent p_x="-1" p_y="8"/>
 			<Agent p_x="-1" p_y="9"/>
-			<!--
+			
 			<Agent p_x="-1" p_y="0"/>
 			<Agent p_x="-1" p_y="1"/>
 			<Agent p_x="-1" p_y="2"/>
@@ -90,7 +90,7 @@
 			<Agent p_x="-1" p_y="7"/>
 			<Agent p_x="-1" p_y="8"/>
 			<Agent p_x="-1" p_y="9"/>
-			-->
+			
 		</Generator>
     </AgentGroup>
 	
@@ -119,17 +119,6 @@
 			<Agent p_x="-1" p_y="7"/>
 			<Agent p_x="-1" p_y="8"/>
 			<Agent p_x="-1" p_y="9"/>
-			<!--
-			<Agent p_x="-1" p_y="0"/>
-			<Agent p_x="-1" p_y="1"/>
-			<Agent p_x="-1" p_y="2"/>
-			<Agent p_x="-1" p_y="3"/>
-			<Agent p_x="-1" p_y="4"/>
-			<Agent p_x="-1" p_y="5"/>
-			<Agent p_x="-1" p_y="6"/>
-			<Agent p_x="-1" p_y="7"/>
-			<Agent p_x="-1" p_y="8"/>
-			<Agent p_x="-1" p_y="9"/>
 			
 			<Agent p_x="-1" p_y="0"/>
 			<Agent p_x="-1" p_y="1"/>
@@ -152,10 +141,21 @@
 			<Agent p_x="-1" p_y="7"/>
 			<Agent p_x="-1" p_y="8"/>
 			<Agent p_x="-1" p_y="9"/>
-			-->
+			
+			<Agent p_x="-1" p_y="0"/>
+			<Agent p_x="-1" p_y="1"/>
+			<Agent p_x="-1" p_y="2"/>
+			<Agent p_x="-1" p_y="3"/>
+			<Agent p_x="-1" p_y="4"/>
+			<Agent p_x="-1" p_y="5"/>
+			<Agent p_x="-1" p_y="6"/>
+			<Agent p_x="-1" p_y="7"/>
+			<Agent p_x="-1" p_y="8"/>
+			<Agent p_x="-1" p_y="9"/>
+			
 		</Generator>
     </AgentGroup>
-
+    -->
 
 <ObstacleSet type="explicit" class="1">
 
