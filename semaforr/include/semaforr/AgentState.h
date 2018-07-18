@@ -222,11 +222,14 @@ public:
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
   bool crowdModelLearned();
+  bool riskModelLearned();
+  bool flowModelLearned();
   double getGridValue(double x, double y);
   double getRiskValue(double x, double y);
   double getFlowValue(double x, double y, double theta);
   double getCrowdObservation(double x, double y);
   double getRiskExperience(double x, double y);
+  double getFLowObservation(double x, double y);
 
  private:
 

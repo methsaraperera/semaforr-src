@@ -3444,7 +3444,7 @@ double Tier3CrowdAvoidRotation::actionComment(FORRAction action){
 
 void Tier3RiskAvoid::set_commenting(){
   cout << "In RiskAvoid set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3459,7 +3459,7 @@ double Tier3RiskAvoid::actionComment(FORRAction action){
 
 void Tier3RiskAvoidRotation::set_commenting(){
   cout << "In RiskAvoidRotation set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3474,7 +3474,7 @@ double Tier3RiskAvoidRotation::actionComment(FORRAction action){
 
 void Tier3FlowAvoid::set_commenting(){
   cout << "In FlowAvoid set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3489,7 +3489,7 @@ double Tier3FlowAvoid::actionComment(FORRAction action){
 
 void Tier3FlowAvoidRotation::set_commenting(){
   cout << "In FlowAvoidRotation set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3534,7 +3534,7 @@ double Tier3FindTheCrowdRotation::actionComment(FORRAction action){
 
 void Tier3FindTheRisk::set_commenting(){
   cout << "In FindTheRisk set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3549,7 +3549,7 @@ double Tier3FindTheRisk::actionComment(FORRAction action){
 
 void Tier3FindTheRiskRotation::set_commenting(){
   cout << "In FindTheRiskRotation set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3564,7 +3564,7 @@ double Tier3FindTheRiskRotation::actionComment(FORRAction action){
 
 void Tier3FindTheFlow::set_commenting(){
   cout << "In FindTheFlow set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3573,13 +3573,13 @@ void Tier3FindTheFlow::set_commenting(){
 double Tier3FindTheFlow::actionComment(FORRAction action){
   cout << "Inside FindTheFlow" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
-  double flow_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
+  double flow_value = beliefs->getAgentState()->getFLowObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * flow_value;
 }
 
 void Tier3FindTheFlowRotation::set_commenting(){
   cout << "In FindTheFlowRotation set commenting " << endl;
-  if(beliefs->getAgentState()->crowdModelLearned())
+  if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -3588,6 +3588,6 @@ void Tier3FindTheFlowRotation::set_commenting(){
 double Tier3FindTheFlowRotation::actionComment(FORRAction action){
   cout << "Inside FindTheFlowRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
-  double flow_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
+  double flow_value = beliefs->getAgentState()->getFLowObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * flow_value;
 }

@@ -494,6 +494,68 @@ bool AgentState::crowdModelLearned(){
   return false;
 }
 
+bool AgentState::riskModelLearned(){
+  std::vector<double> risk = crowdModel.risk;
+  for(int i = 0; i < risk.size() ; i++){
+    if(risk[i]>0){
+      return true;
+    }
+  }
+  return false;
+}
+
+bool AgentState::flowModelLearned(){
+  std::vector<double> left = crowdModel.left;
+  for(int i = 0; i < left.size() ; i++){
+    if(left[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> right = crowdModel.right;
+  for(int i = 0; i < right.size() ; i++){
+    if(right[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> up = crowdModel.up;
+  for(int i = 0; i < up.size() ; i++){
+    if(up[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> down = crowdModel.down;
+  for(int i = 0; i < down.size() ; i++){
+    if(down[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> up_left = crowdModel.up_left;
+  for(int i = 0; i < up_left.size() ; i++){
+    if(up_left[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> up_right = crowdModel.up_right;
+  for(int i = 0; i < up_right.size() ; i++){
+    if(up_right[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> down_left = crowdModel.down_left;
+  for(int i = 0; i < down_left.size() ; i++){
+    if(down_left[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> down_right = crowdModel.down_right;
+  for(int i = 0; i < down_right.size() ; i++){
+    if(down_right[i]>0){
+      return true;
+    }
+  }
+  return false;
+}
+
 double AgentState::getGridValue(double x, double y){
   int resolution = crowdModel.resolution;
   int height = crowdModel.height;
@@ -563,7 +625,6 @@ double AgentState::getCrowdObservation(double x, double y){
   int resolution = crowdModel.resolution;
   int height = crowdModel.height;
   int width = crowdModel.width;
-  //std::vector<double> risk = crowdModel.risk;
   double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
   cout << "resolution = " << resolution << " height = " << height << " width = " << width << " crowdObservationValue = " << crowdObservationValue << endl;
   return crowdObservationValue;
@@ -573,8 +634,27 @@ double AgentState::getRiskExperience(double x, double y){
   int resolution = crowdModel.resolution;
   int height = crowdModel.height;
   int width = crowdModel.width;
-  //std::vector<double> risk = crowdModel.risk;
   double riskExperienceValue = crowdModel.risk_experiences[(floor(y/resolution)*width)+floor(x/resolution)];
   cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskExperienceValue = " << riskExperienceValue << endl;
   return riskExperienceValue;
+}
+
+double AgentState::getFLowObservation(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  double leftValue = crowdModel.left[(floor(y/resolution)*width)+floor(x/resolution)];
+  double rightValue = crowdModel.right[(floor(y/resolution)*width)+floor(x/resolution)];
+  double upValue = crowdModel.up[(floor(y/resolution)*width)+floor(x/resolution)];
+  double downValue = crowdModel.down[(floor(y/resolution)*width)+floor(x/resolution)];
+  double up_leftValue = crowdModel.up_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  double up_rightValue = crowdModel.up_right[(floor(y/resolution)*width)+floor(x/resolution)];
+  double down_leftValue = crowdModel.down_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  double down_rightValue = crowdModel.down_right[(floor(y/resolution)*width)+floor(x/resolution)];
+
+  double totalX = leftValue*cos(M_PI) + rightValue*cos(0) + upValue*cos(M_PI/2) + downValue*cos(3*M_PI/2) + up_leftValue*cos(3*M_PI/4) + up_rightValue*cos(M_PI/4) + down_leftValue*cos(5*M_PI/4) + down_rightValue*cos(7*M_PI/4);
+  double totalY = leftValue*sin(M_PI) + rightValue*sin(0) + upValue*sin(M_PI/2) + downValue*sin(3*M_PI/2) + up_leftValue*sin(3*M_PI/4) + up_rightValue*sin(M_PI/4) + down_leftValue*sin(5*M_PI/4) + down_rightValue*sin(7*M_PI/4);
+  double flowMagnitude = sqrt(totalX*totalX + totalY*totalY);
+  double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
+  return flowMagnitude*crowdObservationValue;
 }

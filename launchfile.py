@@ -19,9 +19,9 @@ def experiment():
     map_config = map_folder+"/"+map_name+"S.xml"
     map_dimensions = map_folder+"/dimensions.conf"
     target_set = map_folder+"/" + target_file_name
-    density = "off"
-    flow = "off"
-    risk = "off"
+    density = "on"
+    flow = "on"
+    risk = "on"
     cusum = "off"
     discount = "off"
     explore = "off"

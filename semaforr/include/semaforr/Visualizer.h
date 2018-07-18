@@ -34,6 +34,8 @@ private:
   ros::Publisher all_targets_pub_;
   ros::Publisher remaining_targets_pub_;
   ros::Publisher region_pub_;
+  ros::Publisher exits_pub_;
+  ros::Publisher skeleton_pub_;
   ros::Publisher conveyor_pub_;
   ros::Publisher occupancy_pub_;
   ros::Publisher trails_pub_;
@@ -68,6 +70,8 @@ public:
     conveyor_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("conveyor", 1);
     occupancy_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("occupancy", 1);
     region_pub_ = nh_->advertise<visualization_msgs::MarkerArray>("region", 1);
+    exits_pub_ = nh_->advertise<visualization_msgs::Marker>("exits", 1);
+    skeleton_pub_ = nh_->advertise<visualization_msgs::Marker>("skeleton", 1);
     nodes1_pub_ = nh_->advertise<visualization_msgs::Marker>("nodes1", 1);
     nodes2_pub_ = nh_->advertise<visualization_msgs::Marker>("nodes2", 1);
     edges_pub_ = nh_->advertise<visualization_msgs::MarkerArray>("edges", 1);
@@ -103,6 +107,8 @@ public:
 	//publish_edges_cost();
 	publish_conveyor();
 	publish_region();
+	publish_exits();
+	publish_skeleton();
 	publish_trails();
 	publish_doors();
 	publish_walls();
@@ -449,6 +455,81 @@ public:
 	}
 	region_pub_.publish(markerArray);
   }
+
+  void publish_exits(){
+	ROS_DEBUG("Inside publish exits");
+	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+	cout << "There are currently " << regions.size() << " regions" << endl;
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 0.15;
+	marker.scale.z = 0.15;
+	// Set the color -- be sure to set alpha to something non-zero!
+	marker.color.r = 0.0f;
+	marker.color.g = 0.0f;
+	marker.color.b = 1.0f;
+	marker.color.a = 0.5;
+	marker.lifetime = ros::Duration();
+
+	for(int i = 0 ; i < regions.size(); i++){
+		vector<FORRExit> exits = regions[i].getExits();
+		for(int j = 0; j < exits.size() ; j++){
+			float x = exits[j].getExitPoint().get_x();
+			float y = exits[j].getExitPoint().get_y();
+			geometry_msgs::Point point;
+			point.x = x;
+			point.y = y;
+			point.z = 0;
+			marker.points.push_back(point);
+		}
+	}
+  	exits_pub_.publish(marker);
+  }
+  void publish_skeleton(){
+  	ROS_DEBUG("Inside publish skeleton");
+  	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+	cout << "There are currently " << regions.size() << " regions" << endl;
+	visualization_msgs::Marker line_list;
+	line_list.header.frame_id = "map";
+	line_list.header.stamp = ros::Time::now();
+	line_list.ns = "basic_shapes";
+	line_list.action = visualization_msgs::Marker::ADD;
+	line_list.id = 1;
+	line_list.type = visualization_msgs::Marker::LINE_LIST;
+	line_list.pose.orientation.w = 1.0;
+	line_list.scale.x = 0.1;
+	line_list.color.r = 1.0;
+	line_list.color.a = 1.0;
+	for(int i = 0 ; i < regions.size(); i++){
+		vector<FORRExit> exits = regions[i].getExits();
+		for(int j = 0; j < exits.size() ; j++){
+			geometry_msgs::Point p1, p2;
+			p1.x = regions[i].getCenter().get_x();
+			p1.y = regions[i].getCenter().get_y();
+			p1.z = 0;
+
+			p2.x = regions[exits[j].getExitRegion()].getCenter().get_x();
+			p2.y = regions[exits[j].getExitRegion()].getCenter().get_y();
+			p2.z = 0;
+
+			line_list.points.push_back(p1);
+			line_list.points.push_back(p2);
+		}
+	}
+  	skeleton_pub_.publish(line_list);
+  }
+
   void publish_trails(){
 	ROS_DEBUG("Inside publish trail");
 	//Goal here is to publish all trails
