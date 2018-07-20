@@ -103,18 +103,29 @@ public:
   }
   
   Task *getCurrentTask() { return currentTask; }
-  void setCurrentTask(Task *task, Position current, PathPlanner *planner, bool aStarOn) { 
+  /*void setCurrentTask(Task *task, Position current, PathPlanner *planner, bool aStarOn) { 
     currentTask = task; 
     if(aStarOn){
     	currentTask->generateWaypoints(current, planner);
     } 
-  }
-  void generateOrigWaypoints(Position current, PathPlanner *planner, bool aStarOn) { 
-    if(aStarOn){
-      currentTask->generateOriginalWaypoints(current, planner);
-    } 
+  }*/
+
+  void setCurrentTask(Task *task){
+    currentTask = task;
   }
 
+  list<int> getWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+    if(aStarOn){
+      currentTask->generateWaypoints(current, planner);
+      return currentTask->getWaypointInds();
+    }
+  }
+
+  void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+    if(aStarOn){
+      currentTask->generateWaypoints(current, planner);
+    }
+  }
 
   set<FORRAction> *getVetoedActions() { 
 	//std::cout << "returning vetoed action list " << vetoedActions->size() << std::endl;

@@ -30,6 +30,7 @@
 // Forward-declare Controller so the typedef below can reference it
 class Controller;
 typedef std::vector<Tier3Advisor*>::iterator advisor3It;
+typedef std::vector<PathPlanner*>::iterator planner2It;
 
 // ROS Controller class 
 class Controller {
@@ -65,6 +66,9 @@ private:
   //Tier 1 advisors are called here
   bool tierOneDecision(FORRAction *decision);
 
+  //Tier 2 planners are called here
+  void tierTwoDecision(Position current);
+
   //Tier 3 advisors are called here
   void tierThreeDecision(FORRAction *decision);
 
@@ -85,6 +89,7 @@ private:
   // An ordered list of advisors that are consulted by Controller::FORRDecision
   Tier1Advisor *tier1;
   PathPlanner *planner;
+  std::vector<PathPlanner*> tier2Planners;
   std::vector<Tier3Advisor*> tier3Advisors;
   
   // Checks if a given advisor is active
@@ -101,6 +106,7 @@ private:
   bool doorsOn;
   bool aStarOn;
   bool firstTaskAssigned;
+  bool distance, density, risk, flow, CUSUM, discount, explore;
 };
   
 #endif /* CONTROLLER_H */

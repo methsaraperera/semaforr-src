@@ -76,7 +76,9 @@ int PathPlanner::calcPath(bool cautious){
     }
     //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights
-    updateNavGraph();
+    if (name != "distance") {
+      updateNavGraph();
+    }
     astar newsearch(*navGraph, s, t);
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
@@ -88,78 +90,6 @@ int PathPlanner::calcPath(bool cautious){
 
       pathCost = calcPathCost(path);
       pathCalculated = true;
-    }
-    else {
-      return 3;
-    }
-  }
-  return 0;
-}
-
-int PathPlanner::calcOrigPath(bool cautious){
-  const string signature = "PathPlanner::calcOrigPath()> ";
-  
-  if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
-    
-    if(PATH_DEBUG) {
-      cout << signature << "Source:"; 
-      source.printNode(); 
-      cout << endl;
-      cout << signature << "Target:"; 
-      target.printNode();
-      cout << endl;
-    }
-
-    Node s, t;
-    if ( originalNavGraph->isNode(source) ) {
-      if(PATH_DEBUG)
-  cout << signature << "Source is a valid Node in the navigation graph" << endl; 
-      s = source ;
-    }
-    else {
-      if(PATH_DEBUG)
-  cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
-      s = getClosestNode(source, target);
-    }
-    //cout << signature << "Checking if source node is invalid" << endl;
-    if ( s.getID() == Node::invalid_node_index )
-      return 1;
-
-    if ( originalNavGraph->isNode(target) ) {
-      if(PATH_DEBUG)
-  cout << signature << "Target is a valid Node in the navigation graph" << endl; 
-      t = target ;
-    }
-    else {
-      if(PATH_DEBUG)
-  cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
-      t = getClosestNode(target, source);
-    }
-    //cout << signature << "Checking if target node is invalid" << endl;
-    if ( t.getID() == Node::invalid_node_index )
-      return 2;
-
-    //cout << signature << "Completed finding source and destination nodes" << endl;
-    if(PATH_DEBUG) {
-      cout << signature << "s:"; 
-      s.printNode(); 
-      cout << endl;
-      cout << signature << "t:"; 
-      t.printNode();
-      cout << endl;
-    }
-
-    astar newsearch(*originalNavGraph, s, t);
-    if ( newsearch.isPathFound() ) {
-      origPath = newsearch.getPathToTarget();
-      origObjectiveSet = false;
-      origPathCompleted = false;
-      
-      if(!cautious)
-  smoothPath(origPath, s, t);
-      
-      origPathCost = calcPathCost(origPath); 
-      origPathCalculated = true;
     }
     else {
       return 3;
@@ -195,23 +125,32 @@ void PathPlanner::updateNavGraph(){
 
 double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double oldcost){
 	int b = 30;
-	double s_cost = cellCost(s.getX(), s.getY(), b);
-	double d_cost = cellCost(d.getX(), d.getY(), b);
-
-  double s_risk_cost = riskCost(s.getX(), s.getY(), b);
-  double d_risk_cost = riskCost(d.getX(), d.getY(), b);
-	// weights that balance distance, crowd density and crowd flow
-	int w1 = 1;
-	int w2 = 50;
-	int w3 = 50;
+  // weights that balance distance, crowd density and crowd flow
+  int w1 = 1;
+  int w2 = 50;
+  int w3 = 50;
   int w4 = 50;
 
-	double flowcost = computeCrowdFlow(s,d);
-	if(direction == false){
-		flowcost = flowcost * (-1);
-	}
+  if (name == "density"){
+	 double s_cost = cellCost(s.getX(), s.getY(), b);
+	 double d_cost = cellCost(d.getX(), d.getY(), b);
+   return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
+  }
+  if (name == "risk"){
+    double s_risk_cost = riskCost(s.getX(), s.getY(), b);
+    double d_risk_cost = riskCost(d.getX(), d.getY(), b);
+    return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+  }
+  if (name == "flow"){
+    double flowcost = computeCrowdFlow(s,d);
+    if(direction == false){
+      flowcost = flowcost * (-1);
+    }
+    return (w1 * oldcost) + (w3 * flowcost);
+  }
+
   //double newEdgeCost = (oldcost * flowcost);
-  double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+  //double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
 
 	//cout << "Flow cost --------- " << endl;
   /*if (s_cost > 0 or d_cost > 0 or flowcost > 0 or s_risk_cost > 0 or d_risk_cost > 0){
@@ -222,7 +161,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   	//cout << "Old cost : " << oldcost << " new cost : " << newEdgeCost << std::endl;
     cout << "New cost    :" << newEdgeCost << endl;
   }*/
-	return newEdgeCost;
+	//return newEdgeCost;
 }
 
 

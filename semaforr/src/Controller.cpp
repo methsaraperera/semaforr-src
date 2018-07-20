@@ -227,6 +227,62 @@ void Controller::initialize_params(string filename){
         ROS_DEBUG_STREAM("arrRotate " << arrRotate[i]);
       }
     }
+    else if (fileLine.find("distance") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      distance = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("distance " << distance);
+    }
+    else if (fileLine.find("density") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      density = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("density " << density);
+    }
+    else if (fileLine.find("risk") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      risk = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("risk " << risk);
+    }
+    else if (fileLine.find("flow") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      flow = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("flow " << flow);
+    }
+    else if (fileLine.find("CUSUM") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      CUSUM = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("CUSUM " << CUSUM);
+    }
+    else if (fileLine.find("discount") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      discount = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("discount " << discount);
+    }
+    else if (fileLine.find("explore") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      explore = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("explore " << explore);
+    }
   }
 }
 
@@ -236,43 +292,68 @@ void Controller::initialize_params(string filename){
 //
 //
 void Controller::initialize_planner(string map_config, string map_dimensions, int &l, int &h){
-	string fileLine;
-	double p;
-	std::ifstream file(map_dimensions.c_str());
-  	ROS_DEBUG_STREAM("Reading map dimension file:" << map_dimensions);
-  	if(!file.is_open()){
-    		ROS_DEBUG("Unable to locate or read map dimensions file!");
-  	}
-  	while(getline(file, fileLine)){
-    		//cout << "Inside while in tasks" << endl;
-    		if(fileLine[0] == '#')  // skip comment lines
-      			continue;
-    		else{
-      			std::stringstream ss(fileLine);
-      			std::istream_iterator<std::string> begin(ss);
-      			std::istream_iterator<std::string> end;
-      			std::vector<std::string> vstrings(begin, end);
-			ROS_DEBUG("Unable to locate or read map dimensions file!");
-      			l = atoi(vstrings[0].c_str());
-      			h = atoi(vstrings[1].c_str());
-			p = atof(vstrings[2].c_str());
-     			ROS_DEBUG_STREAM("Map dim:" << l << " " << h << " " << p << endl);
-    		}
-  	}	
-	Map *map = new Map(l*100, h*100);
-	map->readMapFromXML(map_config);
-	cout << "Finished reading map"<< endl;
-	
-	Graph *navGraph = new Graph(map,(int)(p*100.0));
-	cout << "initialized nav graph" << endl;
-	//navGraph->printGraph();
-	//navGraph->outputGraph();
-	Node n;
-        planner = new PathPlanner(navGraph, *map, n,n);
-	cout << "initialized planner" << endl;
+  string fileLine;
+  double p;
+  std::ifstream file(map_dimensions.c_str());
+  ROS_DEBUG_STREAM("Reading map dimension file:" << map_dimensions);
+  if(!file.is_open()){
+    ROS_DEBUG("Unable to locate or read map dimensions file!");
+  }
+  while(getline(file, fileLine)){
+    //cout << "Inside while in tasks" << endl;
+    if(fileLine[0] == '#')  // skip comment lines
+      continue;
+    else{
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      ROS_DEBUG("Unable to locate or read map dimensions file!");
+      l = atoi(vstrings[0].c_str());
+      h = atoi(vstrings[1].c_str());
+      p = atof(vstrings[2].c_str());
+      ROS_DEBUG_STREAM("Map dim:" << l << " " << h << " " << p << endl);
+    }
+  }	
+  Map *map = new Map(l*100, h*100);
+  map->readMapFromXML(map_config);
+  cout << "Finished reading map"<< endl;
+  
+  Graph *navGraph = new Graph(map,(int)(p*100.0));
+  cout << "initialized nav graph" << endl;
+  //navGraph->printGraph();
+  //navGraph->outputGraph();
+  Node n;
+  if(distance == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "distance");
+    tier2Planners.push_back(planner);
+  }
+  if(density == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "density");
+    tier2Planners.push_back(planner);
+  }
+  if(risk == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "risk");
+    tier2Planners.push_back(planner);
+  }
+  if(flow == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "flow");
+    tier2Planners.push_back(planner);
+  }
+  if(CUSUM == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "CUSUM");
+    tier2Planners.push_back(planner);
+  }
+  if(discount == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "discount");
+    tier2Planners.push_back(planner);
+  }
+  if(explore == 1){
+    planner = new PathPlanner(navGraph, *map, n,n, "explore");
+    tier2Planners.push_back(planner);
+  }
+  cout << "initialized planner" << endl;
 
-  Graph *origNavGraph = new Graph(map,(int)(p*100.0));
-  planner->setOriginalNavGraph(origNavGraph);
 }
 
 
@@ -345,8 +426,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
-      beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+      tierTwoDecision(current);
       firstTaskAssigned = true;
   }
   bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
@@ -361,8 +442,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
-      beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+      tierTwoDecision(current);
     }
   } 
   // else if subtask is complete
@@ -370,13 +451,6 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
     beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
     //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
-    if (beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() > 0) {
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
-    }
-    else {
-      //beliefs->getAgentState()->generateOrigWaypoints(current,planner,aStarOn);
-    }
-    
   } 
   // otherwise if task Decision limit reached, skip task 
   if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
@@ -385,8 +459,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     //beliefs->getAgentState()->skipTask();
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
-      beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      //beliefs->getAgentState()->generateOrigWaypoints(Position(beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_x(), beliefs->getAgentState()->getCurrentTask()->getWaypoints()[0].get_y(),0),planner,aStarOn);
+      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
+      tierTwoDecision(current);
     }
   }
 }
@@ -509,6 +583,73 @@ bool Controller::tierOneDecision(FORRAction *decision){
   //cout << "vetoedActions = " << vetoList.str() << endl;
   
   return decisionMade;
+}
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Generate tier 3 decision
+//
+//
+void Controller::tierTwoDecision(Position current){
+  vector< list<int> > plans;
+  typedef vector< list<int> >::iterator vecIT;
+
+  beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+
+  for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+    PathPlanner *planner = *it;
+    plans.push_back(beliefs->getAgentState()->getWaypoints(current,planner,aStarOn));
+  }
+
+  vector< vector<double> > planCosts;
+  typedef vector< vector<double> >::iterator costIT;
+
+  for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+    PathPlanner *planner = *it;
+    vector<double> planCost;
+    for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
+      planCost.push_back(planner->calcPathCost(*vt));
+    }
+    planCosts.push_back(planCost);
+  }
+
+  typedef vector<double>::iterator doubIT;
+  vector< vector<double> > planCostsNormalized;
+  for (costIT it = planCosts.begin(); it != planCosts.end(); it++){
+    double max = *max_element(it->begin(), it->end());
+    double min = *min_element(it->begin(), it->end());
+    vector<double> planCostNormalized;
+    for (doubIT vt = it->begin(); vt != it->end(); vt++){
+      if (max != min){
+        double norm_factor = (max - min)/10;
+        planCostNormalized.push_back((*vt - min)/norm_factor);
+      }
+      else{
+        planCostNormalized.push_back(0);
+      }
+    }
+    planCostsNormalized.push_back(planCostNormalized);
+  }
+
+  vector<double> totalCosts;
+  for (int i = 0; i < plans.size(); i++){
+    double cost=0;
+    for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
+      cost += it->at(i);
+    }
+    totalCosts.push_back(cost);
+  }
+  double maxCost=-1;
+  int maxCostInd;
+  for (int i=0; i < totalCosts.size(); i++){
+    if (totalCosts[i] > maxCost){
+      maxCost = totalCosts[i];
+      maxCostInd = i;
+    }
+  }
+  PathPlanner *bestPlanner = tier2Planners.at(maxCostInd);
+  beliefs->getAgentState()->setCurrentWaypoints(current,bestPlanner,aStarOn);
 }
 
 
