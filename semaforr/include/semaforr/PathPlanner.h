@@ -79,6 +79,8 @@ public:
 
   Node getTarget(){ return target; }
 
+  string getName(){ return name;}
+
   double cellCost(int sx, int sy, int buffer);
 
   double riskCost(int sx, int sy, int buffer);

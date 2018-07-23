@@ -77,6 +77,7 @@ int PathPlanner::calcPath(bool cautious){
     //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights
     if (name != "distance") {
+      cout << "Updating nav graph for non-distance planners" << endl;
       updateNavGraph();
     }
     astar newsearch(*navGraph, s, t);
@@ -132,16 +133,19 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w4 = 50;
 
   if (name == "density"){
-	 double s_cost = cellCost(s.getX(), s.getY(), b);
-	 double d_cost = cellCost(d.getX(), d.getY(), b);
-   return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
+    //cout << "Updating density nav graph" << endl;
+    double s_cost = cellCost(s.getX(), s.getY(), b);
+    double d_cost = cellCost(d.getX(), d.getY(), b);
+    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
   }
   if (name == "risk"){
+    //cout << "Updating risk nav graph" << endl;
     double s_risk_cost = riskCost(s.getX(), s.getY(), b);
     double d_risk_cost = riskCost(d.getX(), d.getY(), b);
     return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
   }
   if (name == "flow"){
+    //cout << "updating flow nav graph" << endl;
     double flowcost = computeCrowdFlow(s,d);
     if(direction == false){
       flowcost = flowcost * (-1);

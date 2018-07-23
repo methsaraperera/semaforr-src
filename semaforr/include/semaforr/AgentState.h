@@ -112,10 +112,12 @@ public:
 
   void setCurrentTask(Task *task){
     currentTask = task;
+    ROS_DEBUG_STREAM("Current task set");
   }
 
   list<int> getWaypoints(Position current, PathPlanner *planner, bool aStarOn){
     if(aStarOn){
+      ROS_DEBUG_STREAM("Generating waypoints");
       currentTask->generateWaypoints(current, planner);
       return currentTask->getWaypointInds();
     }

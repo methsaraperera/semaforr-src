@@ -56,6 +56,15 @@ public:
   // getter for planner
   PathPlanner *getPlanner() { return planner; }
 
+  std::vector<PathPlanner*> getPlanners() { return tier2Planners; }
+
+  void updatePlannersModels(semaforr::CrowdModel c) {
+    for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+      PathPlanner *planner = *it;
+      planner->setCrowdModel(c);
+    }
+  }
+
 private:
 
   //FORR decision loop and tiers

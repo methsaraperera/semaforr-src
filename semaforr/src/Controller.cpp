@@ -327,30 +327,37 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
   if(distance == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "distance");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: distance");
   }
   if(density == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "density");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: density");
   }
   if(risk == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "risk");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: risk");
   }
   if(flow == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "flow");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: flow");
   }
   if(CUSUM == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "CUSUM");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: CUSUM");
   }
   if(discount == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "discount");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: discount");
   }
   if(explore == 1){
     planner = new PathPlanner(navGraph, *map, n,n, "explore");
     tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: explore");
   }
   cout << "initialized planner" << endl;
 
@@ -588,10 +595,11 @@ bool Controller::tierOneDecision(FORRAction *decision){
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Generate tier 3 decision
+// Generate tier 2 decision
 //
 //
 void Controller::tierTwoDecision(Position current){
+  ROS_DEBUG_STREAM("Tier 2 Decision");
   vector< list<int> > plans;
   typedef vector< list<int> >::iterator vecIT;
 
@@ -599,6 +607,7 @@ void Controller::tierTwoDecision(Position current){
 
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
+    ROS_DEBUG_STREAM("Creating plan " << planner->getName());
     plans.push_back(beliefs->getAgentState()->getWaypoints(current,planner,aStarOn));
   }
 
@@ -608,8 +617,11 @@ void Controller::tierTwoDecision(Position current){
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     vector<double> planCost;
+    ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
     for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
-      planCost.push_back(planner->calcPathCost(*vt));
+      double costOfPlan = planner->calcPathCost(*vt);
+      planCost.push_back(costOfPlan);
+      ROS_DEBUG_STREAM("Cost = " << costOfPlan);
     }
     planCosts.push_back(planCost);
   }
@@ -619,14 +631,17 @@ void Controller::tierTwoDecision(Position current){
   for (costIT it = planCosts.begin(); it != planCosts.end(); it++){
     double max = *max_element(it->begin(), it->end());
     double min = *min_element(it->begin(), it->end());
+    double norm_factor = (max - min)/10;
     vector<double> planCostNormalized;
+    ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
     for (doubIT vt = it->begin(); vt != it->end(); vt++){
       if (max != min){
-        double norm_factor = (max - min)/10;
         planCostNormalized.push_back((*vt - min)/norm_factor);
+        ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
       }
       else{
         planCostNormalized.push_back(0);
+        ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
       }
     }
     planCostsNormalized.push_back(planCostNormalized);
@@ -635,20 +650,27 @@ void Controller::tierTwoDecision(Position current){
   vector<double> totalCosts;
   for (int i = 0; i < plans.size(); i++){
     double cost=0;
+    ROS_DEBUG_STREAM("Computing total cost = " << cost);
     for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
       cost += it->at(i);
+      ROS_DEBUG_STREAM("cost = " << cost);
     }
+    ROS_DEBUG_STREAM("cost = " << cost);
     totalCosts.push_back(cost);
   }
   double maxCost=-1;
   int maxCostInd;
+  ROS_DEBUG_STREAM("Computing max cost");
   for (int i=0; i < totalCosts.size(); i++){
+    ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
     if (totalCosts[i] > maxCost){
       maxCost = totalCosts[i];
       maxCostInd = i;
     }
   }
+  ROS_DEBUG_STREAM("Max cost = " << maxCost << " Max cost ind = " << maxCostInd);
   PathPlanner *bestPlanner = tier2Planners.at(maxCostInd);
+  ROS_DEBUG_STREAM("Best plan " << bestPlanner->getName());
   beliefs->getAgentState()->setCurrentWaypoints(current,bestPlanner,aStarOn);
 }
 
