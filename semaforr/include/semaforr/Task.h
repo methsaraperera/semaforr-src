@@ -126,6 +126,36 @@ class Task {
 	cout << "plan generation complete" << endl;
   }
 
+  bool generateWaypointsFromInds(Position source, PathPlanner *planner, list<int> indices){
+	waypoints.clear();
+	//a_star planner works in cms so all units are converts into cm
+	//once plan is generated waypoints are stored in meters
+	Node s(1, source.getX()*100, source.getY()*100);
+	planner->setSource(s);
+	Node t(1, x*100, y*100);
+	planner->setTarget(t);
+
+	//cout << "plan generation status" << planner->calcPath(true) << endl;
+
+	waypointInd = indices;
+	Graph *navGraph = planner->getGraph();
+
+	list<int>::iterator it;
+	for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+		double x = navGraph->getNode(*it).getX()/100.0;
+		double y = navGraph->getNode(*it).getY()/100.0;
+		cout << x << " " << y << endl;
+		CartesianPoint waypoint(x,y);
+		waypoints.push_back(waypoint);
+		//if atleast one point is generated
+		cout << "Plan active is true" << endl;
+		isPlanActive = true;
+	}
+	setupNextWaypoint(source);
+	//planner->resetPath();
+	//cout << "plan generation complete" << endl;
+  }
+
 
    double planCost(vector<CartesianPoint> waypoints, PathPlanner *planner, Position source, Position target){
    	double cost = planner->calcPathCost(waypoints, source, target);

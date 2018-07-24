@@ -123,9 +123,9 @@ public:
     }
   }
 
-  void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+  void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn, list<int> indices){
     if(aStarOn){
-      currentTask->generateWaypoints(current, planner);
+      currentTask->generateWaypointsFromInds(current, planner, indices);
     }
   }
 

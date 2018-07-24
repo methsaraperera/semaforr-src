@@ -41,7 +41,7 @@ bool astar::search(int source, int target)
       //double tmpCost = graph->getNode(current->id).getCostTo(tmp->id);
 
       tmp->g = current->g + graph->getNode(current->id).getCostTo(tmp->id);
-      tmp->f = tmp->g + octile_h(tmp, goal); // Compute f for this node
+      tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
       tmp->prev = current;
 
       bool inClosed = false;

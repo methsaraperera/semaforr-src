@@ -87,7 +87,7 @@ int PathPlanner::calcPath(bool cautious){
       pathCompleted = false;
 
       if(!cautious)
-	smoothPath(path, s, t);
+        smoothPath(path, s, t);
 
       pathCost = calcPathCost(path);
       pathCalculated = true;
@@ -106,9 +106,9 @@ void PathPlanner::updateNavGraph(){
 	}
 	else{
 		cout << crowdModel.height << endl;
-		for(int i = 0 ; i < crowdModel.densities.size(); i++){
+		/*for(int i = 0 ; i < crowdModel.densities.size(); i++){
 			cout << crowdModel.densities[i] << endl;
-		}
+		}*/
 		vector<Edge*> edges = navGraph->getEdges();
 		// compute the extra cost imposed by crowd model on each edge in navGraph
 		for(int i = 0; i < edges.size(); i++){
@@ -128,9 +128,9 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	int b = 30;
   // weights that balance distance, crowd density and crowd flow
   int w1 = 1;
-  int w2 = 50;
-  int w3 = 50;
-  int w4 = 50;
+  int w2 = 100;
+  int w3 = 100;
+  int w4 = 100;
 
   if (name == "density"){
     //cout << "Updating density nav graph" << endl;
@@ -151,6 +151,17 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       flowcost = flowcost * (-1);
     }
     return (w1 * oldcost) + (w3 * flowcost);
+  }
+  if (name == "combined"){
+    double s_cost = cellCost(s.getX(), s.getY(), b);
+    double d_cost = cellCost(d.getX(), d.getY(), b);
+    double s_risk_cost = riskCost(s.getX(), s.getY(), b);
+    double d_risk_cost = riskCost(d.getX(), d.getY(), b);
+    double flowcost = computeCrowdFlow(s,d);
+    if(direction == false){
+      flowcost = flowcost * (-1);
+    }
+    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
   }
 
   //double newEdgeCost = (oldcost * flowcost);

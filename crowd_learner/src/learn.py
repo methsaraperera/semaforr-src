@@ -457,8 +457,8 @@ class CountCrowdModel:
 	crowd_rviz.info.origin.orientation.w = 1
 	density_rviz = [density[x][y] for x in range(self.division) for y in range(self.division)]
 	crowd_rviz.data = self.normalize(density_rviz, 0, 100)
-	print "Normalized Crowd model sent for rviz:"
-	print crowd_rviz.data
+	#print "Normalized Crowd model sent for rviz:"
+	#print crowd_rviz.data
 	self.pub_crowd_density.publish(crowd_rviz)
 
 	# send message for rviz display unsampled data
@@ -471,8 +471,8 @@ class CountCrowdModel:
 	risk_rviz.info.origin.orientation.w = 1
 	risk_density_rviz = [risk[x][y] for x in range(self.division) for y in range(self.division)]
 	risk_rviz.data = self.normalize(risk_density_rviz, 0, 100)
-	print "Normalized Risk model sent for rviz:"
-	print risk_rviz.data
+	#print "Normalized Risk model sent for rviz:"
+	#print risk_rviz.data
 	self.pub_crowd_risk.publish(risk_rviz)
 
 

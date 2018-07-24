@@ -99,7 +99,7 @@ public:
 		//ROS_DEBUG("Inside callback for crowd model");
 		cout << crowd_model.height << " " << crowd_model.width << endl;
 		//update the crowd model of the belief
-		//controller->getPlanner()->setCrowdModel(crowd_model);
+		controller->getPlanner()->setCrowdModel(crowd_model);
 		controller->updatePlannersModels(crowd_model);
 		controller->getBeliefs()->getAgentState()->setCrowdModel(crowd_model);
 	}

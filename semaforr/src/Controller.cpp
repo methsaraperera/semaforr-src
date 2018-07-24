@@ -259,6 +259,14 @@ void Controller::initialize_params(string filename){
       flow = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("flow " << flow);
     }
+    else if (fileLine.find("combined") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      combined = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("combined " << combined);
+    }
     else if (fileLine.find("CUSUM") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -319,43 +327,64 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
   map->readMapFromXML(map_config);
   cout << "Finished reading map"<< endl;
   
-  Graph *navGraph = new Graph(map,(int)(p*100.0));
-  cout << "initialized nav graph" << endl;
+  //Graph *navGraph = new Graph(map,(int)(p*100.0));
+  //cout << "initialized nav graph" << endl;
   //navGraph->printGraph();
   //navGraph->outputGraph();
   Node n;
   if(distance == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "distance");
+    Graph *navGraphDistance = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: distance");
   }
   if(density == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "density");
+    Graph *navGraphDensity = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphDensity, *map, n,n, "density");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: density");
   }
   if(risk == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "risk");
+    Graph *navGraphRisk = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphRisk, *map, n,n, "risk");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: risk");
   }
   if(flow == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "flow");
+    Graph *navGraphFlow = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphFlow, *map, n,n, "flow");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: flow");
   }
+  if(combined == 1){
+    Graph *navGraphCombined = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphCombined, *map, n,n, "combined");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: combined");
+  }
   if(CUSUM == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "CUSUM");
+    Graph *navGraphCUSUM = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphCUSUM, *map, n,n, "CUSUM");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: CUSUM");
   }
   if(discount == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "discount");
+    Graph *navGraphDiscount = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphDiscount, *map, n,n, "discount");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: discount");
   }
   if(explore == 1){
-    planner = new PathPlanner(navGraph, *map, n,n, "explore");
+    Graph *navGraphExplore = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphExplore, *map, n,n, "explore");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: explore");
   }
@@ -605,10 +634,21 @@ void Controller::tierTwoDecision(Position current){
 
   beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
 
+  double computationTimeSec=0.0;
+  timeval cv;
+  double start_timecv;
+  double end_timecv;
+
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     ROS_DEBUG_STREAM("Creating plan " << planner->getName());
+    gettimeofday(&cv,NULL);
+    start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
     plans.push_back(beliefs->getAgentState()->getWaypoints(current,planner,aStarOn));
+    gettimeofday(&cv,NULL);
+    end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+    computationTimeSec = (end_timecv-start_timecv);
+    ROS_DEBUG_STREAM("Planning time = " << computationTimeSec);
   }
 
   vector< vector<double> > planCosts;
@@ -658,20 +698,25 @@ void Controller::tierTwoDecision(Position current){
     ROS_DEBUG_STREAM("cost = " << cost);
     totalCosts.push_back(cost);
   }
-  double maxCost=-1;
-  int maxCostInd;
-  ROS_DEBUG_STREAM("Computing max cost");
+  double minCost=1000;
+  int minCostInd;
+  ROS_DEBUG_STREAM("Computing min cost");
   for (int i=0; i < totalCosts.size(); i++){
     ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
-    if (totalCosts[i] > maxCost){
-      maxCost = totalCosts[i];
-      maxCostInd = i;
+    if (totalCosts[i] < minCost){
+      minCost = totalCosts[i];
+      minCostInd = i;
     }
   }
-  ROS_DEBUG_STREAM("Max cost = " << maxCost << " Max cost ind = " << maxCostInd);
-  PathPlanner *bestPlanner = tier2Planners.at(maxCostInd);
+  ROS_DEBUG_STREAM("Min cost = " << minCost << " Min cost ind = " << minCostInd);
+  PathPlanner *bestPlanner = tier2Planners.at(minCostInd);
   ROS_DEBUG_STREAM("Best plan " << bestPlanner->getName());
-  beliefs->getAgentState()->setCurrentWaypoints(current,bestPlanner,aStarOn);
+  beliefs->getAgentState()->setCurrentWaypoints(current,bestPlanner,aStarOn, plans.at(minCostInd));
+
+  for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+    PathPlanner *planner = *it;
+    planner->resetPath();
+  }
 }
 
 

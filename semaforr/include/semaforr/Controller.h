@@ -115,7 +115,7 @@ private:
   bool doorsOn;
   bool aStarOn;
   bool firstTaskAssigned;
-  bool distance, density, risk, flow, CUSUM, discount, explore;
+  bool distance, density, risk, flow, combined, CUSUM, discount, explore;
 };
   
 #endif /* CONTROLLER_H */
