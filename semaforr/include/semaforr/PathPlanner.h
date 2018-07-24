@@ -28,6 +28,14 @@ private:
   list<int> path; 
   double pathCost;
   string name;
+  vector< vector<int> > posHistMap;
+  double width;
+  double height;
+  int granularity;
+  int boxes_width;
+  int boxes_height;
+  int map_height;
+  int map_width;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -63,6 +71,29 @@ public:
   }
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
+  void setPosHistory(vector< vector<CartesianPoint> > all_trace){
+    if (name == "novel"){
+      width = navGraph->getMap()->getLength();
+      height = navGraph->getMap()->getHeight();
+      granularity = 2;
+      boxes_width = width/granularity;
+      boxes_height = height/granularity;
+      map_height = height;
+      map_width = width;
+      for(int i = 0; i < boxes_width; i++){
+          vector<int> col;
+          for(int j = 0; j < boxes_height; j++){
+              col.push_back(0);
+          }
+          posHistMap.push_back(col);
+      }
+      for(int i = 0; i < all_trace.size(); i++){
+        for(int j = 0; j < all_trace[i].size(); j++) {
+          posHistMap[(int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width)][(int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height)] += 1;
+        }
+      }
+    }
+  }
 
   void updateNavGraph();
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
@@ -84,6 +115,8 @@ public:
   double cellCost(int sx, int sy, int buffer);
 
   double riskCost(int sx, int sy, int buffer);
+
+  double novelCost(int sx, int sy);
 
   void setTarget(Node t){ target = t; }
 

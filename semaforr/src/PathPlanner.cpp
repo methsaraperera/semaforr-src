@@ -105,7 +105,7 @@ void PathPlanner::updateNavGraph(){
 		cout << "crowdModel not recieved" << endl;
 	}
 	else{
-		cout << crowdModel.height << endl;
+		//cout << crowdModel.height << endl;
 		/*for(int i = 0 ; i < crowdModel.densities.size(); i++){
 			cout << crowdModel.densities[i] << endl;
 		}*/
@@ -115,7 +115,7 @@ void PathPlanner::updateNavGraph(){
 			Node toNode = navGraph->getNode(edges[i]->getTo());
 			Node fromNode = navGraph->getNode(edges[i]->getFrom());
 			double oldcost = edges[i]->getDistCost();
-			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, false, oldcost);
+			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, true, oldcost);
 			double newEdgeCosttf = computeNewEdgeCost(fromNode, toNode, false, oldcost); 
 			navGraph->updateEdgeCost(i, newEdgeCostft, newEdgeCosttf);
 			//cout << "Edge Cost " << oldcost << " -> " << newEdgeCostft << " -> " << newEdgeCosttf << endl;
@@ -131,7 +131,16 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w2 = 100;
   int w3 = 100;
   int w4 = 100;
-
+  int w5 = 100;
+  if (name == "smooth"){
+    //cout << "Updating smooth nav graph" << endl;
+    return (oldcost * oldcost * oldcost * oldcost);
+  }
+  if (name == "novel"){
+    double ns_cost = novelCost(s.getX(), s.getY());
+    double nd_cost = novelCost(d.getX(), d.getY());
+    return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
+  }
   if (name == "density"){
     //cout << "Updating density nav graph" << endl;
     double s_cost = cellCost(s.getX(), s.getY(), b);
@@ -282,6 +291,10 @@ double PathPlanner::computeCrowdFlow(Node s, Node d){
 
 	double cost = cost_u + cost_d + cost_r + cost_l + cost_ur + cost_ul + cost_dr + cost_dl;
 	return cost;
+}
+
+double PathPlanner::novelCost(int nodex, int nodey){
+  return posHistMap[(int)((nodex/(map_width*1.0)) * boxes_width)][(int)((nodey/(map_height*1.0)) * boxes_height)];
 }
 
 

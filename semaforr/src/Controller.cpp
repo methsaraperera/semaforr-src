@@ -235,6 +235,22 @@ void Controller::initialize_params(string filename){
       distance = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("distance " << distance);
     }
+    else if (fileLine.find("smooth") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      smooth = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("smooth " << smooth);
+    }
+    else if (fileLine.find("novel") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      novel = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("novel " << novel);
+    }
     else if (fileLine.find("density") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -338,6 +354,20 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: distance");
+  }
+  if(smooth == 1){
+    Graph *navGraphSmooth = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphSmooth, *map, n,n, "smooth");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: smooth");
+  }
+  if(novel == 1){
+    Graph *navGraphNovel = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphNovel, *map, n,n, "novel");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: novel");
   }
   if(density == 1){
     Graph *navGraphDensity = new Graph(map,(int)(p*100.0));
@@ -641,6 +671,7 @@ void Controller::tierTwoDecision(Position current){
 
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
+    planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     ROS_DEBUG_STREAM("Creating plan " << planner->getName());
     gettimeofday(&cv,NULL);
     start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
