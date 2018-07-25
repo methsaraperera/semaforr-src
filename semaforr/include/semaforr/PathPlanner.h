@@ -73,9 +73,9 @@ public:
 
   void setPosHistory(vector< vector<CartesianPoint> > all_trace){
     if (name == "novel"){
-      width = navGraph->getMap()->getLength();
-      height = navGraph->getMap()->getHeight();
-      granularity = 2;
+      width = navGraph->getMap()->getLength()/100;
+      height = navGraph->getMap()->getHeight()/100;
+      granularity = 10;
       boxes_width = width/granularity;
       boxes_height = height/granularity;
       map_height = height;
@@ -87,8 +87,11 @@ public:
           }
           posHistMap.push_back(col);
       }
+      //cout << "width = " << width << " height = " << height << " granularity = " << granularity << " boxes_width = " << boxes_width << " boxes_height = " << boxes_height << " map_width = " << map_width << " map_height = " << map_height << endl;
       for(int i = 0; i < all_trace.size(); i++){
         for(int j = 0; j < all_trace[i].size(); j++) {
+          //cout << "Pose " << i << ", " << j << " : x = " << all_trace[i][j].get_x() << " y = " << all_trace[i][j].get_y() << endl;
+          //cout << "Modified x = " << (int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width) << " Modified y = " << (int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height) << endl;
           posHistMap[(int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width)][(int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height)] += 1;
         }
       }

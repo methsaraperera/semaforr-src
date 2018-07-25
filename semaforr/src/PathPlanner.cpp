@@ -139,6 +139,9 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   if (name == "novel"){
     double ns_cost = novelCost(s.getX(), s.getY());
     double nd_cost = novelCost(d.getX(), d.getY());
+    /*if (ns_cost > 0 or nd_cost > 0) {
+      cout << "old cost = " << oldcost << " novelCost = " << (ns_cost+nd_cost)/2 << " combined cost = " << (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2) << endl;
+    }*/
     return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
   }
   if (name == "density"){
@@ -294,7 +297,9 @@ double PathPlanner::computeCrowdFlow(Node s, Node d){
 }
 
 double PathPlanner::novelCost(int nodex, int nodey){
-  return posHistMap[(int)((nodex/(map_width*1.0)) * boxes_width)][(int)((nodey/(map_height*1.0)) * boxes_height)];
+  //cout << "Inside novelCost : Node x = " << (nodex/100.0) << " Node y = " << (nodey/100.0) << endl;
+  //cout << "Modified Node x = " << (int)(((nodex/100.0)/(map_width*1.0)) * boxes_width) << " Modified Node y = " << (int)(((nodey/100.0)/(map_height*1.0)) * boxes_height) << endl;
+  return posHistMap[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
 }
 
 
