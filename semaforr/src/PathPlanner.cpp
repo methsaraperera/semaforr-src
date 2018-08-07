@@ -132,9 +132,11 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w3 = 100;
   int w4 = 100;
   int w5 = 100;
+  int w6 = 1;
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
-    return (oldcost * oldcost * oldcost * oldcost);
+    double smooth_cost = (oldcost * oldcost * oldcost);
+    return smooth_cost;
   }
   if (name == "novel"){
     double ns_cost = novelCost(s.getX(), s.getY());
@@ -170,10 +172,13 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double s_risk_cost = riskCost(s.getX(), s.getY(), b);
     double d_risk_cost = riskCost(d.getX(), d.getY(), b);
     double flowcost = computeCrowdFlow(s,d);
+    double ns_cost = novelCost(s.getX(), s.getY());
+    double nd_cost = novelCost(d.getX(), d.getY());
+    double smooth_cost = (oldcost * oldcost * oldcost);
     if(direction == false){
       flowcost = flowcost * (-1);
     }
-    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost);
   }
 
   //double newEdgeCost = (oldcost * flowcost);
@@ -304,10 +309,17 @@ double PathPlanner::novelCost(int nodex, int nodey){
 
 
 double PathPlanner::projection(double flow_angle, double flow_length, double xs, double ys, double xd, double yd){
-	double pi = 3.145;
-	double edge_angle = atan2((ys - yd),(xs - xd));
-	edge_angle = (edge_angle > 0 ? edge_angle : (2*pi + edge_angle));
+	//double pi = 3.145;
+	double edge_angle = atan2((ys - yd),(xs - xd))+M_PI;
+	//edge_angle = (edge_angle > 0 ? edge_angle : (2*pi + edge_angle));
+  edge_angle = (edge_angle < (2*M_PI) ? edge_angle : (0.0));
 	double theta = flow_angle - edge_angle;
+  if(theta>M_PI){
+    theta = theta-2*M_PI;
+  }
+  else if(theta<-M_PI){
+    theta = theta+2*M_PI;
+  }
 	//cout << "Flow angle: " << flow_angle << " Edge angle: " << edge_angle << " Diff: " << theta << endl;
 	return flow_length * cos(theta);
 }

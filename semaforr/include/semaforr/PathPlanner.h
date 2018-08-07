@@ -29,6 +29,7 @@ private:
   double pathCost;
   string name;
   vector< vector<int> > posHistMap;
+  vector< vector<double> > posHistMapNorm;
   double width;
   double height;
   int granularity;
@@ -72,28 +73,48 @@ public:
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
   void setPosHistory(vector< vector<CartesianPoint> > all_trace){
-    if (name == "novel"){
+    if (name == "novel" or name == "combined"){
       width = navGraph->getMap()->getLength()/100;
       height = navGraph->getMap()->getHeight()/100;
-      granularity = 10;
+      granularity = 5;
       boxes_width = width/granularity;
       boxes_height = height/granularity;
       map_height = height;
       map_width = width;
       for(int i = 0; i < boxes_width; i++){
-          vector<int> col;
-          for(int j = 0; j < boxes_height; j++){
-              col.push_back(0);
-          }
-          posHistMap.push_back(col);
+        vector<int> col;
+        for(int j = 0; j < boxes_height; j++){
+          col.push_back(0);
+        }
+        posHistMap.push_back(col);
       }
-      //cout << "width = " << width << " height = " << height << " granularity = " << granularity << " boxes_width = " << boxes_width << " boxes_height = " << boxes_height << " map_width = " << map_width << " map_height = " << map_height << endl;
+      cout << "width = " << width << " height = " << height << " granularity = " << granularity << " boxes_width = " << boxes_width << " boxes_height = " << boxes_height << " map_width = " << map_width << " map_height = " << map_height << endl;
       for(int i = 0; i < all_trace.size(); i++){
         for(int j = 0; j < all_trace[i].size(); j++) {
           //cout << "Pose " << i << ", " << j << " : x = " << all_trace[i][j].get_x() << " y = " << all_trace[i][j].get_y() << endl;
           //cout << "Modified x = " << (int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width) << " Modified y = " << (int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height) << endl;
           posHistMap[(int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width)][(int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height)] += 1;
         }
+      }
+      double max=-1, min=1000000;
+      for(int i = 0; i < boxes_width; i++){
+        for(int j = 0; j < boxes_height; j++){
+          if(posHistMap[i][j]>max){
+            max = posHistMap[i][j];
+          }
+          if(posHistMap[i][j]<min){
+            min = posHistMap[i][j];
+          }
+        }
+      }
+      cout << "max = " << max << " min = " << min << endl;
+      for(int i = 0; i < boxes_width; i++){
+        vector<double> col;
+        for(int j = 0; j < boxes_height; j++){
+          cout << "Cell val = " << posHistMap[i][j] << " Normed = " << (posHistMap[i][j]-min)/(max-min) << endl;
+          col.push_back((posHistMap[i][j]-min)/(max-min));
+        }
+        posHistMapNorm.push_back(col);
       }
     }
   }
