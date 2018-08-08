@@ -42,21 +42,39 @@ bool astar::search(int source, int target)
 
       tmp->g = current->g + graph->getNode(current->id).getCostTo(tmp->id);
       tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
-      tmp->prev = current;
+      tmp->prev.push_back(current);
 
       bool inClosed = false;
       for(uint j = 0; j < closed.size(); j++)
+      {
         if(closed[j]->id == tmp->id)
         {
           inClosed = true;
-          break;
           if(closed[j]->g > tmp->g)
           {
             printf("closed[j].g = %f, tmp.g = %f\n", closed[j]->g, tmp->g);
             closed[j] = tmp;
           }
+          else if(closed[j]->g == tmp->g)
+          {
+            printf("closed[j].g = %f, tmp.g = %f\n", closed[j]->g, tmp->g);
+            bool inClosedPrev = false;
+            for(int i = 0; i < closed[j]->prev.size(); i++)
+            {
+              if(closed[j]->prev[i]->id == current->id)
+              {
+                inClosedPrev = true;
+              }
+            }
+            if(inClosedPrev == false)
+            {
+              closed[j]->prev.push_back(current);
+            }
+            cout << "prev.size = " << closed[j]->prev.size() << endl;
+          }
+          break;
         }
-
+      }
       if(inClosed || !tmp->accessible)
         continue;
 
@@ -95,9 +113,35 @@ void astar::push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare> &pq, 
     {
       found = true;
       if(tmp->g < n->g)
+      {
         pq.push(tmp);
+      }
+      else if(tmp->g == n->g)
+      {
+        //cout << "open->id = " << tmp->id << ", n->id = " << n->id << endl;
+        printf("open->g = %f, n->g = %f\n", tmp->g, n->g);
+        for(int i = 0; i < n->prev.size(); i++)
+        {
+          bool intmpPrev = false;
+          for(int j = 0; j < tmp->prev.size(); j++)
+          {
+            if(tmp->prev[j]->id == n->prev[i]->id)
+            {
+              intmpPrev = true;
+            }
+          }
+          if(intmpPrev == false)
+          {
+            tmp->prev.push_back(n->prev[i]);
+          }
+        }
+        cout << "prev.size = " << tmp->prev.size() << endl;
+        pq.push(tmp);
+      }
       else
+      {
         pq.push(n);
+      }
       break;
     }
 
@@ -119,11 +163,13 @@ void astar::push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare> &pq, 
 
 void astar::construct_path(_VNode* g)
 {
+  cout << "Inside construct_path" << endl;
   path.clear();
-  while(g->prev != NULL)
+  while(!g->prev.empty())
   {
-    path.push_front(g->prev->id);
-    g = g->prev;
+    cout << "g->prev.size() = " << g->prev.size() << endl;
+    path.push_front(g->prev[0]->id);
+    g = g->prev[0];
   }
 
 }

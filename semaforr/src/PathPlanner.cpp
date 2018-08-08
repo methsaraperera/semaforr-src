@@ -128,10 +128,10 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	int b = 30;
   // weights that balance distance, crowd density and crowd flow
   int w1 = 1;
-  int w2 = 100;
+  int w2 = 200;
   int w3 = 100;
   int w4 = 100;
-  int w5 = 100;
+  int w5 = 200;
   int w6 = 1;
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
@@ -304,7 +304,8 @@ double PathPlanner::computeCrowdFlow(Node s, Node d){
 double PathPlanner::novelCost(int nodex, int nodey){
   //cout << "Inside novelCost : Node x = " << (nodex/100.0) << " Node y = " << (nodey/100.0) << endl;
   //cout << "Modified Node x = " << (int)(((nodex/100.0)/(map_width*1.0)) * boxes_width) << " Modified Node y = " << (int)(((nodey/100.0)/(map_height*1.0)) * boxes_height) << endl;
-  return posHistMap[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
+  //cout << "novelCost = " << posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)] << endl;
+  return posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
 }
 
 

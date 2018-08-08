@@ -57,7 +57,7 @@ private:
           x, y;         // copied from the Node
       double g,        // distance from start
              f;       // g + heuristic
-      _VNode* prev;  // best predecessor to move from, used to built the path
+      vector<_VNode*> prev;  // best predecessor to move from, used to built the path
 
       _VNode(Node &n) // Make a _VNode from a Node
       {
@@ -66,7 +66,7 @@ private:
         this->y = n.getY();
         this->accessible = n.isAccessible();
         g = f = 0;
-        prev = NULL;
+        //prev = NULL;
       }
 
       _VNode(Node n) // Make a _VNode from a Node
@@ -76,7 +76,7 @@ private:
         this->y = n.getY();
         this->accessible = n.isAccessible();
         g = f = 0;
-        prev = NULL;
+        //prev = NULL;
       }
 
   };
