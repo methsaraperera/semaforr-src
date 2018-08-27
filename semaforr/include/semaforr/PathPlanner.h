@@ -26,8 +26,10 @@ private:
   Map map;
   semaforr::CrowdModel crowdModel;
   Node source, target; 
-  list<int> path; 
+  list<int> path;
+  vector< list<int> > paths;
   double pathCost;
+  vector <double> pathCosts;
   string name;
   vector< vector<int> > posHistMap;
   vector< vector<double> > posHistMapNorm;
@@ -62,8 +64,11 @@ public:
   /*! \return list of node indexes of waypoints */
   list<int> getPath(){ return path; }
 
+  vector< list<int> > getPaths(){ return paths; }
+
   void resetPath() { 
     path.clear();
+    paths.clear();
     pathCompleted = true; 
     pathCalculated = false;
   }

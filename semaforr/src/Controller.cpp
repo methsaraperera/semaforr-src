@@ -660,6 +660,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
 void Controller::tierTwoDecision(Position current){
   ROS_DEBUG_STREAM("Tier 2 Decision");
   vector< list<int> > plans;
+  vector<string> plannerNames;
   typedef vector< list<int> >::iterator vecIT;
 
   beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
@@ -672,10 +673,14 @@ void Controller::tierTwoDecision(Position current){
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
-    ROS_DEBUG_STREAM("Creating plan " << planner->getName());
+    ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     gettimeofday(&cv,NULL);
     start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
-    plans.push_back(beliefs->getAgentState()->getWaypoints(current,planner,aStarOn));
+    vector< list<int> > multPlans = beliefs->getAgentState()->getPlansWaypoints(current,planner,aStarOn);
+    for (int i = 0; i < multPlans.size(); i++){
+      plans.push_back(multPlans[i]);
+      plannerNames.push_back(planner->getName());
+    }
     gettimeofday(&cv,NULL);
     end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
     computationTimeSec = (end_timecv-start_timecv);
@@ -726,23 +731,36 @@ void Controller::tierTwoDecision(Position current){
       cost += it->at(i);
       ROS_DEBUG_STREAM("cost = " << cost);
     }
-    ROS_DEBUG_STREAM("cost = " << cost);
+    ROS_DEBUG_STREAM("Total cost = " << cost);
     totalCosts.push_back(cost);
   }
   double minCost=1000;
-  int minCostInd;
   ROS_DEBUG_STREAM("Computing min cost");
   for (int i=0; i < totalCosts.size(); i++){
     ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
     if (totalCosts[i] < minCost){
       minCost = totalCosts[i];
-      minCostInd = i;
     }
   }
-  ROS_DEBUG_STREAM("Min cost = " << minCost << " Min cost ind = " << minCostInd);
-  PathPlanner *bestPlanner = tier2Planners.at(minCostInd);
-  ROS_DEBUG_STREAM("Best plan " << bestPlanner->getName());
-  beliefs->getAgentState()->setCurrentWaypoints(current,bestPlanner,aStarOn, plans.at(minCostInd));
+  ROS_DEBUG_STREAM("Min cost = " << minCost);
+  //vector<PathPlanner*> bestPlanners;
+  vector<string> bestPlanNames;
+  vector<int> bestPlanInds;
+  for (int i=0; i < totalCosts.size(); i++){
+    if(totalCosts[i] == minCost){
+      //bestPlanners.push_back(tier2Planners.at(i));
+      bestPlanNames.push_back(plannerNames[i]);
+      bestPlanInds.push_back(i);
+      ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
+    }
+  }
+
+  srand(time(NULL));
+  int random_number = rand() % (bestPlanInds.size());
+  //PathPlanner *bestPlanner = bestPlanners.at(random_number);
+  ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
+  ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
+  beliefs->getAgentState()->setCurrentWaypoints(current,tier2Planners[0],aStarOn, plans.at(bestPlanInds.at(random_number)));
 
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;

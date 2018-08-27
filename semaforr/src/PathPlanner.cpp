@@ -83,6 +83,7 @@ int PathPlanner::calcPath(bool cautious){
     astar newsearch(*navGraph, s, t);
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
+      paths = newsearch.getPathsToTarget();
       objectiveSet = false;
       pathCompleted = false;
 
@@ -91,6 +92,9 @@ int PathPlanner::calcPath(bool cautious){
 
       pathCost = calcPathCost(path);
       pathCalculated = true;
+      for (int i=0; i<paths.size(); i++){
+        pathCosts.push_back(calcPathCost(paths[i]));
+      }
     }
     else {
       return 3;
@@ -128,14 +132,14 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
 	int b = 30;
   // weights that balance distance, crowd density and crowd flow
   int w1 = 1;
-  int w2 = 200;
-  int w3 = 100;
-  int w4 = 100;
-  int w5 = 200;
+  int w2 = 500;
+  int w3 = 500;
+  int w4 = 500;
+  int w5 = 500;
   int w6 = 1;
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
-    double smooth_cost = (oldcost * oldcost * oldcost);
+    double smooth_cost = (oldcost * 5);
     return smooth_cost;
   }
   if (name == "novel"){
@@ -161,8 +165,11 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   if (name == "flow"){
     //cout << "updating flow nav graph" << endl;
     double flowcost = computeCrowdFlow(s,d);
-    if(direction == false){
+    if(direction == true){
       flowcost = flowcost * (-1);
+    }
+    if(flowcost < 0){
+      flowcost = 0;
     }
     return (w1 * oldcost) + (w3 * flowcost);
   }
@@ -174,9 +181,12 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double flowcost = computeCrowdFlow(s,d);
     double ns_cost = novelCost(s.getX(), s.getY());
     double nd_cost = novelCost(d.getX(), d.getY());
-    double smooth_cost = (oldcost * oldcost * oldcost);
-    if(direction == false){
+    double smooth_cost = (oldcost * 5);
+    if(direction == true){
       flowcost = flowcost * (-1);
+    }
+    if(flowcost < 0){
+      flowcost = 0;
     }
     return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost);
   }

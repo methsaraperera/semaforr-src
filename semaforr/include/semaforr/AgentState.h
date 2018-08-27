@@ -123,6 +123,14 @@ public:
     }
   }
 
+  vector< list<int> > getPlansWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+    if(aStarOn){
+      ROS_DEBUG_STREAM("Generating multiple sets of waypoints");
+      currentTask->generateWaypoints(current, planner);
+      return currentTask->getPlansInds();
+    }
+  }
+
   void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn, list<int> indices){
     if(aStarOn){
       currentTask->generateWaypointsFromInds(current, planner, indices);

@@ -9,6 +9,7 @@
 class astar {
 public:
   list<int> path;
+  vector< list<int> > paths;
 
   astar (Graph*);
   astar (Graph, Node&, Node&);
@@ -17,7 +18,7 @@ public:
   // Wrappers
   bool isPathFound() { return ( !path.empty() || start->id == goal->id ); }
   list<int> getPathToTarget() { return path; }
-
+  vector< list<int> > getPathsToTarget() { return paths; }
 
 private:
 
