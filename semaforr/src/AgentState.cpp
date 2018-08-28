@@ -370,13 +370,13 @@ FORRAction AgentState::get_max_allowed_forward_move(){
 
 
 // returns an Action that takes the robot closest to the target
-FORRAction AgentState::moveTowards(){
+FORRAction AgentState::moveTowards(CartesianPoint target){
     ROS_DEBUG("AgentState :: In moveTowards");
-    double distance_from_target = currentPosition.getDistance(currentTask->getX(), currentTask->getY());
+    double distance_from_target = currentPosition.getDistance(target.get_x(), target.get_y());
     ROS_DEBUG_STREAM("Distance from target : " << distance_from_target);
     // compute the angular difference between the direction to the target and the current robot direction
     double robot_direction = currentPosition.getTheta();
-    double goal_direction = atan2((currentTask->getY() - currentPosition.getY()), (currentTask->getX() - currentPosition.getX()));
+    double goal_direction = atan2((target.get_y() - currentPosition.getY()), (target.get_x() - currentPosition.getX()));
     
     double required_rotation = goal_direction - robot_direction;
 

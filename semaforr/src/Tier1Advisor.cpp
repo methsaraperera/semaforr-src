@@ -113,21 +113,35 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   ROS_DEBUG("Begin victory advisor");
   // if the robot is oriented towards the goal and the robot actions which are not vetoed allows the robot to reach the goal then take that action.
   bool decisionMade = false;
-  CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+  CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
   ROS_DEBUG("Check if target can be spotted using laser scan");
   bool targetInSight = beliefs->getAgentState()->canSeePoint(task);
   
   if(targetInSight == false){
-    ROS_DEBUG("Target not in sight , skipping victory advisor");
-  }
-  else{
-      ROS_DEBUG("Target in sight , victory advisor active");
-      (*decision) = beliefs->getAgentState()->moveTowards();
+    ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
+    CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint);
+    if(waypointInSight == false){
+      ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
+    }
+    else{
+      ROS_DEBUG("Waypoint in sight , victory advisor active");
+      (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
       if(forward.parameter >= decision->parameter and decision->parameter != 0){
-	ROS_DEBUG("Target in sight and no obstacles , victory advisor to take decision");
-      	decisionMade = true;
+        ROS_DEBUG("Waypoint in sight and no obstacles , victory advisor to take decision");
+        decisionMade = true;
       }
+    }
+  }
+  else{
+    ROS_DEBUG("Target in sight , victory advisor active");
+    (*decision) = beliefs->getAgentState()->moveTowards(task);
+    FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+    if(forward.parameter >= decision->parameter and decision->parameter != 0){
+      ROS_DEBUG("Target in sight and no obstacles , victory advisor to take decision");
+    	decisionMade = true;
+    }
   }
   return decisionMade;
 }

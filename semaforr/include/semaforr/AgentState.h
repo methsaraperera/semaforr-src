@@ -64,7 +64,7 @@ public:
   }
   
   // Best possible move towards the target
-  FORRAction moveTowards();
+  FORRAction moveTowards(CartesianPoint target);
 
   set<FORRAction> *getActionSet(){return action_set;}
   set<FORRAction> *getForwardActionSet(){return forward_set;}

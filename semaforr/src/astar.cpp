@@ -21,7 +21,7 @@ bool astar::search(int source, int target)
   start = new _VNode(graph->getNode(source));
   goal  = new _VNode(graph->getNode(target));
   open.push(start);
-  int count = 0;
+  //int count = 0;
   while (!open.empty())
   {
     _VNode* current = open.top(); open.pop(); // Get and remove the top of the open list
@@ -41,7 +41,7 @@ bool astar::search(int source, int target)
       //double tmpCost = graph->getNode(current->id).getCostTo(tmp->id);
 
       tmp->g = current->g + graph->getNode(current->id).getCostTo(tmp->id);
-      tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
+      tmp->f = tmp->g + octile_h(tmp, goal); // Compute f for this node
       tmp->prev.push_back(current);
 
       bool inClosed = false;
@@ -80,9 +80,9 @@ bool astar::search(int source, int target)
 
       push_update(open, tmp);
     }
-    count++;
+    //count++;
   }
-  cout << "Number of nodes expanded = " << count << endl;
+  //cout << "Number of nodes expanded = " << count << endl;
   return false;
 }
 
@@ -217,7 +217,7 @@ void astar::construct_path(_VNode* g)
   cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
-  tmp = g;
+  /*tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
@@ -362,7 +362,7 @@ void astar::construct_path(_VNode* g)
     }
   }
   cout << "Path size = " << path.size() << endl;
-  paths.push_back(path);
+  paths.push_back(path);*/
   cout << "Number of paths = " << paths.size() << endl;
 }
 

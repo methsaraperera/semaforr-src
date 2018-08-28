@@ -731,7 +731,7 @@ void Controller::tierTwoDecision(Position current){
       cost += it->at(i);
       ROS_DEBUG_STREAM("cost = " << cost);
     }
-    ROS_DEBUG_STREAM("Total cost = " << cost);
+    ROS_DEBUG_STREAM("Final cost = " << cost);
     totalCosts.push_back(cost);
   }
   double minCost=1000;
@@ -815,9 +815,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
 
     advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
 
-    cout << "Before commenting " << endl;
+    //cout << "Before commenting " << endl;
     comments = advisor->allAdvice();
-    cout << "after commenting " << endl;
+    //cout << "after commenting " << endl;
     // aggregate all comments
 
     for(mapIt iterator = comments.begin(); iterator != comments.end(); iterator++){
