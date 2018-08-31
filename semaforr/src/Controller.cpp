@@ -307,6 +307,46 @@ void Controller::initialize_params(string filename){
       explore = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("explore " << explore);
     }
+    else if (fileLine.find("spatial") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      spatial = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("spatial " << spatial);
+    }
+    else if (fileLine.find("trailer") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      trailer = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("trailer " << trailer);
+    }
+    else if (fileLine.find("barrier") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      barrier = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("barrier " << barrier);
+    }
+    else if (fileLine.find("conveys") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      conveys = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("conveys " << conveys);
+    }
+    else if (fileLine.find("turn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      turn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("turn " << turn);
+    }
   }
 }
 
@@ -418,7 +458,42 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: explore");
   }
-  cout << "initialized planner" << endl;
+  if(spatial == 1){
+    Graph *navGraphSpatial = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphSpatial, *map, n,n, "spatial");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: spatial");
+  }
+  if(trailer == 1){
+    Graph *navGraphTrailer = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphTrailer, *map, n,n, "trailer");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: trailer");
+  }
+  if(barrier == 1){
+    Graph *navGraphBarrier = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphBarrier, *map, n,n, "barrier");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: barrier");
+  }
+  if(conveys == 1){
+    Graph *navGraphConveys = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphConveys, *map, n,n, "conveys");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: conveys");
+  }
+  if(turn == 1){
+    Graph *navGraphTurn = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphTurn, *map, n,n, "turn");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: turn");
+  }
+  cout << "initialized planners" << endl;
 
 }
 
@@ -673,6 +748,7 @@ void Controller::tierTwoDecision(Position current){
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
+    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors());
     ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     gettimeofday(&cv,NULL);
     start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
@@ -722,7 +798,7 @@ void Controller::tierTwoDecision(Position current){
     }
     planCostsNormalized.push_back(planCostNormalized);
   }
-
+  planCostsNormalized.pop_back();
   vector<double> totalCosts;
   for (int i = 0; i < plans.size(); i++){
     double cost=0;
@@ -736,19 +812,27 @@ void Controller::tierTwoDecision(Position current){
   }
   double minCost=1000;
   ROS_DEBUG_STREAM("Computing min cost");
-  for (int i=0; i < totalCosts.size(); i++){
+  for (int i=0; i < totalCosts.size()-3; i++){
     ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
     if (totalCosts[i] < minCost){
       minCost = totalCosts[i];
     }
   }
+
+  double minCombinedCost=1000;
+  for (int i=18; i < totalCosts.size(); i++){
+    ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
+    if (totalCosts[i] < minCombinedCost){
+      minCombinedCost = totalCosts[i];
+    }
+  }
   ROS_DEBUG_STREAM("Min cost = " << minCost);
-  //vector<PathPlanner*> bestPlanners;
+  ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
+
   vector<string> bestPlanNames;
   vector<int> bestPlanInds;
-  for (int i=0; i < totalCosts.size(); i++){
+  for (int i=0; i < totalCosts.size()-3; i++){
     if(totalCosts[i] == minCost){
-      //bestPlanners.push_back(tier2Planners.at(i));
       bestPlanNames.push_back(plannerNames[i]);
       bestPlanInds.push_back(i);
       ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
@@ -757,7 +841,6 @@ void Controller::tierTwoDecision(Position current){
 
   srand(time(NULL));
   int random_number = rand() % (bestPlanInds.size());
-  //PathPlanner *bestPlanner = bestPlanners.at(random_number);
   ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
   ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
   beliefs->getAgentState()->setCurrentWaypoints(current,tier2Planners[0],aStarOn, plans.at(bestPlanInds.at(random_number)));

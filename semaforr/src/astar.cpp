@@ -9,14 +9,14 @@ astar::astar(Graph *g)
   this->path.clear();
 }
 
-astar::astar(Graph g, Node& start, Node& goal)
+astar::astar(Graph g, Node& start, Node& goal, string name)
 {
   this->graph = &g;
   this->path.clear();
-  search(start.getID(), goal.getID());
+  search(start.getID(), goal.getID(), name);
 }
 
-bool astar::search(int source, int target)
+bool astar::search(int source, int target, string name)
 {
   start = new _VNode(graph->getNode(source));
   goal  = new _VNode(graph->getNode(target));
@@ -41,7 +41,18 @@ bool astar::search(int source, int target)
       //double tmpCost = graph->getNode(current->id).getCostTo(tmp->id);
 
       tmp->g = current->g + graph->getNode(current->id).getCostTo(tmp->id);
-      tmp->f = tmp->g + octile_h(tmp, goal); // Compute f for this node
+      if (name == "distance")
+      {
+        tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
+      }
+      else if (name == "smooth")
+      {
+        tmp->f = tmp->g + euclidian_h(tmp, goal)*5; // Compute f for this node
+      }
+      else
+      {
+        tmp->f = tmp->g + 0;
+      }
       tmp->prev.push_back(current);
 
       bool inClosed = false;
@@ -168,20 +179,20 @@ void astar::construct_path(_VNode* g)
   cout << "Inside construct_path" << endl;
   _VNode* tmp = g;
   path.clear();
-  while(!tmp->prev.empty())
+  /*while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     path.push_front(tmp->prev[0]->id);
     tmp = tmp->prev[0];
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       path.push_front(tmp->prev[1]->id);
@@ -193,14 +204,14 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -214,35 +225,14 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
-  paths.push_back(path);
-
-  /*tmp = g;
-  path.clear();
-  while(!tmp->prev.empty())
-  {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
-    if(tmp->prev.size()>1)
-    {
-      srand(time(NULL));
-      int random_number = rand() % (tmp->prev.size());
-      path.push_front(tmp->prev[random_number]->id);
-      tmp = tmp->prev[random_number];
-    }
-    else
-    {
-      path.push_front(tmp->prev[0]->id);
-      tmp = tmp->prev[0];
-    }
-  }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -256,14 +246,14 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -277,14 +267,14 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -298,14 +288,14 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -319,14 +309,35 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();*/
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -340,14 +351,14 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
 
   tmp = g;
   path.clear();
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       srand(time(NULL));
@@ -361,9 +372,9 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
-  cout << "Path size = " << path.size() << endl;
-  paths.push_back(path);*/
-  cout << "Number of paths = " << paths.size() << endl;
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+  //cout << "Number of paths = " << paths.size() << endl;
 }
 
 /* Returns true if left hand side has a lower f value than right hand side */

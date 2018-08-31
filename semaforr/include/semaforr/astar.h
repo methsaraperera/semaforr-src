@@ -12,8 +12,8 @@ public:
   vector< list<int> > paths;
 
   astar (Graph*);
-  astar (Graph, Node&, Node&);
-  bool search(int, int); // Search the graph for a path and return true if found
+  astar (Graph, Node&, Node&, string);
+  bool search(int, int, string); // Search the graph for a path and return true if found
 
   // Wrappers
   bool isPathFound() { return ( !path.empty() || start->id == goal->id ); }

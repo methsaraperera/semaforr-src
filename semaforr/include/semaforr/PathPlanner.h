@@ -13,6 +13,8 @@
 #include <semaforr/CrowdModel.h>
 #include <math.h>
 #include <vector>
+//#include "SpatialModel.h"
+#include "FORRConveyors.h"
 
 /*! 
   \brief PathPlanner class in PathPlanner module
@@ -40,6 +42,8 @@ private:
   int boxes_height;
   int map_height;
   int map_width;
+  //SpatialModel* spatialModel;
+  FORRConveyors* conveyors;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -133,6 +137,10 @@ public:
         cout << endl;
       }*/
     }
+  }
+
+  void setSpatialModel(FORRConveyors* cv){
+    conveyors = cv;
   }
 
   void updateNavGraph();

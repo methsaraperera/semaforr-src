@@ -115,7 +115,7 @@ private:
   bool doorsOn;
   bool aStarOn;
   bool firstTaskAssigned;
-  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore;
+  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, trailer, barrier, conveys, turn;
 };
   
 #endif /* CONTROLLER_H */

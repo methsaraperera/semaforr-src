@@ -80,7 +80,7 @@ int PathPlanner::calcPath(bool cautious){
       cout << "Updating nav graph for non-distance planners" << endl;
       updateNavGraph();
     }
-    astar newsearch(*navGraph, s, t);
+    astar newsearch(*navGraph, s, t, name);
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
       paths = newsearch.getPathsToTarget();
@@ -140,7 +140,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
     double smooth_cost = (oldcost * 5);
-    return smooth_cost;
+    return (w6 * smooth_cost);
   }
   if (name == "novel"){
     double ns_cost = novelCost(s.getX(), s.getY());
@@ -148,19 +148,37 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     /*if (ns_cost > 0 or nd_cost > 0) {
       cout << "old cost = " << oldcost << " novelCost = " << (ns_cost+nd_cost)/2 << " combined cost = " << (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2) << endl;
     }*/
-    return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
+    //return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
+    if (ns_cost > 0 or nd_cost > 0){
+      return (w5 * (ns_cost+nd_cost)/2);
+    }
+    else{
+      return (w1 * oldcost);
+    }
   }
   if (name == "density"){
     //cout << "Updating density nav graph" << endl;
     double s_cost = cellCost(s.getX(), s.getY(), b);
     double d_cost = cellCost(d.getX(), d.getY(), b);
-    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
+    //return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
+    if (s_cost > 0 or d_cost > 0){
+      return (w2 * (s_cost+d_cost)/2);
+    }
+    else{
+      return (w1 * oldcost);
+    }
   }
   if (name == "risk"){
     //cout << "Updating risk nav graph" << endl;
     double s_risk_cost = riskCost(s.getX(), s.getY(), b);
     double d_risk_cost = riskCost(d.getX(), d.getY(), b);
-    return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+    //return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+    if (s_risk_cost > 0 or d_risk_cost > 0){
+      return (w4 * (s_risk_cost+d_risk_cost)/2);
+    }
+    else{
+      return (w1 * oldcost);
+    }
   }
   if (name == "flow"){
     //cout << "updating flow nav graph" << endl;
@@ -171,7 +189,13 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     if(flowcost < 0){
       flowcost = 0;
     }
-    return (w1 * oldcost) + (w3 * flowcost);
+    //return (w1 * oldcost) + (w3 * flowcost);
+    if (flowcost > 0){
+      return (w3 * flowcost);
+    }
+    else{
+      return (w1 * oldcost);
+    }
   }
   if (name == "combined"){
     double s_cost = cellCost(s.getX(), s.getY(), b);
@@ -348,7 +372,7 @@ bool PathPlanner::isAccessible(Node s, Node t) {
   if ( s.getID() == Node::invalid_node_index || t.getID() == Node::invalid_node_index )
     return false;
 
-  astar newsearch(*navGraph, s, t);
+  astar newsearch(*navGraph, s, t, name);
   if ( newsearch.isPathFound() )
     return true;
 
@@ -424,7 +448,7 @@ list<pair<int,int> > PathPlanner::getPathXYBetween(int x1, int y1, int x2, int y
   }
 
   // calculate the path. if no path is found return the path_points list empty
-  astar newsearch(*navGraph, s, t);
+  astar newsearch(*navGraph, s, t, name);
   if(newsearch.isPathFound()) {
     path_c = newsearch.getPathToTarget();
     smoothPath(path_c, s, t);
@@ -555,7 +579,7 @@ double PathPlanner::estimateCost(Node s, Node t, int l){
   double pathCost = Map::distance(s.getX(), s.getY(), sn.getX(), sn.getY());
   pathCost += Map::distance(t.getX(), t.getY(), tn.getX(), tn.getY());
 
-  astar nsearch(*navGraph, sn, tn);
+  astar nsearch(*navGraph, sn, tn, name);
   if ( nsearch.isPathFound() ){
     list<int> p = nsearch.getPathToTarget();
     pathCost += calcPathCost(p);
