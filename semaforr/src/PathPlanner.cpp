@@ -137,6 +137,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w4 = 500;
   int w5 = 500;
   int w6 = 1;
+  int w7 = 1;
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
     double smooth_cost = (oldcost * 5);
@@ -197,6 +198,36 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       return (w1 * oldcost);
     }
   }
+  if (name == "spatial"){
+    int sRegion=-1,dRegion=-1;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
+        sRegion = i;
+      }
+      if(regions[i].inRegion(d.getX()/100.0, d.getY()/100.0)){
+        dRegion = i;
+      }
+    }
+    if (sRegion >= 0 and dRegion >= 0){
+      return (w1 * oldcost);
+    }
+    else if ((sRegion == -1 and dRegion >= 0) or (sRegion >= 0 and dRegion == -1)){
+      return (w1 * oldcost) * 5;
+    }
+    else{
+      return (w1 * oldcost) * 10;
+    }
+  }
+  if (name == "conveys"){
+    double sconveycost = computeConveyorCost(s.getX(), s.getY());
+    double dconveycost = computeConveyorCost(d.getX(), d.getY());
+    if (sconveycost > 0 or dconveycost > 0){
+      return (w7 * 1/((sconveycost + dconveycost)/2));
+    }
+    else {
+      return (w1 * oldcost);
+    }
+  }
   if (name == "combined"){
     double s_cost = cellCost(s.getX(), s.getY(), b);
     double d_cost = cellCost(d.getX(), d.getY(), b);
@@ -206,13 +237,15 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double ns_cost = novelCost(s.getX(), s.getY());
     double nd_cost = novelCost(d.getX(), d.getY());
     double smooth_cost = (oldcost * 5);
+    double sconveycost = computeConveyorCost(s.getX(), s.getY());
+    double dconveycost = computeConveyorCost(d.getX(), d.getY());
     if(direction == true){
       flowcost = flowcost * (-1);
     }
     if(flowcost < 0){
       flowcost = 0;
     }
-    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost);
+    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost) + (w7 * 1/((sconveycost + dconveycost)/2));
   }
 
   //double newEdgeCost = (oldcost * flowcost);
@@ -340,6 +373,12 @@ double PathPlanner::novelCost(int nodex, int nodey){
   //cout << "Modified Node x = " << (int)(((nodex/100.0)/(map_width*1.0)) * boxes_width) << " Modified Node y = " << (int)(((nodey/100.0)/(map_height*1.0)) * boxes_height) << endl;
   //cout << "novelCost = " << posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)] << endl;
   return posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
+}
+
+double PathPlanner::computeConveyorCost(int nodex, int nodey){
+  //cout << "Inside computeConveyorCost : Node x = " << (nodex/100.0) << " Node y = " << (nodey/100.0) << endl;
+  //cout << "ConveyorCost = " << conveyors->getGridValue((nodex/100.0),(nodey/100.0)) << endl;
+  return conveyors->getGridValue((nodex/100.0),(nodey/100.0));
 }
 
 

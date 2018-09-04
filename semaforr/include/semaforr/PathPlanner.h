@@ -15,6 +15,7 @@
 #include <vector>
 //#include "SpatialModel.h"
 #include "FORRConveyors.h"
+#include "FORRRegion.h"
 
 /*! 
   \brief PathPlanner class in PathPlanner module
@@ -44,6 +45,7 @@ private:
   int map_width;
   //SpatialModel* spatialModel;
   FORRConveyors* conveyors;
+  vector<FORRRegion> regions;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -139,8 +141,9 @@ public:
     }
   }
 
-  void setSpatialModel(FORRConveyors* cv){
+  void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs){
     conveyors = cv;
+    regions = rgs;
   }
 
   void updateNavGraph();
@@ -165,6 +168,8 @@ public:
   double riskCost(int sx, int sy, int buffer);
 
   double novelCost(int sx, int sy);
+
+  double computeConveyorCost(int sx, int sy);
 
   void setTarget(Node t){ target = t; }
 

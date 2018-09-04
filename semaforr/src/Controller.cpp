@@ -571,7 +571,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       tierTwoDecision(current);
       firstTaskAssigned = true;
   }
-  bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
+  //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
+  bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
   bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
 
   //if task is complete
@@ -590,7 +591,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   // else if subtask is complete
   else if(waypointReached == true and aStarOn){
     ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
-    beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
+    //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
+    beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
     //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
   } 
   // otherwise if task Decision limit reached, skip task 
@@ -748,7 +750,7 @@ void Controller::tierTwoDecision(Position current){
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
-    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors());
+    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions());
     ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     gettimeofday(&cv,NULL);
     start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
@@ -798,7 +800,7 @@ void Controller::tierTwoDecision(Position current){
     }
     planCostsNormalized.push_back(planCostNormalized);
   }
-  planCostsNormalized.pop_back();
+  //planCostsNormalized.pop_back();
   vector<double> totalCosts;
   for (int i = 0; i < plans.size(); i++){
     double cost=0;
@@ -812,26 +814,26 @@ void Controller::tierTwoDecision(Position current){
   }
   double minCost=1000;
   ROS_DEBUG_STREAM("Computing min cost");
-  for (int i=0; i < totalCosts.size()-3; i++){
+  for (int i=0; i < totalCosts.size(); i++){
     ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
     if (totalCosts[i] < minCost){
       minCost = totalCosts[i];
     }
   }
 
-  double minCombinedCost=1000;
+  /*double minCombinedCost=1000;
   for (int i=18; i < totalCosts.size(); i++){
     ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
     if (totalCosts[i] < minCombinedCost){
       minCombinedCost = totalCosts[i];
     }
-  }
+  }*/
   ROS_DEBUG_STREAM("Min cost = " << minCost);
-  ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
+  //ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
 
   vector<string> bestPlanNames;
   vector<int> bestPlanInds;
-  for (int i=0; i < totalCosts.size()-3; i++){
+  for (int i=0; i < totalCosts.size(); i++){
     if(totalCosts[i] == minCost){
       bestPlanNames.push_back(plannerNames[i]);
       bestPlanInds.push_back(i);

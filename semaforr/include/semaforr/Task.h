@@ -153,7 +153,8 @@ class Task {
 		cout << "Plan active is true" << endl;
 		isPlanActive = true;
 	}
-	setupNextWaypoint(source);
+	//setupNextWaypoint(source);
+	setupNearestWaypoint(source);
 	//planner->resetPath();
 	//cout << "plan generation complete" << endl;
   }
@@ -173,13 +174,37 @@ class Task {
 		wy = waypoints[0].get_y();
 		dis = currentPosition.getDistance(wx, wy);
 		if(dis < 0.75){
-			cout << "found waypoing with dist < 0.75" << endl;
+			cout << "found waypoint with dist < 0.75" << endl;
 			waypoints.erase(waypoints.begin());
 		}
 		else{
 			break;
 		} 	
 	}
+	cout << "check plan active: " << waypoints.size() << endl;
+	if(waypoints.size() > 0){
+		isPlanActive = true;
+	}
+	else{
+		isPlanActive = false;
+	}
+	cout << "end setup next waypoint" << endl;
+   }
+
+   void setupNearestWaypoint(Position currentPosition){
+   	cout << "inside setup nearest waypoint" << endl;
+	double dis;
+	int farthest = 0;
+	for (int i = 0; i < waypoints.size(); i++){
+		dis = currentPosition.getDistance(waypoints[i].get_x(), waypoints[i].get_y());
+		if(dis < 0.75){
+			cout << "found waypoint with dist < 0.75" << endl;
+			farthest = i;
+		}
+	}
+	waypoints.erase(waypoints.begin(), waypoints.begin()+farthest);
+	wx = waypoints[0].get_x();
+	wy = waypoints[0].get_y();
 	cout << "check plan active: " << waypoints.size() << endl;
 	if(waypoints.size() > 0){
 		isPlanActive = true;
@@ -206,6 +231,18 @@ class Task {
 	double dis = currentPosition.getDistance(wx, wy);
 	if (isPlanActive && (dis < 0.75)){
 		status = true;
+	}
+	return status;
+   }
+
+   bool isAnyWaypointComplete(Position currentPosition){
+	bool status = false;
+	for (int i = 0; i < waypoints.size(); i++){
+		double dis = currentPosition.getDistance(waypoints[i].get_x(), waypoints[i].get_y());
+		if (isPlanActive && (dis < 0.75)){
+			status = true;
+			break;
+		}
 	}
 	return status;
    }
