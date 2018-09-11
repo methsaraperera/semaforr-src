@@ -46,6 +46,7 @@ private:
   //SpatialModel* spatialModel;
   FORRConveyors* conveyors;
   vector<FORRRegion> regions;
+  vector< vector<CartesianPoint> > trails;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -141,9 +142,10 @@ public:
     }
   }
 
-  void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs){
+  void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs, vector< vector<CartesianPoint> > trl){
     conveyors = cv;
     regions = rgs;
+    trails = trl;
   }
 
   void updateNavGraph();

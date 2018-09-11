@@ -138,6 +138,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w5 = 500;
   int w6 = 1;
   int w7 = 1;
+  int w8 = 1;
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
     double smooth_cost = (oldcost * 5);
@@ -209,7 +210,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     if (sRegion >= 0 and dRegion >= 0){
-      return (w1 * oldcost);
+      return (w1 * oldcost) * 0.5;
     }
     else if ((sRegion == -1 and dRegion >= 0) or (sRegion >= 0 and dRegion == -1)){
       return (w1 * oldcost) * 5;
@@ -221,12 +222,31 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   if (name == "conveys"){
     double sconveycost = computeConveyorCost(s.getX(), s.getY());
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
-    if (sconveycost > 0 or dconveycost > 0){
-      return (w7 * 1/((sconveycost + dconveycost)/2));
+    return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
+  }
+  if (name == "trailer"){
+    //cout << "updating trailer nav graph" << endl;
+    int strailcount = 0;
+    int dtrailcount = 0;
+    //cout << "trails.size() = " << trails.size() << endl;
+    for(int i = 0; i < trails.size(); i++){
+      //cout << "trails[i].size() = " << trails[i].size() << endl;
+      for(int j = 0; j < trails[i].size(); j++){
+        cout << j << endl;
+        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) < 1){
+          strailcount++;
+          cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
+        }
+        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) < 1){
+          dtrailcount++;
+          cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
+        }
+      }
     }
-    else {
-      return (w1 * oldcost);
-    }
+    //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
+    return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
   }
   if (name == "combined"){
     double s_cost = cellCost(s.getX(), s.getY(), b);
@@ -245,7 +265,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     if(flowcost < 0){
       flowcost = 0;
     }
-    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost) + (w7 * 1/((sconveycost + dconveycost)/2));
+    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost) + (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
   }
 
   //double newEdgeCost = (oldcost * flowcost);
