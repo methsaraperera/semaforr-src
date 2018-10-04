@@ -113,6 +113,8 @@ private:
   bool conveyorsOn;
   bool regionsOn;
   bool doorsOn;
+  bool hallwaysOn;
+  bool barrsOn;
   bool aStarOn;
   bool firstTaskAssigned;
   bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, trailer, barrier, conveys, turn;

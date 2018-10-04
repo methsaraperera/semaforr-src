@@ -187,6 +187,22 @@ void Controller::initialize_params(string filename){
       doorsOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("doorsOn " << doorsOn);
     }
+    else if (fileLine.find("hallwaysOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      hallwaysOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("hallwaysOn " << hallwaysOn);
+    }
+    else if (fileLine.find("barrsOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      barrsOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("barrsOn " << barrsOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -655,6 +671,10 @@ void Controller::learnSpatialModel(AgentState* agentState){
   if(doorsOn){
     beliefs->getSpatialModel()->getDoors()->clearAllDoors();
     beliefs->getSpatialModel()->getDoors()->learnDoors(regions);
+  }
+  if(hallwaysOn){
+    beliefs->getSpatialModel()->getHallways()->clearAllHallways();
+    beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
   }
 }
 

@@ -11,6 +11,7 @@
 #include <FORRTrails.h>
 #include <FORRConveyors.h>
 #include <FORRDoors.h>
+#include <FORRHallways.h>
 
 class SpatialModel{
 
@@ -21,18 +22,21 @@ public:
 		trails = new FORRTrails();
 		conveyors = new FORRConveyors(width, height, granularity);
 		doors = new FORRDoors();
+		hallways = new FORRHallways(width, height);
 	};
 
-        FORRRegionList* getRegionList(){return abstract_map;}
+	FORRRegionList* getRegionList(){return abstract_map;}
 	//FORRTrace* getTrace(){return trace;}
 	FORRTrails* getTrails(){return trails;}
 	FORRConveyors* getConveyors(){return conveyors;}
 	FORRDoors* getDoors(){return doors;}
+	FORRHallways* getHallways(){return hallways;}
 
 private:
 	FORRRegionList *abstract_map;
-        //FORRTrace *trace;
+	//FORRTrace *trace;
 	FORRTrails *trails;
 	FORRConveyors *conveyors;
 	FORRDoors *doors;
+	FORRHallways *hallways;
 };

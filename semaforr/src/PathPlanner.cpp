@@ -232,16 +232,15 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     for(int i = 0; i < trails.size(); i++){
       //cout << "trails[i].size() = " << trails[i].size() << endl;
       for(int j = 0; j < trails[i].size(); j++){
-        cout << j << endl;
-        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) < 1){
+        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) < 0.5){
           strailcount++;
-          cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
-          cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
         }
-        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) < 1){
+        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) < 0.5){
           dtrailcount++;
-          cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
-          cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
         }
       }
     }
