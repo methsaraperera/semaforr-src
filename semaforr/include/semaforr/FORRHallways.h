@@ -94,6 +94,8 @@ public:
         map_height_ = hgt;
     };
     vector<Aggregate> getHallways(){return hallways;}
+    int getWidth(){return map_width_;}
+    int getHeight(){return map_height_;}
     ~FORRHallways(){};
 
     void clearAllHallways(){
@@ -131,18 +133,18 @@ public:
 
         //int id = 0;
         double step = 180/8;
-        for(int i = 0; i < mean_segments.size(); i++) {
-            double angle = mean_segments[i].GetAngle() * 180/M_PI;
+        for(int i = 0; i < trails_segments.size(); i++) {
+            double angle = trails_segments[i].GetAngle() * 180/M_PI;
             if(angle < step)
-                hallway_types[0].push_back(mean_segments[i]);
+                hallway_types[0].push_back(trails_segments[i]);
             else if(angle < 3*step)
-                hallway_types[1].push_back(mean_segments[i]);
+                hallway_types[1].push_back(trails_segments[i]);
             else if(angle < 5*step)
-                hallway_types[2].push_back(mean_segments[i]);
+                hallway_types[2].push_back(trails_segments[i]);
             else if(angle < 7*step)
-                hallway_types[3].push_back(mean_segments[i]);
+                hallway_types[3].push_back(trails_segments[i]);
             else
-                hallway_types[0].push_back(mean_segments[i]);
+                hallway_types[0].push_back(trails_segments[i]);
         }
 
         int filter_size = 9; // magic number
@@ -162,7 +164,7 @@ public:
                 all_aggregates.push_back(group);
             }
             cout << hallway_groups.size() << endl;
-            cout << "done proccessing" << endl;
+            cout << "done proccessing " << hallway_names[i] << endl;
         }
         cout << "finished map" << endl;
         //for(auto x: all_aggregates)

@@ -37,6 +37,7 @@ private:
   ros::Publisher exits_pub_;
   ros::Publisher skeleton_pub_;
   ros::Publisher conveyor_pub_;
+  ros::Publisher hallway_pub_;
   ros::Publisher occupancy_pub_;
   ros::Publisher trails_pub_;
   ros::Publisher plan_pub_;
@@ -66,6 +67,7 @@ public:
     plan_pub_ = nh_->advertise<nav_msgs::Path>("plan", 1);
 
     conveyor_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("conveyor", 1);
+    hallway_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("hallway", 1);
     occupancy_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("occupancy", 1);
     region_pub_ = nh_->advertise<visualization_msgs::MarkerArray>("region", 1);
     exits_pub_ = nh_->advertise<visualization_msgs::Marker>("exits", 1);
@@ -103,6 +105,7 @@ public:
 	}*/
 	//publish_edges_cost();
 	publish_conveyor();
+	publish_hallway();
 	publish_region();
 	publish_exits();
 	publish_skeleton();
@@ -357,14 +360,78 @@ public:
 
 	vector< vector<int> > conveyors = beliefs->getSpatialModel()->getConveyors()->getConveyors();
 	for(int j = 0; j < grid.info.height; j++){
-	    for(int i = 0; i < grid.info.width; i++){
-      		grid.data.push_back(conveyors[i][j]);
-    	    }
-  	}
+		for(int i = 0; i < grid.info.width; i++){
+			grid.data.push_back(conveyors[i][j]);
+		}
+	}
 	conveyor_pub_.publish(grid);
   }
 
+  void publish_hallway(){
+	ROS_DEBUG("Inside publish hallway");
+	nav_msgs::OccupancyGrid grid;
 
+	grid.header.frame_id = "map";
+	grid.header.stamp = ros::Time::now();
+	grid.info.map_load_time = ros::Time::now();
+
+	grid.info.origin.orientation.w = 0;
+	grid.info.resolution = 1;
+	grid.info.width = beliefs->getSpatialModel()->getHallways()->getWidth();
+	grid.info.height = beliefs->getSpatialModel()->getHallways()->getHeight();
+	cout << grid.info.width << " " << grid.info.height << endl;
+	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+	cout << hallways.size() << endl;
+	if(hallways.size() == 0){
+		hallway_pub_.publish(grid);
+	}
+	else{
+		cout << "creating heatmap" << endl;
+		vector< vector<int> > heatmap;
+		for(int j = 0; j < grid.info.height; j++){
+			vector<int> values;
+			for(int i = 0; i < grid.info.width; i++){
+				values.push_back(0);
+			}
+			heatmap.push_back(values);
+			values.clear();
+		}
+		cout << heatmap.size() << " " << heatmap[0].size() << endl;
+		cout << "updating heatmap from hallways" << endl;
+		for(int i = 0; i < hallways.size(); i++){
+			vector<CartesianPoint> points = hallways[i].getPoints();
+			cout << points.size() << endl;
+			for(int j = 0; j < points.size(); j++){
+				cout << points[j].get_x()-1 << " " << points[j].get_y()-1 << endl;
+				heatmap[points[j].get_y()-1][points[j].get_x()-1]++;
+			}
+		}
+		int max=-1,min=10000;
+		for(int i = 0; i < heatmap.size(); i++){
+			for(int j = 0; j < heatmap[i].size(); j++){
+				if(heatmap[i][j] > max){
+					max = heatmap[i][j];
+				}
+				if(heatmap[i][j] < min){
+					min = heatmap[i][j];
+				}
+			}
+		}
+		for(int i = 0; i < heatmap.size(); i++){
+			for(int j = 0; j < heatmap[i].size(); j++){
+				heatmap[i][j] = (heatmap[i][j] - min) / (max - min);
+			}
+		}
+		cout << "pushing heatmap to occupancygrid" << endl;
+		for(int j = 0; j < grid.info.height; j++){
+			for(int i = 0; i < grid.info.width; i++){
+				grid.data.push_back(heatmap[j][i]);
+			}
+		}
+		cout << "publishing hallway message" << endl;
+		hallway_pub_.publish(grid);
+	}
+  }
 
   void publish_occupancy(){
 	ROS_DEBUG("Inside publish occupancy");

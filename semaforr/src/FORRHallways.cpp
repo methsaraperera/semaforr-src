@@ -144,8 +144,8 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
 
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
-  //threshold = average_of_distances - (2*std);
-  threshold = average_of_distances;
+  threshold = average_of_distances - (2*std);
+  //threshold = average_of_distances;
   cout << "threshold " << threshold << endl;
   for(int i = 0; i < similarities.size(); i++) {
   	cout << similarities[i][2] << endl;
@@ -193,6 +193,7 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
     vector<vector<int> > labeled_image(width,vector<int>(height, 0));
 
+    cout << heat_map.size() << " " << heat_map[0].size() << endl;
     //cout << hallway_groups[i].size() << endl;
     UpdateMap(heat_map, hallway_group);
     cout << "1a" << endl;
@@ -429,7 +430,7 @@ void FORRHallways::unionCoords(int x, int y, int x2, int y2, const vector<vector
 }
 
 void FORRHallways::LabelImage(const vector<vector<int> > &binary_map, vector<vector<int> > &labeled_image){
-  cout << "map_width_ " << map_width_ << " map_height_ " << map_width_ << endl;
+  cout << "map_width_ " << map_width_ << " map_height_ " << map_height_ << endl;
   for (int x = 0; x < map_width_; x++){
     for (int y = 0; y < map_height_; y++){
       labeled_image[x][y] = map_width_*y+x;
@@ -468,7 +469,7 @@ void FORRHallways::LabelImage(const vector<vector<int> > &binary_map, vector<vec
 void FORRHallways::ListGroups(vector<vector< pair<int,int> > > &aggregates_and_points, const vector<vector<int> > &labeled_image){
   int num_rows = labeled_image.size();
   int num_cols = labeled_image[0].size();
-
+  cout << "num_rows " << num_rows << " num_cols " << num_cols << endl;
   map<int, int> aggregates_ids;
 
   int id_given = 0;
@@ -481,8 +482,7 @@ void FORRHallways::ListGroups(vector<vector< pair<int,int> > > &aggregates_and_p
         int id = aggregates_ids[pixel];
         aggregates_and_points[id].push_back(make_pair(i+1,j+1));
       }
-      else {
-
+      else if(pixel >= 0){
         aggregates_ids[pixel] = id_given;
         vector<pair<int,int> > first_element;
         first_element.push_back(make_pair(i+1,j+1));

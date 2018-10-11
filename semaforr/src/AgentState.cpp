@@ -152,8 +152,11 @@ bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, Cartesi
 bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point){
   ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
   ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
-  bool canSeePoint = false;
+  bool canAccessPoint = false;
   double distLaserPosToPoint = laserPos.get_distance(point);
+  if(distLaserPosToPoint > 5){
+    return false;
+  }
   double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
   int index = 0;
   double min_angle = 100000;
@@ -178,10 +181,30 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
   }
   //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
   if (numFree > 4) {
-    canSeePoint = true;
+    canAccessPoint = true;
   }
   //else, not visible
-  return canSeePoint;
+  //return canAccessPoint;
+  double epsilon = canSeePointEpsilon;
+  bool canSeePoint = false;
+  double ab = laserPos.get_distance(point);
+  for(int i = 0; i < givenLaserEndpoints.size(); i++){
+    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+    double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+    double bc = givenLaserEndpoints[i].get_distance(point);
+    if(((ab + bc) - ac) < epsilon){
+      //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+      //cout << "Distance: "<<distance_to_point<<endl;
+      canSeePoint = true;
+      break;
+    }
+  }
+  if(canSeePoint and canAccessPoint){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
 
