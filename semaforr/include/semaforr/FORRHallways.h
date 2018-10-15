@@ -26,6 +26,16 @@ public:
   Aggregate(vector<CartesianPoint> coordinates, int id): points_(coordinates), hallway_type_(id) {}
   vector<CartesianPoint> getPoints() const {return points_;}
   int getHallwayType() const {return hallway_type_;}
+  bool pointInAggregate(CartesianPoint point){
+    std::vector<CartesianPoint>::iterator it;
+    it = find(points_.begin(), points_.end(), point);
+    if(it != points_.end()){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
 private:
   vector<CartesianPoint> points_;
   int hallway_type_;
@@ -133,18 +143,18 @@ public:
 
         //int id = 0;
         double step = 180/8;
-        for(int i = 0; i < trails_segments.size(); i++) {
-            double angle = trails_segments[i].GetAngle() * 180/M_PI;
+        for(int i = 0; i < mean_segments.size(); i++) {
+            double angle = mean_segments[i].GetAngle() * 180/M_PI;
             if(angle < step)
-                hallway_types[0].push_back(trails_segments[i]);
+                hallway_types[0].push_back(mean_segments[i]);
             else if(angle < 3*step)
-                hallway_types[1].push_back(trails_segments[i]);
+                hallway_types[1].push_back(mean_segments[i]);
             else if(angle < 5*step)
-                hallway_types[2].push_back(trails_segments[i]);
+                hallway_types[2].push_back(mean_segments[i]);
             else if(angle < 7*step)
-                hallway_types[3].push_back(trails_segments[i]);
+                hallway_types[3].push_back(mean_segments[i]);
             else
-                hallway_types[0].push_back(trails_segments[i]);
+                hallway_types[0].push_back(mean_segments[i]);
         }
 
         int filter_size = 9; // magic number

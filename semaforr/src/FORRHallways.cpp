@@ -88,7 +88,12 @@ double FORRHallways::FindMax(const vector<vector<double> > &segments, const int 
 //output:
 //TODO: what if min = max
 double FORRHallways::Normalize(const double original_val, const double min_val, const double max_val) {
-  return (original_val - min_val)/(max_val - min_val);
+  if(max_val != min_val){
+  	return (original_val - min_val)/(max_val - min_val);
+  }
+  else{
+  	return 0.0;
+  }
 }
 
 
@@ -137,18 +142,25 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
     sum_of_distances += similarities[i][2]; // similarity score
   }
   average_of_distances = sum_of_distances / similarities.size();
-
+  cout << "average_of_distances = " << average_of_distances << endl;
   for(int i = 0; i < similarities.size(); i++) {
     sum_of_squared_differences += pow((similarities[i][2]-average_of_distances), 2);
   }
 
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
-  threshold = average_of_distances - (2*std);
-  //threshold = average_of_distances;
+  cout << "std = " << std << endl;
+  double deviations = 2;
+  threshold = average_of_distances - (deviations*std);
   cout << "threshold " << threshold << endl;
+  while(threshold <= 0){
+  	deviations = deviations-0.5;
+  	threshold = average_of_distances - (deviations*std);
+  	cout << "threshold " << threshold << endl;
+  }
+  
   for(int i = 0; i < similarities.size(); i++) {
-  	cout << similarities[i][2] << endl;
+  	//cout << similarities[i][2] << endl;
     if(similarities[i][2] <= threshold) {
       vector<double> similar_pairing;
       similar_pairing.push_back(similarities[i][0]);
@@ -168,8 +180,8 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
 void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const vector<vector<double> > &most_similar, const vector<Segment> &segments) {
   double average_left_x, average_left_y, average_right_x, average_right_y = 0;
   for(int i = 0; i < most_similar.size(); i++) {
-    Segment left = segments[most_similar.at(i)[0]];
-    Segment right = segments[most_similar.at(i)[1]];
+    Segment left = segments[most_similar[i][0]];
+    Segment right = segments[most_similar[i][1]];
     average_left_x = (left.GetLeftPoint().get_x() + right.GetLeftPoint().get_x())/2;
     average_left_y = (left.GetLeftPoint().get_y() + right.GetLeftPoint().get_y())/2;
     CartesianPoint left_coord = CartesianPoint(average_left_x, average_left_y);
@@ -193,29 +205,22 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
     vector<vector<int> > labeled_image(width,vector<int>(height, 0));
 
-    cout << heat_map.size() << " " << heat_map[0].size() << endl;
+    //cout << heat_map.size() << " " << heat_map[0].size() << endl;
     //cout << hallway_groups[i].size() << endl;
     UpdateMap(heat_map, hallway_group);
     cout << "1a" << endl;
 
     /*FilterImage(filtered_heat_map,heat_map,9);
 
-    BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
-    BinarizeImage(binarized_heat_map, heat_map, 0);
-
-    //PrintIntVector(binarized_heat_map);
-
     cout << "2a" << endl;
-    //ConvertMatrixToImage(binarized_heat_map, image_name);
+    BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
+    BinarizeImage(binarized_heat_map, heat_map, 1);
 
-    //string labeled_image = "labeled_" + image_name;
     cout << "3a" << endl;
-    //LabelImage(image_name, labeled_image);
     LabelImage(binarized_heat_map,labeled_image);
 
     cout << "3c" << endl; //error1
     vector<vector< pair<int,int> > > points_in_aggregates;
-    //ListGroups(points_in_aggregates, labeled_image);
     ListGroups(points_in_aggregates, labeled_image);
     cout << "3d" << endl;
 
@@ -230,22 +235,22 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
 // also slow
 void FORRHallways::UpdateMap(vector<vector<int> > &frequency_map, const vector<Segment> &segments) {
   cout << "map size input: " << frequency_map.size() << " " << frequency_map[0].size() << endl;
-  cout << segments.size() << endl;
+  //cout << segments.size() << endl;
   for(int i = 0; i < segments.size(); i++) {
-    cout << i << endl;
+    //cout << i << endl;
     CartesianPoint left = segments[i].GetLeftPoint();
-    cout << i << "left" << endl;
+    //cout << i << "left" << endl;
     CartesianPoint right = segments[i].GetRightPoint();
-    cout << i << "right" << endl;
+    //cout << i << "right" << endl;
     Interpolate(frequency_map, round(left.get_x()), round(left.get_y()), round(right.get_x()), round(right.get_y()));
-    cout << i <<"Done"<< endl;
+    //cout << i <<"Done"<< endl;
   }
-  for(int i = 0; i < frequency_map.size(); i++) {
+  /*for(int i = 0; i < frequency_map.size(); i++) {
     for(int j = 0; j < frequency_map[0].size(); j++) {
       cout << frequency_map[i][j] << " ";
     }
     cout << endl;
-  }
+  }*/
 }
 
 //********$^$^^%#^#
@@ -254,14 +259,14 @@ void FORRHallways::UpdateMap(vector<vector<int> > &frequency_map, const vector<S
 void FORRHallways::Interpolate(vector<vector<int> > &frequency_map, double left_x, double left_y, double right_x, double right_y) {
 
   double step = abs(left_x - right_x) + abs(left_y - right_y);
-  cout << "step: " << step << " " << 1/step << endl;
+  //cout << "step: " << step << " " << 1/step << endl;
 
   for(double j = 0; j <= 1; j += 1/step) {
-    cout << j << endl;
+    //cout << j << endl;
     int xcoord = round(j*(right_x - left_x) + left_x);
     int ycoord = round(j*(right_y - left_y) + left_y);
-    cout << xcoord << " " << ycoord << endl;
-    cout << frequency_map[0].size() << " " << frequency_map.size() << endl;
+    //cout << xcoord << " " << ycoord << endl;
+    //cout << frequency_map[0].size() << " " << frequency_map.size() << endl;
     frequency_map[xcoord][ycoord]++;
   }
 }
@@ -391,9 +396,9 @@ void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<v
     for(int j = 0; j < original[0].size(); j++) {
       if(original[i][j] > threshold)
         binarized[i][j] = 255;
-      cout << binarized[i][j] << " ";
+      //cout << binarized[i][j] << " ";
     }
-    cout << endl;
+    //cout << endl;
   }
 }
 
@@ -402,35 +407,35 @@ void FORRHallways::doUnion(int x, int y, int x2, int y2, vector<vector<int> > &l
   int a = map_width_*y+x;
   int ya = y;
   int xa = x;
-  cout << "a " << a << " " << xa << " " << ya << endl;
+  //cout << "a " << a << " " << xa << " " << ya << endl;
   while (labeled_image[xa][ya] != a){
     a = labeled_image[xa][ya];
     ya = floor(a/map_width_);
     xa = a - map_width_*ya;
-    cout << a << " " << xa << " " << ya << endl;
+    //cout << a << " " << xa << " " << ya << endl;
   }
   int b = map_width_*y2+x2;
   int yb = y2;
   int xb = x2;
-  cout << "b " << b << " " << xb << " " << yb << endl;
+  //cout << "b " << b << " " << xb << " " << yb << endl;
   while (labeled_image[xb][yb] != b){
     b = labeled_image[xb][yb];
     yb = floor(b/map_width_);
     xb = b - map_width_*yb;
-    cout << b << " " << xb << " " << yb << endl;
+    //cout << b << " " << xb << " " << yb << endl;
   }
   labeled_image[xb][yb] = a;
 }
  
 void FORRHallways::unionCoords(int x, int y, int x2, int y2, const vector<vector<int> > &binary_map, vector<vector<int> > &labeled_image){
   if (y2 < map_height_ && x2 < map_width_ && binary_map[x][y] && binary_map[x2][y2]){
-    cout << y2 << " " << x2 << " " << binary_map[x][y] << " " << binary_map[x2][y2] << endl;
+    //cout << y2 << " " << x2 << " " << binary_map[x][y] << " " << binary_map[x2][y2] << endl;
     doUnion(x, y, x2, y2, labeled_image);
   }
 }
 
 void FORRHallways::LabelImage(const vector<vector<int> > &binary_map, vector<vector<int> > &labeled_image){
-  cout << "map_width_ " << map_width_ << " map_height_ " << map_height_ << endl;
+  //cout << "map_width_ " << map_width_ << " map_height_ " << map_height_ << endl;
   for (int x = 0; x < map_width_; x++){
     for (int y = 0; y < map_height_; y++){
       labeled_image[x][y] = map_width_*y+x;
@@ -447,7 +452,7 @@ void FORRHallways::LabelImage(const vector<vector<int> > &binary_map, vector<vec
   for (int x = 0; x < map_width_; x++){
     for (int y = 0; y < map_height_; y++){
       if (binary_map[x][y] == 0){
-        cout << ' ';
+        //cout << ' ';
         labeled_image[x][y] = -1;
         continue;
       }
@@ -459,17 +464,17 @@ void FORRHallways::LabelImage(const vector<vector<int> > &binary_map, vector<vec
         ynew = floor(c/map_width_);
         xnew = c - map_width_*ynew;
       }
-      cout << c << " ";
+      //cout << c << " ";
       labeled_image[x][y] = c;
     }
-    cout << "\n";
+    //cout << "\n";
   }
 }
 
 void FORRHallways::ListGroups(vector<vector< pair<int,int> > > &aggregates_and_points, const vector<vector<int> > &labeled_image){
   int num_rows = labeled_image.size();
   int num_cols = labeled_image[0].size();
-  cout << "num_rows " << num_rows << " num_cols " << num_cols << endl;
+  //cout << "num_rows " << num_rows << " num_cols " << num_cols << endl;
   map<int, int> aggregates_ids;
 
   int id_given = 0;
@@ -480,12 +485,12 @@ void FORRHallways::ListGroups(vector<vector< pair<int,int> > > &aggregates_and_p
       //cout << pixel << endl;
       if(aggregates_ids.count(pixel) > 0) {
         int id = aggregates_ids[pixel];
-        aggregates_and_points[id].push_back(make_pair(i+1,j+1));
+        aggregates_and_points[id].push_back(make_pair(i,j));
       }
       else if(pixel >= 0){
         aggregates_ids[pixel] = id_given;
         vector<pair<int,int> > first_element;
-        first_element.push_back(make_pair(i+1,j+1));
+        first_element.push_back(make_pair(i,j));
         aggregates_and_points.push_back(first_element);
         id_given++;
       }

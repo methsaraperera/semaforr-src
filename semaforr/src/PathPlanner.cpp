@@ -200,7 +200,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
   }
   if (name == "spatial"){
-    int sRegion=-1,dRegion=-1;
+    int sRegion=-1,dRegion=-1, sHallway=-1, dHallway=-1;
     for(int i = 0; i < regions.size() ; i++){
       if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
         sRegion = i;
@@ -209,10 +209,24 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         dRegion = i;
       }
     }
-    if (sRegion >= 0 and dRegion >= 0){
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
+        sHallway = i;
+      }
+      if(hallways[i].pointInAggregate(CartesianPoint(d.getX()/100.0, d.getY()/100.0))){
+        dHallway = i;
+      }
+    }
+    if (sRegion >= 0 and dRegion >= 0 and sHallway >= 0 and dHallway >= 0){
       return (w1 * oldcost) * 0.5;
     }
-    else if ((sRegion == -1 and dRegion >= 0) or (sRegion >= 0 and dRegion == -1)){
+    else if ((sRegion >= 0 and dRegion >= 0) or (sHallway >= 0 and dHallway >= 0)){
+      return (w1 * oldcost);
+    }
+    else if ((sRegion >= 0 and dHallway >= 0) or (sHallway >= 0 and dRegion >= 0) or (dRegion >= 0 and sHallway >= 0) or (dHallway >= 0 and sRegion >= 0)){
+      return (w1 * oldcost) * 2;
+    }
+    else if (sRegion >= 0 or dRegion >= 0 or sHallway >= 0 or dHallway >= 0){
       return (w1 * oldcost) * 5;
     }
     else{

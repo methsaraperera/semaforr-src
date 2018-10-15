@@ -67,7 +67,7 @@ public:
     plan_pub_ = nh_->advertise<nav_msgs::Path>("plan", 1);
 
     conveyor_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("conveyor", 1);
-    hallway_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("hallway", 1);
+    hallway_pub_ = nh_->advertise<visualization_msgs::Marker>("hallway", 1);
     occupancy_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("occupancy", 1);
     region_pub_ = nh_->advertise<visualization_msgs::MarkerArray>("region", 1);
     exits_pub_ = nh_->advertise<visualization_msgs::Marker>("exits", 1);
@@ -369,68 +369,62 @@ public:
 
   void publish_hallway(){
 	ROS_DEBUG("Inside publish hallway");
-	nav_msgs::OccupancyGrid grid;
-
-	grid.header.frame_id = "map";
-	grid.header.stamp = ros::Time::now();
-	grid.info.map_load_time = ros::Time::now();
-
-	grid.info.origin.orientation.w = 0;
-	grid.info.resolution = 1;
-	grid.info.width = beliefs->getSpatialModel()->getHallways()->getWidth();
-	grid.info.height = beliefs->getSpatialModel()->getHallways()->getHeight();
-	cout << grid.info.width << " " << grid.info.height << endl;
+	visualization_msgs::Marker marker;
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-	cout << hallways.size() << endl;
-	if(hallways.size() == 0){
-		hallway_pub_.publish(grid);
+	cout << "There are currently " << hallways.size() << " hallways" << endl;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 1.0;
+	marker.scale.z = 1.0;
+	marker.lifetime = ros::Duration();
+	for(int i = 0; i < hallways.size(); i++){
+		vector<CartesianPoint> points = hallways[i].getPoints();
+		int hallway_type = hallways[i].getHallwayType();
+		cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
+		for(int j = 0; j < points.size(); j++){
+			float x = points[j].get_x();
+			float y = points[j].get_y();
+			geometry_msgs::Point point;
+			point.x = x;
+			point.y = y;
+			point.z = 0;
+			marker.points.push_back(point);
+			std_msgs::ColorRGBA color;
+			color.a = 0.5;
+			if(hallway_type == 0){
+				color.r = 1.0;
+				color.g = 0.0;
+				color.b = 0.0;
+			}
+			else if(hallway_type == 1){
+				color.r = 0.0;
+				color.g = 1.0;
+				color.b = 0.0;
+			}
+			else if(hallway_type == 2){
+				color.r = 0.0;
+				color.g = 0.0;
+				color.b = 1.0;
+			}
+			else if(hallway_type == 3){
+				color.r = 1.0;
+				color.g = 1.0;
+				color.b = 1.0;
+			}
+			marker.colors.push_back(color);
+		}
 	}
-	else{
-		cout << "creating heatmap" << endl;
-		vector< vector<int> > heatmap;
-		for(int j = 0; j < grid.info.height; j++){
-			vector<int> values;
-			for(int i = 0; i < grid.info.width; i++){
-				values.push_back(0);
-			}
-			heatmap.push_back(values);
-			values.clear();
-		}
-		cout << heatmap.size() << " " << heatmap[0].size() << endl;
-		cout << "updating heatmap from hallways" << endl;
-		for(int i = 0; i < hallways.size(); i++){
-			vector<CartesianPoint> points = hallways[i].getPoints();
-			cout << points.size() << endl;
-			for(int j = 0; j < points.size(); j++){
-				cout << points[j].get_x()-1 << " " << points[j].get_y()-1 << endl;
-				heatmap[points[j].get_y()-1][points[j].get_x()-1]++;
-			}
-		}
-		int max=-1,min=10000;
-		for(int i = 0; i < heatmap.size(); i++){
-			for(int j = 0; j < heatmap[i].size(); j++){
-				if(heatmap[i][j] > max){
-					max = heatmap[i][j];
-				}
-				if(heatmap[i][j] < min){
-					min = heatmap[i][j];
-				}
-			}
-		}
-		for(int i = 0; i < heatmap.size(); i++){
-			for(int j = 0; j < heatmap[i].size(); j++){
-				heatmap[i][j] = (heatmap[i][j] - min) / (max - min);
-			}
-		}
-		cout << "pushing heatmap to occupancygrid" << endl;
-		for(int j = 0; j < grid.info.height; j++){
-			for(int i = 0; i < grid.info.width; i++){
-				grid.data.push_back(heatmap[j][i]);
-			}
-		}
-		cout << "publishing hallway message" << endl;
-		hallway_pub_.publish(grid);
-	}
+	hallway_pub_.publish(marker);
   }
 
   void publish_occupancy(){
