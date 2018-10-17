@@ -45,10 +45,6 @@ bool astar::search(int source, int target, string name)
       {
         tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
       }
-      else if (name == "smooth")
-      {
-        tmp->f = tmp->g + euclidian_h(tmp, goal)*5; // Compute f for this node
-      }
       else
       {
         tmp->f = tmp->g + 0;
@@ -313,49 +309,49 @@ void astar::construct_path(_VNode* g)
   paths.push_back(path);
 
   tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
   path.clear();*/
-  while(!tmp->prev.empty())
-  {
-    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
-    if(tmp->prev.size()>1)
-    {
-      srand(time(NULL));
-      int random_number = rand() % (tmp->prev.size());
-      path.push_front(tmp->prev[random_number]->id);
-      tmp = tmp->prev[random_number];
-    }
-    else
-    {
-      path.push_front(tmp->prev[0]->id);
-      tmp = tmp->prev[0];
-    }
-  }
-  //cout << "Path size = " << path.size() << endl;
-  paths.push_back(path);
-
-  tmp = g;
-  path.clear();
-  while(!tmp->prev.empty())
-  {
-    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
-    if(tmp->prev.size()>1)
-    {
-      srand(time(NULL));
-      int random_number = rand() % (tmp->prev.size());
-      path.push_front(tmp->prev[random_number]->id);
-      tmp = tmp->prev[random_number];
-    }
-    else
-    {
-      path.push_front(tmp->prev[0]->id);
-      tmp = tmp->prev[0];
-    }
-  }
-  //cout << "Path size = " << path.size() << endl;
-  paths.push_back(path);
-
-  tmp = g;
-  path.clear();
   while(!tmp->prev.empty())
   {
     //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;

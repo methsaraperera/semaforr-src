@@ -150,7 +150,7 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
   cout << "std = " << std << endl;
-  double deviations = 2;
+  double deviations = 1.5;
   threshold = average_of_distances - (deviations*std);
   cout << "threshold " << threshold << endl;
   while(threshold <= 0){

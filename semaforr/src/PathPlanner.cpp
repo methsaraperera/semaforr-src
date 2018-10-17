@@ -39,12 +39,12 @@ int PathPlanner::calcPath(bool cautious){
     Node s, t;
     if ( navGraph->isNode(source) ) {
       if(PATH_DEBUG)
-	cout << signature << "Source is a valid Node in the navigation graph" << endl;
+        cout << signature << "Source is a valid Node in the navigation graph" << endl;
       s = source ;
     }
     else {
       if(PATH_DEBUG)
-	cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
+        cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
       s = getClosestNode(source, target);
     }
     //cout << signature << "Checking if source node is invalid" << endl;
@@ -53,12 +53,12 @@ int PathPlanner::calcPath(bool cautious){
 
     if ( navGraph->isNode(target) ) {
       if(PATH_DEBUG)
-	cout << signature << "Target is a valid Node in the navigation graph" << endl;
+        cout << signature << "Target is a valid Node in the navigation graph" << endl;
       t = target ;
     }
     else {
       if(PATH_DEBUG)
-	cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl;
+        cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl;
       t = getClosestNode(target, source);
     }
     //cout << signature << "Checking if target node is invalid" << endl;
@@ -105,7 +105,7 @@ int PathPlanner::calcPath(bool cautious){
 
 void PathPlanner::updateNavGraph(){
 	cout << "Updating nav graph before with the current crowd model" << endl;
-	if(crowdModel.densities.size() == 0){
+	if(crowdModel.densities.size() == 0 and (name == "density" or name == "risk" or name == "flow")){
 		cout << "crowdModel not recieved" << endl;
 	}
 	else{
@@ -141,7 +141,8 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w8 = 1;
   if (name == "smooth"){
     //cout << "Updating smooth nav graph" << endl;
-    double smooth_cost = (oldcost * 5);
+    //double smooth_cost = (oldcost * 5);
+    double smooth_cost = 1;
     return (w6 * smooth_cost);
   }
   if (name == "novel"){
@@ -236,7 +237,16 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   if (name == "conveys"){
     double sconveycost = computeConveyorCost(s.getX(), s.getY());
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
-    return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
+    //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
+    if ((sconveycost + dconveycost) >= 3){
+      return (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
+    }
+    else if ((sconveycost + dconveycost) >= 1){
+      return (w7 * oldcost);
+    }
+    else{
+      return (w7 * oldcost * 5);
+    }
   }
   if (name == "trailer"){
     //cout << "updating trailer nav graph" << endl;
@@ -259,7 +269,16 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
-    return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
+    //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
+    if ((strailcount + dtrailcount) >= 3){
+      return (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
+    }
+    else if ((strailcount + dtrailcount) >= 1){
+      return (w7 * oldcost);
+    }
+    else{
+      return (w7 * oldcost * 5);
+    }
   }
   if (name == "combined"){
     double s_cost = cellCost(s.getX(), s.getY(), b);
@@ -582,7 +601,7 @@ double PathPlanner::calcPathCost(list<int> p){
   // add reaching from source and to target costs
   // Note: This will double count when called from estimateCost() and calcPath()
 
-  if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
+  /*if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
     if ( !p.empty() ){
       pcost += Map::distance(source.getX(), source.getY(),
 					     navGraph->getNode(p.front()).getX(),
@@ -594,7 +613,7 @@ double PathPlanner::calcPathCost(list<int> p){
     else
       pcost += Map::distance(source.getX(), source.getY(),
 					     target.getX(), target.getY());
-  }
+  }*/
 
   return pcost;
 }
@@ -727,37 +746,35 @@ Node PathPlanner::getClosestNode(Node n, Node ref){
       double d = Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() );
 
       if(PATH_DEBUG){
-	cout << "\tChecking ";
-	(*iter)->printNode();
-	cout << endl;
-	cout << "\tDistance between the n and this node: " << d << endl;
+        cout << "\tChecking ";
+        (*iter)->printNode();
+        cout << endl;
+        cout << "\tDistance between the n and this node: " << d << endl;
       }
 
       double d_t = 0.0;
       if(ref.getID() != Node::invalid_node_index)
-	d_t = Map::distance((*iter)->getX(), (*iter)->getY(), ref.getX(), ref.getY());
+        d_t = Map::distance((*iter)->getX(), (*iter)->getY(), ref.getX(), ref.getY());
 
       if(PATH_DEBUG)
-	cout << "\tDistance between this node to ref: " << d_t << endl;
+        cout << "\tDistance between this node to ref: " << d_t << endl;
       // d + d_t < dist, was the earlier version, not sure why?
-      if (( d < dist ) &&
-	  !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) &&
-	  (*iter)->isAccessible()) {
-	//cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
-	dist = d + d_t;
-	temp = (*(*iter));
-	if(PATH_DEBUG) {
-	  cout << "\tFound a new candidate!: ";
-	  temp.printNode();
-	  cout << endl << endl;
-	}
+      if (( d < dist ) && !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) && (*iter)->isAccessible()) {
+        //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
+        dist = d + d_t;
+        temp = (*(*iter));
+        if(PATH_DEBUG) {
+          cout << "\tFound a new candidate!: ";
+          temp.printNode();
+          cout << endl << endl;
+        }
       }
     }
 
     if(temp.getID() == Node::invalid_node_index) {
       s_radius += 0.1 * s_radius;
       if(PATH_DEBUG)
-	cout << signature << "Didn't find a suitable candidate. Increasing search radius to: " << s_radius << endl;
+        cout << signature << "Didn't find a suitable candidate. Increasing search radius to: " << s_radius << endl;
     }
 
   } while(temp.getID() == Node::invalid_node_index && s_radius <= max_radius);

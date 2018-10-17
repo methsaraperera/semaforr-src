@@ -57,7 +57,8 @@ class Task {
 	}
   }
 
-
+  bool getIsPlanActive(){return isPlanActive;}
+  
   int getDecisionCount(){return decision_count;} 
  
   int incrementDecisionCount() {decision_count += 1;}
@@ -111,7 +112,12 @@ class Task {
 	waypointInd = planner->getPath();
 	plansInds = planner->getPaths();
 	Graph *navGraph = planner->getGraph();
-
+	if(waypointInd.size() > 0){
+		isPlanActive = true;
+	}
+	else{
+		isPlanActive = false;
+	}
 	/*list<int>::iterator it;
 	for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 		double x = navGraph->getNode(*it).getX()/100.0;

@@ -590,7 +590,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
   bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
   bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
-
+  bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
   //if task is complete
   if(taskCompleted == true){
     ROS_DEBUG("Target Achieved, moving on to next target!!");
@@ -603,14 +603,18 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
       tierTwoDecision(current);
     }
-  } 
+  }
   // else if subtask is complete
   else if(waypointReached == true and aStarOn){
     ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
     //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
     beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
     //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
-  } 
+  }
+  else if(isPlanActive == false and aStarOn){
+    ROS_DEBUG("No active plan, setting up new plan!!");
+    tierTwoDecision(current);
+  }
   // otherwise if task Decision limit reached, skip task 
   if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
     ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
@@ -785,89 +789,89 @@ void Controller::tierTwoDecision(Position current){
     computationTimeSec = (end_timecv-start_timecv);
     ROS_DEBUG_STREAM("Planning time = " << computationTimeSec);
   }
+  if(beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() == true){
+    vector< vector<double> > planCosts;
+    typedef vector< vector<double> >::iterator costIT;
 
-  vector< vector<double> > planCosts;
-  typedef vector< vector<double> >::iterator costIT;
-
-  for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
-    PathPlanner *planner = *it;
-    vector<double> planCost;
-    ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
-    for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
-      double costOfPlan = planner->calcPathCost(*vt);
-      planCost.push_back(costOfPlan);
-      ROS_DEBUG_STREAM("Cost = " << costOfPlan);
-    }
-    planCosts.push_back(planCost);
-  }
-
-  typedef vector<double>::iterator doubIT;
-  vector< vector<double> > planCostsNormalized;
-  for (costIT it = planCosts.begin(); it != planCosts.end(); it++){
-    double max = *max_element(it->begin(), it->end());
-    double min = *min_element(it->begin(), it->end());
-    double norm_factor = (max - min)/10;
-    vector<double> planCostNormalized;
-    ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
-    for (doubIT vt = it->begin(); vt != it->end(); vt++){
-      if (max != min){
-        planCostNormalized.push_back((*vt - min)/norm_factor);
-        ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
+    for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+      PathPlanner *planner = *it;
+      vector<double> planCost;
+      ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
+      for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
+        double costOfPlan = planner->calcPathCost(*vt);
+        planCost.push_back(costOfPlan);
+        ROS_DEBUG_STREAM("Cost = " << costOfPlan);
       }
-      else{
-        planCostNormalized.push_back(0);
-        ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
+      planCosts.push_back(planCost);
+    }
+
+    typedef vector<double>::iterator doubIT;
+    vector< vector<double> > planCostsNormalized;
+    for (costIT it = planCosts.begin(); it != planCosts.end(); it++){
+      double max = *max_element(it->begin(), it->end());
+      double min = *min_element(it->begin(), it->end());
+      double norm_factor = (max - min)/10;
+      vector<double> planCostNormalized;
+      ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
+      for (doubIT vt = it->begin(); vt != it->end(); vt++){
+        if (max != min){
+          planCostNormalized.push_back((*vt - min)/norm_factor);
+          ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
+        }
+        else{
+          planCostNormalized.push_back(0);
+          ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
+        }
+      }
+      planCostsNormalized.push_back(planCostNormalized);
+    }
+    //planCostsNormalized.pop_back();
+    vector<double> totalCosts;
+    for (int i = 0; i < plans.size(); i++){
+      double cost=0;
+      ROS_DEBUG_STREAM("Computing total cost = " << cost);
+      for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
+        cost += it->at(i);
+        ROS_DEBUG_STREAM("cost = " << cost);
+      }
+      ROS_DEBUG_STREAM("Final cost = " << cost);
+      totalCosts.push_back(cost);
+    }
+    double minCost=1000;
+    ROS_DEBUG_STREAM("Computing min cost");
+    for (int i=0; i < totalCosts.size(); i++){
+      ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
+      if (totalCosts[i] < minCost){
+        minCost = totalCosts[i];
       }
     }
-    planCostsNormalized.push_back(planCostNormalized);
-  }
-  //planCostsNormalized.pop_back();
-  vector<double> totalCosts;
-  for (int i = 0; i < plans.size(); i++){
-    double cost=0;
-    ROS_DEBUG_STREAM("Computing total cost = " << cost);
-    for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
-      cost += it->at(i);
-      ROS_DEBUG_STREAM("cost = " << cost);
-    }
-    ROS_DEBUG_STREAM("Final cost = " << cost);
-    totalCosts.push_back(cost);
-  }
-  double minCost=1000;
-  ROS_DEBUG_STREAM("Computing min cost");
-  for (int i=0; i < totalCosts.size(); i++){
-    ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
-    if (totalCosts[i] < minCost){
-      minCost = totalCosts[i];
-    }
-  }
 
-  /*double minCombinedCost=1000;
-  for (int i=18; i < totalCosts.size(); i++){
-    ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
-    if (totalCosts[i] < minCombinedCost){
-      minCombinedCost = totalCosts[i];
-    }
-  }*/
-  ROS_DEBUG_STREAM("Min cost = " << minCost);
-  //ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
+    /*double minCombinedCost=1000;
+    for (int i=18; i < totalCosts.size(); i++){
+      ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
+      if (totalCosts[i] < minCombinedCost){
+        minCombinedCost = totalCosts[i];
+      }
+    }*/
+    ROS_DEBUG_STREAM("Min cost = " << minCost);
+    //ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
 
-  vector<string> bestPlanNames;
-  vector<int> bestPlanInds;
-  for (int i=0; i < totalCosts.size(); i++){
-    if(totalCosts[i] == minCost){
-      bestPlanNames.push_back(plannerNames[i]);
-      bestPlanInds.push_back(i);
-      ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
+    vector<string> bestPlanNames;
+    vector<int> bestPlanInds;
+    for (int i=0; i < totalCosts.size(); i++){
+      if(totalCosts[i] == minCost){
+        bestPlanNames.push_back(plannerNames[i]);
+        bestPlanInds.push_back(i);
+        ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
+      }
     }
+
+    srand(time(NULL));
+    int random_number = rand() % (bestPlanInds.size());
+    ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
+    ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
+    beliefs->getAgentState()->setCurrentWaypoints(current,tier2Planners[0],aStarOn, plans.at(bestPlanInds.at(random_number)));
   }
-
-  srand(time(NULL));
-  int random_number = rand() % (bestPlanInds.size());
-  ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
-  ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
-  beliefs->getAgentState()->setCurrentWaypoints(current,tier2Planners[0],aStarOn, plans.at(bestPlanInds.at(random_number)));
-
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->resetPath();
