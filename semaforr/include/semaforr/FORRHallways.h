@@ -24,11 +24,15 @@ using namespace std;
 struct Aggregate {
 public:
   Aggregate(vector<CartesianPoint> coordinates, int id): points_(coordinates), hallway_type_(id) {}
+
   vector<CartesianPoint> getPoints() const {return points_;}
+
   int getHallwayType() const {return hallway_type_;}
+
   bool pointInAggregate(CartesianPoint point){
     std::vector<CartesianPoint>::iterator it;
-    it = find(points_.begin(), points_.end(), point);
+    CartesianPoint roundedPoint = CartesianPoint((int)(point.get_x()),(int)(point.get_y()));
+    it = find(points_.begin(), points_.end(), roundedPoint);
     if(it != points_.end()){
       return true;
     }
@@ -36,9 +40,48 @@ public:
       return false;
     }
   }
+
+  double distanceToAggregate(CartesianPoint point){
+    std::vector<CartesianPoint>::iterator it;
+    CartesianPoint roundedPoint = CartesianPoint((int)(point.get_x()),(int)(point.get_y()));
+    it = find(points_.begin(), points_.end(), roundedPoint);
+    double dist = 1000000.0;
+    if(it != points_.end()){
+      dist = 0.0;
+    }
+    else{
+      for(int i = 0; i < points_.size(); i++){
+        double tempDist = point.get_distance(points_[i]);
+        if(tempDist < dist){
+          dist = tempDist;
+        }
+      }
+    }
+    return dist;
+  }
+
+  void findConnection(Aggregate &hlwy, int id1, int id2){
+    for(int i = 0; i < points_.size(); i++){
+      if(hlwy.pointInAggregate(points_[i]) == true){
+        connectedHallways.push_back(id2);
+        hlwy.addConnection(id1);
+        break;
+      }
+    }
+  }
+
+  void addConnection(int id){
+    connectedHallways.push_back(id);
+  }
+
+  int numConnections(){
+    return connectedHallways.size();
+  }
+
 private:
   vector<CartesianPoint> points_;
   int hallway_type_;
+  vector<int> connectedHallways;
 };
 
 
@@ -177,8 +220,13 @@ public:
             cout << "done proccessing " << hallway_names[i] << endl;
         }
         cout << "finished map" << endl;
-        //for(auto x: all_aggregates)
-        //  x.PrintAggregate();
+        
+        for (int i = 0; i < all_aggregates.size()-1; i++){
+          for (int j = i + 1; j < all_aggregates.size(); j++){
+            all_aggregates[i].findConnection(all_aggregates[j],i,j);
+          }
+        }
+
         hallways = all_aggregates;
     }
 

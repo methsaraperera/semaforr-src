@@ -1132,6 +1132,75 @@ class Tier3FindTheFlowRotation : public Tier3Advisor{
   virtual void set_commenting();
 
 };
+
+class Tier3Follow : public Tier3Advisor{
+ public: 
+  Tier3Follow(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Follow();
+  
+  virtual ~Tier3Follow(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FollowRotation : public Tier3Advisor{
+ public: 
+  Tier3FollowRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FollowRotation();
+  
+  virtual ~Tier3FollowRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Crossroads : public Tier3Advisor{
+ public: 
+  Tier3Crossroads(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Crossroads();
+  
+  virtual ~Tier3Crossroads(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3CrossroadsRotation : public Tier3Advisor{
+ public: 
+  Tier3CrossroadsRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3CrossroadsRotation();
+  
+  virtual ~Tier3CrossroadsRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Stay : public Tier3Advisor{
+ public: 
+  Tier3Stay(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Stay();
+  
+  virtual ~Tier3Stay(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3StayRotation : public Tier3Advisor{
+ public: 
+  Tier3StayRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3StayRotation();
+  
+  virtual ~Tier3StayRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
 #endif
 
 

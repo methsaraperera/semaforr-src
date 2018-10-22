@@ -340,6 +340,18 @@ Tier3Advisor* Tier3Advisor::makeAdvisor(Beliefs *beliefs, string name, string de
     return new Tier3FindTheFlow(beliefs, name, description, weight, magic_init, is_active);
   else if(name == "FindTheFlowRotation")
     return new Tier3FindTheFlowRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Follow")
+    return new Tier3Follow(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "FollowRotation")
+    return new Tier3FollowRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Crossroads")
+    return new Tier3Crossroads(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "CrossroadsRotation")
+    return new Tier3CrossroadsRotation(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "Stay")
+    return new Tier3Stay(beliefs, name, description, weight, magic_init, is_active);
+  else if(name == "StayRotation")
+    return new Tier3StayRotation(beliefs, name, description, weight, magic_init, is_active);
   else 
     std::cout << "No such advisor " << std::endl;
 }
@@ -428,7 +440,12 @@ Tier3FlowAvoid::Tier3FlowAvoid (Beliefs *beliefs, string name, string descriptio
 Tier3FlowAvoidRotation::Tier3FlowAvoidRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
 Tier3FindTheFlow::Tier3FindTheFlow (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
 Tier3FindTheFlowRotation::Tier3FindTheFlowRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
-
+Tier3Follow::Tier3Follow (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3FollowRotation::Tier3FollowRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Crossroads::Tier3Crossroads (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3CrossroadsRotation::Tier3CrossroadsRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
+Tier3Stay::Tier3Stay (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {};
+Tier3StayRotation::Tier3StayRotation (Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active): Tier3Advisor(beliefs, name, description, weight, magic_init, is_active) {}; 
  
 
 
@@ -516,6 +533,12 @@ Tier3FlowAvoid::Tier3FlowAvoid(): Tier3Advisor() {};
 Tier3FlowAvoidRotation::Tier3FlowAvoidRotation(): Tier3Advisor() {};
 Tier3FindTheFlow::Tier3FindTheFlow(): Tier3Advisor() {};
 Tier3FindTheFlowRotation::Tier3FindTheFlowRotation(): Tier3Advisor() {};
+Tier3Follow::Tier3Follow(): Tier3Advisor() {};
+Tier3FollowRotation::Tier3FollowRotation(): Tier3Advisor() {};
+Tier3Crossroads::Tier3Crossroads(): Tier3Advisor() {};
+Tier3CrossroadsRotation::Tier3CrossroadsRotation(): Tier3Advisor() {};
+Tier3Stay::Tier3Stay(): Tier3Advisor() {};
+Tier3StayRotation::Tier3StayRotation(): Tier3Advisor() {};
 
 
 // vote to go through an extrance to a region containing the target
@@ -3590,4 +3613,154 @@ double Tier3FindTheFlowRotation::actionComment(FORRAction action){
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getFLowObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * flow_value;
+}
+
+double Tier3Follow::actionComment(FORRAction action){
+  double result=0;
+  return result;
+}
+
+void Tier3Follow::set_commenting(){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  if(hallways.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3FollowRotation::actionComment(FORRAction action){
+  double result=0;
+  return result;
+}
+
+void Tier3FollowRotation::set_commenting(){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  if(hallways.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Crossroads::actionComment(FORRAction action){
+  double result=0;
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+
+  for(int i = 0; i < hallways.size() ; i++){
+    double tempDist = hallways[i].distanceToAggregate(expPosition);
+    if(tempDist > 0){
+      result += ((1 / tempDist) * hallways[i].numConnections());
+    }
+    else{
+      result += (2 * hallways[i].numConnections());
+    }
+  }
+
+  return result;
+}
+
+void Tier3Crossroads::set_commenting(){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  if(hallways.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3CrossroadsRotation::actionComment(FORRAction action){
+  double result=0;
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+
+  for(int i = 0; i < hallways.size() ; i++){
+    double tempDist = hallways[i].distanceToAggregate(expPosition);
+    if(tempDist > 0){
+      result += ((1 / tempDist) * hallways[i].numConnections());
+    }
+    else{
+      result += (2 * hallways[i].numConnections());
+    }
+  }
+
+  return result;
+}
+
+void Tier3CrossroadsRotation::set_commenting(){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  if(hallways.size() > 0)
+    advisor_commenting = true;
+  else
+    advisor_commenting = false;
+}
+
+double Tier3Stay::actionComment(FORRAction action){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  double minDistance = 1000000.0;
+  for(int i = 0; i < hallways.size() ; i++){
+    double tempDist = hallways[i].distanceToAggregate(expPosition);
+    if(tempDist < minDistance){
+      minDistance = tempDist;
+    }
+  }
+  return ((-1) * minDistance);
+}
+
+void Tier3Stay::set_commenting(){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
+  bool currPosInHallway = false;
+  if(hallways.size() > 0){
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(currPosition)){
+        currPosInHallway = true;
+        break;
+      }
+    }
+  }
+  else{
+    advisor_commenting = false;
+  }
+  if(currPosInHallway == true){
+    advisor_commenting = true;
+  }
+}
+
+double Tier3StayRotation::actionComment(FORRAction action){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  double minDistance = 1000000.0;
+  for(int i = 0; i < hallways.size() ; i++){
+    double tempDist = hallways[i].distanceToAggregate(expPosition);
+    if(tempDist < minDistance){
+      minDistance = tempDist;
+    }
+  }
+  return ((-1) * minDistance);
+}
+
+void Tier3StayRotation::set_commenting(){
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
+  bool currPosInHallway = false;
+  if(hallways.size() > 0){
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(currPosition)){
+        currPosInHallway = true;
+        break;
+      }
+    }
+  }
+  else{
+    advisor_commenting = false;
+  }
+  if(currPosInHallway == true){
+    advisor_commenting = true;
+  }
 }

@@ -503,8 +503,24 @@ void FORRHallways::ConvertPairToCartesianPoint(vector<vector<CartesianPoint> > &
   for(int i = 0; i < input.size(); i++){
     vector<CartesianPoint> trail_coordinates;
     for(int j = 0; j < input[i].size(); j++) {
-      CartesianPoint new_point = CartesianPoint(input[i][j].first,input[i][j].second);
-      trail_coordinates.push_back(new_point);
+      CartesianPoint new_point0 = CartesianPoint(input[i][j].first,input[i][j].second);
+      trail_coordinates.push_back(new_point0);
+      /*CartesianPoint new_point1 = CartesianPoint(input[i][j].first+0.25,input[i][j].second+0.25);
+      trail_coordinates.push_back(new_point1);
+      CartesianPoint new_point2 = CartesianPoint(input[i][j].first+0.25,input[i][j].second-0.25);
+      trail_coordinates.push_back(new_point2);
+      CartesianPoint new_point3 = CartesianPoint(input[i][j].first-0.25,input[i][j].second+0.25);
+      trail_coordinates.push_back(new_point3);
+      CartesianPoint new_point4 = CartesianPoint(input[i][j].first-0.25,input[i][j].second-0.25);
+      trail_coordinates.push_back(new_point4);
+      CartesianPoint new_point5 = CartesianPoint(input[i][j].first+0.25,input[i][j].second);
+      trail_coordinates.push_back(new_point5);
+      CartesianPoint new_point6 = CartesianPoint(input[i][j].first-0.25,input[i][j].second);
+      trail_coordinates.push_back(new_point6);
+      CartesianPoint new_point7 = CartesianPoint(input[i][j].first,input[i][j].second+0.25);
+      trail_coordinates.push_back(new_point7);
+      CartesianPoint new_point8 = CartesianPoint(input[i][j].first,input[i][j].second-0.25);
+      trail_coordinates.push_back(new_point8);*/
     }
     trails.push_back(trail_coordinates);
   }
