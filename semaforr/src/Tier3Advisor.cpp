@@ -2570,15 +2570,25 @@ double Tier3LearnSpatialModel::actionComment(FORRAction action){
     // check if the expected position is in region
     if(regions[i].inRegion(expPosition.get_x(), expPosition.get_y())){
       robotRegion = i;
+      break;
     }
   }
-  if(robotRegion > (-1)){
+
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  bool expPosInHallway = false;
+  for(int i = 0; i < hallways.size(); i++){
+    if(hallways[i].pointInAggregate(expPosition)){
+      expPosInHallway = true;
+      break;
+    }
+  }
+  if(robotRegion > (-1) or expPosInHallway == true){
     result = -1.0 * (beliefs->getSpatialModel()->getConveyors()->getMaxGridValue());
-    //cout << "LearnSpatialModel INSIDE REGION : " << result << endl;
+    cout << "LearnSpatialModel INSIDE REGION or HALLWAY : " << result << endl;
   }
   else {
     result = -(beliefs->getSpatialModel()->getConveyors()->getAverageGridValue(expectedPosition.getX(), expectedPosition.getY()));
-    //cout << "LearnSpatialModel OUTSIDE REGION : " << result << endl;
+    cout << "LearnSpatialModel OUTSIDE REGION or HALLWAY : " << result << endl;
   }
   return result;
 }
@@ -2598,15 +2608,25 @@ double Tier3LearnSpatialModelRotation::actionComment(FORRAction action){
     // check if the expected position is in region
     if(regions[i].inRegion(expPosition.get_x(), expPosition.get_y())){
       robotRegion = i;
+      break;
     }
   }
-  if(robotRegion > (-1)){
+
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  bool expPosInHallway = false;
+  for(int i = 0; i < hallways.size(); i++){
+    if(hallways[i].pointInAggregate(expPosition)){
+      expPosInHallway = true;
+      break;
+    }
+  }
+  if(robotRegion > (-1) or expPosInHallway == true){
     result = -1.0 * (beliefs->getSpatialModel()->getConveyors()->getMaxGridValue());
-    //cout << "LearnSpatialModel INSIDE REGION : " << result << endl;
+    cout << "LearnSpatialModelRotation INSIDE REGION or HALLWAY : " << result << endl;
   }
   else {
     result = -(beliefs->getSpatialModel()->getConveyors()->getAverageGridValue(expectedPosition.getX(), expectedPosition.getY()));
-    //cout << "LearnSpatialModel OUTSIDE REGION : " << result << endl;
+    cout << "LearnSpatialModelRotation OUTSIDE REGION or HALLWAY : " << result << endl;
   }
   return result;
 }
@@ -3616,11 +3636,98 @@ double Tier3FindTheFlowRotation::actionComment(FORRAction action){
 }
 
 double Tier3Follow::actionComment(FORRAction action){
+  cout << "Inside Follow" << endl;
   double result=0;
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+  vector<int> targetClosestHallway;
+  vector<int> expPosClosestHallway;
+  vector<double> targetDistances;
+  vector<double> expPosDistances;
+  double targetDistToHallway = 1000000.0, expDistToHallway = 1000000.0;
+  cout << "Number of hallways = " << hallways.size() << endl;
+  // Get distances between all hallways and the target and expected position
+  for(int i = 0; i < hallways.size() ; i++){
+    targetDistances.push_back(hallways[i].distanceToAggregate(targetPoint));
+    expPosDistances.push_back(hallways[i].distanceToAggregate(expPosition));
+  }
+  // Get minimum distance between the target and expected position and a hallway
+  for(int i = 0; i < hallways.size(); i++){
+    cout << "targetDistances[" << i << "] == " << targetDistances[i] << "; expPosDistances[" << i << "] == " << expPosDistances[i] << endl;
+    if(targetDistances[i] < targetDistToHallway){
+      targetDistToHallway = targetDistances[i];
+    }
+    if(expPosDistances[i] < expDistToHallway){
+      expDistToHallway = expPosDistances[i];
+    }
+  }
+  cout << "targetDistToHallway = " << targetDistToHallway << "; expDistToHallway = " << expDistToHallway << endl;
+  // Get all hallways with minimum distance to the target and expected position
+  for(int i = 0; i < hallways.size(); i++){
+    if(targetDistances[i] == targetDistToHallway){
+      targetClosestHallway.push_back(i);
+      cout << "targetClosestHallway = " << i << endl;
+    }
+    if(expPosDistances[i] == expDistToHallway){
+      expPosClosestHallway.push_back(i);
+      cout << "expPosClosestHallway = " << i << endl;
+    }
+  }
+  // Check whether the target and expected position are in the same or different hallways
+  bool sameHallway = false, expCloseToSame = false, diffHallwayConnected = false, diffHallwayUnconnected = false;
+  double targetDist, expPosDist;
+  int targetHallwayConn, expPosHallwayConn, targetHallwayNoConn, expPosHallwayNoConn;
+  for(int i = 0; i < targetClosestHallway.size(); i++){
+    for(int j = 0; j < expPosClosestHallway.size(); j++){
+      cout << "targetClosestHallway[" << i << "] = " << targetClosestHallway[i] << "; expPosClosestHallway[" << j << "] = " << expPosClosestHallway[j] << endl;
+      if(targetClosestHallway[i] == expPosClosestHallway[j] and targetDistances[targetClosestHallway[i]] == 0 and expPosDistances[expPosClosestHallway[j]] == 0){
+        sameHallway = true;
+        cout << "sameHallway = true" << endl;
+      }
+      else if(targetClosestHallway[i] == expPosClosestHallway[j] and targetDistances[targetClosestHallway[i]] >= 0 and expPosDistances[expPosClosestHallway[j]] > 0){
+        expCloseToSame = true;
+        targetDist = targetDistances[targetClosestHallway[i]];
+        expPosDist = expPosDistances[expPosClosestHallway[j]];
+        cout << "expCloseToSame = true; targetDist = " << targetDist << "; expPosDist = " << expPosDist << endl;
+      }
+      else if(targetClosestHallway[i] != expPosClosestHallway[j]){
+        if(hallways[targetClosestHallway[i]].isHallwayConnected(expPosClosestHallway[j]) == true){
+          diffHallwayConnected = true;
+          targetHallwayConn = targetClosestHallway[i];
+          expPosHallwayConn = expPosClosestHallway[j];
+          cout << "diffHallwayConnected = true; targetHallwayConn = " << targetHallwayConn << "; expPosHallwayConn = " << expPosHallwayConn << endl;
+        }
+        else{
+          diffHallwayUnconnected = true;
+          targetHallwayNoConn = targetClosestHallway[i];
+          expPosHallwayNoConn = expPosClosestHallway[j];
+          cout << "diffHallwayUnconnected = true; targetHallwayNoConn = " << targetHallwayNoConn << "; expPosHallwayNoConn = " << expPosHallwayNoConn << endl;
+        }
+      }
+    }
+  }
+
+  if(sameHallway == true){
+    result = (-1) * expPosition.get_distance(targetPoint); //distance from expected position to target
+  }
+  else if(expCloseToSame == true){
+    result = (-1) * (expPosition.get_distance(targetPoint) + expPosDist + targetDist); //distance from expected position to target plus distance from expected position to hallway plus distance from target to hallway
+  }
+  else if(diffHallwayConnected == true){
+    result = (-1) * (expPosDistances[targetHallwayConn] + targetDistances[expPosHallwayConn]); //distance from expected position to target's hallway plus distance from target to expected position's hallway
+  }
+  else if(diffHallwayUnconnected == true){
+    result = (-1) * (hallways[targetHallwayNoConn].distanceBetweenAggregates(hallways[expPosHallwayNoConn])); //distance between target's hallway and expected position's hallway
+  }
+  cout << "result = " << result << endl;
   return result;
 }
 
 void Tier3Follow::set_commenting(){
+  cout << "In Follow set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   if(hallways.size() > 0)
     advisor_commenting = true;
@@ -3629,11 +3736,98 @@ void Tier3Follow::set_commenting(){
 }
 
 double Tier3FollowRotation::actionComment(FORRAction action){
+  cout << "Inside FollowRotation" << endl;
   double result=0;
+  vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+  vector<int> targetClosestHallway;
+  vector<int> expPosClosestHallway;
+  vector<double> targetDistances;
+  vector<double> expPosDistances;
+  double targetDistToHallway = 1000000.0, expDistToHallway = 1000000.0;
+  cout << "Number of hallways = " << hallways.size() << endl;
+  // Get distances between all hallways and the target and expected position
+  for(int i = 0; i < hallways.size() ; i++){
+    targetDistances.push_back(hallways[i].distanceToAggregate(targetPoint));
+    expPosDistances.push_back(hallways[i].distanceToAggregate(expPosition));
+  }
+  // Get minimum distance between the target and expected position and a hallway
+  for(int i = 0; i < hallways.size(); i++){
+    cout << "targetDistances[" << i << "] == " << targetDistances[i] << "; expPosDistances[" << i << "] == " << expPosDistances[i] << endl;
+    if(targetDistances[i] < targetDistToHallway){
+      targetDistToHallway = targetDistances[i];
+    }
+    if(expPosDistances[i] < expDistToHallway){
+      expDistToHallway = expPosDistances[i];
+    }
+  }
+  cout << "targetDistToHallway = " << targetDistToHallway << "; expDistToHallway = " << expDistToHallway << endl;
+  // Get all hallways with minimum distance to the target and expected position
+  for(int i = 0; i < hallways.size(); i++){
+    if(targetDistances[i] == targetDistToHallway){
+      targetClosestHallway.push_back(i);
+      cout << "targetClosestHallway = " << i << endl;
+    }
+    if(expPosDistances[i] == expDistToHallway){
+      expPosClosestHallway.push_back(i);
+      cout << "expPosClosestHallway = " << i << endl;
+    }
+  }
+  // Check whether the target and expected position are in the same or different hallways
+  bool sameHallway = false, expCloseToSame = false, diffHallwayConnected = false, diffHallwayUnconnected = false;
+  double targetDist, expPosDist;
+  int targetHallwayConn, expPosHallwayConn, targetHallwayNoConn, expPosHallwayNoConn;
+  for(int i = 0; i < targetClosestHallway.size(); i++){
+    for(int j = 0; j < expPosClosestHallway.size(); j++){
+      cout << "targetClosestHallway[" << i << "] = " << targetClosestHallway[i] << "; expPosClosestHallway[" << j << "] = " << expPosClosestHallway[j] << endl;
+      if(targetClosestHallway[i] == expPosClosestHallway[j] and targetDistances[targetClosestHallway[i]] == 0 and expPosDistances[expPosClosestHallway[j]] == 0){
+        sameHallway = true;
+        cout << "sameHallway = true" << endl;
+      }
+      else if(targetClosestHallway[i] == expPosClosestHallway[j] and targetDistances[targetClosestHallway[i]] >= 0 and expPosDistances[expPosClosestHallway[j]] > 0){
+        expCloseToSame = true;
+        targetDist = targetDistances[targetClosestHallway[i]];
+        expPosDist = expPosDistances[expPosClosestHallway[j]];
+        cout << "expCloseToSame = true; targetDist = " << targetDist << "; expPosDist = " << expPosDist << endl;
+      }
+      else if(targetClosestHallway[i] != expPosClosestHallway[j]){
+        if(hallways[targetClosestHallway[i]].isHallwayConnected(expPosClosestHallway[j]) == true){
+          diffHallwayConnected = true;
+          targetHallwayConn = targetClosestHallway[i];
+          expPosHallwayConn = expPosClosestHallway[j];
+          cout << "diffHallwayConnected = true; targetHallwayConn = " << targetHallwayConn << "; expPosHallwayConn = " << expPosHallwayConn << endl;
+        }
+        else{
+          diffHallwayUnconnected = true;
+          targetHallwayNoConn = targetClosestHallway[i];
+          expPosHallwayNoConn = expPosClosestHallway[j];
+          cout << "diffHallwayUnconnected = true; targetHallwayNoConn = " << targetHallwayNoConn << "; expPosHallwayNoConn = " << expPosHallwayNoConn << endl;
+        }
+      }
+    }
+  }
+
+  if(sameHallway == true){
+    result = (-1) * expPosition.get_distance(targetPoint); //distance from expected position to target
+  }
+  else if(expCloseToSame == true){
+    result = (-1) * (expPosition.get_distance(targetPoint) + expPosDist + targetDist); //distance from expected position to target plus distance from expected position to hallway plus distance from target to hallway
+  }
+  else if(diffHallwayConnected == true){
+    result = (-1) * (expPosDistances[targetHallwayConn] + targetDistances[expPosHallwayConn]); //distance from expected position to target's hallway plus distance from target to expected position's hallway
+  }
+  else if(diffHallwayUnconnected == true){
+    result = (-1) * (hallways[targetHallwayNoConn].distanceBetweenAggregates(hallways[expPosHallwayNoConn])); //distance between target's hallway and expected position's hallway
+  }
+  cout << "result = " << result << endl;
   return result;
 }
 
 void Tier3FollowRotation::set_commenting(){
+  cout << "In FollowRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   if(hallways.size() > 0)
     advisor_commenting = true;
@@ -3642,25 +3836,29 @@ void Tier3FollowRotation::set_commenting(){
 }
 
 double Tier3Crossroads::actionComment(FORRAction action){
+  cout << "Inside Crossroads" << endl;
   double result=0;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
-
+  cout << "Number of hallways = " << hallways.size() << endl;
   for(int i = 0; i < hallways.size() ; i++){
     double tempDist = hallways[i].distanceToAggregate(expPosition);
+    cout << "tempDist = " << tempDist << endl;
     if(tempDist > 0){
       result += ((1 / tempDist) * hallways[i].numConnections());
     }
     else{
       result += (2 * hallways[i].numConnections());
     }
+    cout << "result = " << result << endl;
   }
-
+  cout << "Final result = " << result << endl;
   return result;
 }
 
 void Tier3Crossroads::set_commenting(){
+  cout << "In Crossroads set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   if(hallways.size() > 0)
     advisor_commenting = true;
@@ -3669,25 +3867,29 @@ void Tier3Crossroads::set_commenting(){
 }
 
 double Tier3CrossroadsRotation::actionComment(FORRAction action){
+  cout << "Inside CrossroadsRotation" << endl;
   double result=0;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
-
+  cout << "Number of hallways = " << hallways.size() << endl;
   for(int i = 0; i < hallways.size() ; i++){
     double tempDist = hallways[i].distanceToAggregate(expPosition);
+    cout << "tempDist = " << tempDist << endl;
     if(tempDist > 0){
       result += ((1 / tempDist) * hallways[i].numConnections());
     }
     else{
       result += (2 * hallways[i].numConnections());
     }
+    cout << "result = " << result << endl;
   }
-
+  cout << "Final result = " << result << endl;
   return result;
 }
 
 void Tier3CrossroadsRotation::set_commenting(){
+  cout << "In CrossroadsRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   if(hallways.size() > 0)
     advisor_commenting = true;
@@ -3696,71 +3898,93 @@ void Tier3CrossroadsRotation::set_commenting(){
 }
 
 double Tier3Stay::actionComment(FORRAction action){
+  cout << "Inside Stay" << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
   double minDistance = 1000000.0;
+  cout << "Number of hallways = " << hallways.size() << endl;
   for(int i = 0; i < hallways.size() ; i++){
     double tempDist = hallways[i].distanceToAggregate(expPosition);
+    cout << "tempDist = " << tempDist << endl;
     if(tempDist < minDistance){
       minDistance = tempDist;
     }
   }
+  cout << "minDistance = " << minDistance << endl;
   return ((-1) * minDistance);
 }
 
 void Tier3Stay::set_commenting(){
+  cout << "In Stay set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
   bool currPosInHallway = false;
-  if(hallways.size() > 0){
+  cout << "Number of hallways = " << hallways.size() << endl;
+  if(hallways.size() == 0){
+    advisor_commenting = false;
+  }
+  else{
     for(int i = 0; i < hallways.size(); i++){
       if(hallways[i].pointInAggregate(currPosition)){
         currPosInHallway = true;
         break;
       }
     }
-  }
-  else{
-    advisor_commenting = false;
-  }
-  if(currPosInHallway == true){
-    advisor_commenting = true;
+    if(currPosInHallway == true){
+      cout << "currPosInHallway = true" << endl;
+      advisor_commenting = true;
+    }
+    else{
+      cout << "currPosInHallway = false" << endl;
+      advisor_commenting = false;
+    }
   }
 }
 
 double Tier3StayRotation::actionComment(FORRAction action){
+  cout << "Inside StayRotation" << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
   double minDistance = 1000000.0;
+  cout << "Number of hallways = " << hallways.size() << endl;
   for(int i = 0; i < hallways.size() ; i++){
     double tempDist = hallways[i].distanceToAggregate(expPosition);
+    cout << "tempDist = " << tempDist << endl;
     if(tempDist < minDistance){
       minDistance = tempDist;
     }
   }
+  cout << "minDistance = " << minDistance << endl;
   return ((-1) * minDistance);
 }
 
 void Tier3StayRotation::set_commenting(){
+  cout << "In StayRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
   bool currPosInHallway = false;
-  if(hallways.size() > 0){
+  cout << "Number of hallways = " << hallways.size() << endl;
+  if(hallways.size() == 0){
+    advisor_commenting = false;
+  }
+  else{
     for(int i = 0; i < hallways.size(); i++){
       if(hallways[i].pointInAggregate(currPosition)){
         currPosInHallway = true;
         break;
       }
     }
-  }
-  else{
-    advisor_commenting = false;
-  }
-  if(currPosInHallway == true){
-    advisor_commenting = true;
+    if(currPosInHallway == true){
+      cout << "currPosInHallway = true" << endl;
+      advisor_commenting = true;
+    }
+    else{
+      cout << "currPosInHallway = false" << endl;
+      advisor_commenting = false;
+    }
   }
 }
