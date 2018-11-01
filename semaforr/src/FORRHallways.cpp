@@ -11,7 +11,7 @@ using namespace std;
 void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector<CartesianPoint> > &trails) {
   cout << "num of trails " << trails.size() << endl;
   for(int i = 0; i < trails.size(); i++) {
-  	cout << "num of trail segments " << trails[i].size() << endl;
+  	cout << "num of trail markers " << trails[i].size() << endl;
     for(int j = 0; j < trails[i].size()-1; j++) {
       Segment current_segment = Segment(trails[i][j], trails[i][j+1]);
       if(trails[i][j].get_x() > trails[i][j+1].get_x())
@@ -150,7 +150,7 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
   cout << "std = " << std << endl;
-  double deviations = 1.5;
+  double deviations = 2;
   threshold = average_of_distances - (deviations*std);
   cout << "threshold " << threshold << endl;
   while(threshold <= 0){
@@ -214,7 +214,7 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
 
     cout << "2a" << endl;
     BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
-    BinarizeImage(binarized_heat_map, heat_map, 1);
+    BinarizeImage(binarized_heat_map, heat_map, 0);
 
     cout << "3a" << endl;
     LabelImage(binarized_heat_map,labeled_image);
@@ -394,8 +394,33 @@ void FORRHallways::FilterImage(vector<vector<double> > &filtered, const vector<v
 void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<vector<int> > &original, int threshold) {
   for(int i = 0; i < original.size(); i++) {
     for(int j = 0; j < original[0].size(); j++) {
-      if(original[i][j] > threshold)
+      if(original[i][j] > threshold){
         binarized[i][j] = 255;
+        if(i>0 and j>0){
+          binarized[i-1][j-1] = 255;
+        }
+        if(i>0){
+          binarized[i-1][j] = 255;
+        }
+        if(j>0){
+          binarized[i][j-1] = 255;
+        }
+        if(i < original.size() and j < original[0].size()){
+          binarized[i+1][j+1] = 255;
+        }
+        if(i < original.size()){
+          binarized[i+1][j] = 255;
+        }
+        if(j < original[0].size()){
+          binarized[i][j+1] = 255;
+        }
+        if(i>0 and j < original[0].size()){
+          binarized[i-1][j+1] = 255;
+        }
+        if(i < original.size() and j>0){
+          binarized[i+1][j-1] = 255;
+        }
+      }
       //cout << binarized[i][j] << " ";
     }
     //cout << endl;
@@ -505,21 +530,21 @@ void FORRHallways::ConvertPairToCartesianPoint(vector<vector<CartesianPoint> > &
     for(int j = 0; j < input[i].size(); j++) {
       CartesianPoint new_point0 = CartesianPoint(input[i][j].first,input[i][j].second);
       trail_coordinates.push_back(new_point0);
-      /*CartesianPoint new_point1 = CartesianPoint(input[i][j].first+0.25,input[i][j].second+0.25);
+      /*CartesianPoint new_point1 = CartesianPoint(input[i][j].first+1.0,input[i][j].second+1.0);
       trail_coordinates.push_back(new_point1);
-      CartesianPoint new_point2 = CartesianPoint(input[i][j].first+0.25,input[i][j].second-0.25);
+      CartesianPoint new_point2 = CartesianPoint(input[i][j].first+1.0,input[i][j].second-1.0);
       trail_coordinates.push_back(new_point2);
-      CartesianPoint new_point3 = CartesianPoint(input[i][j].first-0.25,input[i][j].second+0.25);
+      CartesianPoint new_point3 = CartesianPoint(input[i][j].first-1.0,input[i][j].second+1.0);
       trail_coordinates.push_back(new_point3);
-      CartesianPoint new_point4 = CartesianPoint(input[i][j].first-0.25,input[i][j].second-0.25);
+      CartesianPoint new_point4 = CartesianPoint(input[i][j].first-1.0,input[i][j].second-1.0);
       trail_coordinates.push_back(new_point4);
-      CartesianPoint new_point5 = CartesianPoint(input[i][j].first+0.25,input[i][j].second);
+      CartesianPoint new_point5 = CartesianPoint(input[i][j].first+1.0,input[i][j].second);
       trail_coordinates.push_back(new_point5);
-      CartesianPoint new_point6 = CartesianPoint(input[i][j].first-0.25,input[i][j].second);
+      CartesianPoint new_point6 = CartesianPoint(input[i][j].first-1.0,input[i][j].second);
       trail_coordinates.push_back(new_point6);
-      CartesianPoint new_point7 = CartesianPoint(input[i][j].first,input[i][j].second+0.25);
+      CartesianPoint new_point7 = CartesianPoint(input[i][j].first,input[i][j].second+1.0);
       trail_coordinates.push_back(new_point7);
-      CartesianPoint new_point8 = CartesianPoint(input[i][j].first,input[i][j].second-0.25);
+      CartesianPoint new_point8 = CartesianPoint(input[i][j].first,input[i][j].second-1.0);
       trail_coordinates.push_back(new_point8);*/
     }
     trails.push_back(trail_coordinates);

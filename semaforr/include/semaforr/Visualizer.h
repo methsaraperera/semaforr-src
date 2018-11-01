@@ -421,6 +421,11 @@ public:
 				color.g = 1.0;
 				color.b = 1.0;
 			}
+			else{
+				color.r = 0.0;
+				color.g = 0.0;
+				color.b = 0.0;
+			}
 			marker.colors.push_back(color);
 		}
 	}
@@ -604,7 +609,7 @@ public:
 	line_list.scale.x = 0.1;
 	line_list.color.r = 1.0;
 	line_list.color.a = 1.0;
-
+	cout << "There are currently " << trails->getSize() << " trails" << endl;
 	for(int i = 0 ; i < trails->getSize(); i++){
 		vector<TrailMarker> trail = trails->getTrail(i);
 		for(int j = 0; j < trail.size()-1; j++){
@@ -769,8 +774,8 @@ public:
 	int currentTask = -1;
 	if(!agenda.empty()){
 		currentTask = all_agenda.size() - agenda.size();
-  		if(currentTask != 0)
-			decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
+  		//if(currentTask != 0)
+		decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
 	}
 	ROS_DEBUG("After decisionCount");
 
@@ -895,9 +900,9 @@ public:
 
 	std::stringstream output;
 
-	//output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << crowdModel.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << planStream.str();// << advisorInfluence << "\t" << "\t" << lep.str() << "\t" << ls.str();
+	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << crowdModel.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << planStream.str();// << advisorInfluence << "\t" << "\t" << lep.str() << "\t" << ls.str();
 
-	output << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << regionsstream.str() << "\t" << lep.str() << "\t" << ls.str();
+	//output << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << regionsstream.str() << "\t" << lep.str() << "\t" << ls.str();
 
 	//output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << lep.str() << "\t" << ls.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << crowdModel.str() << "\t" << planStream.str();
 

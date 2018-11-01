@@ -30,34 +30,34 @@ public:
   int getHallwayType() const {return hallway_type_;}
 
   bool pointInAggregate(CartesianPoint point){
-    cout << "Inside pointInAggregate" << endl;
+    //cout << "Inside pointInAggregate" << endl;
     std::vector<CartesianPoint>::iterator it;
     CartesianPoint roundedPoint = CartesianPoint((int)(point.get_x()),(int)(point.get_y()));
-    cout << "point x = " << point.get_x() << ", y = " << point.get_y() << "; Rounded point x = " << roundedPoint.get_x() << ", y = " << roundedPoint.get_y() << endl;
+    //cout << "point x = " << point.get_x() << ", y = " << point.get_y() << "; Rounded point x = " << roundedPoint.get_x() << ", y = " << roundedPoint.get_y() << endl;
     it = find(points_.begin(), points_.end(), roundedPoint);
     if(it != points_.end()){
-      cout << "point found in aggregate" << endl;
+      //cout << "point found in aggregate" << endl;
       return true;
     }
     else{
-      cout << "point NOT found in aggregate" << endl;
+      //cout << "point NOT found in aggregate" << endl;
       return false;
     }
   }
 
   double distanceToAggregate(CartesianPoint point){
-    cout << "Inside distanceToAggregate" << endl;
+    //cout << "Inside distanceToAggregate" << endl;
     std::vector<CartesianPoint>::iterator it;
     CartesianPoint roundedPoint = CartesianPoint((int)(point.get_x()),(int)(point.get_y()));
-    cout << "point x = " << point.get_x() << ", y = " << point.get_y() << "; Rounded point x = " << roundedPoint.get_x() << ", y = " << roundedPoint.get_y() << endl;
+    //cout << "point x = " << point.get_x() << ", y = " << point.get_y() << "; Rounded point x = " << roundedPoint.get_x() << ", y = " << roundedPoint.get_y() << endl;
     it = find(points_.begin(), points_.end(), roundedPoint);
     double dist = 1000000.0;
     if(it != points_.end()){
-      cout << "point found in aggregate so distance = 0.0" << endl;
+      //cout << "point found in aggregate so distance = 0.0" << endl;
       dist = 0.0;
     }
     else{
-      cout << "point NOT found in aggregate" << endl;
+      //cout << "point NOT found in aggregate" << endl;
       for(int i = 0; i < points_.size(); i++){
         double tempDist = point.get_distance(points_[i]);
         if(tempDist < dist){
@@ -65,17 +65,17 @@ public:
         }
       }
     }
-    cout << "distance = " << dist << endl;
+    //cout << "distance = " << dist << endl;
     return dist;
   }
 
   void findConnection(Aggregate &hlwy, int id1, int id2){
-    cout << "Inside findConnection" << endl;
+    //cout << "Inside findConnection" << endl;
     for(int i = 0; i < points_.size(); i++){
       if(hlwy.pointInAggregate(points_[i]) == true){
         connectedHallways.push_back(id2);
         hlwy.addConnection(id1);
-        cout << "Connection found between " << id1 << " and " << id2 << endl;
+        //cout << "Connection found between " << id1 << " and " << id2 << endl;
         break;
       }
     }
@@ -91,19 +91,19 @@ public:
   }
 
   bool isHallwayConnected(int id){
-    cout << "Inside isHallwayConnected" << endl;
+    //cout << "Inside isHallwayConnected" << endl;
     for(int i = 0; i < connectedHallways.size(); i++){
       if(connectedHallways[i] == id){
-        cout << "Hallways are connected" << endl;
+        //cout << "Hallways are connected" << endl;
         return true;
       }
     }
-    cout << "Hallways are NOT connected" << endl;
+    //cout << "Hallways are NOT connected" << endl;
     return false;
   }
 
   double distanceBetweenAggregates(Aggregate hlwy){
-    cout << "Inside distanceBetweenAggregates" << endl;
+    //cout << "Inside distanceBetweenAggregates" << endl;
     double dist = 1000000.0;
     for(int i = 0; i < points_.size(); i++){
       double tempDist = hlwy.distanceToAggregate(points_[i]);
@@ -111,7 +111,7 @@ public:
         dist = tempDist;
       }
     }
-    cout << "Distance between = " << dist << endl;
+    //cout << "Distance between = " << dist << endl;
     return dist;
   }
 
@@ -257,14 +257,16 @@ public:
             cout << "done proccessing " << hallway_names[i] << endl;
         }
         cout << "finished map" << endl;
-        cout << "finding connections between hallways" << endl;
-        for (int i = 0; i < all_aggregates.size()-1; i++){
-          for (int j = i + 1; j < all_aggregates.size(); j++){
-            all_aggregates[i].findConnection(all_aggregates[j],i,j);
+        if(all_aggregates.size() > 0){
+          cout << "finding connections between hallways" << endl;
+          for (int i = 0; i < all_aggregates.size()-1; i++){
+            for (int j = i + 1; j < all_aggregates.size(); j++){
+              all_aggregates[i].findConnection(all_aggregates[j],i,j);
+            }
           }
-        }
-        for (int i = 0; i < all_aggregates.size(); i++){
-          all_aggregates[i].numConnections();
+          for (int i = 0; i < all_aggregates.size(); i++){
+            all_aggregates[i].numConnections();
+          }
         }
 
         hallways = all_aggregates;

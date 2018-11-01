@@ -50,7 +50,6 @@ bool CartesianPoint::operator==(const CartesianPoint& lhs) const{
 }
 
 
-
 /***********************************************************************
                 Line class implementation
 ***********************************************************************/

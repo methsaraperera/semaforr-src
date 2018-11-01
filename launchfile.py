@@ -77,9 +77,13 @@ def experiment():
     #why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
     #print "waiting,,"
    
+    rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
+
     # Wait till semaforr completes the process
     while semaforr_process.poll() is None:
         print "Semaforr process still running ..."
+        if rviz_process.poll() is not None:
+            rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
         time.sleep(1)
 
     print "Semaforr process has ended ..."
