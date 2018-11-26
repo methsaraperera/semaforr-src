@@ -678,7 +678,8 @@ void Controller::learnSpatialModel(AgentState* agentState){
   }
   if(hallwaysOn){
     beliefs->getSpatialModel()->getHallways()->clearAllHallways();
-    beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
+    beliefs->getSpatialModel()->getHallways()->learnHallways(all_trace);
+    //beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
   }
 }
 

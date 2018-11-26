@@ -396,7 +396,7 @@ void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<v
     for(int j = 0; j < original[0].size(); j++) {
       if(original[i][j] > threshold){
         binarized[i][j] = 255;
-        if(i>0 and j>0){
+        /*if(i>0 and j>0){
           binarized[i-1][j-1] = 255;
         }
         if(i>0){
@@ -419,7 +419,7 @@ void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<v
         }
         if(i < original.size() and j>0){
           binarized[i+1][j-1] = 255;
-        }
+        }*/
       }
       //cout << binarized[i][j] << " ";
     }

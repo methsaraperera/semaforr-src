@@ -887,20 +887,60 @@ public:
 	int width = model.width;
 	std::vector<double> densities = model.densities;
 	std::vector<double> risk = model.risk;
-	crowdModel << height << " " << width << " " << resolution << " ";
+	crowdModel << height << " " << width << " " << resolution << ";";
 	for(int i = 0; i < densities.size() ; i++){
 		crowdModel << densities[i] << " ";
 	}
-	crowdModel << ";";
+	crowdModel << "\t";
 	for(int i = 0; i < risk.size() ; i++){
 		crowdModel << risk[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> left = model.left;
+	for(int i = 0; i < left.size() ; i++){
+		crowdModel << left[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> right = model.right;
+	for(int i = 0; i < right.size() ; i++){
+		crowdModel << right[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> up = model.up;
+	for(int i = 0; i < up.size() ; i++){
+		crowdModel << up[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> down = model.down;
+	for(int i = 0; i < down.size() ; i++){
+		crowdModel << down[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> up_left = model.up_left;
+	for(int i = 0; i < up_left.size() ; i++){
+		crowdModel << up_left[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> up_right = model.up_right;
+	for(int i = 0; i < up_right.size() ; i++){
+		crowdModel << up_right[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> down_left = model.down_left;
+	for(int i = 0; i < down_left.size() ; i++){
+		crowdModel << down_left[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> down_right = model.down_right;
+	for(int i = 0; i < down_right.size() ; i++){
+		crowdModel << down_right[i] << " ";
 	}
 
 	ROS_DEBUG("After all crowd model");
 
 	std::stringstream output;
 
-	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << crowdModel.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << planStream.str();// << advisorInfluence << "\t" << "\t" << lep.str() << "\t" << ls.str();
+	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << crowdModel.str() << "\t" << planStream.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str();//<< "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << advisorInfluence << "\t" << lep.str() << "\t" << ls.str();
 
 	//output << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << regionsstream.str() << "\t" << lep.str() << "\t" << ls.str();
 

@@ -156,6 +156,7 @@ public:
 		gettimeofday(&tv,NULL);
 		start_time = tv.tv_sec + (tv.tv_usec/1000000.0);
 		// Run the loop , the input sensing and the output beaming is asynchrounous
+		bool firstMessageReceived;
 		while(nh_.ok()) {
 			// If pos value is not received from menge wait
 			while(init_pos_received == false or init_laser_received == false){
@@ -163,7 +164,8 @@ public:
 				//wait for some time
 				rate.sleep();
 				// Sense input 
-				ros::spinOnce();	
+				ros::spinOnce();
+				firstMessageReceived = true;
 			}
 			gettimeofday(&tv,NULL);
 			end_time = tv.tv_sec + (tv.tv_usec/1000000.0);
@@ -171,7 +173,12 @@ public:
 			//Sense the input and the current target to run the advisors and generate a decision
 			if(action_complete){
 				ROS_INFO_STREAM("Action completed. Save sensor info, Current position: " << current.getX() << " " << current.getY() << " " << current.getTheta());
-				viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+				if(firstMessageReceived == true){
+					firstMessageReceived = false;
+				}
+				else{
+					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+				}
 				gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
@@ -318,9 +325,11 @@ int main(int argc, char **argv) {
 		string target_set(argv[2]);
 		string map_config(argv[3]);
 		string map_dimensions(argv[4]);
+		string advisors(argv[5]);
+		string params(argv[6]);
 
-		string advisor_config = path + "/config/advisors.conf";
-		string params_config = path + "/config/params.conf";
+		string advisor_config = path + advisors;
+		string params_config = path + params;
 
 		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions); 
 
