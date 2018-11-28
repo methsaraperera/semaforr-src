@@ -16,7 +16,7 @@ void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector
       Segment current_segment = Segment(trails[i][j], trails[i][j+1]);
       if(trails[i][j].get_x() > trails[i][j+1].get_x())
         current_segment = Segment(trails[i][j+1], trails[i][j]);
-      if((trails[i][j].get_x() != trails[i][j+1].get_x()) || (trails[i][j].get_y() != trails[i][j+1].get_y()))
+      if((trails[i][j].get_x() != trails[i][j+1].get_x()) and (trails[i][j].get_y() != trails[i][j+1].get_y()) and (pow(pow((trails[i][j].get_x() - trails[i][j+1].get_x()), 2)+pow((trails[i][j].get_y() - trails[i][j+1].get_y()), 2),0.5)>=0.2))
         segments.push_back(current_segment);
     }
   }
@@ -200,7 +200,7 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
 // filtered line is one below than expected pos
 // just pass 1 vector of hallway
 vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group,int filter_size, int width, int height) {
-    vector<vector<int> > heat_map(width,vector<int>(height, 0));
+    vector<vector<double> > heat_map(width,vector<double>(height, 0));
     vector<vector<double> > filtered_heat_map(width,vector<double>(height, 0));
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
     vector<vector<int> > labeled_image(width,vector<int>(height, 0));
@@ -214,7 +214,7 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
 
     cout << "2a" << endl;
     BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
-    BinarizeImage(binarized_heat_map, heat_map, 0);
+    BinarizeImage(binarized_heat_map, heat_map, 1);
 
     cout << "3a" << endl;
     LabelImage(binarized_heat_map,labeled_image);
@@ -233,7 +233,7 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
 
 // isnt accurate to line
 // also slow
-void FORRHallways::UpdateMap(vector<vector<int> > &frequency_map, const vector<Segment> &segments) {
+void FORRHallways::UpdateMap(vector<vector<double> > &frequency_map, const vector<Segment> &segments) {
   cout << "map size input: " << frequency_map.size() << " " << frequency_map[0].size() << endl;
   //cout << segments.size() << endl;
   for(int i = 0; i < segments.size(); i++) {
@@ -256,7 +256,7 @@ void FORRHallways::UpdateMap(vector<vector<int> > &frequency_map, const vector<S
 //********$^$^^%#^#
 
 // does this produce a similar map?
-void FORRHallways::Interpolate(vector<vector<int> > &frequency_map, double left_x, double left_y, double right_x, double right_y) {
+void FORRHallways::Interpolate(vector<vector<double> > &frequency_map, double left_x, double left_y, double right_x, double right_y) {
 
   double step = abs(left_x - right_x) + abs(left_y - right_y);
   //cout << "step: " << step << " " << 1/step << endl;
@@ -267,7 +267,32 @@ void FORRHallways::Interpolate(vector<vector<int> > &frequency_map, double left_
     int ycoord = round(j*(right_y - left_y) + left_y);
     //cout << xcoord << " " << ycoord << endl;
     //cout << frequency_map[0].size() << " " << frequency_map.size() << endl;
-    frequency_map[xcoord][ycoord]++;
+    frequency_map[xcoord][ycoord] += 1.0;
+    //cout << xcoord << " " << ycoord << " " << frequency_map[xcoord][ycoord] << endl;
+    if(xcoord>0 and ycoord>0){
+      frequency_map[xcoord-1][ycoord-1] += 0.17;
+    }
+    if(xcoord>0){
+      frequency_map[xcoord-1][ycoord] += 0.17;
+    }
+    if(ycoord>0){
+      frequency_map[xcoord][ycoord-1] += 0.17;
+    }
+    if(xcoord < frequency_map.size() and ycoord < frequency_map[0].size()){
+      frequency_map[xcoord+1][ycoord+1] += 0.17;
+    }
+    if(xcoord < frequency_map.size()){
+      frequency_map[xcoord+1][ycoord] += 0.17;
+    }
+    if(ycoord < frequency_map[0].size()){
+      frequency_map[xcoord][ycoord+1] += 0.17;
+    }
+    if(xcoord>0 and ycoord < frequency_map[0].size()){
+      frequency_map[xcoord-1][ycoord+1] += 0.17;
+    }
+    if(xcoord < frequency_map.size() and ycoord>0){
+      frequency_map[xcoord+1][ycoord-1] += 0.17;
+    }
   }
 }
 
@@ -391,10 +416,10 @@ void FORRHallways::FilterImage(vector<vector<double> > &filtered, const vector<v
   }
 }
   // assumes binarized has the same dimensions as original
-void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<vector<int> > &original, int threshold) {
+void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<vector<double> > &original, int threshold) {
   for(int i = 0; i < original.size(); i++) {
     for(int j = 0; j < original[0].size(); j++) {
-      if(original[i][j] > threshold){
+      if(original[i][j] >= threshold){
         binarized[i][j] = 255;
         /*if(i>0 and j>0){
           binarized[i-1][j-1] = 255;

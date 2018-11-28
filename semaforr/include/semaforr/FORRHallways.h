@@ -222,18 +222,23 @@ public:
 
 
         //int id = 0;
-        double step = 180/8;
+        //double step = 180/8;
+        double step = 10;
         for(int i = 0; i < mean_segments.size(); i++) {
             double angle = mean_segments[i].GetAngle() * 180/M_PI;
             if(angle < step)
                 hallway_types[0].push_back(mean_segments[i]);
-            else if(angle < 3*step)
+            //else if(angle < 3*step)
+            else if(angle < 45+step and angle > 45-step)
                 hallway_types[1].push_back(mean_segments[i]);
-            else if(angle < 5*step)
+            //else if(angle < 5*step)
+            else if(angle < 90+step and angle > 90-step)
                 hallway_types[2].push_back(mean_segments[i]);
-            else if(angle < 7*step)
+            //else if(angle < 7*step)
+            else if(angle < 135+step and angle > 135-step)
                 hallway_types[3].push_back(mean_segments[i]);
-            else
+            //else
+            else if(angle > 180-step)
                 hallway_types[0].push_back(mean_segments[i]);
         }
 
@@ -295,12 +300,12 @@ private:
     void CreateMeanSegments(vector<Segment> &averaged_segments,const vector<vector<double> > &most_similar,const vector<Segment> &segments);
 
     vector<vector<CartesianPoint> > ProcessHallwayData(const vector<Segment> &hallway_group,int filter_size, int width, int height);
-    void UpdateMap(vector<vector<int> > &frequency_map, const vector<Segment> &segments);
-    void Interpolate(vector<vector<int> > &frequency_map,double left_x, double left_y, double right_x, double right_y);
+    void UpdateMap(vector<vector<double> > &frequency_map, const vector<Segment> &segments);
+    void Interpolate(vector<vector<double> > &frequency_map,double left_x, double left_y, double right_x, double right_y);
     vector<vector<int> > CreateCircularAveragingFilter(int radius);
     vector<vector<double> > ReturnMatlabFilter();
     void FilterImage(vector<vector<double> > &filtered, const vector<vector<int> > &original, int radius);
-    void BinarizeImage(vector<vector<int> > &binarized,const vector<vector<int> > &original,  int threshold);
+    void BinarizeImage(vector<vector<int> > &binarized,const vector<vector<double> > &original,  int threshold);
     //void ConvertMatrixToImage(const vector<vector<int> > &binary_map, string image_name);
     void doUnion(int x, int y, int x2, int y2, vector<vector<int> > &labeled_image);
     void unionCoords(int x, int y, int x2, int y2, const vector<vector<int> > &binary_map, vector<vector<int> > &labeled_image);

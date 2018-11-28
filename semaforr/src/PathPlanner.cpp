@@ -153,7 +153,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }*/
     //return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
     if (ns_cost > 0 or nd_cost > 0){
-      return (w5 * (ns_cost+nd_cost)/2);
+      return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
     }
     else{
       return (w1 * oldcost);
@@ -165,7 +165,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double d_cost = cellCost(d.getX(), d.getY(), b);
     //return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
     if (s_cost > 0 or d_cost > 0){
-      return (w2 * (s_cost+d_cost)/2);
+      return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
     }
     else{
       return (w1 * oldcost);
@@ -177,7 +177,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double d_risk_cost = riskCost(d.getX(), d.getY(), b);
     //return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
     if (s_risk_cost > 0 or d_risk_cost > 0){
-      return (w4 * (s_risk_cost+d_risk_cost)/2);
+      return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
     }
     else{
       return (w1 * oldcost);
@@ -194,7 +194,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
     //return (w1 * oldcost) + (w3 * flowcost);
     if (flowcost > 0){
-      return (w3 * flowcost);
+      return (w1 * oldcost) + (w3 * flowcost);
     }
     else{
       return (w1 * oldcost);

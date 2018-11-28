@@ -159,6 +159,11 @@ class Task {
 		cout << "Plan active is true" << endl;
 		isPlanActive = true;
 	}
+	vector<CartesianPoint> skippedwaypoints;
+	for(int i = 0; i < waypoints.size(); i+=1){
+		skippedwaypoints.push_back(waypoints[i]);
+	}
+	waypoints = skippedwaypoints;
 	//setupNextWaypoint(source);
 	setupNearestWaypoint(source);
 	//planner->resetPath();

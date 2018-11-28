@@ -655,7 +655,12 @@ void Controller::learnSpatialModel(AgentState* agentState){
   vector<Position> *pos_hist = completedTask->getPositionHistory();
   vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
- 
+  vector<CartesianPoint> trace;
+  for(int i = 0 ; i < pos_hist->size() ; i++){
+    trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+  }
+  all_trace.push_back(trace);
+
   if(trailsOn){
     beliefs->getSpatialModel()->getTrails()->updateTrails(agentState);
     beliefs->getSpatialModel()->getTrails()->resetChosenTrail();
