@@ -16,7 +16,7 @@ void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector
       Segment current_segment = Segment(trails[i][j], trails[i][j+1]);
       if(trails[i][j].get_x() > trails[i][j+1].get_x())
         current_segment = Segment(trails[i][j+1], trails[i][j]);
-      if((trails[i][j].get_x() != trails[i][j+1].get_x()) and (trails[i][j].get_y() != trails[i][j+1].get_y()) and (pow(pow((trails[i][j].get_x() - trails[i][j+1].get_x()), 2)+pow((trails[i][j].get_y() - trails[i][j+1].get_y()), 2),0.5)>=0.2))
+      if((trails[i][j].get_x() != trails[i][j+1].get_x()) and (trails[i][j].get_y() != trails[i][j+1].get_y()) and (pow((pow((trails[i][j].get_x() - trails[i][j+1].get_x()), 2)+pow((trails[i][j].get_y() - trails[i][j+1].get_y()), 2)),0.5)>=0.3))
         segments.push_back(current_segment);
     }
   }
@@ -50,11 +50,11 @@ void FORRHallways::NormalizeVector(vector<vector<double> > &normalized_segments,
 void FORRHallways::ConvertSegmentsToDouble(vector<vector<double> > &data, const vector<Segment> &segments) {
   vector<double> single_segment_data;
   for(int i = 0; i< segments.size(); i++) {
-    single_segment_data.push_back(segments.at(i).GetLeftPoint().get_x());
-    single_segment_data.push_back(segments.at(i).GetLeftPoint().get_y());
-    single_segment_data.push_back(segments.at(i).GetRightPoint().get_x());
-    single_segment_data.push_back(segments.at(i).GetRightPoint().get_y());
-    single_segment_data.push_back(segments.at(i).GetAngle());
+    single_segment_data.push_back(segments[i].GetLeftPoint().get_x());
+    single_segment_data.push_back(segments[i].GetLeftPoint().get_y());
+    single_segment_data.push_back(segments[i].GetRightPoint().get_x());
+    single_segment_data.push_back(segments[i].GetRightPoint().get_y());
+    single_segment_data.push_back(segments[i].GetAngle());
     data.push_back(single_segment_data);
     single_segment_data.clear();
   }
@@ -121,11 +121,15 @@ void FORRHallways::ListSimilarities(vector<vector<double> > &similarities, const
 //TODO:: should name be changed to reflect squared nature?
 //TODO:: parameterize nth root
 double FORRHallways::ComputeDistance(const vector<double> first_segment, const vector<double> second_segment) {
-  double sum = 0;
+  /*double sum = 0;
   for(int i = 0; i < first_segment.size(); i++) {
     sum += pow((first_segment[i] - second_segment[i]), 2);
   }
-  sum = pow(sum, .5); //remember it's rooted in matlab function
+  sum = pow(sum, .5); //remember it's rooted in matlab function;*/
+  double dist1 = pow((pow((first_segment[0] - second_segment[0]), 2) + pow((first_segment[1] - second_segment[1]), 2)), 0.5);
+  double dist2 = pow((pow((first_segment[2] - second_segment[2]), 2) + pow((first_segment[3] - second_segment[3]), 2)), 0.5);
+  double angledist = pow((pow((first_segment[4] - second_segment[4]), 2)), 0.5);
+  double sum = (0.25*dist1 + 0.25*dist2 + 0.5*angledist);
   return sum;
 }
 
@@ -150,11 +154,11 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
   cout << "std = " << std << endl;
-  double deviations = 2;
+  double deviations = 3;
   threshold = average_of_distances - (deviations*std);
   cout << "threshold " << threshold << endl;
   while(threshold <= 0){
-  	deviations = deviations-0.5;
+  	deviations = deviations-0.25;
   	threshold = average_of_distances - (deviations*std);
   	cout << "threshold " << threshold << endl;
   }
@@ -166,6 +170,7 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
       similar_pairing.push_back(similarities[i][0]);
       similar_pairing.push_back(similarities[i][1]);
       most_similar.push_back(similar_pairing);
+      //cout << similarities[i][0] << " " << similarities[i][1] << " " << similarities[i][2] << endl;
       similar_pairing.clear();
     }
   }
@@ -180,18 +185,19 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
 void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const vector<vector<double> > &most_similar, const vector<Segment> &segments) {
   double average_left_x, average_left_y, average_right_x, average_right_y = 0;
   for(int i = 0; i < most_similar.size(); i++) {
-    Segment left = segments[most_similar[i][0]];
-    Segment right = segments[most_similar[i][1]];
-    average_left_x = (left.GetLeftPoint().get_x() + right.GetLeftPoint().get_x())/2;
-    average_left_y = (left.GetLeftPoint().get_y() + right.GetLeftPoint().get_y())/2;
+    Segment first = segments[int(most_similar[i][0])];
+    Segment second = segments[int(most_similar[i][1])];
+    average_left_x = (first.GetLeftPoint().get_x() + second.GetLeftPoint().get_x())/2;
+    average_left_y = (first.GetLeftPoint().get_y() + second.GetLeftPoint().get_y())/2;
     CartesianPoint left_coord = CartesianPoint(average_left_x, average_left_y);
 
-    average_right_x = (left.GetRightPoint().get_x() + right.GetRightPoint().get_x())/2;
-    average_right_y = (left.GetRightPoint().get_y() + right.GetRightPoint().get_y())/2;
+    average_right_x = (first.GetRightPoint().get_x() + second.GetRightPoint().get_x())/2;
+    average_right_y = (first.GetRightPoint().get_y() + second.GetRightPoint().get_y())/2;
     CartesianPoint right_coord = CartesianPoint(average_right_x, average_right_y);
 
     Segment average = Segment(left_coord, right_coord);
     averaged_segments.push_back(average);
+    //cout << first.GetLeftPoint().get_x() << " " << first.GetLeftPoint().get_y() << " " << first.GetRightPoint().get_x() << " " << first.GetRightPoint().get_y() << " " << first.GetAngle() << " " << second.GetLeftPoint().get_x() << " " << second.GetLeftPoint().get_y() << " " << second.GetRightPoint().get_x() << " " << second.GetRightPoint().get_y() << " " << second.GetAngle() << " " << average.GetLeftPoint().get_x() << " " << average.GetLeftPoint().get_y() << " " << average.GetRightPoint().get_x() << " " << average.GetRightPoint().get_y() << " " << average.GetAngle() << endl;
   }
 }
 
@@ -199,7 +205,7 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
 
 // filtered line is one below than expected pos
 // just pass 1 vector of hallway
-vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group,int filter_size, int width, int height) {
+vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group, int filter_size, int width, int height) {
     vector<vector<double> > heat_map(width,vector<double>(height, 0));
     vector<vector<double> > filtered_heat_map(width,vector<double>(height, 0));
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
@@ -214,7 +220,7 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
 
     cout << "2a" << endl;
     BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
-    BinarizeImage(binarized_heat_map, heat_map, 1);
+    BinarizeImage(binarized_heat_map, heat_map, 2);
 
     cout << "3a" << endl;
     LabelImage(binarized_heat_map,labeled_image);
@@ -270,28 +276,28 @@ void FORRHallways::Interpolate(vector<vector<double> > &frequency_map, double le
     frequency_map[xcoord][ycoord] += 1.0;
     //cout << xcoord << " " << ycoord << " " << frequency_map[xcoord][ycoord] << endl;
     if(xcoord>0 and ycoord>0){
-      frequency_map[xcoord-1][ycoord-1] += 0.17;
+      frequency_map[xcoord-1][ycoord-1] += 0.1;
     }
     if(xcoord>0){
-      frequency_map[xcoord-1][ycoord] += 0.17;
+      frequency_map[xcoord-1][ycoord] += 0.1;
     }
     if(ycoord>0){
-      frequency_map[xcoord][ycoord-1] += 0.17;
+      frequency_map[xcoord][ycoord-1] += 0.1;
     }
     if(xcoord < frequency_map.size() and ycoord < frequency_map[0].size()){
-      frequency_map[xcoord+1][ycoord+1] += 0.17;
+      frequency_map[xcoord+1][ycoord+1] += 0.1;
     }
     if(xcoord < frequency_map.size()){
-      frequency_map[xcoord+1][ycoord] += 0.17;
+      frequency_map[xcoord+1][ycoord] += 0.1;
     }
     if(ycoord < frequency_map[0].size()){
-      frequency_map[xcoord][ycoord+1] += 0.17;
+      frequency_map[xcoord][ycoord+1] += 0.1;
     }
     if(xcoord>0 and ycoord < frequency_map[0].size()){
-      frequency_map[xcoord-1][ycoord+1] += 0.17;
+      frequency_map[xcoord-1][ycoord+1] += 0.1;
     }
     if(xcoord < frequency_map.size() and ycoord>0){
-      frequency_map[xcoord+1][ycoord-1] += 0.17;
+      frequency_map[xcoord+1][ycoord-1] += 0.1;
     }
   }
 }
@@ -572,6 +578,8 @@ void FORRHallways::ConvertPairToCartesianPoint(vector<vector<CartesianPoint> > &
       CartesianPoint new_point8 = CartesianPoint(input[i][j].first,input[i][j].second-1.0);
       trail_coordinates.push_back(new_point8);*/
     }
-    trails.push_back(trail_coordinates);
+    if(trail_coordinates.size() > 2){
+      trails.push_back(trail_coordinates);
+    }
   }
 }

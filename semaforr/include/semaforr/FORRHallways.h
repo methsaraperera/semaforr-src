@@ -149,6 +149,8 @@ private:
   double angle_;
 
   double FindAngle() {
+    //double angle = atan2((left_point_.get_y() - right_point_.get_y()),(left_point_.get_x() - right_point_.get_x()))+M_PI;
+    //angle = (angle < (2*M_PI) ? angle : (0.0));
     CartesianPoint coordinate = TranslateSegment();
     double angle = atan2(coordinate.get_y(), coordinate.get_x());
     angle = MakeAnglePositive(angle);
@@ -223,22 +225,22 @@ public:
 
         //int id = 0;
         //double step = 180/8;
-        double step = 10;
+        double step = 5;
         for(int i = 0; i < mean_segments.size(); i++) {
             double angle = mean_segments[i].GetAngle() * 180/M_PI;
-            if(angle < step)
+            if(angle <= step and angle >= 0)
                 hallway_types[0].push_back(mean_segments[i]);
             //else if(angle < 3*step)
-            else if(angle < 45+step and angle > 45-step)
+            else if(angle <= 45+step*2 and angle >= 45-step*2)
                 hallway_types[1].push_back(mean_segments[i]);
             //else if(angle < 5*step)
-            else if(angle < 90+step and angle > 90-step)
+            else if(angle <= 90+step and angle >= 90-step)
                 hallway_types[2].push_back(mean_segments[i]);
             //else if(angle < 7*step)
-            else if(angle < 135+step and angle > 135-step)
+            else if(angle <= 135+step*2 and angle >= 135-step*2)
                 hallway_types[3].push_back(mean_segments[i]);
             //else
-            else if(angle > 180-step)
+            else if(angle <= 180 and angle >= 180-step)
                 hallway_types[0].push_back(mean_segments[i]);
         }
 
