@@ -583,8 +583,12 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
-      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      tierTwoDecision(current);
+      if(aStarOn){
+        tierTwoDecision(current);
+      }
+      else{
+        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+      }
       firstTaskAssigned = true;
   }
   //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
@@ -600,8 +604,12 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
-      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      tierTwoDecision(current);
+      if(aStarOn){
+        tierTwoDecision(current);
+      }
+      else{
+        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+      }
     }
   }
   // else if subtask is complete
@@ -622,8 +630,12 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     //beliefs->getAgentState()->skipTask();
     beliefs->getAgentState()->finishTask();
     if(beliefs->getAgentState()->getAgenda().size() > 0){
-      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask(),current,planner,aStarOn);
-      tierTwoDecision(current);
+      if(aStarOn){
+        tierTwoDecision(current);
+      }
+      else{
+        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+      }
     }
   }
 }

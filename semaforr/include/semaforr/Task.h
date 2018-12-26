@@ -160,7 +160,7 @@ class Task {
 		isPlanActive = true;
 	}
 	vector<CartesianPoint> skippedwaypoints;
-	for(int i = 0; i < waypoints.size(); i+=1){
+	for(int i = 0; i < waypoints.size(); i+=20){
 		skippedwaypoints.push_back(waypoints[i]);
 	}
 	waypoints = skippedwaypoints;
@@ -206,14 +206,20 @@ class Task {
    	cout << "inside setup nearest waypoint" << endl;
 	double dis;
 	int farthest = 0;
+	cout << "waypoints size: " << waypoints.size() << endl;
 	for (int i = 0; i < waypoints.size(); i++){
 		dis = currentPosition.getDistance(waypoints[i].get_x(), waypoints[i].get_y());
 		if(dis < 0.75){
-			cout << "found waypoint with dist < 0.75" << endl;
+			cout << "found waypoint with dist < 0.75: " << i << endl;
 			farthest = i;
 		}
 	}
-	waypoints.erase(waypoints.begin(), waypoints.begin()+farthest);
+	if(farthest == 0){
+		waypoints.erase(waypoints.begin());
+	}
+	else{
+		waypoints.erase(waypoints.begin(), waypoints.begin()+farthest);
+	}
 	wx = waypoints[0].get_x();
 	wy = waypoints[0].get_y();
 	cout << "check plan active: " << waypoints.size() << endl;

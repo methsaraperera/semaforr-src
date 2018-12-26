@@ -154,7 +154,7 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
   //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
   bool canAccessPoint = false;
   double distLaserPosToPoint = laserPos.get_distance(point);
-  if(distLaserPosToPoint > 5){
+  if(distLaserPosToPoint > 10){
     return false;
   }
   double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
