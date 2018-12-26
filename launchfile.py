@@ -99,7 +99,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(10)
     print "roscore terminated!"
 
-map_name = "gradcenter-5"
+map_name = "map-a"
 density = "on"
 flow = "on"
 risk = "on"
@@ -109,45 +109,54 @@ explore = "off"
 
 for i in range(0,5):
     target_file_name = "target.conf"
-    log_name = map_name + "_" + "commonsense_region" + "_" + str(i) + ".txt"
+    log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
     #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
     #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
 
-for i in range(0,5):
-    target_file_name = "target.conf"
-    log_name = map_name + "_" + "commonsense_trail_conv" + "_" + str(i) + ".txt"
-    advisors = "/config/advisors1.conf"
-    params = "/config/params1.conf"
-    #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
+# for i in range(0,5):
+#     target_file_name = "target.conf"
+#     log_name = map_name + "_" + "commonsense_region" + "_" + str(i) + ".txt"
+#     advisors = "/config/advisors0.conf"
+#     params = "/config/params0.conf"
+#     #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
 
-for i in range(0,5):
-    target_file_name = "target.conf"
-    log_name = map_name + "_" + "commonsense_region_trail_conv" + "_" + str(i) + ".txt"
-    advisors = "/config/advisors2.conf"
-    params = "/config/params2.conf"
-    #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
+# for i in range(0,5):
+#     target_file_name = "target.conf"
+#     log_name = map_name + "_" + "commonsense_trail_conv" + "_" + str(i) + ".txt"
+#     advisors = "/config/advisors1.conf"
+#     params = "/config/params1.conf"
+#     #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
 
-for i in range(0,5):
-    target_file_name = "target.conf"
-    log_name = map_name + "_" + "commonsense_region_trail_conv_crowd" + "_" + str(i) + ".txt"
-    advisors = "/config/advisors3.conf"
-    params = "/config/params3.conf"
-    #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
+# for i in range(0,5):
+#     target_file_name = "target.conf"
+#     log_name = map_name + "_" + "commonsense_region_trail_conv" + "_" + str(i) + ".txt"
+#     advisors = "/config/advisors2.conf"
+#     params = "/config/params2.conf"
+#     #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
 
-for i in range(0,5):
-    target_file_name = "target.conf"
-    log_name = map_name + "_" + "commonsense_all" + "_" + str(i) + ".txt"
-    advisors = "/config/advisors4.conf"
-    params = "/config/params4.conf"
-    #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
+# for i in range(0,5):
+#     target_file_name = "target.conf"
+#     log_name = map_name + "_" + "commonsense_region_trail_conv_crowd" + "_" + str(i) + ".txt"
+#     advisors = "/config/advisors3.conf"
+#     params = "/config/params3.conf"
+#     #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
+
+# for i in range(0,5):
+#     target_file_name = "target.conf"
+#     log_name = map_name + "_" + "commonsense_all" + "_" + str(i) + ".txt"
+#     advisors = "/config/advisors4.conf"
+#     params = "/config/params4.conf"
+#     #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)

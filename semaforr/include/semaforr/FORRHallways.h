@@ -8,6 +8,8 @@ Written by Raj Korpan, adapted from Sarah Mathew and Gil Dekel, 2018
 #ifndef FORRHALLWAYS_H
 #define FORRHALLWAYS_H
 
+#include <AgentState.h>
+#include <FORRGeometry.h>
 #include <vector>
 #include <string>
 #include <math.h>
@@ -15,7 +17,6 @@ Written by Raj Korpan, adapted from Sarah Mathew and Gil Dekel, 2018
 #include <cmath>        //for atan2 and M_PI
 #include <algorithm>
 #include <map>
-#include <FORRGeometry.h>
 
 using namespace std;
 
@@ -132,6 +133,14 @@ public:
     angle_ = FindAngle();
   }
 
+  Segment(CartesianPoint left, CartesianPoint right, vector <CartesianPoint> leftLaser, vector <CartesianPoint> rightLaser){
+    left_point_ = left;
+    right_point_ = right;
+    angle_ = FindAngle();
+    left_laser_ = leftLaser;
+    right_laser_ = rightLaser;
+  }
+
 
   void PrintSegment() {
     cout << left_point_.get_x() << " " << left_point_.get_y() << endl;
@@ -142,11 +151,15 @@ public:
   CartesianPoint GetLeftPoint() const {return left_point_;}
   CartesianPoint GetRightPoint() const {return right_point_;}
   double GetAngle() const {return angle_;}
+  vector <CartesianPoint> GetLeftLaser() const {return left_laser_;}
+  vector <CartesianPoint> GetRightLaser() const {return right_laser_;}
 
 private:
   CartesianPoint left_point_;
   CartesianPoint right_point_;
   double angle_;
+  vector <CartesianPoint> left_laser_;
+  vector <CartesianPoint> right_laser_;
 
   double FindAngle() {
     //double angle = atan2((left_point_.get_y() - right_point_.get_y()),(left_point_.get_x() - right_point_.get_x()))+M_PI;
@@ -194,11 +207,14 @@ public:
         hallways.clear();
     }
 
-    void learnHallways(vector< vector<CartesianPoint> > trails_trace) {
+    void learnHallways(AgentState *agentState, vector< vector<CartesianPoint> > trails_trace, vector< vector<CartesianPoint> > laser_hist) {
         vector< vector<CartesianPoint> > trails_coordinates = trails_trace;
+        vector < vector <CartesianPoint> > laser_history = laser_hist;
+        agent_state = agentState;
 
         vector<Segment> trails_segments;
-        CreateSegments(trails_segments, trails_coordinates);
+        CreateSegments(trails_segments, trails_coordinates, laser_history);
+        cout << "num of segments  " << trails_segments.size() << endl;
 
         vector<vector<double> > segments_normalized(trails_segments.size(), vector<double>(5,0));
         NormalizeVector(segments_normalized, trails_segments);
@@ -225,7 +241,7 @@ public:
 
         //int id = 0;
         //double step = 180/8;
-        double step = 5;
+        double step = 10;
         for(int i = 0; i < mean_segments.size(); i++) {
             double angle = mean_segments[i].GetAngle() * 180/M_PI;
             if(angle <= step and angle >= 0)
@@ -282,11 +298,12 @@ public:
 private:
     vector<Aggregate> hallways;
     vector<vector<int> > interpolate;
+    AgentState *agent_state;
 
     int map_height_;
     int map_width_;
 
-    void CreateSegments(vector<Segment> &segments, const vector<vector<CartesianPoint> > &trails);
+    void CreateSegments(vector<Segment> &segments, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history);
 
     void NormalizeVector(vector<vector<double> > &normalized_segments, const vector<Segment> &segments);
     void ConvertSegmentsToDouble(vector<vector<double> > &data, const vector<Segment> &segments);

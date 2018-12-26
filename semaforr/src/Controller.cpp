@@ -667,11 +667,15 @@ void Controller::learnSpatialModel(AgentState* agentState){
   vector<Position> *pos_hist = completedTask->getPositionHistory();
   vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
+  vector< vector<CartesianPoint> > all_laser_hist = beliefs->getAgentState()->getAllLaserHistory();
   vector<CartesianPoint> trace;
   for(int i = 0 ; i < pos_hist->size() ; i++){
     trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
   }
   all_trace.push_back(trace);
+  for(int i = 0 ; i < laser_hist->size() ; i++){
+    all_laser_hist.push_back((*laser_hist)[i]);
+  }
 
   if(trailsOn){
     beliefs->getSpatialModel()->getTrails()->updateTrails(agentState);
@@ -695,7 +699,7 @@ void Controller::learnSpatialModel(AgentState* agentState){
   }
   if(hallwaysOn){
     beliefs->getSpatialModel()->getHallways()->clearAllHallways();
-    beliefs->getSpatialModel()->getHallways()->learnHallways(all_trace);
+    beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, all_trace, all_laser_hist);
     //beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
   }
 }
@@ -793,7 +797,8 @@ void Controller::tierTwoDecision(Position current){
     PathPlanner *planner = *it;
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),trails_trace, beliefs->getSpatialModel()->getHallways()->getHallways());
+    //planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),trails_trace, beliefs->getSpatialModel()->getHallways()->getHallways());
+    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),trails_trace);
     ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     gettimeofday(&cv,NULL);
     start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);

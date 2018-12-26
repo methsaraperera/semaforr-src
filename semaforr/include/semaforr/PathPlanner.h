@@ -16,7 +16,7 @@
 //#include "SpatialModel.h"
 #include "FORRConveyors.h"
 #include "FORRRegion.h"
-#include "FORRHallways.h"
+//#include "FORRHallways.h"
 
 /*! 
   \brief PathPlanner class in PathPlanner module
@@ -48,7 +48,7 @@ private:
   FORRConveyors* conveyors;
   vector<FORRRegion> regions;
   vector< vector<CartesianPoint> > trails;
-  vector<Aggregate> hallways;
+  //vector<Aggregate> hallways;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -144,7 +144,8 @@ public:
     }
   }
 
-  void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs, vector< vector<CartesianPoint> > trl, vector<Aggregate> hlwys){
+  //void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs, vector< vector<CartesianPoint> > trl, vector<Aggregate> hlwys){
+  void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs, vector< vector<CartesianPoint> > trl){
     conveyors = cv;
     regions = rgs;
     vector< vector<CartesianPoint> > interpolatedTrails;
@@ -162,7 +163,7 @@ public:
       interpolatedTrails.push_back(tempTrail);
     }
     trails = interpolatedTrails;
-    hallways = hlwys;
+    //hallways = hlwys;
   }
 
   void updateNavGraph();

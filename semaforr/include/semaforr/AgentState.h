@@ -157,13 +157,17 @@ public:
   //Merge finish task and skip task they are both doing the same right now
   void finishTask() {
     if (currentTask != NULL){
-	//save the current task position into all_trace
-    	vector<CartesianPoint> trace;
-        vector<Position> *pos_hist = currentTask->getPositionHistory();
-    	for(int i = 0 ; i < pos_hist->size() ; i++){
-		trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
-	}
-	all_trace.push_back(trace);
+      //save the current task position into all_trace
+      vector<CartesianPoint> trace;
+      vector<Position> *pos_hist = currentTask->getPositionHistory();
+      for(int i = 0 ; i < pos_hist->size() ; i++){
+        trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+      }
+      all_trace.push_back(trace);
+      vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
+      for(int i = 0 ; i < laser_hist->size() ; i++){
+        all_laser_history.push_back((*laser_hist)[i]);
+      }
       agenda.remove(currentTask);
     }
     rotateMode = true;
@@ -171,6 +175,7 @@ public:
   }
 
   vector< vector<CartesianPoint> > getAllTrace(){return all_trace;}
+  vector< vector<CartesianPoint> > getAllLaserHistory(){return all_laser_history;}
 
   void skipTask() {
     if (currentTask != NULL)
@@ -266,6 +271,9 @@ public:
 
   // All position history of all targets
   vector< vector<CartesianPoint> > all_trace;
+
+  // All laser history of all targets
+  vector< vector<CartesianPoint> > all_laser_history;
 
   // set of vetoed actions that the robot cant execute in its current state
   set<FORRAction> *vetoedActions;

@@ -213,7 +213,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         break;
       }
     }
-    for(int i = 0; i < hallways.size(); i++){
+    /*for(int i = 0; i < hallways.size(); i++){
       if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
         sHallway = i;
       }
@@ -223,7 +223,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       if(sHallway >= 0 and dHallway >= 0){
         break;
       }
-    }
+    }*/
     if (sRegion >= 0 and dRegion >= 0 and sHallway >= 0 and dHallway >= 0){
       return (w1 * oldcost) * 0.5;
     }

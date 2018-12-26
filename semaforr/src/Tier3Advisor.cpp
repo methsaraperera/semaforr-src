@@ -3729,10 +3729,37 @@ double Tier3Follow::actionComment(FORRAction action){
 void Tier3Follow::set_commenting(){
   cout << "In Follow set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-  if(hallways.size() > 0)
-    advisor_commenting = true;
-  else
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+  bool currPosInHallway = false, targetInHallway = false;
+  //cout << "Number of hallways = " << hallways.size() << endl;
+  if(hallways.size() == 0){
     advisor_commenting = false;
+  }
+  else{
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(currPosition)){
+        currPosInHallway = true;
+        break;
+      }
+    }
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(targetPoint)){
+        targetInHallway = true;
+        break;
+      }
+    }
+    if(currPosInHallway == true and targetInHallway == true){
+      //cout << "currPosInHallway = true and targetInHallway = true" << endl;
+      advisor_commenting = true;
+    }
+    else{
+      //cout << "currPosInHallway = false and/or targetInHallway = false" << endl;
+      advisor_commenting = false;
+    }
+  }
 }
 
 double Tier3FollowRotation::actionComment(FORRAction action){
@@ -3829,10 +3856,37 @@ double Tier3FollowRotation::actionComment(FORRAction action){
 void Tier3FollowRotation::set_commenting(){
   cout << "In FollowRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-  if(hallways.size() > 0)
-    advisor_commenting = true;
-  else
+  Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+  CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
+  Task *task = beliefs->getAgentState()->getCurrentTask();
+  CartesianPoint targetPoint (task->getX() , task->getY());
+  bool currPosInHallway = false, targetInHallway = false;
+  //cout << "Number of hallways = " << hallways.size() << endl;
+  if(hallways.size() == 0){
     advisor_commenting = false;
+  }
+  else{
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(currPosition)){
+        currPosInHallway = true;
+        break;
+      }
+    }
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(targetPoint)){
+        targetInHallway = true;
+        break;
+      }
+    }
+    if(currPosInHallway == true and targetInHallway == true){
+      //cout << "currPosInHallway = true and targetInHallway = true" << endl;
+      advisor_commenting = true;
+    }
+    else{
+      //cout << "currPosInHallway = false and/or targetInHallway = false" << endl;
+      advisor_commenting = false;
+    }
+  }
 }
 
 double Tier3Crossroads::actionComment(FORRAction action){

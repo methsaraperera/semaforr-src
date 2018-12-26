@@ -8,18 +8,34 @@ using namespace std;
 
 
 
-void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector<CartesianPoint> > &trails) {
+void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history) {
   cout << "num of trails " << trails.size() << endl;
+  vector<CartesianPoint> trail_markers;
   for(int i = 0; i < trails.size(); i++) {
-  	cout << "num of trail markers " << trails[i].size() << endl;
-    for(int j = 0; j < trails[i].size()-1; j++) {
-      Segment current_segment = Segment(trails[i][j], trails[i][j+1]);
-      if(trails[i][j].get_x() > trails[i][j+1].get_x())
-        current_segment = Segment(trails[i][j+1], trails[i][j]);
-      if((trails[i][j].get_x() != trails[i][j+1].get_x()) and (trails[i][j].get_y() != trails[i][j+1].get_y()) and (pow((pow((trails[i][j].get_x() - trails[i][j+1].get_x()), 2)+pow((trails[i][j].get_y() - trails[i][j+1].get_y()), 2)),0.5)>=0.3))
+    for(int j = 0; j < trails[i].size(); j++) {
+      trail_markers.push_back(trails[i][j]);
+    }
+  }
+  cout << "num of trail markers " << trail_markers.size() << " num of laser history " << laser_history.size() << endl;
+  for (int i = 0; i < trail_markers.size()-1; i++){
+    if(agent_state->canAccessPoint(laser_history[i], trail_markers[i], trail_markers[i+1]) or agent_state->canAccessPoint(laser_history[i+1], trail_markers[i+1], trail_markers[i])){
+      Segment current_segment = Segment(trail_markers[i], trail_markers[i+1], laser_history[i], laser_history[i+1]);
+      if(trail_markers[i].get_x() > trail_markers[i+1].get_x())
+        current_segment = Segment(trail_markers[i+1], trail_markers[i], laser_history[i+1], laser_history[i]);
+      if((trail_markers[i].get_x() != trail_markers[i+1].get_x()) and (trail_markers[i].get_y() != trail_markers[i+1].get_y()) and (pow((pow((trail_markers[i].get_x() - trail_markers[i+1].get_x()), 2)+pow((trail_markers[i].get_y() - trail_markers[i+1].get_y()), 2)),0.5)>=0.2))
         segments.push_back(current_segment);
     }
   }
+  // for(int i = 0; i < trails.size(); i++) {
+  // 	cout << "num of trail markers " << trails[i].size() << endl;
+  //   for(int j = 0; j < trails[i].size()-1; j++) {
+  //     Segment current_segment = Segment(trails[i][j], trails[i][j+1]);
+  //     if(trails[i][j].get_x() > trails[i][j+1].get_x())
+  //       current_segment = Segment(trails[i][j+1], trails[i][j]);
+  //     if((trails[i][j].get_x() != trails[i][j+1].get_x()) and (trails[i][j].get_y() != trails[i][j+1].get_y()) and (pow((pow((trails[i][j].get_x() - trails[i][j+1].get_x()), 2)+pow((trails[i][j].get_y() - trails[i][j+1].get_y()), 2)),0.5)>=0.3))
+  //       segments.push_back(current_segment);
+  //   }
+  // }
 }
 
 
@@ -154,11 +170,11 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
   cout << "std = " << std << endl;
-  double deviations = 3;
+  double deviations = 2;
   threshold = average_of_distances - (deviations*std);
   cout << "threshold " << threshold << endl;
   while(threshold <= 0){
-  	deviations = deviations-0.25;
+  	deviations = deviations-0.5;
   	threshold = average_of_distances - (deviations*std);
   	cout << "threshold " << threshold << endl;
   }
@@ -195,8 +211,10 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
     average_right_y = (first.GetRightPoint().get_y() + second.GetRightPoint().get_y())/2;
     CartesianPoint right_coord = CartesianPoint(average_right_x, average_right_y);
 
-    Segment average = Segment(left_coord, right_coord);
-    averaged_segments.push_back(average);
+    if(agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), left_coord) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), left_coord) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), right_coord) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), right_coord)){
+      Segment average = Segment(left_coord, right_coord);
+      averaged_segments.push_back(average);
+    }
     //cout << first.GetLeftPoint().get_x() << " " << first.GetLeftPoint().get_y() << " " << first.GetRightPoint().get_x() << " " << first.GetRightPoint().get_y() << " " << first.GetAngle() << " " << second.GetLeftPoint().get_x() << " " << second.GetLeftPoint().get_y() << " " << second.GetRightPoint().get_x() << " " << second.GetRightPoint().get_y() << " " << second.GetAngle() << " " << average.GetLeftPoint().get_x() << " " << average.GetLeftPoint().get_y() << " " << average.GetRightPoint().get_x() << " " << average.GetRightPoint().get_y() << " " << average.GetAngle() << endl;
   }
 }
@@ -220,7 +238,7 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
 
     cout << "2a" << endl;
     BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
-    BinarizeImage(binarized_heat_map, heat_map, 2);
+    BinarizeImage(binarized_heat_map, heat_map, 1);
 
     cout << "3a" << endl;
     LabelImage(binarized_heat_map,labeled_image);
