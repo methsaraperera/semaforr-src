@@ -22,7 +22,7 @@ void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector
       Segment current_segment = Segment(trail_markers[i], trail_markers[i+1], laser_history[i], laser_history[i+1]);
       if(trail_markers[i].get_x() > trail_markers[i+1].get_x())
         current_segment = Segment(trail_markers[i+1], trail_markers[i], laser_history[i+1], laser_history[i]);
-      if((trail_markers[i].get_x() != trail_markers[i+1].get_x()) and (trail_markers[i].get_y() != trail_markers[i+1].get_y()) and (pow((pow((trail_markers[i].get_x() - trail_markers[i+1].get_x()), 2)+pow((trail_markers[i].get_y() - trail_markers[i+1].get_y()), 2)),0.5)>=0.2))
+      if((trail_markers[i].get_x() != trail_markers[i+1].get_x()) and (trail_markers[i].get_y() != trail_markers[i+1].get_y()) and (pow((pow((trail_markers[i].get_x() - trail_markers[i+1].get_x()), 2)+pow((trail_markers[i].get_y() - trail_markers[i+1].get_y()), 2)),0.5)>=0.5))
         segments.push_back(current_segment);
     }
   }
@@ -142,10 +142,23 @@ double FORRHallways::ComputeDistance(const vector<double> first_segment, const v
     sum += pow((first_segment[i] - second_segment[i]), 2);
   }
   sum = pow(sum, .5); //remember it's rooted in matlab function;*/
-  double dist1 = pow((pow((first_segment[0] - second_segment[0]), 2) + pow((first_segment[1] - second_segment[1]), 2)), 0.5);
-  double dist2 = pow((pow((first_segment[2] - second_segment[2]), 2) + pow((first_segment[3] - second_segment[3]), 2)), 0.5);
-  double angledist = pow((pow((first_segment[4] - second_segment[4]), 2)), 0.5);
-  double sum = (0.25*dist1 + 0.25*dist2 + 0.5*angledist);
+  //double dist1 = pow((pow((first_segment[0] - second_segment[0]), 2) + pow((first_segment[1] - second_segment[1]), 2)), 0.5);
+  //double dist2 = pow((pow((first_segment[2] - second_segment[2]), 2) + pow((first_segment[3] - second_segment[3]), 2)), 0.5);
+  double first_avg_x = (first_segment[0] + first_segment[2])/2;
+  double first_avg_y = (first_segment[1] + first_segment[3])/2;
+  double second_avg_x = (second_segment[0] + second_segment[2])/2;
+  double second_avg_y = (second_segment[1] + second_segment[3])/2;
+  double dist = pow((pow((first_avg_x - second_avg_x), 2) + pow((first_avg_y - second_avg_y), 2)), 0.5);
+  double angledist = max(first_segment[4],second_segment[4]) - min(first_segment[4],second_segment[4]);
+  if(angledist > M_PI/2){
+    angledist = M_PI - (angledist);
+  }
+  //double angledist = pow((pow((first_segment[4] - second_segment[4]), 2)), 0.5);
+  //double sum = (0.25*dist1 + 0.25*dist2 + 0.5*angledist);
+  //cout << first_segment[0] << " " << first_segment[1] << " " << first_segment[2] << " " << first_segment[3] << " " << first_avg_x << " " << first_avg_y << endl;
+  //cout << second_segment[0] << " " << second_segment[1] << " " << second_segment[2] << " " << second_segment[3] << " " << second_avg_x << " " << second_avg_y << endl;
+  //cout << dist << " " << first_segment[4] << " " << second_segment[4] << " " << angledist << endl;
+  double sum = (dist + angledist)/2;
   return sum;
 }
 
@@ -170,8 +183,8 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
   double normalized_sum_of_squared_differences = sum_of_squared_differences/(similarities.size());
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
   cout << "std = " << std << endl;
-  double deviations = 2;
-  threshold = average_of_distances - (deviations*std);
+  double deviations = 3.5;
+  /*threshold = average_of_distances - (deviations*std);
   cout << "threshold " << threshold << endl;
   while(threshold <= 0){
   	deviations = deviations-0.5;
@@ -189,6 +202,24 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
       //cout << similarities[i][0] << " " << similarities[i][1] << " " << similarities[i][2] << endl;
       similar_pairing.clear();
     }
+  }*/
+  if(isinf(std) == false){
+    while(most_similar.size() == 0 and deviations > 0){
+      deviations = deviations-0.5;
+      threshold = average_of_distances - (deviations*std);
+      cout << "threshold " << threshold << endl;
+      for(int i = 0; i < similarities.size(); i++) {
+        //cout << similarities[i][2] << endl;
+        if(similarities[i][2] <= threshold) {
+          vector<double> similar_pairing;
+          similar_pairing.push_back(similarities[i][0]);
+          similar_pairing.push_back(similarities[i][1]);
+          most_similar.push_back(similar_pairing);
+          //cout << similarities[i][0] << " " << similarities[i][1] << " " << similarities[i][2] << endl;
+          similar_pairing.clear();
+        }
+      }
+    }
   }
 }
 
@@ -198,8 +229,8 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
 
 
 
-void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const vector<vector<double> > &most_similar, const vector<Segment> &segments) {
-  double average_left_x, average_left_y, average_right_x, average_right_y = 0;
+void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const vector<vector<double> > &most_similar, const vector<Segment> &segments, double step) {
+  double average_left_x, average_left_y, average_right_x, average_right_y, average_left_right_x, average_left_right_y, average_right_left_x, average_right_left_y = 0;
   for(int i = 0; i < most_similar.size(); i++) {
     Segment first = segments[int(most_similar[i][0])];
     Segment second = segments[int(most_similar[i][1])];
@@ -210,9 +241,84 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
     average_right_x = (first.GetRightPoint().get_x() + second.GetRightPoint().get_x())/2;
     average_right_y = (first.GetRightPoint().get_y() + second.GetRightPoint().get_y())/2;
     CartesianPoint right_coord = CartesianPoint(average_right_x, average_right_y);
+    Segment average_same = Segment(left_coord, right_coord);
+    if(average_left_x > average_right_x){
+      average_same = Segment(right_coord, left_coord);
+    }
 
-    if(agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), left_coord) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), left_coord) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), right_coord) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), right_coord)){
-      Segment average = Segment(left_coord, right_coord);
+    average_left_right_x = (first.GetLeftPoint().get_x() + second.GetRightPoint().get_x())/2;
+    average_left_right_y = (first.GetLeftPoint().get_y() + second.GetRightPoint().get_y())/2;
+    CartesianPoint left_right_coord = CartesianPoint(average_left_right_x, average_left_right_y);
+
+    average_right_left_x = (first.GetRightPoint().get_x() + second.GetLeftPoint().get_x())/2;
+    average_right_left_y = (first.GetRightPoint().get_y() + second.GetLeftPoint().get_y())/2;
+    CartesianPoint right_left_coord = CartesianPoint(average_right_left_x, average_right_left_y);
+    Segment average_diff = Segment(left_right_coord, right_left_coord);
+    if(average_left_right_x > average_right_left_x){
+      average_diff = Segment(right_left_coord, left_right_coord);
+    }
+    Segment average = average_same;
+    double average_same_angle = average_same.GetAngle() * 180/M_PI;
+    double average_diff_angle = average_diff.GetAngle() * 180/M_PI;
+    //cout << "first angle = " << first.GetAngle() << " second angle = " << second.GetAngle() << " average_same_angle = " << average_same.GetAngle() << " average_diff_angle = " << average_diff.GetAngle() << endl;
+    bool match = false;
+    if(first.GetAngle() * 180/M_PI <= step and first.GetAngle() * 180/M_PI >= 0 and second.GetAngle() * 180/M_PI <= step and second.GetAngle() * 180/M_PI >= 0){
+      if(average_same_angle <= step and average_same_angle >= 0){
+        average = average_same;
+        match = true;
+      }
+      else if(average_diff_angle <= step and average_diff_angle >= 0){
+        average = average_diff;
+        match = true;
+      }
+    }
+    else if(first.GetAngle() * 180/M_PI <= 45+step and first.GetAngle() * 180/M_PI >= 45-step and second.GetAngle() * 180/M_PI <= 45+step and second.GetAngle() * 180/M_PI >= 45-step){
+      if(average_same_angle <= 45+step and average_same_angle >= 45-step){
+        average = average_same;
+        match = true;
+      }
+      else if(average_diff_angle <= 45+step and average_diff_angle >= 45-step){
+        average = average_diff;
+        match = true;
+      }
+    }
+    else if(first.GetAngle() * 180/M_PI <= 90+step and first.GetAngle() * 180/M_PI >= 90-step and second.GetAngle() * 180/M_PI <= 90+step and second.GetAngle() * 180/M_PI >= 90-step){
+      if(average_same_angle <= 90+step and average_same_angle >= 90-step){
+        average = average_same;
+        match = true;
+      }
+      else if(average_diff_angle <= 90+step and average_diff_angle >= 90-step){
+        average = average_diff;
+        match = true;
+      }
+    }
+    else if(first.GetAngle() * 180/M_PI <= 135+step and first.GetAngle() * 180/M_PI >= 135-step and second.GetAngle() * 180/M_PI <= 135+step and second.GetAngle() * 180/M_PI >= 135-step){
+      if(average_same_angle <= 135+step and average_same_angle >= 135-step){
+        average = average_same;
+        match = true;
+      }
+      else if(average_diff_angle <= 135+step and average_diff_angle >= 135-step){
+        average = average_diff;
+        match = true;
+      }
+    }
+    else if(first.GetAngle() * 180/M_PI <= 180 and first.GetAngle() * 180/M_PI >= 180-step and second.GetAngle() * 180/M_PI <= 180 and second.GetAngle() * 180/M_PI >= 180-step){
+      if(average_same_angle <= 180 and average_same_angle >= 180-step){
+        average = average_same;
+        match = true;
+      }
+      else if(average_diff_angle <= 180 and average_diff_angle >= 180-step){
+        average = average_diff;
+        match = true;
+      }
+    }
+    //double angledist_same = (pow((pow((average_same.GetAngle() - first.GetAngle()), 2)), 0.5) + pow((pow((average_same.GetAngle() - second.GetAngle()), 2)), 0.5));
+    //double angledist_diff = (pow((pow((average_diff.GetAngle() - first.GetAngle()), 2)), 0.5) + pow((pow((average_diff.GetAngle() - second.GetAngle()), 2)), 0.5));
+    //if(angledist_same > angledist_diff){
+    //  average = average_diff;
+    //}
+    if(match == true and agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint()) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint()) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint()) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint())){
+      cout << average.GetAngle() << endl;
       averaged_segments.push_back(average);
     }
     //cout << first.GetLeftPoint().get_x() << " " << first.GetLeftPoint().get_y() << " " << first.GetRightPoint().get_x() << " " << first.GetRightPoint().get_y() << " " << first.GetAngle() << " " << second.GetLeftPoint().get_x() << " " << second.GetLeftPoint().get_y() << " " << second.GetRightPoint().get_x() << " " << second.GetRightPoint().get_y() << " " << second.GetAngle() << " " << average.GetLeftPoint().get_x() << " " << average.GetLeftPoint().get_y() << " " << average.GetRightPoint().get_x() << " " << average.GetRightPoint().get_y() << " " << average.GetAngle() << endl;
@@ -223,7 +329,7 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
 
 // filtered line is one below than expected pos
 // just pass 1 vector of hallway
-vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group, int filter_size, int width, int height) {
+vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group, int width, int height) {
     vector<vector<double> > heat_map(width,vector<double>(height, 0));
     vector<vector<double> > filtered_heat_map(width,vector<double>(height, 0));
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
@@ -293,7 +399,7 @@ void FORRHallways::Interpolate(vector<vector<double> > &frequency_map, double le
     //cout << frequency_map[0].size() << " " << frequency_map.size() << endl;
     frequency_map[xcoord][ycoord] += 1.0;
     //cout << xcoord << " " << ycoord << " " << frequency_map[xcoord][ycoord] << endl;
-    if(xcoord>0 and ycoord>0){
+    /*if(xcoord>0 and ycoord>0){
       frequency_map[xcoord-1][ycoord-1] += 0.1;
     }
     if(xcoord>0){
@@ -316,7 +422,7 @@ void FORRHallways::Interpolate(vector<vector<double> > &frequency_map, double le
     }
     if(xcoord < frequency_map.size() and ycoord>0){
       frequency_map[xcoord+1][ycoord-1] += 0.1;
-    }
+    }*/
   }
 }
 

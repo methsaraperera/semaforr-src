@@ -214,71 +214,140 @@ public:
 
         vector<Segment> trails_segments;
         CreateSegments(trails_segments, trails_coordinates, laser_history);
-        cout << "num of segments  " << trails_segments.size() << endl;
+        cout << "num of segments " << trails_segments.size() << endl;
 
-        vector<vector<double> > segments_normalized(trails_segments.size(), vector<double>(5,0));
-        NormalizeVector(segments_normalized, trails_segments);
-        cout << "num of segments normalized " << segments_normalized.size() << endl;
-
-        vector<vector<double> > segments_similarities;
-        ListSimilarities(segments_similarities, segments_normalized);
-        cout << "num of segments similarities " << segments_similarities.size() << endl;
-
-        vector<vector<double> > most_similar_segments;
-        FindMostSimilarSegments(most_similar_segments, segments_similarities);
-        cout << "num of most similar segments " << most_similar_segments.size() << endl;
-
-        vector<Segment> mean_segments;
-        CreateMeanSegments(mean_segments, most_similar_segments, trails_segments);
-        cout << "num of mean_segments " << mean_segments.size() << endl;
-
-        vector<vector<Segment> > hallway_types(4);
-        // horizontal_segments //id 1
-        // minor_diagonal_segments; // id 2
-        // vertical_segments; // id  3
-        // major_diagonal_segments; // id 4
-
-
-        //int id = 0;
-        //double step = 180/8;
-        double step = 10;
-        for(int i = 0; i < mean_segments.size(); i++) {
-            double angle = mean_segments[i].GetAngle() * 180/M_PI;
-            if(angle <= step and angle >= 0)
-                hallway_types[0].push_back(mean_segments[i]);
-            //else if(angle < 3*step)
-            else if(angle <= 45+step*2 and angle >= 45-step*2)
-                hallway_types[1].push_back(mean_segments[i]);
-            //else if(angle < 5*step)
-            else if(angle <= 90+step and angle >= 90-step)
-                hallway_types[2].push_back(mean_segments[i]);
-            //else if(angle < 7*step)
-            else if(angle <= 135+step*2 and angle >= 135-step*2)
-                hallway_types[3].push_back(mean_segments[i]);
-            //else
-            else if(angle <= 180 and angle >= 180-step)
-                hallway_types[0].push_back(mean_segments[i]);
+        vector<vector<Segment> > hallway_sections(4);
+        double step = 22.5;
+        for(int i = 0; i < trails_segments.size(); i++) {
+          double angle = trails_segments[i].GetAngle() * 180/M_PI;
+          if(angle <= step and angle >= 0){
+            //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
+            hallway_sections[0].push_back(trails_segments[i]);
+          }
+          else if(angle <= 45+step and angle >= 45-step){
+            //cout << "Section 1 = " << trails_segments[i].GetAngle() << endl;
+            hallway_sections[1].push_back(trails_segments[i]);
+          }
+          else if(angle <= 90+step and angle >= 90-step){
+            //cout << "Section 2 = " << trails_segments[i].GetAngle() << endl;
+            hallway_sections[2].push_back(trails_segments[i]);
+          }
+          else if(angle <= 135+step and angle >= 135-step){
+            //cout << "Section 3 = " << trails_segments[i].GetAngle() << endl;
+            hallway_sections[3].push_back(trails_segments[i]);
+          }
+          else if(angle <= 180 and angle >= 180-step){
+            //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
+            hallway_sections[0].push_back(trails_segments[i]);
+          }
         }
-
-        int filter_size = 9; // magic number
-        cout << "start map" << endl;
-
         vector<string> hallway_names;
         hallway_names.push_back("horizontal");
         hallway_names.push_back("minor_diagonal");
         hallway_names.push_back("vertical");
         hallway_names.push_back("major_diagonal");
         vector<Aggregate> all_aggregates;
-        for(int i = 0; i < hallway_names.size(); i++) {
-            vector<vector<CartesianPoint> > hallway_groups = ProcessHallwayData( hallway_types[i], filter_size, map_width_, map_height_);
+        for(int i = 0; i < hallway_sections.size(); i++) {
+          cout << "num of segments in hallway section " << hallway_sections[i].size() << endl;
+          if(hallway_sections[i].size() > 0){
+            //vector<vector<double> > segments_normalized(hallway_sections[i].size(), vector<double>(5,0));
+            //NormalizeVector(segments_normalized, hallway_sections[i]);
+            //cout << "num of segments normalized " << segments_normalized.size() << endl;
+
+            vector<vector<double> > segments_data;
+            ConvertSegmentsToDouble(segments_data, hallway_sections[i]);
+
+            vector<vector<double> > segments_similarities;
+            ListSimilarities(segments_similarities, segments_data);
+            //ListSimilarities(segments_similarities, segments_normalized);
+            cout << "num of segments similarities " << segments_similarities.size() << endl;
+
+            vector<vector<double> > most_similar_segments;
+            FindMostSimilarSegments(most_similar_segments, segments_similarities);
+            cout << "num of most similar segments " << most_similar_segments.size() << endl;
+
+            vector<Segment> mean_segments;
+            CreateMeanSegments(mean_segments, most_similar_segments, hallway_sections[i], step);
+            cout << "num of mean_segments " << mean_segments.size() << endl;
+
+            vector<vector<CartesianPoint> > hallway_groups = ProcessHallwayData(mean_segments, map_width_, map_height_);
             cout << "process agg" << endl;
             for(int j = 0; j< hallway_groups.size(); j++) {
                 Aggregate group = Aggregate(hallway_groups.at(j), i);
                 all_aggregates.push_back(group);
             }
             cout << hallway_groups.size() << endl;
-            cout << "done proccessing " << hallway_names[i] << endl;
+            segments_data.clear();
+            segments_similarities.clear();
+            most_similar_segments.clear();
+            mean_segments.clear();
+            hallway_groups.clear();
+          }
+          cout << "done proccessing " << hallway_names[i] << endl;
         }
+
+        // vector<vector<double> > segments_normalized(trails_segments.size(), vector<double>(5,0));
+        // NormalizeVector(segments_normalized, trails_segments);
+        // cout << "num of segments normalized " << segments_normalized.size() << endl;
+
+        // vector<vector<double> > segments_similarities;
+        // ListSimilarities(segments_similarities, segments_normalized);
+        // cout << "num of segments similarities " << segments_similarities.size() << endl;
+
+        // vector<vector<double> > most_similar_segments;
+        // FindMostSimilarSegments(most_similar_segments, segments_similarities);
+        // cout << "num of most similar segments " << most_similar_segments.size() << endl;
+
+        // vector<Segment> mean_segments;
+        // CreateMeanSegments(mean_segments, most_similar_segments, trails_segments);
+        // cout << "num of mean_segments " << mean_segments.size() << endl;
+
+        // vector<vector<Segment> > hallway_types(4);
+        // // horizontal_segments //id 1
+        // // minor_diagonal_segments; // id 2
+        // // vertical_segments; // id  3
+        // // major_diagonal_segments; // id 4
+
+
+        // //int id = 0;
+        // //double step = 180/8;
+        // double step = 10;
+        // for(int i = 0; i < mean_segments.size(); i++) {
+        //     double angle = mean_segments[i].GetAngle() * 180/M_PI;
+        //     if(angle <= step and angle >= 0)
+        //         hallway_types[0].push_back(mean_segments[i]);
+        //     //else if(angle < 3*step)
+        //     else if(angle <= 45+step*2 and angle >= 45-step*2)
+        //         hallway_types[1].push_back(mean_segments[i]);
+        //     //else if(angle < 5*step)
+        //     else if(angle <= 90+step and angle >= 90-step)
+        //         hallway_types[2].push_back(mean_segments[i]);
+        //     //else if(angle < 7*step)
+        //     else if(angle <= 135+step*2 and angle >= 135-step*2)
+        //         hallway_types[3].push_back(mean_segments[i]);
+        //     //else
+        //     else if(angle <= 180 and angle >= 180-step)
+        //         hallway_types[0].push_back(mean_segments[i]);
+        // }
+
+        // cout << "start map" << endl;
+
+        // vector<string> hallway_names;
+        // hallway_names.push_back("horizontal");
+        // hallway_names.push_back("minor_diagonal");
+        // hallway_names.push_back("vertical");
+        // hallway_names.push_back("major_diagonal");
+        // vector<Aggregate> all_aggregates;
+        // for(int i = 0; i < hallway_names.size(); i++) {
+        //     vector<vector<CartesianPoint> > hallway_groups = ProcessHallwayData( hallway_types[i], map_width_, map_height_);
+        //     cout << "process agg" << endl;
+        //     for(int j = 0; j< hallway_groups.size(); j++) {
+        //         Aggregate group = Aggregate(hallway_groups.at(j), i);
+        //         all_aggregates.push_back(group);
+        //     }
+        //     cout << hallway_groups.size() << endl;
+        //     cout << "done proccessing " << hallway_names[i] << endl;
+        // }
         cout << "finished map" << endl;
         if(all_aggregates.size() > 0){
           cout << "finding connections between hallways" << endl;
@@ -316,9 +385,9 @@ private:
 
     void FindMostSimilarSegments(vector<vector<double> > &most_similar,const vector<vector<double> > &similarities);
 
-    void CreateMeanSegments(vector<Segment> &averaged_segments,const vector<vector<double> > &most_similar,const vector<Segment> &segments);
+    void CreateMeanSegments(vector<Segment> &averaged_segments,const vector<vector<double> > &most_similar,const vector<Segment> &segments,double step);
 
-    vector<vector<CartesianPoint> > ProcessHallwayData(const vector<Segment> &hallway_group,int filter_size, int width, int height);
+    vector<vector<CartesianPoint> > ProcessHallwayData(const vector<Segment> &hallway_group, int width, int height);
     void UpdateMap(vector<vector<double> > &frequency_map, const vector<Segment> &segments);
     void Interpolate(vector<vector<double> > &frequency_map,double left_x, double left_y, double right_x, double right_y);
     vector<vector<int> > CreateCircularAveragingFilter(int radius);

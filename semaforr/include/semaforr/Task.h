@@ -160,7 +160,7 @@ class Task {
 		isPlanActive = true;
 	}
 	vector<CartesianPoint> skippedwaypoints;
-	for(int i = 0; i < waypoints.size(); i+=20){
+	for(int i = 0; i < waypoints.size(); i+=4){
 		skippedwaypoints.push_back(waypoints[i]);
 	}
 	waypoints = skippedwaypoints;
