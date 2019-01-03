@@ -270,18 +270,22 @@ public:
             CreateMeanSegments(mean_segments, most_similar_segments, hallway_sections[i], step);
             cout << "num of mean_segments " << mean_segments.size() << endl;
 
-            vector<vector<CartesianPoint> > hallway_groups = ProcessHallwayData(mean_segments, map_width_, map_height_);
-            cout << "process agg" << endl;
-            for(int j = 0; j< hallway_groups.size(); j++) {
-                Aggregate group = Aggregate(hallway_groups.at(j), i);
-                all_aggregates.push_back(group);
+            vector<vector<CartesianPoint> > initial_hallway_groups = ProcessHallwayData(mean_segments, map_width_, map_height_);
+            if(initial_hallway_groups.size()>0){
+              vector<vector<CartesianPoint> > hallway_groups = MergeNearbyHallways(initial_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_);
+              cout << "process agg" << endl;
+              for(int j = 0; j< hallway_groups.size(); j++) {
+                  Aggregate group = Aggregate(hallway_groups.at(j), i);
+                  all_aggregates.push_back(group);
+              }
+              cout << hallway_groups.size() << endl;
+              hallway_groups.clear();
             }
-            cout << hallway_groups.size() << endl;
             segments_data.clear();
             segments_similarities.clear();
             most_similar_segments.clear();
             mean_segments.clear();
-            hallway_groups.clear();
+            initial_hallway_groups.clear();
           }
           cout << "done proccessing " << hallway_names[i] << endl;
         }
@@ -388,12 +392,14 @@ private:
     void CreateMeanSegments(vector<Segment> &averaged_segments,const vector<vector<double> > &most_similar,const vector<Segment> &segments,double step);
 
     vector<vector<CartesianPoint> > ProcessHallwayData(const vector<Segment> &hallway_group, int width, int height);
+    vector<vector<CartesianPoint> > MergeNearbyHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height);
     void UpdateMap(vector<vector<double> > &frequency_map, const vector<Segment> &segments);
+    void SmoothMap(vector<vector<double> > &frequency_map, const vector<vector<double> > &heat_map);
     void Interpolate(vector<vector<double> > &frequency_map,double left_x, double left_y, double right_x, double right_y);
     vector<vector<int> > CreateCircularAveragingFilter(int radius);
     vector<vector<double> > ReturnMatlabFilter();
     void FilterImage(vector<vector<double> > &filtered, const vector<vector<int> > &original, int radius);
-    void BinarizeImage(vector<vector<int> > &binarized,const vector<vector<double> > &original,  int threshold);
+    void BinarizeImage(vector<vector<int> > &binarized,const vector<vector<double> > &original,  double threshold);
     //void ConvertMatrixToImage(const vector<vector<int> > &binary_map, string image_name);
     void doUnion(int x, int y, int x2, int y2, vector<vector<int> > &labeled_image);
     void unionCoords(int x, int y, int x2, int y2, const vector<vector<int> > &binary_map, vector<vector<int> > &labeled_image);

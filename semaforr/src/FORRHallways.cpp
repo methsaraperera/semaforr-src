@@ -18,13 +18,13 @@ void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector
   }
   cout << "num of trail markers " << trail_markers.size() << " num of laser history " << laser_history.size() << endl;
   for (int i = 0; i < trail_markers.size()-1; i++){
-    if(agent_state->canAccessPoint(laser_history[i], trail_markers[i], trail_markers[i+1]) or agent_state->canAccessPoint(laser_history[i+1], trail_markers[i+1], trail_markers[i])){
-      Segment current_segment = Segment(trail_markers[i], trail_markers[i+1], laser_history[i], laser_history[i+1]);
-      if(trail_markers[i].get_x() > trail_markers[i+1].get_x())
-        current_segment = Segment(trail_markers[i+1], trail_markers[i], laser_history[i+1], laser_history[i]);
-      if((trail_markers[i].get_x() != trail_markers[i+1].get_x()) and (trail_markers[i].get_y() != trail_markers[i+1].get_y()) and (pow((pow((trail_markers[i].get_x() - trail_markers[i+1].get_x()), 2)+pow((trail_markers[i].get_y() - trail_markers[i+1].get_y()), 2)),0.5)>=0.5))
-        segments.push_back(current_segment);
-    }
+    //if(agent_state->canAccessPoint(laser_history[i], trail_markers[i], trail_markers[i+1]) or agent_state->canAccessPoint(laser_history[i+1], trail_markers[i+1], trail_markers[i])){
+    Segment current_segment = Segment(trail_markers[i], trail_markers[i+1], laser_history[i], laser_history[i+1]);
+    if(trail_markers[i].get_x() > trail_markers[i+1].get_x())
+      current_segment = Segment(trail_markers[i+1], trail_markers[i], laser_history[i+1], laser_history[i]);
+    if((trail_markers[i].get_x() != trail_markers[i+1].get_x()) and (trail_markers[i].get_y() != trail_markers[i+1].get_y()) and (pow((pow((trail_markers[i].get_x() - trail_markers[i+1].get_x()), 2)+pow((trail_markers[i].get_y() - trail_markers[i+1].get_y()), 2)),0.5)>=0.5))
+      segments.push_back(current_segment);
+    //}
   }
   // for(int i = 0; i < trails.size(); i++) {
   // 	cout << "num of trail markers " << trails[i].size() << endl;
@@ -318,8 +318,10 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
     //  average = average_diff;
     //}
     if(match == true and agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint()) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint()) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint()) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint())){
-      cout << average.GetAngle() << endl;
+      //cout << average.GetAngle() << endl;
       averaged_segments.push_back(average);
+      averaged_segments.push_back(first);
+      averaged_segments.push_back(second);
     }
     //cout << first.GetLeftPoint().get_x() << " " << first.GetLeftPoint().get_y() << " " << first.GetRightPoint().get_x() << " " << first.GetRightPoint().get_y() << " " << first.GetAngle() << " " << second.GetLeftPoint().get_x() << " " << second.GetLeftPoint().get_y() << " " << second.GetRightPoint().get_x() << " " << second.GetRightPoint().get_y() << " " << second.GetAngle() << " " << average.GetLeftPoint().get_x() << " " << average.GetLeftPoint().get_y() << " " << average.GetRightPoint().get_x() << " " << average.GetRightPoint().get_y() << " " << average.GetAngle() << endl;
   }
@@ -331,6 +333,7 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
 // just pass 1 vector of hallway
 vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group, int width, int height) {
     vector<vector<double> > heat_map(width,vector<double>(height, 0));
+    vector<vector<double> > smoothed_heat_map(width,vector<double>(height, 0));
     vector<vector<double> > filtered_heat_map(width,vector<double>(height, 0));
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
     vector<vector<int> > labeled_image(width,vector<int>(height, 0));
@@ -340,11 +343,13 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
     UpdateMap(heat_map, hallway_group);
     cout << "1a" << endl;
 
+    SmoothMap(smoothed_heat_map, heat_map);
+    cout << "2a" << endl;
     /*FilterImage(filtered_heat_map,heat_map,9);
 
-    cout << "2a" << endl;
     BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
-    BinarizeImage(binarized_heat_map, heat_map, 1);
+    //BinarizeImage(binarized_heat_map, heat_map, 1);
+    BinarizeImage(binarized_heat_map, smoothed_heat_map, 1);
 
     cout << "3a" << endl;
     LabelImage(binarized_heat_map,labeled_image);
@@ -381,6 +386,97 @@ void FORRHallways::UpdateMap(vector<vector<double> > &frequency_map, const vecto
     }
     cout << endl;
   }*/
+}
+
+void FORRHallways::SmoothMap(vector<vector<double> > &frequency_map, const vector<vector<double> > &heat_map) {
+  for(int i = 0; i < heat_map.size(); i++) {
+    for(int j = 0; j < heat_map[0].size(); j++) {
+      //cout << i << "," << j << " " << heat_map[i][j] << endl;
+      double value = heat_map[i][j];
+      if(value > 0){
+        frequency_map[i][j] = value;
+      }
+      else{
+        double count = 0;
+        if(i>0){
+          if(heat_map[i-1][j]>0)
+            value++;
+          count++;
+        }
+        if(i>0 and j>0){
+          if(heat_map[i-1][j-1]>0)
+            value++;
+          count++;
+        }
+        if(i>0 and j<heat_map[0].size()-1){
+          if(heat_map[i-1][j+1]>0)
+            value++;
+          count++;
+        }
+        if(i<heat_map.size()-1 and j>0){
+          if(heat_map[i+1][j-1]>0)
+            value++;
+          count++;
+        }
+        if(i<heat_map.size()-1){
+          if(heat_map[i+1][j]>0)
+            value++;
+          count++;
+        }
+        if(i<heat_map.size()-1 and j<heat_map[0].size()-1){
+          if(heat_map[i+1][j+1]>0)
+            value++;
+          count++;
+        }
+        if(j>0){
+          if(heat_map[i][j-1]>0)
+            value++;
+          count++;
+        }
+        if(j<heat_map[0].size()-1){
+          if(heat_map[i][j+1]>0)
+            value++;
+          count++;
+        }
+        frequency_map[i][j] = value/count;
+      }
+      /*double count = 1;
+      if(i>0){
+        value += heat_map[i-1][j];
+        count++;
+      }
+      if(i>0 and j>0){
+        value += heat_map[i-1][j-1];
+        count++;
+      }
+      if(i>0 and j<heat_map[0].size()-1){
+        value += heat_map[i-1][j+1];
+        count++;
+      }
+      if(i<heat_map.size()-1 and j>0){
+        value += heat_map[i+1][j-1];
+        count++;
+      }
+      if(i<heat_map.size()-1){
+        value += heat_map[i+1][j];
+        count++;
+      }
+      if(i<heat_map.size()-1 and j<heat_map[0].size()-1){
+        value += heat_map[i+1][j+1];
+        count++;
+      }
+      if(j>0){
+        value += heat_map[i][j-1];
+        count++;
+      }
+      if(j<heat_map[0].size()-1){
+        value += heat_map[i][j+1];
+        count++;
+      }
+      //cout << value << " " << count << " " << value/count << endl;
+      frequency_map[i][j] = value/count;*/
+    }
+  }
 }
 
 //********$^$^^%#^#
@@ -546,7 +642,7 @@ void FORRHallways::FilterImage(vector<vector<double> > &filtered, const vector<v
   }
 }
   // assumes binarized has the same dimensions as original
-void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<vector<double> > &original, int threshold) {
+void FORRHallways::BinarizeImage(vector<vector<int> > &binarized, const vector<vector<double> > &original, double threshold) {
   for(int i = 0; i < original.size(); i++) {
     for(int j = 0; j < original[0].size(); j++) {
       if(original[i][j] >= threshold){
@@ -627,6 +723,7 @@ void FORRHallways::LabelImage(const vector<vector<int> > &binary_map, vector<vec
     for (int y = 0; y < map_height_; y++){
       unionCoords(x, y, x+1, y, binary_map, labeled_image);
       unionCoords(x, y, x, y+1, binary_map, labeled_image);
+      unionCoords(x, y, x+1, y+1, binary_map, labeled_image);
     }
   }
   for (int x = 0; x < map_width_; x++){
@@ -706,4 +803,150 @@ void FORRHallways::ConvertPairToCartesianPoint(vector<vector<CartesianPoint> > &
       trails.push_back(trail_coordinates);
     }
   }
+}
+
+vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height){
+  cout << "Inside MergeNearbyHallways" << endl;
+  vector<vector<CartesianPoint> > merged_hallways;
+  vector<vector<int> > poses_in_hallways(initial_hallway_groups.size());
+  vector<CartesianPoint> trail_markers;
+  for(int i = 0; i < trails.size(); i++) {
+    for(int j = 0; j < trails[i].size(); j++) {
+      trail_markers.push_back(trails[i][j]);
+    }
+  }
+  for(int i = 0; i < trail_markers.size(); i++){
+    CartesianPoint roundedPoint = CartesianPoint((int)(trail_markers[i].get_x()),(int)(trail_markers[i].get_y()));
+    for(int j = 0; j < initial_hallway_groups.size(); j++) {
+      std::vector<CartesianPoint>::const_iterator it;
+      it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedPoint);
+      if(it != initial_hallway_groups[j].end())
+        poses_in_hallways[j].push_back(i);
+    }
+  }
+  /*for(int i = 0; i < poses_in_hallways.size(); i++){
+    cout << poses_in_hallways[i].size() << endl;
+  }*/
+  vector<Segment> possible_mergers_joins;
+  for(int i = 0; i < initial_hallway_groups.size() - 1; i++) {
+    for(int j = i + 1; j < initial_hallway_groups.size(); j++) {
+      bool first_sees_second, second_sees_first = false;
+      Segment temp_segment_fs = Segment(CartesianPoint(0,0),CartesianPoint(0,0));
+      Segment temp_segment_sf = Segment(CartesianPoint(0,0),CartesianPoint(0,0));
+      for(int k = 0; k < poses_in_hallways[i].size(); k++){
+        for(int l = 0; l < initial_hallway_groups[j].size(); l++){
+          if(first_sees_second == false){
+            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[j][l])){
+              temp_segment_fs = Segment(trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[j][l]);
+              if(temp_segment_fs.GetLeftPoint().get_x() > temp_segment_fs.GetRightPoint().get_x()){
+                temp_segment_fs = Segment(initial_hallway_groups[j][l], trail_markers[poses_in_hallways[i][k]]);
+              }
+              double angle = temp_segment_fs.GetAngle() * 180/M_PI;
+              if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
+                first_sees_second = true;
+              }
+              else if(hallway_type == 1 and angle <= 45+step and angle >= 45-step){
+                first_sees_second = true;
+              }
+              else if(hallway_type == 2 and angle <= 90+step and angle >= 90-step){
+                first_sees_second = true;
+              }
+              else if(hallway_type == 3 and angle <= 135+step and angle >= 135-step){
+                first_sees_second = true;
+              }
+            }
+          }
+        }
+      }
+      for(int k = 0; k < poses_in_hallways[j].size(); k++){
+        for(int l = 0; l < initial_hallway_groups[i].size(); l++){
+          if(second_sees_first == false){
+            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trail_markers[poses_in_hallways[j][k]], initial_hallway_groups[i][l])){
+              temp_segment_sf = Segment(trail_markers[poses_in_hallways[j][k]], initial_hallway_groups[i][l]);
+              if(temp_segment_sf.GetLeftPoint().get_x() > temp_segment_sf.GetRightPoint().get_x()){
+                temp_segment_sf = Segment(initial_hallway_groups[i][l], trail_markers[poses_in_hallways[j][k]]);
+              }
+              double angle = temp_segment_sf.GetAngle() * 180/M_PI;
+              if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
+                second_sees_first = true;
+              }
+              else if(hallway_type == 1 and angle <= 45+step and angle >= 45-step){
+                second_sees_first = true;
+              }
+              else if(hallway_type == 2 and angle <= 90+step and angle >= 90-step){
+                second_sees_first = true;
+              }
+              else if(hallway_type == 3 and angle <= 135+step and angle >= 135-step){
+                second_sees_first = true;
+              }
+            }
+          }
+        }
+      }
+      if(first_sees_second == true and second_sees_first == true){
+        cout << "Both see each other : " << i << " " << j << endl;
+        possible_mergers_joins.push_back(temp_segment_fs);
+        possible_mergers_joins.push_back(temp_segment_sf);
+      }
+    }
+  }
+  vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
+  for(int i = 0; i < initial_hallway_groups.size(); i++){
+    for(int j = 0; j < initial_hallway_groups[i].size(); j++){
+      binarized_heat_map[round(initial_hallway_groups[i][j].get_x())][round(initial_hallway_groups[i][j].get_y())] = 1;
+    }
+  }
+  for(int i = 0; i < possible_mergers_joins.size(); i++){
+    CartesianPoint left = possible_mergers_joins[i].GetLeftPoint();
+    CartesianPoint right = possible_mergers_joins[i].GetRightPoint();
+    double step = abs(left.get_x() - right.get_x()) + abs(left.get_y() - right.get_y());
+    for(double j = 0; j <= 1; j += 1/step) {
+      int xcoord = round(j*(right.get_x() - left.get_x()) + left.get_x());
+      int ycoord = round(j*(right.get_y() - left.get_y()) + left.get_y());
+      binarized_heat_map[xcoord][ycoord] = 1;
+    }
+  }
+  vector<vector<int> > labeled_image(width,vector<int>(height, 0));
+  LabelImage(binarized_heat_map,labeled_image);
+
+  vector<vector< pair<int,int> > > points_in_aggregates;
+  ListGroups(points_in_aggregates, labeled_image);
+
+  ConvertPairToCartesianPoint(merged_hallways, points_in_aggregates);
+
+  /*map<int, set<int> > all_mergers;
+  map<int, vector<Segment> > all_joiners;
+  for(int i = 0; i < initial_hallway_groups.size(); i++){
+    bool hallway_merged = false;
+    for(int j = 0; j < possible_mergers.size(); j++){
+      if(i == possible_mergers[j].first){
+        hallway_merged = true;
+        all_mergers[i].insert(possible_mergers[j].second);
+        all_joiners[i].push_back(possible_mergers_joins[j][0]);
+        all_joiners[i].push_back(possible_mergers_joins[j][1]);
+      }
+      else if(i == possible_mergers[j].second){
+        hallway_merged = true;
+        all_mergers[i].insert(possible_mergers[j].first);
+        all_joiners[i].push_back(possible_mergers_joins[j][0]);
+        all_joiners[i].push_back(possible_mergers_joins[j][1]);
+      }
+    }
+    if(hallway_merged == false){
+      merged_hallways.push_back(initial_hallway_groups[i]);
+    }
+  }
+  for(int i = 0; i < initial_hallway_groups.size(); i++){
+    if(all_mergers[i].empty() == false){
+      std::set<int>::iterator it;
+      for(it = all_mergers[i].begin(); it != all_mergers[i].end(); it++){
+        if(all_mergers[*it].empty() == false){
+          all_mergers[i].insert(all_mergers[*it].begin(), all_mergers[*it].end());
+
+          all_mergers.erase(*it);
+        }
+      }
+    }
+  }*/
+  return merged_hallways;
 }
