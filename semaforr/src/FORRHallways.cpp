@@ -26,16 +26,6 @@ void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector
       segments.push_back(current_segment);
     //}
   }
-  // for(int i = 0; i < trails.size(); i++) {
-  // 	cout << "num of trail markers " << trails[i].size() << endl;
-  //   for(int j = 0; j < trails[i].size()-1; j++) {
-  //     Segment current_segment = Segment(trails[i][j], trails[i][j+1]);
-  //     if(trails[i][j].get_x() > trails[i][j+1].get_x())
-  //       current_segment = Segment(trails[i][j+1], trails[i][j]);
-  //     if((trails[i][j].get_x() != trails[i][j+1].get_x()) and (trails[i][j].get_y() != trails[i][j+1].get_y()) and (pow((pow((trails[i][j].get_x() - trails[i][j+1].get_x()), 2)+pow((trails[i][j].get_y() - trails[i][j+1].get_y()), 2)),0.5)>=0.3))
-  //       segments.push_back(current_segment);
-  //   }
-  // }
 }
 
 
@@ -337,19 +327,19 @@ vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Se
     vector<vector<double> > filtered_heat_map(width,vector<double>(height, 0));
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
     vector<vector<int> > labeled_image(width,vector<int>(height, 0));
-
+    double threshold = 0.6;
     //cout << heat_map.size() << " " << heat_map[0].size() << endl;
     //cout << hallway_groups[i].size() << endl;
     UpdateMap(heat_map, hallway_group);
     cout << "1a" << endl;
 
-    SmoothMap(smoothed_heat_map, heat_map);
+    SmoothMap(smoothed_heat_map, heat_map, threshold);
     cout << "2a" << endl;
     /*FilterImage(filtered_heat_map,heat_map,9);
 
     BinarizeImage(binarized_heat_map, filtered_heat_map, 0);*/
     //BinarizeImage(binarized_heat_map, heat_map, 1);
-    BinarizeImage(binarized_heat_map, smoothed_heat_map, 1);
+    BinarizeImage(binarized_heat_map, smoothed_heat_map, threshold);
 
     cout << "3a" << endl;
     LabelImage(binarized_heat_map,labeled_image);
@@ -388,7 +378,51 @@ void FORRHallways::UpdateMap(vector<vector<double> > &frequency_map, const vecto
   }*/
 }
 
-void FORRHallways::SmoothMap(vector<vector<double> > &frequency_map, const vector<vector<double> > &heat_map) {
+//********$^$^^%#^#
+
+// does this produce a similar map?
+void FORRHallways::Interpolate(vector<vector<double> > &frequency_map, double left_x, double left_y, double right_x, double right_y) {
+
+  double step = abs(left_x - right_x) + abs(left_y - right_y);
+  //cout << "step: " << step << " " << 1/step << endl;
+
+  for(double j = 0; j <= 1; j += 1/step) {
+    //cout << j << endl;
+    int xcoord = round(j*(right_x - left_x) + left_x);
+    int ycoord = round(j*(right_y - left_y) + left_y);
+    //cout << xcoord << " " << ycoord << endl;
+    //cout << frequency_map[0].size() << " " << frequency_map.size() << endl;
+    frequency_map[xcoord][ycoord] += 1.0;
+    //cout << xcoord << " " << ycoord << " " << frequency_map[xcoord][ycoord] << endl;
+    /*if(xcoord>0 and ycoord>0){
+      frequency_map[xcoord-1][ycoord-1] += 0.1;
+    }
+    if(xcoord>0){
+      frequency_map[xcoord-1][ycoord] += 0.1;
+    }
+    if(ycoord>0){
+      frequency_map[xcoord][ycoord-1] += 0.1;
+    }
+    if(xcoord < frequency_map.size() and ycoord < frequency_map[0].size()){
+      frequency_map[xcoord+1][ycoord+1] += 0.1;
+    }
+    if(xcoord < frequency_map.size()){
+      frequency_map[xcoord+1][ycoord] += 0.1;
+    }
+    if(ycoord < frequency_map[0].size()){
+      frequency_map[xcoord][ycoord+1] += 0.1;
+    }
+    if(xcoord>0 and ycoord < frequency_map[0].size()){
+      frequency_map[xcoord-1][ycoord+1] += 0.1;
+    }
+    if(xcoord < frequency_map.size() and ycoord>0){
+      frequency_map[xcoord+1][ycoord-1] += 0.1;
+    }*/
+  }
+}
+
+
+void FORRHallways::SmoothMap(vector<vector<double> > &frequency_map, const vector<vector<double> > &heat_map, double threshold) {
   for(int i = 0; i < heat_map.size(); i++) {
     for(int j = 0; j < heat_map[0].size(); j++) {
       //cout << i << "," << j << " " << heat_map[i][j] << endl;
@@ -440,85 +474,68 @@ void FORRHallways::SmoothMap(vector<vector<double> > &frequency_map, const vecto
         }
         frequency_map[i][j] = value/count;
       }
-      /*double count = 1;
-      if(i>0){
-        value += heat_map[i-1][j];
-        count++;
-      }
-      if(i>0 and j>0){
-        value += heat_map[i-1][j-1];
-        count++;
-      }
-      if(i>0 and j<heat_map[0].size()-1){
-        value += heat_map[i-1][j+1];
-        count++;
-      }
-      if(i<heat_map.size()-1 and j>0){
-        value += heat_map[i+1][j-1];
-        count++;
-      }
-      if(i<heat_map.size()-1){
-        value += heat_map[i+1][j];
-        count++;
-      }
-      if(i<heat_map.size()-1 and j<heat_map[0].size()-1){
-        value += heat_map[i+1][j+1];
-        count++;
-      }
-      if(j>0){
-        value += heat_map[i][j-1];
-        count++;
-      }
-      if(j<heat_map[0].size()-1){
-        value += heat_map[i][j+1];
-        count++;
-      }
-      //cout << value << " " << count << " " << value/count << endl;
-      frequency_map[i][j] = value/count;*/
     }
   }
-}
-
-//********$^$^^%#^#
-
-// does this produce a similar map?
-void FORRHallways::Interpolate(vector<vector<double> > &frequency_map, double left_x, double left_y, double right_x, double right_y) {
-
-  double step = abs(left_x - right_x) + abs(left_y - right_y);
-  //cout << "step: " << step << " " << 1/step << endl;
-
-  for(double j = 0; j <= 1; j += 1/step) {
-    //cout << j << endl;
-    int xcoord = round(j*(right_x - left_x) + left_x);
-    int ycoord = round(j*(right_y - left_y) + left_y);
-    //cout << xcoord << " " << ycoord << endl;
-    //cout << frequency_map[0].size() << " " << frequency_map.size() << endl;
-    frequency_map[xcoord][ycoord] += 1.0;
-    //cout << xcoord << " " << ycoord << " " << frequency_map[xcoord][ycoord] << endl;
-    /*if(xcoord>0 and ycoord>0){
-      frequency_map[xcoord-1][ycoord-1] += 0.1;
+  bool change_made = true;
+  while(change_made == true){
+    int num_changes = 0;
+    for(int i = 0; i < frequency_map.size(); i++) {
+      for(int j = 0; j < frequency_map[0].size(); j++) {
+        double value = 0;
+        double count = 0;
+        if(frequency_map[i][j] < 1){
+          if(i>0){
+            if(frequency_map[i-1][j]>=1)
+              value++;
+            count++;
+          }
+          if(i>0 and j>0){
+            if(frequency_map[i-1][j-1]>=1)
+              value++;
+            count++;
+          }
+          if(i>0 and j<frequency_map[0].size()-1){
+            if(frequency_map[i-1][j+1]>=1)
+              value++;
+            count++;
+          }
+          if(i<frequency_map.size()-1 and j>0){
+            if(frequency_map[i+1][j-1]>=1)
+              value++;
+            count++;
+          }
+          if(i<frequency_map.size()-1){
+            if(frequency_map[i+1][j]>=1)
+              value++;
+            count++;
+          }
+          if(i<frequency_map.size()-1 and j<frequency_map[0].size()-1){
+            if(frequency_map[i+1][j+1]>=1)
+              value++;
+            count++;
+          }
+          if(j>0){
+            if(frequency_map[i][j-1]>=1)
+              value++;
+            count++;
+          }
+          if(j<frequency_map[0].size()-1){
+            if(frequency_map[i][j+1]>=1)
+              value++;
+            count++;
+          }
+          if(value/count >= threshold){
+            //cout << "value " << value << " count " << count << endl;
+            frequency_map[i][j] = 1;
+            num_changes++;
+          }
+        }
+      }
     }
-    if(xcoord>0){
-      frequency_map[xcoord-1][ycoord] += 0.1;
+    cout << "num_changes " << num_changes << endl;
+    if(num_changes == 0){
+      change_made = false;
     }
-    if(ycoord>0){
-      frequency_map[xcoord][ycoord-1] += 0.1;
-    }
-    if(xcoord < frequency_map.size() and ycoord < frequency_map[0].size()){
-      frequency_map[xcoord+1][ycoord+1] += 0.1;
-    }
-    if(xcoord < frequency_map.size()){
-      frequency_map[xcoord+1][ycoord] += 0.1;
-    }
-    if(ycoord < frequency_map[0].size()){
-      frequency_map[xcoord][ycoord+1] += 0.1;
-    }
-    if(xcoord>0 and ycoord < frequency_map[0].size()){
-      frequency_map[xcoord-1][ycoord+1] += 0.1;
-    }
-    if(xcoord < frequency_map.size() and ycoord>0){
-      frequency_map[xcoord+1][ycoord-1] += 0.1;
-    }*/
   }
 }
 
@@ -890,63 +907,115 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
       }
     }
   }
-  vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
-  for(int i = 0; i < initial_hallway_groups.size(); i++){
-    for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-      binarized_heat_map[round(initial_hallway_groups[i][j].get_x())][round(initial_hallway_groups[i][j].get_y())] = 1;
-    }
-  }
-  for(int i = 0; i < possible_mergers_joins.size(); i++){
-    CartesianPoint left = possible_mergers_joins[i].GetLeftPoint();
-    CartesianPoint right = possible_mergers_joins[i].GetRightPoint();
-    double step = abs(left.get_x() - right.get_x()) + abs(left.get_y() - right.get_y());
-    for(double j = 0; j <= 1; j += 1/step) {
-      int xcoord = round(j*(right.get_x() - left.get_x()) + left.get_x());
-      int ycoord = round(j*(right.get_y() - left.get_y()) + left.get_y());
-      binarized_heat_map[xcoord][ycoord] = 1;
-    }
-  }
-  vector<vector<int> > labeled_image(width,vector<int>(height, 0));
-  LabelImage(binarized_heat_map,labeled_image);
-
-  vector<vector< pair<int,int> > > points_in_aggregates;
-  ListGroups(points_in_aggregates, labeled_image);
-
-  ConvertPairToCartesianPoint(merged_hallways, points_in_aggregates);
-
-  /*map<int, set<int> > all_mergers;
-  map<int, vector<Segment> > all_joiners;
-  for(int i = 0; i < initial_hallway_groups.size(); i++){
-    bool hallway_merged = false;
-    for(int j = 0; j < possible_mergers.size(); j++){
-      if(i == possible_mergers[j].first){
-        hallway_merged = true;
-        all_mergers[i].insert(possible_mergers[j].second);
-        all_joiners[i].push_back(possible_mergers_joins[j][0]);
-        all_joiners[i].push_back(possible_mergers_joins[j][1]);
-      }
-      else if(i == possible_mergers[j].second){
-        hallway_merged = true;
-        all_mergers[i].insert(possible_mergers[j].first);
-        all_joiners[i].push_back(possible_mergers_joins[j][0]);
-        all_joiners[i].push_back(possible_mergers_joins[j][1]);
+  if(possible_mergers_joins.size()>0){
+    vector<vector<double> > heat_map(width,vector<double>(height, 0));
+    for(int i = 0; i < initial_hallway_groups.size(); i++){
+      for(int j = 0; j < initial_hallway_groups[i].size(); j++){
+        heat_map[round(initial_hallway_groups[i][j].get_x())][round(initial_hallway_groups[i][j].get_y())] = 1;
       }
     }
-    if(hallway_merged == false){
-      merged_hallways.push_back(initial_hallway_groups[i]);
+    for(int i = 0; i < possible_mergers_joins.size(); i++){
+      CartesianPoint left = possible_mergers_joins[i].GetLeftPoint();
+      CartesianPoint right = possible_mergers_joins[i].GetRightPoint();
+      double step = abs(left.get_x() - right.get_x()) + abs(left.get_y() - right.get_y());
+      for(double j = 0; j <= 1; j += 1/step) {
+        int xcoord = round(j*(right.get_x() - left.get_x()) + left.get_x());
+        int ycoord = round(j*(right.get_y() - left.get_y()) + left.get_y());
+        heat_map[xcoord][ycoord] = 1;
+      }
+    }
+    double threshold = 0.6;
+    vector<vector<double> > smoothed_heat_map(width,vector<double>(height, 0));
+    SmoothMap(smoothed_heat_map, heat_map, threshold);
+
+    vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
+    BinarizeImage(binarized_heat_map, smoothed_heat_map, threshold);
+
+    vector<vector<int> > labeled_image(width,vector<int>(height, 0));
+    LabelImage(binarized_heat_map,labeled_image);
+
+    vector<vector< pair<int,int> > > points_in_aggregates;
+    ListGroups(points_in_aggregates, labeled_image);
+
+    ConvertPairToCartesianPoint(merged_hallways, points_in_aggregates);
+    return merged_hallways;
+  }
+  else{
+    return initial_hallway_groups;
+  }
+}
+
+vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height){
+  cout << "Inside FillHallways" << endl;
+  vector<vector<CartesianPoint> > filled_hallways;
+  vector<vector<int> > poses_in_hallways(initial_hallway_groups.size());
+  vector<CartesianPoint> trail_markers;
+  for(int i = 0; i < trails.size(); i++) {
+    for(int j = 0; j < trails[i].size(); j++) {
+      trail_markers.push_back(trails[i][j]);
     }
   }
-  for(int i = 0; i < initial_hallway_groups.size(); i++){
-    if(all_mergers[i].empty() == false){
-      std::set<int>::iterator it;
-      for(it = all_mergers[i].begin(); it != all_mergers[i].end(); it++){
-        if(all_mergers[*it].empty() == false){
-          all_mergers[i].insert(all_mergers[*it].begin(), all_mergers[*it].end());
-
-          all_mergers.erase(*it);
+  for(int i = 0; i < trail_markers.size(); i++){
+    CartesianPoint roundedPoint = CartesianPoint((int)(trail_markers[i].get_x()),(int)(trail_markers[i].get_y()));
+    for(int j = 0; j < initial_hallway_groups.size(); j++) {
+      std::vector<CartesianPoint>::const_iterator it;
+      it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedPoint);
+      if(it != initial_hallway_groups[j].end())
+        poses_in_hallways[j].push_back(i);
+    }
+  }
+  /*for(int i = 0; i < poses_in_hallways.size(); i++){
+    cout << poses_in_hallways[i].size() << endl;
+  }*/
+  vector<Segment> possible_fills;
+  for(int i = 0; i < initial_hallway_groups.size(); i++) {
+    Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0));
+    for(int k = 0; k < poses_in_hallways[i].size(); k++){
+      for(int j = 0; j < initial_hallway_groups[i].size(); j++){
+        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[i][j])){
+          temp_segment = Segment(trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[i][j]);
+          if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
+            temp_segment = Segment(initial_hallway_groups[i][j], trail_markers[poses_in_hallways[i][k]]);
+          }
+          possible_fills.push_back(temp_segment);
         }
       }
     }
-  }*/
-  return merged_hallways;
+  }
+  if(possible_fills.size()>0){
+    vector<vector<double> > heat_map(width,vector<double>(height, 0));
+    for(int i = 0; i < initial_hallway_groups.size(); i++){
+      for(int j = 0; j < initial_hallway_groups[i].size(); j++){
+        heat_map[round(initial_hallway_groups[i][j].get_x())][round(initial_hallway_groups[i][j].get_y())] = 1;
+      }
+    }
+    for(int i = 0; i < possible_fills.size(); i++){
+      CartesianPoint left = possible_fills[i].GetLeftPoint();
+      CartesianPoint right = possible_fills[i].GetRightPoint();
+      double step = abs(left.get_x() - right.get_x()) + abs(left.get_y() - right.get_y());
+      for(double j = 0; j <= 1; j += 1/step) {
+        int xcoord = round(j*(right.get_x() - left.get_x()) + left.get_x());
+        int ycoord = round(j*(right.get_y() - left.get_y()) + left.get_y());
+        heat_map[xcoord][ycoord] = 1;
+      }
+    }
+    double threshold = 0.6;
+    vector<vector<double> > smoothed_heat_map(width,vector<double>(height, 0));
+    SmoothMap(smoothed_heat_map, heat_map, threshold);
+
+    vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
+    BinarizeImage(binarized_heat_map, smoothed_heat_map, threshold);
+
+    vector<vector<int> > labeled_image(width,vector<int>(height, 0));
+    LabelImage(binarized_heat_map,labeled_image);
+
+    vector<vector< pair<int,int> > > points_in_aggregates;
+    ListGroups(points_in_aggregates, labeled_image);
+
+    ConvertPairToCartesianPoint(filled_hallways, points_in_aggregates);
+    return filled_hallways;
+  }
+  else{
+    return initial_hallway_groups;
+  }
 }

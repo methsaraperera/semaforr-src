@@ -600,15 +600,21 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     ROS_DEBUG("Target Achieved, moving on to next target!!");
     //Learn spatial model only on tasks completed successfully
     learnSpatialModel(beliefs->getAgentState());
+    ROS_DEBUG("Finished Learning Spatial Model!!");
     //Clear existing task and associated plans
     beliefs->getAgentState()->finishTask();
+    //ROS_DEBUG("Task Cleared!!");
+    //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
+      ROS_DEBUG("Selecting Next Task");
       if(aStarOn){
         tierTwoDecision(current);
+        ROS_DEBUG("Next Plan Generated!!");
       }
       else{
         beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+        ROS_DEBUG("Next Task Selected!!");
       }
     }
   }
@@ -624,20 +630,23 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     tierTwoDecision(current);
   }
   // otherwise if task Decision limit reached, skip task 
-  if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
-    ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
-    //learnSpatialModel(beliefs->getAgentState());
-    //beliefs->getAgentState()->skipTask();
-    beliefs->getAgentState()->finishTask();
-    if(beliefs->getAgentState()->getAgenda().size() > 0){
-      if(aStarOn){
-        tierTwoDecision(current);
-      }
-      else{
-        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+  if(beliefs->getAgentState()->getCurrentTask() != NULL){
+    if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
+      ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
+      //learnSpatialModel(beliefs->getAgentState());
+      //beliefs->getAgentState()->skipTask();
+      beliefs->getAgentState()->finishTask();
+      if(beliefs->getAgentState()->getAgenda().size() > 0){
+        if(aStarOn){
+          tierTwoDecision(current);
+        }
+        else{
+          beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+        }
       }
     }
   }
+  //ROS_DEBUG("End Of UpdateState");
 }
 
 

@@ -99,7 +99,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(10)
     print "roscore terminated!"
 
-map_name = "map-a"
+map_name = "gradcenter-4"
 density = "on"
 flow = "on"
 risk = "on"
@@ -107,8 +107,8 @@ cusum = "off"
 discount = "off"
 explore = "off"
 
-for i in range(0,5):
-    target_file_name = "target.conf"
+for i in range(0,1):
+    target_file_name = "target2.conf"
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
