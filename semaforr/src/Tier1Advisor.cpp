@@ -115,12 +115,12 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   bool decisionMade = false;
   CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
   ROS_DEBUG("Check if target can be spotted using laser scan");
-  bool targetInSight = beliefs->getAgentState()->canSeePoint(task);
+  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 10);
   
   if(targetInSight == false){
     ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
-    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint);
+    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 10);
     if(waypointInSight == false){
       ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
     }

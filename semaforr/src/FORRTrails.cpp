@@ -103,7 +103,7 @@ CartesianPoint FORRTrails::getFurthestVisiblePointOnChosenTrail(AgentState *agen
   if(dir == POSITIVE) {
   //go backwards if direction is positive to grab a further point first if possible
     for(int j = trails[chosen_trail].size()-1; j >= 1; j--){
-      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates)) {
+      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates, 20)) {
         can_see_trail = true;
         return trails[chosen_trail][j].coordinates;
       }
@@ -112,7 +112,7 @@ CartesianPoint FORRTrails::getFurthestVisiblePointOnChosenTrail(AgentState *agen
   else if(dir == NEGATIVE){
   //go forwards if direction is negative to grab a further point first if possible
     for(int j = 0; j < trails[chosen_trail].size(); j++){
-      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates)) {
+      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates, 20)) {
         can_see_trail = true;
         return trails[chosen_trail][j].coordinates;
       }

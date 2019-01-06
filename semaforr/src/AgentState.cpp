@@ -149,12 +149,12 @@ bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, Cartesi
 
 //returns true if there is a point that is "visible" by the wall distance vectors.  
 //A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
-bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point){
+bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
   //ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
   //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
   bool canAccessPoint = false;
   double distLaserPosToPoint = laserPos.get_distance(point);
-  if(distLaserPosToPoint > 10){
+  if(distLaserPosToPoint > distanceLimit){
     return false;
   }
   double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
@@ -231,7 +231,7 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
 			//cout << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 			//if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j])) {
       //if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j]) and canSeePoint(laser_endpoints[j], pos_history[j], pos_history[i])) {
-      if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j])) {
+      if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j], 10)) {
 				cout << "CanAccessPoint is true" << endl;
 				cout << "Next point: " << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 				trailPositions.push_back(pos_history[j]);
@@ -255,10 +255,10 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
 
 //returns true if there is a point that is "visible" by the wall distance vectors to some epsilon.  
 //A point is visible if the distance to a wall distance vector line is < epsilon.
-bool AgentState::canSeePoint(CartesianPoint point){
+bool AgentState::canSeePoint(CartesianPoint point, double distanceLimit){
   CartesianPoint curr(currentPosition.getX(),currentPosition.getY());
   //return canSeePoint(laserEndpoints, curr, point);
-  return canAccessPoint(laserEndpoints, curr, point);
+  return canAccessPoint(laserEndpoints, curr, point, distanceLimit);
 }
 
 void AgentState::transformToEndpoints(){

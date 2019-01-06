@@ -8,21 +8,14 @@ using namespace std;
 
 
 
-void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history) {
-  cout << "num of trails " << trails.size() << endl;
-  vector<CartesianPoint> trail_markers;
-  for(int i = 0; i < trails.size(); i++) {
-    for(int j = 0; j < trails[i].size(); j++) {
-      trail_markers.push_back(trails[i][j]);
-    }
-  }
-  cout << "num of trail markers " << trail_markers.size() << " num of laser history " << laser_history.size() << endl;
-  for (int i = 0; i < trail_markers.size()-1; i++){
-    //if(agent_state->canAccessPoint(laser_history[i], trail_markers[i], trail_markers[i+1]) or agent_state->canAccessPoint(laser_history[i+1], trail_markers[i+1], trail_markers[i])){
-    Segment current_segment = Segment(trail_markers[i], trail_markers[i+1], laser_history[i], laser_history[i+1]);
-    if(trail_markers[i].get_x() > trail_markers[i+1].get_x())
-      current_segment = Segment(trail_markers[i+1], trail_markers[i], laser_history[i+1], laser_history[i]);
-    if((trail_markers[i].get_x() != trail_markers[i+1].get_x()) and (trail_markers[i].get_y() != trail_markers[i+1].get_y()) and (pow((pow((trail_markers[i].get_x() - trail_markers[i+1].get_x()), 2)+pow((trail_markers[i].get_y() - trail_markers[i+1].get_y()), 2)),0.5)>=0.5))
+void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<CartesianPoint> &trails, const vector < vector <CartesianPoint> > &laser_history) {
+  cout << "num of trail markers " << trails.size() << " num of laser history " << laser_history.size() << endl;
+  for (int i = 0; i < trails.size()-1; i++){
+    //if(agent_state->canAccessPoint(laser_history[i], trails[i], trails[i+1]) or agent_state->canAccessPoint(laser_history[i+1], trails[i+1], trails[i])){
+    Segment current_segment = Segment(trails[i], trails[i+1], laser_history[i], laser_history[i+1]);
+    if(trails[i].get_x() > trails[i+1].get_x())
+      current_segment = Segment(trails[i+1], trails[i], laser_history[i+1], laser_history[i]);
+    if((trails[i].get_x() != trails[i+1].get_x()) and (trails[i].get_y() != trails[i+1].get_y()) and (pow((pow((trails[i].get_x() - trails[i+1].get_x()), 2)+pow((trails[i].get_y() - trails[i+1].get_y()), 2)),0.5)>=0.5))
       segments.push_back(current_segment);
     //}
   }
@@ -174,28 +167,9 @@ void FORRHallways::FindMostSimilarSegments(vector<vector<double> > &most_similar
   std = pow(normalized_sum_of_squared_differences, .5); // square root of squared difference sum
   cout << "std = " << std << endl;
   double deviations = 3.5;
-  /*threshold = average_of_distances - (deviations*std);
-  cout << "threshold " << threshold << endl;
-  while(threshold <= 0){
-  	deviations = deviations-0.5;
-  	threshold = average_of_distances - (deviations*std);
-  	cout << "threshold " << threshold << endl;
-  }
-  
-  for(int i = 0; i < similarities.size(); i++) {
-  	//cout << similarities[i][2] << endl;
-    if(similarities[i][2] <= threshold) {
-      vector<double> similar_pairing;
-      similar_pairing.push_back(similarities[i][0]);
-      similar_pairing.push_back(similarities[i][1]);
-      most_similar.push_back(similar_pairing);
-      //cout << similarities[i][0] << " " << similarities[i][1] << " " << similarities[i][2] << endl;
-      similar_pairing.clear();
-    }
-  }*/
   if(isinf(std) == false){
     while(most_similar.size() == 0 and deviations > 0){
-      deviations = deviations-0.5;
+      deviations = deviations-0.25;
       threshold = average_of_distances - (deviations*std);
       cout << "threshold " << threshold << endl;
       for(int i = 0; i < similarities.size(); i++) {
@@ -307,7 +281,7 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
     //if(angledist_same > angledist_diff){
     //  average = average_diff;
     //}
-    if(match == true and agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint()) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint()) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint()) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint())){
+    if(match == true and agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint(), 20) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint(), 20) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint(), 20) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint(), 20)){
       //cout << average.GetAngle() << endl;
       averaged_segments.push_back(average);
       averaged_segments.push_back(first);
@@ -321,13 +295,13 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
 
 // filtered line is one below than expected pos
 // just pass 1 vector of hallway
-vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group, int width, int height) {
+vector<vector<CartesianPoint> > FORRHallways::ProcessHallwayData(const vector<Segment> &hallway_group, int width, int height, double threshold) {
     vector<vector<double> > heat_map(width,vector<double>(height, 0));
     vector<vector<double> > smoothed_heat_map(width,vector<double>(height, 0));
     vector<vector<double> > filtered_heat_map(width,vector<double>(height, 0));
     vector<vector<int> > binarized_heat_map(width,vector<int>(height, 0));
     vector<vector<int> > labeled_image(width,vector<int>(height, 0));
-    double threshold = 0.6;
+    
     //cout << heat_map.size() << " " << heat_map[0].size() << endl;
     //cout << hallway_groups[i].size() << endl;
     UpdateMap(heat_map, hallway_group);
@@ -822,18 +796,12 @@ void FORRHallways::ConvertPairToCartesianPoint(vector<vector<CartesianPoint> > &
   }
 }
 
-vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height){
+vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<CartesianPoint> &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height, double threshold){
   cout << "Inside MergeNearbyHallways" << endl;
   vector<vector<CartesianPoint> > merged_hallways;
   vector<vector<int> > poses_in_hallways(initial_hallway_groups.size());
-  vector<CartesianPoint> trail_markers;
-  for(int i = 0; i < trails.size(); i++) {
-    for(int j = 0; j < trails[i].size(); j++) {
-      trail_markers.push_back(trails[i][j]);
-    }
-  }
-  for(int i = 0; i < trail_markers.size(); i++){
-    CartesianPoint roundedPoint = CartesianPoint((int)(trail_markers[i].get_x()),(int)(trail_markers[i].get_y()));
+  for(int i = 0; i < trails.size(); i++){
+    CartesianPoint roundedPoint = CartesianPoint((int)(trails[i].get_x()),(int)(trails[i].get_y()));
     for(int j = 0; j < initial_hallway_groups.size(); j++) {
       std::vector<CartesianPoint>::const_iterator it;
       it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedPoint);
@@ -853,10 +821,10 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
       for(int k = 0; k < poses_in_hallways[i].size(); k++){
         for(int l = 0; l < initial_hallway_groups[j].size(); l++){
           if(first_sees_second == false){
-            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[j][l])){
-              temp_segment_fs = Segment(trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[j][l]);
+            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], 20)){
+              temp_segment_fs = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l]);
               if(temp_segment_fs.GetLeftPoint().get_x() > temp_segment_fs.GetRightPoint().get_x()){
-                temp_segment_fs = Segment(initial_hallway_groups[j][l], trail_markers[poses_in_hallways[i][k]]);
+                temp_segment_fs = Segment(initial_hallway_groups[j][l], trails[poses_in_hallways[i][k]]);
               }
               double angle = temp_segment_fs.GetAngle() * 180/M_PI;
               if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
@@ -878,10 +846,10 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
       for(int k = 0; k < poses_in_hallways[j].size(); k++){
         for(int l = 0; l < initial_hallway_groups[i].size(); l++){
           if(second_sees_first == false){
-            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trail_markers[poses_in_hallways[j][k]], initial_hallway_groups[i][l])){
-              temp_segment_sf = Segment(trail_markers[poses_in_hallways[j][k]], initial_hallway_groups[i][l]);
+            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], 20)){
+              temp_segment_sf = Segment(trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l]);
               if(temp_segment_sf.GetLeftPoint().get_x() > temp_segment_sf.GetRightPoint().get_x()){
-                temp_segment_sf = Segment(initial_hallway_groups[i][l], trail_markers[poses_in_hallways[j][k]]);
+                temp_segment_sf = Segment(initial_hallway_groups[i][l], trails[poses_in_hallways[j][k]]);
               }
               double angle = temp_segment_sf.GetAngle() * 180/M_PI;
               if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
@@ -924,7 +892,7 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
         heat_map[xcoord][ycoord] = 1;
       }
     }
-    double threshold = 0.6;
+    
     vector<vector<double> > smoothed_heat_map(width,vector<double>(height, 0));
     SmoothMap(smoothed_heat_map, heat_map, threshold);
 
@@ -945,18 +913,12 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
   }
 }
 
-vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<vector<CartesianPoint> > &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height){
+vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<CartesianPoint> &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height, double threshold){
   cout << "Inside FillHallways" << endl;
   vector<vector<CartesianPoint> > filled_hallways;
   vector<vector<int> > poses_in_hallways(initial_hallway_groups.size());
-  vector<CartesianPoint> trail_markers;
-  for(int i = 0; i < trails.size(); i++) {
-    for(int j = 0; j < trails[i].size(); j++) {
-      trail_markers.push_back(trails[i][j]);
-    }
-  }
-  for(int i = 0; i < trail_markers.size(); i++){
-    CartesianPoint roundedPoint = CartesianPoint((int)(trail_markers[i].get_x()),(int)(trail_markers[i].get_y()));
+  for(int i = 0; i < trails.size(); i++){
+    CartesianPoint roundedPoint = CartesianPoint((int)(trails[i].get_x()),(int)(trails[i].get_y()));
     for(int j = 0; j < initial_hallway_groups.size(); j++) {
       std::vector<CartesianPoint>::const_iterator it;
       it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedPoint);
@@ -972,10 +934,10 @@ vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<C
     Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0));
     for(int k = 0; k < poses_in_hallways[i].size(); k++){
       for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[i][j])){
-          temp_segment = Segment(trail_markers[poses_in_hallways[i][k]], initial_hallway_groups[i][j]);
+        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 20)){
+          temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j]);
           if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
-            temp_segment = Segment(initial_hallway_groups[i][j], trail_markers[poses_in_hallways[i][k]]);
+            temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]]);
           }
           possible_fills.push_back(temp_segment);
         }
@@ -983,6 +945,7 @@ vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<C
     }
   }
   if(possible_fills.size()>0){
+    cout << "Number of possible fills : " << possible_fills.size() << endl;
     vector<vector<double> > heat_map(width,vector<double>(height, 0));
     for(int i = 0; i < initial_hallway_groups.size(); i++){
       for(int j = 0; j < initial_hallway_groups[i].size(); j++){
@@ -999,7 +962,7 @@ vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<C
         heat_map[xcoord][ycoord] = 1;
       }
     }
-    double threshold = 0.6;
+    
     vector<vector<double> > smoothed_heat_map(width,vector<double>(height, 0));
     SmoothMap(smoothed_heat_map, heat_map, threshold);
 

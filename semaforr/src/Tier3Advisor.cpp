@@ -2214,7 +2214,7 @@ double Tier3ExitDoorLinear::actionComment(FORRAction action){
 
   double min_distance = std::numeric_limits<double>::infinity();
   for(int i = 0; i < doors[robotRegion].size(); i++) {
-  	double doorDistance = beliefs->getSpatialModel()->getDoors()->distanceToDoor(expPosition, regions[robotRegion], doors[robotRegion][i]);
+  	double doorDistance = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
     if (doorDistance < min_distance){
       min_distance = doorDistance;
       comment_strength = ((double)(doors[robotRegion][i].str)) * (1 / doorDistance);
@@ -2291,7 +2291,7 @@ double Tier3ExitDoorRotation::actionComment(FORRAction action){
 
   double min_distance = std::numeric_limits<double>::infinity();
   for(int i = 0; i < doors[robotRegion].size(); i++) {
-  	double doorDistance = beliefs->getSpatialModel()->getDoors()->distanceToDoor(expPosition, regions[robotRegion], doors[robotRegion][i]);
+  	double doorDistance = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
     if (doorDistance < min_distance){
       min_distance = doorDistance;
       comment_strength = ((double)(doors[robotRegion][i].str)) * (1 / doorDistance);

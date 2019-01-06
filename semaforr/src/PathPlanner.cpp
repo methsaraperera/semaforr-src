@@ -201,7 +201,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
   }
   if (name == "spatial"){
-    int sRegion=-1,dRegion=-1, sHallway=-1, dHallway=-1;
+    int sRegion=-1,dRegion=-1;
     for(int i = 0; i < regions.size() ; i++){
       if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
         sRegion = i;
@@ -213,28 +213,86 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         break;
       }
     }
-    /*for(int i = 0; i < hallways.size(); i++){
+
+    double s_door_min_distance = std::numeric_limits<double>::infinity();
+    double s_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(sRegion >= 0){
+      CartesianPoint sPoint = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+      for(int i = 0; i < doors[sRegion].size(); i++) {
+        double doorDistance = doors[sRegion][i].distanceToDoor(sPoint, regions[sRegion]);
+        if (doorDistance < s_door_min_distance){
+          s_door_min_distance = doorDistance;
+        }
+      }
+      vector<FORRExit> exits = regions[sRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = sPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < s_exit_min_distance){
+          s_exit_min_distance = exitDistance;
+        }
+      }
+    }
+
+    double d_door_min_distance = std::numeric_limits<double>::infinity();
+    double d_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(dRegion >= 0){
+      CartesianPoint dPoint = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
+      for(int i = 0; i < doors[dRegion].size(); i++) {
+        double doorDistance = doors[dRegion][i].distanceToDoor(dPoint, regions[dRegion]);
+        if (doorDistance < d_door_min_distance){
+          d_door_min_distance = doorDistance;
+        }
+      }
+      vector<FORRExit> exits = regions[dRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = dPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < d_exit_min_distance){
+          d_exit_min_distance = exitDistance;
+        }
+      }
+    }
+
+    if (sRegion >= 0 and dRegion >= 0){
+      return (w1 * oldcost) * 0.25;
+    }
+    else if (sRegion >= 0 and dRegion == -1){
+      if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.5;
+      }
+      else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.75;
+      }
+      else{
+        return (w1 * oldcost) * 1;
+      }
+    }
+    else if (sRegion ==-1 and dRegion >= 0){
+      if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.5;
+      }
+      else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.75;
+      }
+      else{
+        return (w1 * oldcost) * 1;
+      }
+    }
+    else{
+      return (w1 * oldcost) * 10;
+    }
+  }
+  if (name == "hallwayer"){
+    double sHallway=0, dHallway=0;
+    for(int i = 0; i < hallways.size(); i++){
       if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
-        sHallway = i;
+        sHallway++;
       }
       if(hallways[i].pointInAggregate(CartesianPoint(d.getX()/100.0, d.getY()/100.0))){
-        dHallway = i;
+        dHallway++;
       }
-      if(sHallway >= 0 and dHallway >= 0){
-        break;
-      }
-    }*/
-    if (sRegion >= 0 and dRegion >= 0 and sHallway >= 0 and dHallway >= 0){
-      return (w1 * oldcost) * 0.5;
     }
-    else if ((sRegion >= 0 and dRegion >= 0) or (sHallway >= 0 and dHallway >= 0)){
-      return (w1 * oldcost);
-    }
-    else if ((sRegion >= 0 and dHallway >= 0) or (sHallway >= 0 and dRegion >= 0)){
-      return (w1 * oldcost) * 1.5;
-    }
-    else if (sRegion >= 0 or dRegion >= 0 or sHallway >= 0 or dHallway >= 0){
-      return (w1 * oldcost) * 5;
+    if (sHallway > 0 and dHallway > 0){
+      return (w1 * oldcost) * 1/((sHallway+dHallway)/2);
     }
     else{
       return (w1 * oldcost) * 10;
@@ -244,30 +302,27 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double sconveycost = computeConveyorCost(s.getX(), s.getY());
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
     //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
-    if ((sconveycost + dconveycost) >= 3){
+    if (sconveycost > 0 and dconveycost > 0){
       return (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
     }
-    else if ((sconveycost + dconveycost) >= 1){
-      return (w7 * oldcost);
-    }
     else{
-      return (w7 * oldcost * 5);
+      return (w7 * oldcost * 10);
     }
   }
   if (name == "trailer"){
     //cout << "updating trailer nav graph" << endl;
-    int strailcount = 0;
-    int dtrailcount = 0;
+    double strailcount = 0;
+    double dtrailcount = 0;
     //cout << "trails.size() = " << trails.size() << endl;
     for(int i = 0; i < trails.size(); i++){
       //cout << "trails[i].size() = " << trails[i].size() << endl;
       for(int j = 0; j < trails[i].size(); j++){
-        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) < 0.5){
+        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) <= 0.5){
           strailcount++;
           //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
           //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
         }
-        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) < 0.5){
+        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) <= 0.5){
           dtrailcount++;
           //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
           //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
@@ -276,14 +331,11 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
     //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
     //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
-    if ((strailcount + dtrailcount) >= 3){
+    if (strailcount > 0 and dtrailcount > 0){
       return (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
     }
-    else if ((strailcount + dtrailcount) >= 1){
-      return (w7 * oldcost);
-    }
     else{
-      return (w7 * oldcost * 5);
+      return (w7 * oldcost * 10);
     }
   }
   if (name == "combined"){

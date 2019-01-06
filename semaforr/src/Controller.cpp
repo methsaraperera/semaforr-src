@@ -331,6 +331,14 @@ void Controller::initialize_params(string filename){
       spatial = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("spatial " << spatial);
     }
+    else if (fileLine.find("hallwayer") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      hallwayer = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("hallwayer " << hallwayer);
+    }
     else if (fileLine.find("trailer") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -480,6 +488,13 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     planner = new PathPlanner(navGraphSpatial, *map, n,n, "spatial");
     tier2Planners.push_back(planner);
     ROS_DEBUG_STREAM("Created planner: spatial");
+  }
+  if(hallwayer == 1){
+    Graph *navGraphHallwayer = new Graph(map,(int)(p*100.0));
+    cout << "initialized nav graph" << endl;
+    planner = new PathPlanner(navGraphHallwayer, *map, n,n, "hallwayer");
+    tier2Planners.push_back(planner);
+    ROS_DEBUG_STREAM("Created planner: hallwayer");
   }
   if(trailer == 1){
     Graph *navGraphTrailer = new Graph(map,(int)(p*100.0));
@@ -676,15 +691,15 @@ void Controller::learnSpatialModel(AgentState* agentState){
   vector<Position> *pos_hist = completedTask->getPositionHistory();
   vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
-  vector< vector<CartesianPoint> > all_laser_hist = beliefs->getAgentState()->getAllLaserHistory();
+  //vector< vector<CartesianPoint> > all_laser_hist = beliefs->getAgentState()->getAllLaserHistory();
   vector<CartesianPoint> trace;
   for(int i = 0 ; i < pos_hist->size() ; i++){
     trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
   }
   all_trace.push_back(trace);
-  for(int i = 0 ; i < laser_hist->size() ; i++){
-    all_laser_hist.push_back((*laser_hist)[i]);
-  }
+  //for(int i = 0 ; i < laser_hist->size() ; i++){
+  //  all_laser_hist.push_back((*laser_hist)[i]);
+  //}
 
   if(trailsOn){
     beliefs->getSpatialModel()->getTrails()->updateTrails(agentState);
@@ -707,8 +722,9 @@ void Controller::learnSpatialModel(AgentState* agentState){
     beliefs->getSpatialModel()->getDoors()->learnDoors(regions);
   }
   if(hallwaysOn){
-    beliefs->getSpatialModel()->getHallways()->clearAllHallways();
-    beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, all_trace, all_laser_hist);
+    //beliefs->getSpatialModel()->getHallways()->clearAllHallways();
+    //beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, all_trace, all_laser_hist);
+    beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, trace, laser_hist);
     //beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
   }
 }
@@ -806,8 +822,7 @@ void Controller::tierTwoDecision(Position current){
     PathPlanner *planner = *it;
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-    //planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),trails_trace, beliefs->getSpatialModel()->getHallways()->getHallways());
-    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),trails_trace);
+    planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
     ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     gettimeofday(&cv,NULL);
     start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
