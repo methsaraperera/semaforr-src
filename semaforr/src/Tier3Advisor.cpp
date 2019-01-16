@@ -42,14 +42,14 @@ Tier3Advisor::~Tier3Advisor() {};
 // in advisor 
 // It returns map that maps action to comment strength
 std::map <FORRAction, double> Tier3Advisor::allAdvice(){
-  cout << "IN All advisor t3: " << beliefs->getAgentState()->isMissionComplete() << endl;
+  //cout << "IN All advisor t3: " << beliefs->getAgentState()->isMissionComplete() << endl;
   set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
   set<FORRAction> *action_set;
-  cout << "IN All advisor t3: " << endl;
+  //cout << "IN All advisor t3: " << endl;
   bool inRotateMode = beliefs->getAgentState()->getRotateMode();
-  cout << "Decision Count : " << beliefs->getAgentState()->getCurrentTask()->getDecisionCount() << endl;
+  //cout << "Decision Count : " << beliefs->getAgentState()->getCurrentTask()->getDecisionCount() << endl;
   
-  cout << "Rotation mode : " << inRotateMode << endl;
+  //cout << "Rotation mode : " << inRotateMode << endl;
   /*action_set = beliefs->getAgentState()->getActionSet();
   inRotateMode = true;*/
   if(inRotateMode){
@@ -64,12 +64,12 @@ std::map <FORRAction, double> Tier3Advisor::allAdvice(){
   std::size_t foundr = (this->get_name()).find("Rotation");
   // If the advisor is linear and the agent is in rotation mode
   if((foundr == std::string::npos) and inRotateMode){
-	cout << "Advisor is linear and agent is in rotation mode" << endl; 
+	//cout << "Advisor is linear and agent is in rotation mode" << endl; 
       return result;
   }
   // If the advisor is rotation and the agent is in linear mode
   if((foundr != std::string::npos) and !inRotateMode){
-	cout << "Advisor is rotation and agent is in linear mode" << endl;
+	//cout << "Advisor is rotation and agent is in linear mode" << endl;
       return result;
   }
 
@@ -79,11 +79,11 @@ std::map <FORRAction, double> Tier3Advisor::allAdvice(){
   set<FORRAction>::iterator actionIter;
   for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
     forrAction = *actionIter;
-    cout << forrAction.type << " " << forrAction.parameter << endl;
+    //cout << forrAction.type << " " << forrAction.parameter << endl;
     if(vetoed_actions->find(forrAction) != vetoed_actions->end())// is this action vetoed
       continue;
     adviceStrength = this->actionComment(forrAction);
-    std::cout << "Advisor name :"  << this->get_name() << " Strength: " << adviceStrength << " Action Type:" << forrAction.type << " " << "Action intensity " << forrAction.parameter << std::endl;
+    //std::cout << "Advisor name :"  << this->get_name() << " Strength: " << adviceStrength << " Action Type:" << forrAction.type << " " << "Action intensity " << forrAction.parameter << std::endl;
     result[forrAction] = adviceStrength;
   } 
   //if(result.size() > 1){
@@ -104,17 +104,17 @@ normalize(map <FORRAction, double> * result){
     if(max < itr->second)  max = itr->second;
     if(min > itr->second)  min = itr->second;
   } 
-  std::cout << "Inside normalize " << max << " " << min << endl;
-  if(max != min and result->size() > 1){
+  //std::cout << "Inside normalize " << max << " " << min << endl;
+  if(max != min and result->size() > 1 and max != -std::numeric_limits<double>::infinity() and min != std::numeric_limits<double>::infinity()){
     double norm_factor = (max - min)/10;
     for(itr = result->begin(); itr != result->end() ; itr++){
-      cout << "Before : " << itr->second << endl;
+      //cout << "Before : " << itr->second << endl;
       itr->second = (itr->second - min)/norm_factor;
     }
   }
   else if(max == min and result->size() > 1){
     for(itr = result->begin(); itr != result->end() ; itr++){
-      cout << "Before : " << itr->second << endl;
+      //cout << "Before : " << itr->second << endl;
       itr->second = 0;
     }
   }
@@ -162,13 +162,13 @@ standardize(map <FORRAction, double> * result){
   stdDev = sqrt(stdDev / count);
   if(stdDev != 0) {
     for(itr = result->begin(); itr != result->end() ; itr++){
-      cout << "Before : " << itr->second << endl;
+      //cout << "Before : " << itr->second << endl;
       itr->second = ((itr->second - mean)/stdDev);
     }
   }
   else {
     for(itr = result->begin(); itr != result->end() ; itr++){
-      cout << "Before : " << itr->second << endl;
+      //cout << "Before : " << itr->second << endl;
       itr->second = 0;
     }
   }
@@ -2027,6 +2027,9 @@ double Tier3GoAroundRotation::actionComment(FORRAction action){
   sensor_msgs::LaserScan laserScan = beliefs->getAgentState()->getCurrentLaserScan();
   // compute forward distance to obstacle
   double centerDistanceVector = ( laserScan.ranges[((laserScan.ranges.size()/2)-1)] + laserScan.ranges[((laserScan.ranges.size()/2))] ) / 2;
+  if(centerDistanceVector < 0.1){
+    centerDistanceVector = 0.1;
+  }
   // find average length of distance vectors on right and left sides
   for(int i = 0; i < ((laserScan.ranges.size()/2)); i++){
     double length = laserScan.ranges[i];
@@ -2584,11 +2587,11 @@ double Tier3LearnSpatialModel::actionComment(FORRAction action){
   }
   if(robotRegion > (-1) or expPosInHallway == true){
     result = -1.0 * (beliefs->getSpatialModel()->getConveyors()->getMaxGridValue());
-    cout << "LearnSpatialModel INSIDE REGION or HALLWAY : " << result << endl;
+    //cout << "LearnSpatialModel INSIDE REGION or HALLWAY : " << result << endl;
   }
   else {
     result = -(beliefs->getSpatialModel()->getConveyors()->getAverageGridValue(expectedPosition.getX(), expectedPosition.getY()));
-    cout << "LearnSpatialModel OUTSIDE REGION or HALLWAY : " << result << endl;
+    //cout << "LearnSpatialModel OUTSIDE REGION or HALLWAY : " << result << endl;
   }
   return result;
 }
@@ -2622,11 +2625,11 @@ double Tier3LearnSpatialModelRotation::actionComment(FORRAction action){
   }
   if(robotRegion > (-1) or expPosInHallway == true){
     result = -1.0 * (beliefs->getSpatialModel()->getConveyors()->getMaxGridValue());
-    cout << "LearnSpatialModelRotation INSIDE REGION or HALLWAY : " << result << endl;
+    //cout << "LearnSpatialModelRotation INSIDE REGION or HALLWAY : " << result << endl;
   }
   else {
     result = -(beliefs->getSpatialModel()->getConveyors()->getAverageGridValue(expectedPosition.getX(), expectedPosition.getY()));
-    cout << "LearnSpatialModelRotation OUTSIDE REGION or HALLWAY : " << result << endl;
+    //cout << "LearnSpatialModelRotation OUTSIDE REGION or HALLWAY : " << result << endl;
   }
   return result;
 }
@@ -2966,7 +2969,7 @@ double Tier3LeastAngleRotation::actionComment(FORRAction action){
 }
 
 void Tier3Interpersonal::set_commenting(){
-  cout << "In Interpersonal set commenting " << endl;
+  //cout << "In Interpersonal set commenting " << endl;
   if(beliefs->getAgentState()->getCrowdPose().poses.size() > 0)
     advisor_commenting = true;
   else
@@ -3456,7 +3459,7 @@ double Tier3WaitRotation::actionComment(FORRAction action){
 }*/
 
 void Tier3CrowdAvoid::set_commenting(){
-  cout << "In CrowdAvoid set commenting " << endl;
+  //cout << "In CrowdAvoid set commenting " << endl;
   if(beliefs->getAgentState()->crowdModelLearned())
     advisor_commenting = true;
   else
@@ -3464,14 +3467,14 @@ void Tier3CrowdAvoid::set_commenting(){
 }
 
 double Tier3CrowdAvoid::actionComment(FORRAction action){
-  cout << "Inside CrowdAvoid" << endl;
+  //cout << "Inside CrowdAvoid" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double grid_value = beliefs->getAgentState()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * grid_value;
 }
 
 void Tier3CrowdAvoidRotation::set_commenting(){
-  cout << "In CrowdAvoidRotation set commenting " << endl;
+  //cout << "In CrowdAvoidRotation set commenting " << endl;
   if(beliefs->getAgentState()->crowdModelLearned())
     advisor_commenting = true;
   else
@@ -3479,14 +3482,14 @@ void Tier3CrowdAvoidRotation::set_commenting(){
 }
 
 double Tier3CrowdAvoidRotation::actionComment(FORRAction action){
-  cout << "Inside CrowdAvoidRotation" << endl;
+  //cout << "Inside CrowdAvoidRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double grid_value = beliefs->getAgentState()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * grid_value;
 }
 
 void Tier3RiskAvoid::set_commenting(){
-  cout << "In RiskAvoid set commenting " << endl;
+  //cout << "In RiskAvoid set commenting " << endl;
   if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
@@ -3494,14 +3497,14 @@ void Tier3RiskAvoid::set_commenting(){
 }
 
 double Tier3RiskAvoid::actionComment(FORRAction action){
-  cout << "Inside RiskAvoid" << endl;
+  //cout << "Inside RiskAvoid" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double risk_value = beliefs->getAgentState()->getRiskValue(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * risk_value;
 }
 
 void Tier3RiskAvoidRotation::set_commenting(){
-  cout << "In RiskAvoidRotation set commenting " << endl;
+  //cout << "In RiskAvoidRotation set commenting " << endl;
   if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
@@ -3509,14 +3512,14 @@ void Tier3RiskAvoidRotation::set_commenting(){
 }
 
 double Tier3RiskAvoidRotation::actionComment(FORRAction action){
-  cout << "Inside RiskAvoidRotation" << endl;
+  //cout << "Inside RiskAvoidRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double risk_value = beliefs->getAgentState()->getRiskValue(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * risk_value;
 }
 
 void Tier3FlowAvoid::set_commenting(){
-  cout << "In FlowAvoid set commenting " << endl;
+  //cout << "In FlowAvoid set commenting " << endl;
   if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
@@ -3524,14 +3527,14 @@ void Tier3FlowAvoid::set_commenting(){
 }
 
 double Tier3FlowAvoid::actionComment(FORRAction action){
-  cout << "Inside FlowAvoid" << endl;
+  //cout << "Inside FlowAvoid" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getFlowValue(expectedPosition.getX(), expectedPosition.getY(), expectedPosition.getTheta());
   return flow_value;
 }
 
 void Tier3FlowAvoidRotation::set_commenting(){
-  cout << "In FlowAvoidRotation set commenting " << endl;
+  //cout << "In FlowAvoidRotation set commenting " << endl;
   if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
@@ -3539,14 +3542,14 @@ void Tier3FlowAvoidRotation::set_commenting(){
 }
 
 double Tier3FlowAvoidRotation::actionComment(FORRAction action){
-  cout << "Inside FlowAvoidRotation" << endl;
+  //cout << "Inside FlowAvoidRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getFlowValue(expectedPosition.getX(), expectedPosition.getY(), expectedPosition.getTheta());
   return flow_value;
 }
 
 void Tier3FindTheCrowd::set_commenting(){
-  cout << "In FindTheCrowd set commenting " << endl;
+  //cout << "In FindTheCrowd set commenting " << endl;
   if(beliefs->getAgentState()->crowdModelLearned())
     advisor_commenting = true;
   else
@@ -3554,14 +3557,14 @@ void Tier3FindTheCrowd::set_commenting(){
 }
 
 double Tier3FindTheCrowd::actionComment(FORRAction action){
-  cout << "Inside FindTheCrowd" << endl;
+  //cout << "Inside FindTheCrowd" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double grid_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * grid_value;
 }
 
 void Tier3FindTheCrowdRotation::set_commenting(){
-  cout << "In FindTheCrowdRotation set commenting " << endl;
+  //cout << "In FindTheCrowdRotation set commenting " << endl;
   if(beliefs->getAgentState()->crowdModelLearned())
     advisor_commenting = true;
   else
@@ -3569,14 +3572,14 @@ void Tier3FindTheCrowdRotation::set_commenting(){
 }
 
 double Tier3FindTheCrowdRotation::actionComment(FORRAction action){
-  cout << "Inside FindTheCrowdRotation" << endl;
+  //cout << "Inside FindTheCrowdRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double grid_value = beliefs->getAgentState()->getCrowdObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * grid_value;
 }
 
 void Tier3FindTheRisk::set_commenting(){
-  cout << "In FindTheRisk set commenting " << endl;
+  //cout << "In FindTheRisk set commenting " << endl;
   if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
@@ -3584,14 +3587,14 @@ void Tier3FindTheRisk::set_commenting(){
 }
 
 double Tier3FindTheRisk::actionComment(FORRAction action){
-  cout << "Inside FindTheRisk" << endl;
+  //cout << "Inside FindTheRisk" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double risk_value = beliefs->getAgentState()->getRiskExperience(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * risk_value;
 }
 
 void Tier3FindTheRiskRotation::set_commenting(){
-  cout << "In FindTheRiskRotation set commenting " << endl;
+  //cout << "In FindTheRiskRotation set commenting " << endl;
   if(beliefs->getAgentState()->riskModelLearned())
     advisor_commenting = true;
   else
@@ -3599,14 +3602,14 @@ void Tier3FindTheRiskRotation::set_commenting(){
 }
 
 double Tier3FindTheRiskRotation::actionComment(FORRAction action){
-  cout << "Inside FindTheRiskRotation" << endl;
+  //cout << "Inside FindTheRiskRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double risk_value = beliefs->getAgentState()->getRiskExperience(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * risk_value;
 }
 
 void Tier3FindTheFlow::set_commenting(){
-  cout << "In FindTheFlow set commenting " << endl;
+  //cout << "In FindTheFlow set commenting " << endl;
   if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
@@ -3614,14 +3617,14 @@ void Tier3FindTheFlow::set_commenting(){
 }
 
 double Tier3FindTheFlow::actionComment(FORRAction action){
-  cout << "Inside FindTheFlow" << endl;
+  //cout << "Inside FindTheFlow" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getFLowObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * flow_value;
 }
 
 void Tier3FindTheFlowRotation::set_commenting(){
-  cout << "In FindTheFlowRotation set commenting " << endl;
+  //cout << "In FindTheFlowRotation set commenting " << endl;
   if(beliefs->getAgentState()->flowModelLearned())
     advisor_commenting = true;
   else
@@ -3629,14 +3632,14 @@ void Tier3FindTheFlowRotation::set_commenting(){
 }
 
 double Tier3FindTheFlowRotation::actionComment(FORRAction action){
-  cout << "Inside FindTheFlowRotation" << endl;
+  //cout << "Inside FindTheFlowRotation" << endl;
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double flow_value = beliefs->getAgentState()->getFLowObservation(expectedPosition.getX(), expectedPosition.getY());
   return (-1) * flow_value;
 }
 
 double Tier3Follow::actionComment(FORRAction action){
-  cout << "Inside Follow" << endl;
+  //cout << "Inside Follow" << endl;
   double result=0;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
@@ -3727,7 +3730,7 @@ double Tier3Follow::actionComment(FORRAction action){
 }
 
 void Tier3Follow::set_commenting(){
-  cout << "In Follow set commenting " << endl;
+  //cout << "In Follow set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
@@ -3763,7 +3766,7 @@ void Tier3Follow::set_commenting(){
 }
 
 double Tier3FollowRotation::actionComment(FORRAction action){
-  cout << "Inside FollowRotation" << endl;
+  //cout << "Inside FollowRotation" << endl;
   double result=0;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
@@ -3854,7 +3857,7 @@ double Tier3FollowRotation::actionComment(FORRAction action){
 }
 
 void Tier3FollowRotation::set_commenting(){
-  cout << "In FollowRotation set commenting " << endl;
+  //cout << "In FollowRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
@@ -3890,7 +3893,7 @@ void Tier3FollowRotation::set_commenting(){
 }
 
 double Tier3Crossroads::actionComment(FORRAction action){
-  cout << "Inside Crossroads" << endl;
+  //cout << "Inside Crossroads" << endl;
   double result=0;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
@@ -3912,7 +3915,7 @@ double Tier3Crossroads::actionComment(FORRAction action){
 }
 
 void Tier3Crossroads::set_commenting(){
-  cout << "In Crossroads set commenting " << endl;
+  //cout << "In Crossroads set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   if(hallways.size() > 0)
     advisor_commenting = true;
@@ -3921,7 +3924,7 @@ void Tier3Crossroads::set_commenting(){
 }
 
 double Tier3CrossroadsRotation::actionComment(FORRAction action){
-  cout << "Inside CrossroadsRotation" << endl;
+  //cout << "Inside CrossroadsRotation" << endl;
   double result=0;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
@@ -3943,7 +3946,7 @@ double Tier3CrossroadsRotation::actionComment(FORRAction action){
 }
 
 void Tier3CrossroadsRotation::set_commenting(){
-  cout << "In CrossroadsRotation set commenting " << endl;
+  //cout << "In CrossroadsRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   if(hallways.size() > 0)
     advisor_commenting = true;
@@ -3952,7 +3955,7 @@ void Tier3CrossroadsRotation::set_commenting(){
 }
 
 double Tier3Stay::actionComment(FORRAction action){
-  cout << "Inside Stay" << endl;
+  //cout << "Inside Stay" << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
@@ -3970,7 +3973,7 @@ double Tier3Stay::actionComment(FORRAction action){
 }
 
 void Tier3Stay::set_commenting(){
-  cout << "In Stay set commenting " << endl;
+  //cout << "In Stay set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());
@@ -3998,7 +4001,7 @@ void Tier3Stay::set_commenting(){
 }
 
 double Tier3StayRotation::actionComment(FORRAction action){
-  cout << "Inside StayRotation" << endl;
+  //cout << "Inside StayRotation" << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
@@ -4016,7 +4019,7 @@ double Tier3StayRotation::actionComment(FORRAction action){
 }
 
 void Tier3StayRotation::set_commenting(){
-  cout << "In StayRotation set commenting " << endl;
+  //cout << "In StayRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
   Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currPosition (currentPosition.getX(), currentPosition.getY());

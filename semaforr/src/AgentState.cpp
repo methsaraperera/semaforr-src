@@ -232,8 +232,8 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
 			//if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j])) {
       //if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j]) and canSeePoint(laser_endpoints[j], pos_history[j], pos_history[i])) {
       if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j], 10)) {
-				cout << "CanAccessPoint is true" << endl;
-				cout << "Next point: " << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
+				//cout << "CanAccessPoint is true" << endl;
+				//cout << "Next point: " << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 				trailPositions.push_back(pos_history[j]);
 				trailLaserEndpoints.push_back(laser_endpoints[j]);
 				i = j-1;
@@ -244,8 +244,8 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
     trailPositions.push_back(pos_history.back());
     trailLaserEndpoints.push_back(laser_endpoints.back());
   }
-	cout << pos_history[pos_history.size()-1].get_x() << " " << pos_history[pos_history.size()-1].get_y() << endl;
-	cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
+	//cout << pos_history[pos_history.size()-1].get_x() << " " << pos_history[pos_history.size()-1].get_y() << endl;
+	//cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
 	
 	cleanedMarker.first = trailPositions;
 	cleanedMarker.second = trailLaserEndpoints;
@@ -340,7 +340,7 @@ double AgentState::getDistanceToObstacle(double rotation_angle){
 
 
 FORRAction AgentState::maxForwardAction(){
- 	ROS_DEBUG("In maxforwardaction");
+ 	//ROS_DEBUG("In maxforwardaction");
 	double error_margin = maxForwardActionBuffer; // margin from obstacles
 	double view = maxForwardActionSweepAngle; // +view radians to -view radians view
 	//double view = 0.7854;
@@ -404,7 +404,7 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
     
     double required_rotation = goal_direction - robot_direction;
 
-    ROS_DEBUG_STREAM("Robot direction : " << robot_direction << ", Goal Direction : " << goal_direction << ", Required rotation : " << required_rotation);
+    //ROS_DEBUG_STREAM("Robot direction : " << robot_direction << ", Goal Direction : " << goal_direction << ", Required rotation : " << required_rotation);
     if(required_rotation > M_PI)
       required_rotation = required_rotation - (2*M_PI);
     if(required_rotation < -M_PI)
@@ -586,7 +586,7 @@ double AgentState::getGridValue(double x, double y){
   int width = crowdModel.width;
   //std::vector<double> densities = crowdModel.densities;
   double gridValue = crowdModel.densities[(floor(y/resolution)*width)+floor(x/resolution)];
-  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " gridValue = " << gridValue << endl;
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " gridValue = " << gridValue << endl;
   return gridValue;
 }
 
@@ -596,7 +596,7 @@ double AgentState::getRiskValue(double x, double y){
   int width = crowdModel.width;
   //std::vector<double> risk = crowdModel.risk;
   double riskValue = crowdModel.risk[(floor(y/resolution)*width)+floor(x/resolution)];
-  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskValue = " << riskValue << endl;
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskValue = " << riskValue << endl;
   return riskValue;
 }
 
@@ -641,7 +641,7 @@ double AgentState::getFlowValue(double x, double y, double theta){
     flowValue = -flowMagnitude;
   }
 
-  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " flowValue = " << flowValue << endl;
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " flowValue = " << flowValue << endl;
   return flowValue;
 }
 
@@ -650,7 +650,7 @@ double AgentState::getCrowdObservation(double x, double y){
   int height = crowdModel.height;
   int width = crowdModel.width;
   double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
-  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " crowdObservationValue = " << crowdObservationValue << endl;
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " crowdObservationValue = " << crowdObservationValue << endl;
   return crowdObservationValue;
 }
 
@@ -659,7 +659,7 @@ double AgentState::getRiskExperience(double x, double y){
   int height = crowdModel.height;
   int width = crowdModel.width;
   double riskExperienceValue = crowdModel.risk_experiences[(floor(y/resolution)*width)+floor(x/resolution)];
-  cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskExperienceValue = " << riskExperienceValue << endl;
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskExperienceValue = " << riskExperienceValue << endl;
   return riskExperienceValue;
 }
 

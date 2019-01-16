@@ -69,7 +69,7 @@ class Task {
 
   FORRAction saveDecision(FORRAction decision){
 	decisionSequence->push_back(decision);
-	cout << "After decisionToPush" << endl;
+	//cout << "After decisionToPush" << endl;
   }
 
   vector<Position> *getPositionHistory(){return pos_hist;}
@@ -236,7 +236,7 @@ class Task {
   bool isTaskComplete(Position currentPosition){
 	bool status = false;
 	double dis = currentPosition.getDistance(x, y);
-	if (dis < 1){
+	if (dis < 0.1){
 		status = true;
 	}
 	return status;

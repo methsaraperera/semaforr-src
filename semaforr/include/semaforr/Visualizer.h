@@ -874,14 +874,14 @@ public:
 	vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
 	sensor_msgs::LaserScan laserScan = beliefs->getAgentState()->getCurrentLaserScan();
 	FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
-	ROS_DEBUG("After max_forward");
+	//ROS_DEBUG("After max_forward");
 	//vector< vector<CartesianPoint> > allTrace = beliefs->getAgentState()->getAllTrace();
 	list<Task*>& agenda = beliefs->getAgentState()->getAgenda();
 	list<Task*>& all_agenda = beliefs->getAgentState()->getAllAgenda();
-	ROS_DEBUG("After all_agenda");
+	//ROS_DEBUG("After all_agenda");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	vector< vector< CartesianPoint> > trails =  beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-	ROS_DEBUG("After trails");
+	//ROS_DEBUG("After trails");
 	FORRActionType chosenActionType = decision.type;
 	int chosenActionParameter = decision.parameter;
 	int decisionTier = con->getCurrentDecisionStats()->decisionTier;
@@ -889,12 +889,12 @@ public:
 	string advisors = con->getCurrentDecisionStats()->advisors;
 	string advisorComments = con->getCurrentDecisionStats()->advisorComments;
 	string advisorInfluence = con->getCurrentDecisionStats()->advisorInfluence;
-	cout << "vetoedActions = " << vetoedActions << " decisionTier = " << decisionTier << " advisors = " << advisors << " advisorComments = " << advisorComments << endl;
+	//cout << "vetoedActions = " << vetoedActions << " decisionTier = " << decisionTier << " advisors = " << advisors << " advisorComments = " << advisorComments << endl;
 	vector< vector<int> > conveyors = beliefs->getSpatialModel()->getConveyors()->getConveyors();
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 
-	ROS_DEBUG("After decision statistics");
+	//ROS_DEBUG("After decision statistics");
 	int decisionCount = -1;
 	int currentTask = -1;
 	if(!agenda.empty()){
@@ -902,7 +902,7 @@ public:
   		//if(currentTask != 0)
 		decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
 	}
-	ROS_DEBUG("After decisionCount");
+	//ROS_DEBUG("After decisionCount");
 
 
 	std::stringstream lep;
@@ -911,7 +911,7 @@ public:
  		double y = laserEndpoints[i].get_y();
 		lep << x << "," << y << ";";
 	}
-	ROS_DEBUG("After laserEndpoints");
+	//ROS_DEBUG("After laserEndpoints");
 
 
 	std::stringstream ls;
@@ -923,7 +923,7 @@ public:
 		}
 		ls << length << ",";
 	}
-	ROS_DEBUG("After laserScan");
+	//ROS_DEBUG("After laserScan");
 	/*int totalSize = 0;
 	for(int i = 0; i < allTrace.size(); i++){
 		totalSize += allTrace[i].size();
@@ -939,7 +939,7 @@ public:
 		}
 		regionsstream << ";";
 	}
-	ROS_DEBUG("After regions");
+	//ROS_DEBUG("After regions");
 
 
 	std::stringstream trailstream;
@@ -949,7 +949,7 @@ public:
 		}
 		trailstream << ";";
 	}
-	ROS_DEBUG("After trails");
+	//ROS_DEBUG("After trails");
 
 	std::stringstream conveyorStream;
 	for(int j = 0; j < conveyors.size()-1; j++){
@@ -958,7 +958,7 @@ public:
 		}
 		conveyorStream << ";";
 	}
-	ROS_DEBUG("After conveyors");
+	//ROS_DEBUG("After conveyors");
 	
 
 	std::stringstream doorStream;
@@ -969,7 +969,7 @@ public:
 		doorStream << ";";
 	}
 
-	ROS_DEBUG("After doors");
+	//ROS_DEBUG("After doors");
 
 	std::stringstream hallwayStream;
 	for(int i = 0; i < hallways.size(); i++){
@@ -981,7 +981,7 @@ public:
 		hallwayStream << ";";
 	}
 
-	ROS_DEBUG("After hallways");
+	//ROS_DEBUG("After hallways");
 
 	std::stringstream planStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
@@ -995,7 +995,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//planStream << "\t" << plancost;
 	}
-	ROS_DEBUG("After planStream");
+	//ROS_DEBUG("After planStream");
 
 	std::stringstream crowdStream;
 	geometry_msgs::PoseArray crowdpose = beliefs->getAgentState()->getCrowdPose();
@@ -1005,7 +1005,7 @@ public:
 		<< " " << crowdpose.poses[i].orientation.y << " " << crowdpose.poses[i].orientation.z << " " << crowdpose.poses[i].orientation.w;
 		crowdStream << ";";
 	}
-	ROS_DEBUG("After crowdStream");
+	//ROS_DEBUG("After crowdStream");
 
 	std::stringstream allCrowdStream;
 	geometry_msgs::PoseArray crowdposeall = beliefs->getAgentState()->getCrowdPoseAll();
@@ -1015,7 +1015,7 @@ public:
 		<< " " << crowdposeall.poses[i].orientation.y << " " << crowdposeall.poses[i].orientation.z << " " << crowdposeall.poses[i].orientation.w;
 		allCrowdStream << ";";
 	}
-	ROS_DEBUG("After all crowdStream");
+	//ROS_DEBUG("After all crowdStream");
 
 	std::stringstream crowdModel;
 	semaforr::CrowdModel model = con->getPlanner()->getCrowdModel();
@@ -1073,11 +1073,11 @@ public:
 		crowdModel << down_right[i] << " ";
 	}
 
-	ROS_DEBUG("After all crowd model");
+	//ROS_DEBUG("After all crowd model");
 
 	std::stringstream output;
 
-	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str();// << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence << "\t" << lep.str() << "\t" << ls.str();
+	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str();// << "\t" << advisorInfluence << "\t" << lep.str() << "\t" << ls.str();
 
 	//output << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << regionsstream.str() << "\t" << lep.str() << "\t" << ls.str();
 

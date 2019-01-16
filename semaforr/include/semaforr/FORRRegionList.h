@@ -27,12 +27,12 @@ class FORRRegionList{
   //}
     
   bool isLeaf(FORRRegion region, int numDoors){
-    cout << "In isleaf" << endl;
+    //cout << "In isleaf" << endl;
     vector<FORRExit> exits = region.getExits();
     bool isLeaf = false;
     if(exits.size() <= 1 or numDoors <= 1){
       isLeaf = true;
-      cout << "exits.size = " << exits.size() << " numDoors = " << numDoors << endl;
+      //cout << "exits.size = " << exits.size() << " numDoors = " << numDoors << endl;
       //region.setIsLeaf(isLeaf);
       return isLeaf;
     }

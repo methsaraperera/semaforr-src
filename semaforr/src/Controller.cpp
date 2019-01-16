@@ -704,28 +704,34 @@ void Controller::learnSpatialModel(AgentState* agentState){
   if(trailsOn){
     beliefs->getSpatialModel()->getTrails()->updateTrails(agentState);
     beliefs->getSpatialModel()->getTrails()->resetChosenTrail();
+    ROS_DEBUG("Trails Learned");
   }
   vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
   if(conveyorsOn){
     //beliefs->getSpatialModel()->getConveyors()->populateGridFromPositionHistory(pos_hist);
     beliefs->getSpatialModel()->getConveyors()->populateGridFromTrailTrace(trails_trace.back());
+    ROS_DEBUG("Conveyors Learned");
   }
   if(regionsOn){
     beliefs->getSpatialModel()->getRegionList()->learnRegions(pos_hist, laser_hist);
+    ROS_DEBUG("Regions Learned");
     beliefs->getSpatialModel()->getRegionList()->clearAllExits();
     beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
     beliefs->getSpatialModel()->getRegionList()->learnExits(trails_trace);
+    ROS_DEBUG("Exits Learned");
   }
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   if(doorsOn){
     beliefs->getSpatialModel()->getDoors()->clearAllDoors();
     beliefs->getSpatialModel()->getDoors()->learnDoors(regions);
+    ROS_DEBUG("Doors Learned");
   }
   if(hallwaysOn){
     //beliefs->getSpatialModel()->getHallways()->clearAllHallways();
     //beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, all_trace, all_laser_hist);
     beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, trace, laser_hist);
     //beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
+    ROS_DEBUG("Hallways Learned");
   }
 }
 
@@ -756,12 +762,12 @@ FORRAction Controller::FORRDecision()
   //ROS_DEBUG("After saveDecision");
   beliefs->getAgentState()->clearVetoedActions();
   //ROS_DEBUG("After clearVetoedActions");
-  if(decision->type == FORWARD or decision->type == PAUSE){
+  /*if(decision->type == FORWARD or decision->type == PAUSE){
     beliefs->getAgentState()->setRotateMode(true);
   }
   else{
     beliefs->getAgentState()->setRotateMode(false);
-  }
+  }*/
 
   return *decision;
 }
@@ -953,19 +959,19 @@ void Controller::tierThreeDecision(FORRAction *decision){
        
   std::stringstream advisorsList;
   std::stringstream advisorCommentsList;
-  cout << "processing advisors::"<< endl;
+  //cout << "processing advisors::"<< endl;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     Tier3Advisor *advisor = *it; 
-    cout << advisor->get_name() << endl;
+    //cout << advisor->get_name() << endl;
     // check if advisor should make a decision
     advisor->set_commenting();
     if(advisor->is_active() == false){
-      cout << advisor->get_name() << " is inactive " << endl;
+      //cout << advisor->get_name() << " is inactive " << endl;
       advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
       continue;
     }
     if(advisor->is_commenting() == false){
-      cout << advisor->get_name() << " is not commenting " << endl;
+      //cout << advisor->get_name() << " is not commenting " << endl;
       advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
       continue;
     }
@@ -982,9 +988,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
       // If this is first advisor we need to initialize our final map
       float weight;
       //cout << "Agenda size :::::::::::::::::::::::::::::::::: " << beliefs->getAgenda().size() << endl;
-      cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
+      //cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
       weight = advisor->get_weight();
-      cout << "Weight for this advisor : " << weight << endl;
+      //cout << "Weight for this advisor : " << weight << endl;
 
       advisorCommentsList << advisor->get_name() << " " << iterator->first.type << " " << iterator->first.parameter << " " << iterator->second << ";";
 
@@ -1016,8 +1022,8 @@ void Controller::tierThreeDecision(FORRAction *decision){
   if(best_decisions.size() == 0){
       (*decision) = FORRAction(PAUSE,0);
   }
-  for(unsigned i = 0; i < best_decisions.size(); ++i)
-      cout << "Action type: " << best_decisions.at(i).type << " parameter: " << best_decisions.at(i).parameter << endl;
+  //for(unsigned i = 0; i < best_decisions.size(); ++i)
+      //cout << "Action type: " << best_decisions.at(i).type << " parameter: " << best_decisions.at(i).parameter << endl;
     
   //generate random number using system clock as seed
   srand(time(NULL));

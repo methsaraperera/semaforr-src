@@ -40,7 +40,8 @@ public:
     action_set = new set<FORRAction>();
     forward_set = new set<FORRAction>();
     rotation_set = new set<FORRAction>();
-    rotateMode = true;
+    //rotateMode = true;
+    rotateMode = false;
     numMoves = moveArrMax;
     numRotates = rotateArrMax;
 
@@ -170,7 +171,7 @@ public:
       }
       agenda.remove(currentTask);
     }
-    rotateMode = true;
+    //rotateMode = true;
     currentTask = NULL;
   }
 
@@ -206,7 +207,7 @@ public:
   // returns distance to obstacle in the direction of rotation
   double getDistanceToObstacle(double rotation_angle);
   double getDistanceToForwardObstacle(){
-	ROS_DEBUG("in getDistance to forward obstacle");
+	//ROS_DEBUG("in getDistance to forward obstacle");
 	if(currentLaserScan.ranges.size() == 0)
 		return 25;
 	return currentLaserScan.ranges[currentLaserScan.ranges.size()/2];
