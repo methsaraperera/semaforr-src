@@ -97,7 +97,7 @@ public:
 	// Callback function for pose message
 	void updateCrowdModel(const semaforr::CrowdModel & crowd_model){
 		//ROS_DEBUG("Inside callback for crowd model");
-		cout << crowd_model.height << " " << crowd_model.width << endl;
+		//cout << crowd_model.height << " " << crowd_model.width << endl;
 		//update the crowd model of the belief
 		controller->getPlanner()->setCrowdModel(crowd_model);
 		controller->updatePlannersModels(crowd_model);
@@ -143,7 +143,7 @@ public:
 		//Declares the message to be sent
 		geometry_msgs::Twist base_cmd;
 
-		ros::Rate rate(10.0);
+		ros::Rate rate(30.0);
 		double epsilon_move = 0.2; //Meters
 		double epsilon_turn = 0.1; //Radians
 		bool action_complete = true;
@@ -160,7 +160,7 @@ public:
 		while(nh_.ok()) {
 			// If pos value is not received from menge wait
 			while(init_pos_received == false or init_laser_received == false){
-				ROS_DEBUG("Waiting for first message or laser");
+				//ROS_DEBUG("Waiting for first message or laser");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -222,8 +222,8 @@ public:
 			actionTimeSec = (action_end_time - action_start_time);
 			//ROS_INFO_STREAM("Action Time (sec) : " << actionTimeSec);
 			// Check if the action is complete
-			//action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
-			action_complete = true;
+			action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
+			//action_complete = true;
 		}
 	}
 

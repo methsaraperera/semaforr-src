@@ -70,7 +70,7 @@ private:
   //FORR decision loop and tiers
   FORRAction FORRDecision();
 
-  FORRActionStats *decisionStats = new FORRActionStats();
+  FORRActionStats *decisionStats;
   
   //Tier 1 advisors are called here
   bool tierOneDecision(FORRAction *decision);

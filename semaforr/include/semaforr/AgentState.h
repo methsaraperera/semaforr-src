@@ -40,8 +40,8 @@ public:
     action_set = new set<FORRAction>();
     forward_set = new set<FORRAction>();
     rotation_set = new set<FORRAction>();
-    //rotateMode = true;
-    rotateMode = false;
+    rotateMode = true;
+    //rotateMode = false;
     numMoves = moveArrMax;
     numRotates = rotateArrMax;
 
@@ -135,6 +135,7 @@ public:
   void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn, list<int> indices){
     if(aStarOn){
       currentTask->generateWaypointsFromInds(current, planner, indices);
+      //currentTask->generateOriginalWaypoints(current, planner);
     }
   }
 
@@ -171,7 +172,7 @@ public:
       }
       agenda.remove(currentTask);
     }
-    //rotateMode = true;
+    rotateMode = true;
     currentTask = NULL;
   }
 

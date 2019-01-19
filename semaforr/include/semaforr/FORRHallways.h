@@ -162,11 +162,11 @@ public:
             vector<vector<double> > segments_similarities;
             ListSimilarities(segments_similarities, segments_data);
             //ListSimilarities(segments_similarities, segments_normalized);
-            cout << "num of segments similarities " << segments_similarities.size() << endl;
+            //cout << "num of segments similarities " << segments_similarities.size() << endl;
 
             vector<vector<double> > most_similar_segments;
             FindMostSimilarSegments(most_similar_segments, segments_similarities);
-            cout << "num of most similar segments " << most_similar_segments.size() << endl;
+            //cout << "num of most similar segments " << most_similar_segments.size() << endl;
 
             vector<Segment> mean_segments;
             CreateMeanSegments(mean_segments, most_similar_segments, hallway_sections[i], step);
@@ -176,12 +176,12 @@ public:
             if(initial_hallway_groups.size()>0){
               vector<vector<CartesianPoint> > merged_hallway_groups = MergeNearbyHallways(initial_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               vector<vector<CartesianPoint> > hallway_groups = FillHallways(merged_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
-              cout << "process agg" << endl;
+              //cout << "process agg" << endl;
               for(int j = 0; j< hallway_groups.size(); j++) {
                   Aggregate group = Aggregate(hallway_groups.at(j), i);
                   all_aggregates.push_back(group);
               }
-              cout << hallway_groups.size() << endl;
+              cout << "Num of hallways " << hallway_groups.size() << endl;
               hallway_groups.clear();
             }
             segments_data.clear();
@@ -192,9 +192,9 @@ public:
           }
           cout << "done proccessing " << hallway_names[i] << endl;
         }
-        cout << "finished map" << endl;
+        //cout << "finished map" << endl;
         if(all_aggregates.size() > 0){
-          cout << "finding connections between hallways" << endl;
+          //cout << "finding connections between hallways" << endl;
           for (int i = 0; i < all_aggregates.size()-1; i++){
             for (int j = i + 1; j < all_aggregates.size(); j++){
               all_aggregates[i].findConnection(all_aggregates[j],i,j);

@@ -406,7 +406,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
   Map *map = new Map(l*100, h*100);
   map->readMapFromXML(map_config);
   cout << "Finished reading map"<< endl;
-  
+  Graph *origNavGraph = new Graph(map,(int)(p*100.0));
   //Graph *navGraph = new Graph(map,(int)(p*100.0));
   //cout << "initialized nav graph" << endl;
   //navGraph->printGraph();
@@ -417,6 +417,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: distance");
   }
   if(smooth == 1){
@@ -424,6 +425,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphSmooth, *map, n,n, "smooth");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: smooth");
   }
   if(novel == 1){
@@ -431,6 +433,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphNovel, *map, n,n, "novel");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: novel");
   }
   if(density == 1){
@@ -438,6 +441,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphDensity, *map, n,n, "density");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: density");
   }
   if(risk == 1){
@@ -445,6 +449,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphRisk, *map, n,n, "risk");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: risk");
   }
   if(flow == 1){
@@ -452,6 +457,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphFlow, *map, n,n, "flow");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: flow");
   }
   if(combined == 1){
@@ -459,6 +465,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphCombined, *map, n,n, "combined");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: combined");
   }
   if(CUSUM == 1){
@@ -466,6 +473,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphCUSUM, *map, n,n, "CUSUM");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: CUSUM");
   }
   if(discount == 1){
@@ -473,6 +481,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphDiscount, *map, n,n, "discount");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: discount");
   }
   if(explore == 1){
@@ -480,6 +489,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphExplore, *map, n,n, "explore");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: explore");
   }
   if(spatial == 1){
@@ -487,6 +497,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphSpatial, *map, n,n, "spatial");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: spatial");
   }
   if(hallwayer == 1){
@@ -494,6 +505,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphHallwayer, *map, n,n, "hallwayer");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: hallwayer");
   }
   if(trailer == 1){
@@ -501,6 +513,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphTrailer, *map, n,n, "trailer");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: trailer");
   }
   if(barrier == 1){
@@ -508,6 +521,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphBarrier, *map, n,n, "barrier");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: barrier");
   }
   if(conveys == 1){
@@ -515,6 +529,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphConveys, *map, n,n, "conveys");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: conveys");
   }
   if(turn == 1){
@@ -522,10 +537,10 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphTurn, *map, n,n, "turn");
     tier2Planners.push_back(planner);
+    planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: turn");
   }
   cout << "initialized planners" << endl;
-
 }
 
 
@@ -587,12 +602,13 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   beliefs->getAgentState()->setAgentStateParameters(canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle);
   tier1 = new Tier1Advisor(beliefs);
   firstTaskAssigned = false;
+  decisionStats = new FORRActionStats();
 }
 
 
 // Function which takes sensor inputs and updates it for semaforr to use for decision making, and updates task status
 void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan, geometry_msgs::PoseArray crowdpose, geometry_msgs::PoseArray crowdposeall){
-  cout << "inupdate state" << endl;
+  cout << "In update state" << endl;
   beliefs->getAgentState()->setCurrentSensor(current, laser_scan);
   beliefs->getAgentState()->setCrowdPose(crowdpose);
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
@@ -687,6 +703,13 @@ FORRAction Controller::decide() {
 //
 
 void Controller::learnSpatialModel(AgentState* agentState){
+  double computationTimeSec=0.0;
+  timeval cv;
+  double start_timecv;
+  double end_timecv;
+  gettimeofday(&cv,NULL);
+  start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+
   Task* completedTask = agentState->getCurrentTask();
   vector<Position> *pos_hist = completedTask->getPositionHistory();
   vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
@@ -733,6 +756,11 @@ void Controller::learnSpatialModel(AgentState* agentState){
     //beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
     ROS_DEBUG("Hallways Learned");
   }
+
+  gettimeofday(&cv,NULL);
+  end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+  computationTimeSec = (end_timecv-start_timecv);
+  decisionStats->learningComputationTime = computationTimeSec;
 }
 
 
@@ -762,12 +790,12 @@ FORRAction Controller::FORRDecision()
   //ROS_DEBUG("After saveDecision");
   beliefs->getAgentState()->clearVetoedActions();
   //ROS_DEBUG("After clearVetoedActions");
-  /*if(decision->type == FORWARD or decision->type == PAUSE){
+  if(decision->type == FORWARD or decision->type == PAUSE){
     beliefs->getAgentState()->setRotateMode(true);
   }
   else{
     beliefs->getAgentState()->setRotateMode(false);
-  }*/
+  }
 
   return *decision;
 }
@@ -823,24 +851,26 @@ void Controller::tierTwoDecision(Position current){
   timeval cv;
   double start_timecv;
   double end_timecv;
+  gettimeofday(&cv,NULL);
+  start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
-    ROS_DEBUG_STREAM("Creating plans " << planner->getName());
-    gettimeofday(&cv,NULL);
-    start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+    //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
+    //gettimeofday(&cv,NULL);
+    //start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
     vector< list<int> > multPlans = beliefs->getAgentState()->getPlansWaypoints(current,planner,aStarOn);
     for (int i = 0; i < multPlans.size(); i++){
       plans.push_back(multPlans[i]);
       plannerNames.push_back(planner->getName());
     }
-    gettimeofday(&cv,NULL);
-    end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
-    computationTimeSec = (end_timecv-start_timecv);
-    ROS_DEBUG_STREAM("Planning time = " << computationTimeSec);
+    //gettimeofday(&cv,NULL);
+    //end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+    //computationTimeSec = (end_timecv-start_timecv);
+    //ROS_DEBUG_STREAM("Planning time = " << computationTimeSec);
   }
   if(beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() == true){
     vector< vector<double> > planCosts;
@@ -849,11 +879,11 @@ void Controller::tierTwoDecision(Position current){
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       vector<double> planCost;
-      ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
+      //ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
       for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
         double costOfPlan = planner->calcPathCost(*vt);
         planCost.push_back(costOfPlan);
-        ROS_DEBUG_STREAM("Cost = " << costOfPlan);
+        //ROS_DEBUG_STREAM("Cost = " << costOfPlan);
       }
       planCosts.push_back(planCost);
     }
@@ -865,15 +895,15 @@ void Controller::tierTwoDecision(Position current){
       double min = *min_element(it->begin(), it->end());
       double norm_factor = (max - min)/10;
       vector<double> planCostNormalized;
-      ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
+      //ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
       for (doubIT vt = it->begin(); vt != it->end(); vt++){
         if (max != min){
           planCostNormalized.push_back((*vt - min)/norm_factor);
-          ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
+          //ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
         }
         else{
           planCostNormalized.push_back(0);
-          ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
+          //ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
         }
       }
       planCostsNormalized.push_back(planCostNormalized);
@@ -882,18 +912,18 @@ void Controller::tierTwoDecision(Position current){
     vector<double> totalCosts;
     for (int i = 0; i < plans.size(); i++){
       double cost=0;
-      ROS_DEBUG_STREAM("Computing total cost = " << cost);
+      //ROS_DEBUG_STREAM("Computing total cost = " << cost);
       for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
         cost += it->at(i);
-        ROS_DEBUG_STREAM("cost = " << cost);
+        //ROS_DEBUG_STREAM("cost = " << cost);
       }
-      ROS_DEBUG_STREAM("Final cost = " << cost);
+      //ROS_DEBUG_STREAM("Final cost = " << cost);
       totalCosts.push_back(cost);
     }
     double minCost=1000;
-    ROS_DEBUG_STREAM("Computing min cost");
+    //ROS_DEBUG_STREAM("Computing min cost");
     for (int i=0; i < totalCosts.size(); i++){
-      ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
+      //ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
       if (totalCosts[i] < minCost){
         minCost = totalCosts[i];
       }
@@ -906,7 +936,7 @@ void Controller::tierTwoDecision(Position current){
         minCombinedCost = totalCosts[i];
       }
     }*/
-    ROS_DEBUG_STREAM("Min cost = " << minCost);
+    //ROS_DEBUG_STREAM("Min cost = " << minCost);
     //ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
 
     vector<string> bestPlanNames;
@@ -915,20 +945,25 @@ void Controller::tierTwoDecision(Position current){
       if(totalCosts[i] == minCost){
         bestPlanNames.push_back(plannerNames[i]);
         bestPlanInds.push_back(i);
-        ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
+        //ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
       }
     }
 
     srand(time(NULL));
     int random_number = rand() % (bestPlanInds.size());
-    ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
+    //ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
     ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
+    decisionStats->chosenPlanner = bestPlanNames.at(random_number);
     beliefs->getAgentState()->setCurrentWaypoints(current,tier2Planners[0],aStarOn, plans.at(bestPlanInds.at(random_number)));
   }
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->resetPath();
   }
+  gettimeofday(&cv,NULL);
+  end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+  computationTimeSec = (end_timecv-start_timecv);
+  decisionStats->planningComputationTime = computationTimeSec;
 }
 
 

@@ -26,17 +26,17 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     print map_xml
     print map_dimensions
     print log_name
-    #print why_log_name
-    #print whyplan_log_name
+    print why_log_name
+    print whyplan_log_name
 
     #start roscore
     roscore = subprocess.Popen(['roscore'])
     time.sleep(5)
 
     # start menge simulator
-    #menge_sim_process = subprocess.Popen(['rosrun','menge_sim','menge_sim','-p',map_xml])
-    #print "waiting,,"
-    #time.sleep(10)
+    menge_sim_process = subprocess.Popen(['rosrun','menge_sim','menge_sim','-p',map_xml])
+    print "waiting,,"
+    time.sleep(10)
 
     # start crowd model
     crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
@@ -45,19 +45,26 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     log_file = open(log_name,"w")
     log_process = subprocess.Popen(['rostopic','echo','/decision_log'],stdout=log_file)
 
+    #why_explanations_file = open(why_explanations_name,"w")
+    #why_explanations_process = subprocess.Popen(['rostopic','echo','/explanations'],stdout=why_explanations_file)
+
+    #whyplan_explanations_file = open(whyplan_explanations_name,"w")
+    #whyplan_explanations_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_explanations_file)
+
     #why_log_file = open(why_log_name,"w")
-    #why_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=why_log_file)
+    #why_log_process = subprocess.Popen(['rostopic','echo','/explanations_log'],stdout=why_log_file)
 
     #whyplan_log_file = open(whyplan_log_name,"w")
-    #whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_log_file)
+    #whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
 
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params])
     print "waiting,,"
-    time.sleep(15)
+    time.sleep(1)
+    
     # start people_trajectories
-    people_trajectories_process = subprocess.Popen(['rosrun','people_trajectories','people_trajectories'])
-    print "waiting,,"
+    #people_trajectories_process = subprocess.Popen(['rosrun','people_trajectories','people_trajectories'])
+    #print "waiting,,"
 
     # start why
     #why_process = subprocess.Popen(['rosrun','why','why'])
@@ -79,31 +86,38 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     print "Semaforr process has ended ..."
     print "Terminating the simulator"
 
-    #menge_sim_process.terminate()
-    #while menge_sim_process.poll() is None:
-    #    print "Menge process still running ..."
-    #    time.sleep(1)
-    people_trajectories_process.terminate()
+    menge_sim_process.terminate()
+    while menge_sim_process.poll() is None:
+        print "Menge process still running ..."
+        time.sleep(1)
+    print "Menge terminated!"
+
+    #people_trajectories_process.terminate()
+
     rviz_process.terminate()
-    #print "Menge terminated!"
+    
     print "Terminating crowd model"
     crowd_process.terminate()
+    #why_process.terminate()
     #why_plan_process.terminate()
+    #print "Why terminated!"
     log_process.terminate()
     log_file.close()
+    #why_explanations_process.terminate()
+    #why_explanations_file.close()
+    #whyplan_explanations_process.terminate()
+    #whyplan_explanations_file.close()
     #why_log_process.terminate()
     #why_log_file.close()
     #whyplan_log_process.terminate()
     #whyplan_log_file.close()
     time.sleep(1)
-    #why_process.terminate()
-    #print "Why terminated!"
 
     roscore.terminate()
     time.sleep(10)
     print "roscore terminated!"
 
-map_name = "university"
+map_name = "gradcenter-5"
 density = "on"
 flow = "on"
 risk = "on"
@@ -111,12 +125,14 @@ cusum = "off"
 discount = "off"
 explore = "off"
 
-num_runs = 2
-for i in range(1,num_runs):
-    target_file_name = "target001.conf"
-    log_name = map_name + "_" + "students001" + "_" + str(i) + ".txt"
+num_runs = 1
+for i in range(0,num_runs):
+    target_file_name = "target1.conf"
+    log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
-    #why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    #whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)

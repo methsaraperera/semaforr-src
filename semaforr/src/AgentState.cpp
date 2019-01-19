@@ -126,10 +126,9 @@ bool AgentState::canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, Carte
 //returns true if there is a point that is "visible" by the wall distance vectors to some epsilon.  
 //A point is visible if the distance to a wall distance vector line is < epsilon.
 bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point){
-  ROS_DEBUG_STREAM("AgentState:canSeePoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " <<
-	point.get_x() << "," << point.get_y()); 
+  //ROS_DEBUG_STREAM("AgentState:canSeePoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
   double epsilon = canSeePointEpsilon;
-  ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
   bool canSeePoint = false;
   double ab = laserPos.get_distance(point);
   for(int i = 0; i < givenLaserEndpoints.size(); i++){

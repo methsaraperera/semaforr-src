@@ -27,13 +27,16 @@
 
 class PathPlanner {
 private: 
-  Graph * navGraph; 
+  Graph * navGraph;
+  Graph * originalNavGraph;
   Map map;
   semaforr::CrowdModel crowdModel;
   Node source, target; 
   list<int> path;
   vector< list<int> > paths;
   double pathCost;
+  list<int> origPath; 
+  double origPathCost;
   vector <double> pathCosts;
   string name;
   vector< vector<int> > posHistMap;
@@ -57,6 +60,9 @@ private:
   bool objectiveSet;
   bool pathCompleted;
   bool pathCalculated;
+  bool origObjectiveSet;
+  bool origPathCompleted;
+  bool origPathCalculated;
 
   void smoothPath(list<int>&, Node, Node);
   double computeCrowdFlow(Node s, Node d);
@@ -70,10 +76,12 @@ public:
   */
  PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false){}
 
-  int calcPath(bool cautious = false); 
+  int calcPath(bool cautious = false);
+  int calcOrigPath(bool cautious = false);
 
   /*! \return list of node indexes of waypoints */
   list<int> getPath(){ return path; }
+  list<int> getOrigPath(){ return origPath; }
 
   vector< list<int> > getPaths(){ return paths; }
 
@@ -84,11 +92,20 @@ public:
     pathCalculated = false;
   }
 
+  void resetOrigPath() { 
+    origPath.clear();
+    origPathCompleted = true; 
+    origPathCalculated = false;
+  }
+
   void setCrowdModel(semaforr::CrowdModel c){ 
 	crowdModel = c;
   }
   semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
 
+  void setOriginalNavGraph(Graph * navGraph){ 
+    originalNavGraph = navGraph;
+  }
   void setPosHistory(vector< vector<CartesianPoint> > all_trace){
     posHistMap.clear();
     posHistMapNorm.clear();
@@ -172,6 +189,7 @@ public:
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
 
   Graph* getGraph(){ return navGraph; }
+  Graph* getOrigGraph(){ return originalNavGraph; }
 
   Map* getMap() { return &map;}
 
@@ -248,10 +266,12 @@ public:
   bool pathEmpty() { return path.empty(); }
 
   double getPathCost() { return pathCost; }
+  double getOrigPathCost() { return origPathCost; }
 
   double getRemainingPathLength(double x, double y);  
     
   double calcPathCost(list<int>);
+  double calcOrigPathCost(list<int>);
   double calcPathCost(vector<CartesianPoint> waypoints, Position source, Position target);
 
   double estimateCost(Node, Node, int); 

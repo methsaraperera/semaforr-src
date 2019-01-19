@@ -84,7 +84,7 @@ public:
   }
 
   int numConnections(){
-    cout << "Inside numConnections = " << connectedHallways.size() << endl;
+    //cout << "Inside numConnections = " << connectedHallways.size() << endl;
     return connectedHallways.size();
   }
 
