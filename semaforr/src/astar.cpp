@@ -41,7 +41,7 @@ bool astar::search(int source, int target, string name)
       //double tmpCost = graph->getNode(current->id).getCostTo(tmp->id);
 
       tmp->g = current->g + graph->getNode(current->id).getCostTo(tmp->id);
-      if (name == "distance")
+      if (name == "distance" or name == "combined")
       {
         tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
       }

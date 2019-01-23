@@ -43,6 +43,7 @@ private:
 	ros::Subscriber sub_cmd_vel_;
 	// Message received
 	bool cmd_vel_received;
+	bool rot_received;
 	// other parameters
 	vector<double> peopleX;
 	vector<double> peopleY;
@@ -50,6 +51,7 @@ private:
 	vector<vector<double> > peopleLaserScans;
 	vector<int> peopleFrame;
 	map<int,vector<vector<double> > > pointsByFrame;
+	vector<vector<double> > targets;
 
 public:
 	//! ROS node initialization
@@ -62,10 +64,14 @@ public:
 		crowd_pose_pub_ = nh_.advertise<geometry_msgs::PoseArray>("crowd_pose", 1);
 		crowd_pose_all_pub_ = nh_.advertise<geometry_msgs::PoseArray>("crowd_pose_all", 1);
 		sub_cmd_vel_ = nh.subscribe("cmd_vel", 1000, &Simulator::updateCmdVel, this);
+		rot_received = false;
 		cmd_vel_received = false;
 	}
 
 	void updateCmdVel(const geometry_msgs::Twist & cmd_vel){
+		if(cmd_vel.linear.x == 0.01){
+			rot_received = true;
+		}
 		cmd_vel_received = true;
 		//ROS_INFO_STREAM("Recieved cmd_vel data");
 	}
@@ -80,8 +86,15 @@ public:
 
 		while(getline(file, fileLine)){
 			//cout << "Inside while in tasks" << endl;
-			if(fileLine[0] == '#')  // skip comment lines
-				continue;
+			if(fileLine[0] == '#'){
+				std::vector<std::string> vstrings = parseText(fileLine, '\t');
+				if(vstrings.size() > 10){
+					vector<double> target;
+					target.push_back(atof(vstrings[1].c_str()));
+					target.push_back(atof(vstrings[2].c_str()));
+					targets.push_back(target);
+				}
+			}
 			else{
 				std::vector<std::string> vstrings = parseText(fileLine, '\t');
 				ROS_DEBUG_STREAM("File text: 0 " << vstrings[0] << " 1 " << vstrings[1] << " 2 " << vstrings[2] << " 3 " << vstrings[3]);
@@ -107,7 +120,7 @@ public:
 	}
 	
 	void run(bool first){
-		ros::Rate rate(10.0);
+		ros::Rate rate(30.0);
 		while(nh_.ok()) {
 			while(cmd_vel_received == false and first == false){
 				ROS_DEBUG("Waiting for cmd_vel");
@@ -220,13 +233,27 @@ public:
 			crowd_pose_all_pub_.publish(crowd_all);
 			pose_pub_.publish(poseStamped);
 			laser_pub_.publish(ls);
-			peopleX.erase(peopleX.begin());
-			peopleY.erase(peopleY.begin());
-			peopleTheta.erase(peopleTheta.begin());
-			peopleLaserScans.erase(peopleLaserScans.begin());
-			peopleFrame.erase(peopleFrame.begin());
+
+			if((peopleX[0]==targets[0][0] and peopleY[0]==targets[0][1])){
+				ROS_INFO_STREAM("Target reached");
+				peopleX.erase(peopleX.begin());
+				peopleY.erase(peopleY.begin());
+				peopleTheta.erase(peopleTheta.begin());
+				peopleLaserScans.erase(peopleLaserScans.begin());
+				peopleFrame.erase(peopleFrame.begin());
+				targets.erase(targets.begin());
+			}
+			else if(rot_received == false){
+				ROS_INFO_STREAM("Forward move detected");
+				peopleX.erase(peopleX.begin());
+				peopleY.erase(peopleY.begin());
+				peopleTheta.erase(peopleTheta.begin());
+				peopleLaserScans.erase(peopleLaserScans.begin());
+				peopleFrame.erase(peopleFrame.begin());
+			}
 
 			cmd_vel_received = false;
+			rot_received = false;
 			ROS_INFO_STREAM("People loop completed");
 			//wait for some time
 			rate.sleep();

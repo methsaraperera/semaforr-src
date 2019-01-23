@@ -268,7 +268,7 @@ class Task {
   bool isTaskComplete(Position currentPosition){
 	bool status = false;
 	double dis = currentPosition.getDistance(x, y);
-	if (dis < 1){
+	if (dis < 0.1){
 		status = true;
 	}
 	return status;

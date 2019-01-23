@@ -143,7 +143,7 @@ public:
 		//Declares the message to be sent
 		geometry_msgs::Twist base_cmd;
 
-		ros::Rate rate(30.0);
+		ros::Rate rate(3.0);
 		double epsilon_move = 0.2; //Meters
 		double epsilon_turn = 0.1; //Radians
 		bool action_complete = true;
@@ -222,8 +222,8 @@ public:
 			actionTimeSec = (action_end_time - action_start_time);
 			//ROS_INFO_STREAM("Action Time (sec) : " << actionTimeSec);
 			// Check if the action is complete
-			action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
-			//action_complete = true;
+			//action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
+			action_complete = true;
 		}
 	}
 

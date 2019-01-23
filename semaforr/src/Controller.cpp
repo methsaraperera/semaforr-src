@@ -630,8 +630,10 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   if(taskCompleted == true){
     ROS_DEBUG("Target Achieved, moving on to next target!!");
     //Learn spatial model only on tasks completed successfully
-    learnSpatialModel(beliefs->getAgentState());
-    ROS_DEBUG("Finished Learning Spatial Model!!");
+    if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 40){
+      learnSpatialModel(beliefs->getAgentState());
+      ROS_DEBUG("Finished Learning Spatial Model!!");
+    }
     //Clear existing task and associated plans
     beliefs->getAgentState()->finishTask();
     //ROS_DEBUG("Task Cleared!!");

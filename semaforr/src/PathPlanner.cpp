@@ -561,7 +561,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         finalcost = (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
       }
     }
-
+    return finalcost;
   }
 
   //double newEdgeCost = (oldcost * flowcost);

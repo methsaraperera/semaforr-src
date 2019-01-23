@@ -138,9 +138,19 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
     ROS_DEBUG("Target in sight , victory advisor active");
     (*decision) = beliefs->getAgentState()->moveTowards(task);
     FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-    if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
-      ROS_DEBUG("Target in sight and no obstacles , victory advisor to take decision");
-    	decisionMade = true;
+    vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
+    if(actions.size() > 1){
+      FORRAction lastAction = actions[actions.size() - 1];
+      if((lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN) and (decision->type == RIGHT_TURN or decision->type == LEFT_TURN)){
+        decisionMade = false;
+      }
+      else if((lastAction.type == FORWARD or lastAction.type == PAUSE) and (decision->type == FORWARD or decision->type == PAUSE)){
+        decisionMade = false;
+      }
+      else if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+        ROS_DEBUG("Target in sight and no obstacles , victory advisor to take decision");
+      	decisionMade = true;
+      }
     }
   }
   return decisionMade;
