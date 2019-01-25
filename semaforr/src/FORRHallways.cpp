@@ -286,6 +286,9 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
       averaged_segments.push_back(average);
       averaged_segments.push_back(first);
       averaged_segments.push_back(second);
+      //average.PrintSegment();
+      //first.PrintSegment();
+      //second.PrintSegment();
     }
     //cout << first.GetLeftPoint().get_x() << " " << first.GetLeftPoint().get_y() << " " << first.GetRightPoint().get_x() << " " << first.GetRightPoint().get_y() << " " << first.GetAngle() << " " << second.GetLeftPoint().get_x() << " " << second.GetLeftPoint().get_y() << " " << second.GetRightPoint().get_x() << " " << second.GetRightPoint().get_y() << " " << second.GetAngle() << " " << average.GetLeftPoint().get_x() << " " << average.GetLeftPoint().get_y() << " " << average.GetRightPoint().get_x() << " " << average.GetRightPoint().get_y() << " " << average.GetAngle() << endl;
   }
@@ -344,7 +347,8 @@ void FORRHallways::UpdateMap(vector<vector<double> > &frequency_map, const vecto
     Interpolate(frequency_map, round(left.get_x()), round(left.get_y()), round(right.get_x()), round(right.get_y()));
     //cout << i <<"Done"<< endl;
   }
-  /*for(int i = 0; i < frequency_map.size(); i++) {
+  /*cout << "Heat Map" << endl;
+  for(int i = 0; i < frequency_map.size(); i++) {
     for(int j = 0; j < frequency_map[0].size(); j++) {
       cout << frequency_map[i][j] << " ";
     }
@@ -511,6 +515,13 @@ void FORRHallways::SmoothMap(vector<vector<double> > &frequency_map, const vecto
       change_made = false;
     }
   }
+  /*cout << "Smoothed Heat Map" << endl;
+  for(int i = 0; i < frequency_map.size(); i++) {
+    for(int j = 0; j < frequency_map[0].size(); j++) {
+      cout << frequency_map[i][j] << " ";
+    }
+    cout << endl;
+  }*/
 }
 
 

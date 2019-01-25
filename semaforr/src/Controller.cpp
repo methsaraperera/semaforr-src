@@ -630,7 +630,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   if(taskCompleted == true){
     ROS_DEBUG("Target Achieved, moving on to next target!!");
     //Learn spatial model only on tasks completed successfully
-    if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 40){
+    if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 39){
       learnSpatialModel(beliefs->getAgentState());
       ROS_DEBUG("Finished Learning Spatial Model!!");
     }
@@ -757,6 +757,11 @@ void Controller::learnSpatialModel(AgentState* agentState){
     beliefs->getSpatialModel()->getHallways()->learnHallways(agentState, trace, laser_hist);
     //beliefs->getSpatialModel()->getHallways()->learnHallways(trails_trace);
     ROS_DEBUG("Hallways Learned");
+  }
+  if(barrsOn){
+    CartesianPoint current_position = CartesianPoint(pos_hist->back().getX(), pos_hist->back().getY());
+    beliefs->getSpatialModel()->getBarriers()->updateBarriers(laser_hist, current_position);
+    ROS_DEBUG("Barriers Learned");
   }
 
   gettimeofday(&cv,NULL);

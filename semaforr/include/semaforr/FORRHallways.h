@@ -41,9 +41,7 @@ public:
 
 
   void PrintSegment() {
-    cout << left_point_.get_x() << " " << left_point_.get_y() << endl;
-    cout << right_point_.get_x() << " " << right_point_.get_y() << endl;
-    cout << angle_ << endl;
+    cout << left_point_.get_x() << " " << left_point_.get_y() << " " << right_point_.get_x() << " " << right_point_.get_y() << " " << angle_ << endl;
   }
 
   CartesianPoint GetLeftPoint() const {return left_point_;}
@@ -125,6 +123,7 @@ public:
           if(angle <= step and angle >= 0){
             //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
             hallway_sections[0].push_back(trails_segments[i]);
+            //trails_segments[i].PrintSegment();
           }
           else if(angle <= 45+step and angle >= 45-step){
             //cout << "Section 1 = " << trails_segments[i].GetAngle() << endl;
@@ -141,6 +140,7 @@ public:
           else if(angle <= 180 and angle >= 180-step){
             //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
             hallway_sections[0].push_back(trails_segments[i]);
+            //trails_segments[i].PrintSegment();
           }
         }
         vector<string> hallway_names;
@@ -152,6 +152,7 @@ public:
         for(int i = 0; i < hallway_sections.size(); i++) {
           cout << "num of segments in hallway section " << hallway_sections[i].size() << endl;
           if(hallway_sections[i].size() > 0){
+
             //vector<vector<double> > segments_normalized(hallway_sections[i].size(), vector<double>(5,0));
             //NormalizeVector(segments_normalized, hallway_sections[i]);
             //cout << "num of segments normalized " << segments_normalized.size() << endl;
@@ -174,8 +175,24 @@ public:
 
             vector<vector<CartesianPoint> > initial_hallway_groups = ProcessHallwayData(mean_segments, map_width_, map_height_, threshold);
             if(initial_hallway_groups.size()>0){
+              /*cout << "Initial Aggregates" << endl;
+              for(int j = 0; j < initial_hallway_groups.size(); j++){
+                for(int k = 0; k < initial_hallway_groups[j].size(); k++){
+                  cout << initial_hallway_groups[j][k].get_x() << " " << initial_hallway_groups[j][k].get_y() << " ";
+                }
+                cout << ";";
+              }
+              cout << endl;*/
               vector<vector<CartesianPoint> > merged_hallway_groups = MergeNearbyHallways(initial_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               vector<vector<CartesianPoint> > hallway_groups = FillHallways(merged_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
+              /*cout << "Final Aggregates" << endl;
+              for(int j = 0; j < hallway_groups.size(); j++){
+                for(int k = 0; k < hallway_groups[j].size(); k++){
+                  cout << hallway_groups[j][k].get_x() << " " << hallway_groups[j][k].get_y() << " ";
+                }
+                cout << ";";
+              }
+              cout << endl;*/
               //cout << "process agg" << endl;
               for(int j = 0; j< hallway_groups.size(); j++) {
                   Aggregate group = Aggregate(hallway_groups.at(j), i);

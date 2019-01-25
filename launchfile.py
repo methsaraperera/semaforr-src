@@ -34,9 +34,9 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(5)
 
     # start menge simulator
-    #menge_sim_process = subprocess.Popen(['rosrun','menge_sim','menge_sim','-p',map_xml])
-    #print "waiting,,"
-    #time.sleep(10)
+    menge_sim_process = subprocess.Popen(['rosrun','menge_sim','menge_sim','-p',map_xml])
+    print "waiting,,"
+    time.sleep(10)
 
     # start crowd model
     crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
@@ -60,11 +60,11 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params])
     print "waiting,,"
-    time.sleep(20)
+    time.sleep(2)
     
     # start people_trajectories
-    people_trajectories_process = subprocess.Popen(['rosrun','people_trajectories','people_trajectories'])
-    print "waiting,,"
+    # people_trajectories_process = subprocess.Popen(['rosrun','people_trajectories','people_trajectories'])
+    # print "waiting,,"
 
     # start why
     #why_process = subprocess.Popen(['rosrun','why','why'])
@@ -86,13 +86,13 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     print "Semaforr process has ended ..."
     print "Terminating the simulator"
 
-    #menge_sim_process.terminate()
-    #while menge_sim_process.poll() is None:
-    #    print "Menge process still running ..."
-    #    time.sleep(1)
-    #print "Menge terminated!"
+    menge_sim_process.terminate()
+    while menge_sim_process.poll() is None:
+        print "Menge process still running ..."
+        time.sleep(1)
+    print "Menge terminated!"
 
-    people_trajectories_process.terminate()
+    # people_trajectories_process.terminate()
 
     rviz_process.terminate()
     
@@ -117,7 +117,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(10)
     print "roscore terminated!"
 
-map_name = "university"
+map_name = "map-a"
 density = "on"
 flow = "on"
 risk = "on"
@@ -127,7 +127,7 @@ explore = "off"
 
 num_runs = 1
 for i in range(0,num_runs):
-    target_file_name = "target001.conf"
+    target_file_name = "targetone.conf"
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"

@@ -12,6 +12,7 @@
 #include <FORRConveyors.h>
 #include <FORRDoors.h>
 #include <FORRHallways.h>
+#include <FORRBarriers.h>
 
 class SpatialModel{
 
@@ -23,6 +24,7 @@ public:
 		conveyors = new FORRConveyors(width, height, granularity);
 		doors = new FORRDoors();
 		hallways = new FORRHallways(width, height);
+		barriers = new FORRBarriers();
 	};
 
 	FORRRegionList* getRegionList(){return abstract_map;}
@@ -31,6 +33,7 @@ public:
 	FORRConveyors* getConveyors(){return conveyors;}
 	FORRDoors* getDoors(){return doors;}
 	FORRHallways* getHallways(){return hallways;}
+	FORRBarriers* getBarriers(){return barriers;}
 
 private:
 	FORRRegionList *abstract_map;
@@ -39,4 +42,5 @@ private:
 	FORRConveyors *conveyors;
 	FORRDoors *doors;
 	FORRHallways *hallways;
+	FORRBarriers *barriers;
 };
