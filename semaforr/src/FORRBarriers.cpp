@@ -8,13 +8,13 @@ using namespace std;
 
 
 
-void FORRBarriers::CreateSegments(vector<LineSegment> &segments, CartesianPoint current_position, vector < vector <CartesianPoint> > laser_history) {
-  cout << "num of laser history " << laser_history.size() << endl;
-  for (int i = 0; i < laser_history.size(); i++){
+void FORRBarriers::CreateSegments(vector<LineSegment> &segments, vector<CartesianPoint> position_history, vector < vector <CartesianPoint> > laser_history) {
+  cout << "num of pos history " << position_history.size() << " num of laser history " << laser_history.size() << endl;
+  for (int i = 0; i < laser_history.size(); i+=2){
     cout << "num of laser sensors " << laser_history[i].size() << endl;
     for (int j = 0; j < laser_history[i].size()-1; j++){
       LineSegment current_segment = LineSegment(laser_history[i][j], laser_history[i][j+1]);
-      if(laser_history[i][j].get_distance(current_position) <= 10 and laser_history[i][j+1].get_distance(current_position) <= 10 and laser_history[i][j].get_distance(laser_history[i][j+1]) <= 10){
+      if(laser_history[i][j].get_distance(position_history[i]) <= 5 and laser_history[i][j+1].get_distance(position_history[i]) <= 5 and laser_history[i][j].get_distance(laser_history[i][j+1]) <= 1){
         segments.push_back(current_segment);
       }
     }
@@ -125,79 +125,60 @@ void FORRBarriers::FindMostSimilarSegments(vector<vector<double> > &most_similar
 
 
 void FORRBarriers::CreateInitialSegments(vector<LineSegment> &initial_barriers,const vector<vector<double> > &most_similar,const vector<LineSegment> &segments) {
-  vector<vector<double> > all_similar;
-
+  vector<set<double> > all_similar;
+  set<int> used_inds;
   for(int i = 0; i < most_similar.size() - 1; i++) {
-    vector<double> combined_pairs;
-    combined_pairs.push_back(most_similar[i][0]);
-    combined_pairs.push_back(most_similar[i][1]);
-    cout << combined_pairs[0] << " " << combined_pairs[1] << endl;
-    vector<double> potential_additions;
-    for(int j = i + 1; j < most_similar.size(); j++) {
-      if(most_similar[j][0] == combined_pairs[0] or most_similar[j][0] == combined_pairs[1]){
-        potential_additions.push_back(most_similar[j][1]);
-        //cout << most_similar[j][1] << endl;
-      }
-      if(most_similar[j][1] == combined_pairs[0] or most_similar[j][1] == combined_pairs[1]){
-        potential_additions.push_back(most_similar[j][0]);
-        //cout << most_similar[j][0] << endl;
-      }
-    }
-    double num_changes = potential_additions.size();
-    cout << "num_changes = " << num_changes << endl;
-    while(num_changes > 0){
-      vector<double> new_additions;
-      double initial_size = potential_additions.size();
-      cout << "initial_size = " << initial_size << endl;
-      for(int k = 0; k < potential_additions.size(); k++){
+    if(used_inds.count(i) == 0){
+      //cout << most_similar[i][0] << " " << most_similar[i][1] << endl;
+      set<double> associated_values;
+      associated_values.insert(most_similar[i][0]);
+      associated_values.insert(most_similar[i][1]);
+      vector<double> additions;
+      additions.push_back(most_similar[i][0]);
+      additions.push_back(most_similar[i][1]);
+      used_inds.insert(i);
+      //cout << "remaining additions " << additions.size() << endl;
+      while(additions.size()>0){
         for(int j = i + 1; j < most_similar.size(); j++) {
-          if(most_similar[j][0] == potential_additions[k]){
-            ///////NEED TO CHECK IF ALREADY THERE
-            new_additions.push_back(most_similar[j][1]);
-            //cout << most_similar[j][1] << endl;
-          }
-          if(most_similar[j][1] == potential_additions[k]){
-            ///////NEED TO CHECK IF ALREADY THERE
-            new_additions.push_back(most_similar[j][0]);
-            //cout << most_similar[j][0] << endl;
+          if(used_inds.count(j) == 0){
+            if(most_similar[j][0] == additions[0]){
+              //cout << most_similar[j][1] << endl;
+              if(associated_values.count(most_similar[j][1]) == 0){
+                additions.push_back(most_similar[j][1]);
+                associated_values.insert(most_similar[j][1]);
+                used_inds.insert(j);
+              }
+            }
+            if(most_similar[j][1] == additions[0]){
+              //cout << most_similar[j][0] << endl;
+              if(associated_values.count(most_similar[j][1]) == 0){
+                additions.push_back(most_similar[j][0]);
+                associated_values.insert(most_similar[j][0]);
+                used_inds.insert(j);
+              }
+            }
           }
         }
-        ///////NEED TO CHECK IF ALREADY THERE
-        combined_pairs.push_back(potential_additions[k]);
-        //cout << potential_additions[k] << endl;
+        additions.erase(additions.begin());
+        //cout << "remaining additions " << additions.size() << endl;
       }
-      potential_additions = new_additions;
-      num_changes = potential_additions.size();
-      cout << "num_changes = " << num_changes << endl;
-      new_additions.clear();
-    }
-    cout << combined_pairs.size() << endl;
-    all_similar.push_back(combined_pairs);
-  }
-  cout << "Finished initial all_similar " << all_similar.size() << endl;
-  /*map<double, vector<double> > combinations;
-  for(int i = 0; i < most_similar.size(); i++) {
-    combinations.insert(pair<double,vector<double> >(most_similar[i][0], vector<double>()));
-  }
-  for(int i = 0; i < most_similar.size(); i++) {
-    combinations[most_similar[i][0]].push_back(most_similar[i][1]);
-  }
-  for(map<double, vector<double> >::iterator it=combinations.begin(); it!=combinations.end(); ++it){
-    cout << it->first << endl;
-    for(int i = 0; i < it->second.size(); i++){
-      cout << it->second[i] << endl;
-      map<double, vector<double> >::iterator fit = combinations.find(it->second[i]);
-      if(fit != combinations.end()){
-        cout << fit->first << endl;
-        for(int j = 0; j < fit->second.size(); j++){
-          cout << fit->second[j] << endl;
-          it->second.push_back(fit->second[j]);
-        }
-      }
+      all_similar.push_back(associated_values);
+      associated_values.clear();
+      additions.clear();
     }
   }
-  cout << "Finished map version of all_similar" << endl;*/
+  cout << "all_similar size " << all_similar.size() << " used_inds size " << used_inds.size() << endl;
+
 }
+
+
+//----------------------//------------------------//
+
+
+LineSegment FORRBarriers::MergeSegments(LineSegment first_segment, LineSegment second_segment) {
+  
+}
+
 
 //----------------------//------------------------//
 

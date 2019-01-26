@@ -16,6 +16,7 @@ Written by Raj Korpan, adapted from Sarah Mathew and Gil Dekel, 2018
 #include <cmath>        //for atan2 and M_PI
 #include <algorithm>
 #include <map>
+#include <set>
 
 using namespace std;
 
@@ -38,15 +39,15 @@ public:
         barriers.clear();
     }
 
-    void updateBarriers(vector< vector<CartesianPoint> > *laser_hist, CartesianPoint curr_pos) {
+    void updateBarriers(vector< vector<CartesianPoint> > *laser_hist, vector<CartesianPoint> pos_hist) {
         laser_history.clear();
         for(int i = 0 ; i < laser_hist->size() ; i++){
           laser_history.push_back((*laser_hist)[i]);
         }
-        current_position = curr_pos;
+        position_history = pos_hist;
 
         vector<LineSegment> laser_segments;
-        CreateSegments(laser_segments, current_position, laser_history);
+        CreateSegments(laser_segments, position_history, laser_history);
         cout << "num of segments " << laser_segments.size() << endl;
 
         for(int i = 0 ; i < barriers.size() ; i++){
@@ -72,9 +73,9 @@ public:
 private:
     vector<LineSegment> barriers;
     vector<vector<CartesianPoint> > laser_history;
-    CartesianPoint current_position;
+    vector<CartesianPoint> position_history;
 
-    void CreateSegments(vector<LineSegment> &segments, CartesianPoint current_position, vector < vector <CartesianPoint> > laser_history);
+    void CreateSegments(vector<LineSegment> &segments, vector<CartesianPoint> position_history, vector < vector <CartesianPoint> > laser_history);
 
     void ListSimilarities(vector<vector<double> > &similarities, const vector<LineSegment> &laser_segments);
     double ComputeDistance(LineSegment first_segment, LineSegment second_segment);
@@ -82,6 +83,7 @@ private:
     void FindMostSimilarSegments(vector<vector<double> > &most_similar,const vector<vector<double> > &similarities);
 
     void CreateInitialSegments(vector<LineSegment> &initial_barriers,const vector<vector<double> > &most_similar,const vector<LineSegment> &segments);
+    LineSegment MergeSegments(LineSegment first_segment, LineSegment second_segment);
 
     void MergeNearbyBarriers(vector<LineSegment> &merged_barriers, const vector<LineSegment> &initial_barriers);
 };

@@ -759,8 +759,7 @@ void Controller::learnSpatialModel(AgentState* agentState){
     ROS_DEBUG("Hallways Learned");
   }
   if(barrsOn){
-    CartesianPoint current_position = CartesianPoint(pos_hist->back().getX(), pos_hist->back().getY());
-    beliefs->getSpatialModel()->getBarriers()->updateBarriers(laser_hist, current_position);
+    beliefs->getSpatialModel()->getBarriers()->updateBarriers(laser_hist, all_trace.back());
     ROS_DEBUG("Barriers Learned");
   }
 
