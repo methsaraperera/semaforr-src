@@ -51,7 +51,10 @@ private:
   ros::Publisher edges_cost_pub_;
   ros::Publisher stats_pub_;
   ros::Publisher doors_pub_;
+  ros::Publisher barriers_pub_;
   ros::Publisher walls_pub_;
+  ros::Publisher pose_pub_;
+  ros::Publisher laser_pub_;
   Controller *con;
   Beliefs *beliefs;
   ros::NodeHandle *nh_;
@@ -87,7 +90,10 @@ public:
     trails_pub_ = nh_->advertise<visualization_msgs::Marker>("trail", 1);
     stats_pub_ = nh_->advertise<std_msgs::String>("decision_log", 1);
     doors_pub_ = nh_->advertise<visualization_msgs::Marker>("door", 1);
+    barriers_pub_ = nh_->advertise<visualization_msgs::Marker>("barrier", 1);
     walls_pub_ = nh_->advertise<visualization_msgs::Marker>("walls", 1);
+    pose_pub_ = nh_->advertise<geometry_msgs::PoseStamped>("decision_pose", 1);
+    laser_pub_ = nh_->advertise<sensor_msgs::LaserScan>("decision_laser", 1);
     //declare and create a controller with task, action and advisor configuration
     con = c;
     beliefs = con->getBeliefs();
@@ -122,6 +128,7 @@ public:
 	publish_skeleton();
 	publish_trails();
 	publish_doors();
+	publish_barriers();
 	publish_walls();
 	//publish_occupancy();
   }
@@ -340,15 +347,15 @@ public:
   void publish_plan(){
 	ROS_DEBUG("Inside publish plan!!");
 	nav_msgs::Path path;
-	//path.header.frame_id = "map";
+	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
 
 	vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getWaypoints();
 	double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
 	double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
-	std::stringstream output;
-	output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
-	path.header.frame_id = output.str();
+	//std::stringstream output;
+	//output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
+	//path.header.frame_id = output.str();
 
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;
@@ -820,6 +827,39 @@ public:
 	doors_pub_.publish(line_list);
   }
 
+    void publish_barriers(){
+	ROS_DEBUG("Inside publish barriers");
+
+	std::vector<LineSegment> barriers = beliefs->getSpatialModel()->getBarriers()->getBarriers();
+	cout << "There are currently " << barriers.size() << " barriers" << endl;
+	visualization_msgs::Marker line_list;
+	line_list.header.frame_id = "map";
+	line_list.header.stamp = ros::Time::now();
+	line_list.ns = "basic_shapes";
+	line_list.action = visualization_msgs::Marker::ADD;
+	line_list.id = 1;
+	line_list.type = visualization_msgs::Marker::LINE_LIST;
+	line_list.pose.orientation.w = 1.0;
+	line_list.scale.x = 0.1;
+	line_list.color.r = 1.0;
+	line_list.color.a = 1.0;
+
+	for(int i = 0 ; i < barriers.size(); i++){
+		geometry_msgs::Point p1, p2;
+		p1.x = barriers[i].get_endpoints().first.get_x();
+		p1.y = barriers[i].get_endpoints().first.get_y();
+		p1.z = 0;
+
+		p2.x = barriers[i].get_endpoints().second.get_x();
+		p2.y = barriers[i].get_endpoints().second.get_y();
+		p2.z = 0;
+
+		line_list.points.push_back(p1);
+		line_list.points.push_back(p2);
+	}
+	barriers_pub_.publish(line_list);
+  }
+
   void publish_walls(){
 	ROS_DEBUG("Inside publish walls");
 	vector<Wall> walls = con->getPlanner()->getMap()->getWalls();
@@ -895,6 +935,16 @@ public:
 	double targetX;
 	double targetY;
 	double robotTheta = beliefs->getAgentState()->getCurrentPosition().getTheta();
+
+	geometry_msgs::PoseStamped poseStamped;
+	poseStamped.header.frame_id = "map";
+	poseStamped.header.stamp = ros::Time::now();
+	poseStamped.pose.position.x = robotX;
+	poseStamped.pose.position.y = robotY;
+	poseStamped.pose.position.z = 0;
+	poseStamped.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, robotTheta);
+	pose_pub_.publish(poseStamped);
+
 	if(beliefs->getAgentState()->getCurrentTask() != NULL) {
 		targetX = beliefs->getAgentState()->getCurrentTask()->getTaskX();
 		targetY = beliefs->getAgentState()->getCurrentTask()->getTaskY();
@@ -904,6 +954,8 @@ public:
 	}
 	vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
 	sensor_msgs::LaserScan laserScan = beliefs->getAgentState()->getCurrentLaserScan();
+	laser_pub_.publish(laserScan);
+
 	FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
 	//ROS_DEBUG("After max_forward");
 	//vector< vector<CartesianPoint> > allTrace = beliefs->getAgentState()->getAllTrace();
@@ -1125,9 +1177,9 @@ public:
 
 	std::stringstream output;
 
-	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner;// << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence << "\t" << lep.str() << "\t" << ls.str();
+	//output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner;// << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence << "\t" << lep.str() << "\t" << ls.str();
 
-	//output << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << regionsstream.str() << "\t" << lep.str() << "\t" << ls.str();
+	output << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << lep.str() << "\t" << ls.str();
 
 	//output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << lep.str() << "\t" << ls.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << crowdModel.str() << "\t" << planStream.str();
 

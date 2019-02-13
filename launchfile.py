@@ -39,7 +39,10 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(10)
 
     # start crowd model
-    crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
+    #crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
+
+    # start situations
+    situation_process = subprocess.Popen(['rosrun','situation_learner','learn.py'])
 
     # start logging
     log_file = open(log_name,"w")
@@ -97,7 +100,8 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     rviz_process.terminate()
     
     print "Terminating crowd model"
-    crowd_process.terminate()
+    #crowd_process.terminate()
+    situation_process.terminate()
     #why_process.terminate()
     #why_plan_process.terminate()
     #print "Why terminated!"

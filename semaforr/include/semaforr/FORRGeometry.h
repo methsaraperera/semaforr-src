@@ -169,7 +169,9 @@ class LineSegment: public Line{
   /*******************************************************************
                          Accessors
   ********************************************************************/
-  pair<CartesianPoint, CartesianPoint> get_endpoints();  
+  pair<CartesianPoint, CartesianPoint> get_endpoints();
+
+  double get_length();
 
   /*  
     function as in do_lines_intersect will store the point of intersection

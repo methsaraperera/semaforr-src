@@ -44,15 +44,16 @@ public:
         for(int i = 0 ; i < laser_hist->size() ; i++){
           laser_history.push_back((*laser_hist)[i]);
         }
+        position_history.clear();
         position_history = pos_hist;
 
         vector<LineSegment> laser_segments;
         CreateSegments(laser_segments, position_history, laser_history);
         cout << "num of segments " << laser_segments.size() << endl;
 
-        for(int i = 0 ; i < barriers.size() ; i++){
+        /*for(int i = 0 ; i < barriers.size() ; i++){
           laser_segments.push_back(barriers[i]);
-        }
+        }*/
         vector<vector<double> > segments_similarities;
         ListSimilarities(segments_similarities, laser_segments);
         cout << "num of segments similarities " << segments_similarities.size() << endl;
@@ -64,10 +65,19 @@ public:
         vector<LineSegment> initial_barriers;
         CreateInitialSegments(initial_barriers, most_similar_segments, laser_segments);
         cout << "num of initial_barriers " << initial_barriers.size() << endl;
+        for(int i = 0 ; i < barriers.size() ; i++){
+          initial_barriers.push_back(barriers[i]);
+        }
+        barriers = initial_barriers;
 
-        vector<LineSegment> merged_barriers;
-        MergeNearbyBarriers(merged_barriers, initial_barriers);
-        barriers = merged_barriers;
+        /*if(initial_barriers.size() > 1){
+          vector<LineSegment> merged_barriers;
+          MergeNearbyBarriers(merged_barriers, initial_barriers);
+          cout << "num of merged_barriers " << merged_barriers.size() << endl;
+          if(merged_barriers.size() > 0){
+            barriers = merged_barriers;
+          }
+        }*/
     }
 
 private:
@@ -83,7 +93,7 @@ private:
     void FindMostSimilarSegments(vector<vector<double> > &most_similar,const vector<vector<double> > &similarities);
 
     void CreateInitialSegments(vector<LineSegment> &initial_barriers,const vector<vector<double> > &most_similar,const vector<LineSegment> &segments);
-    LineSegment MergeSegments(LineSegment first_segment, LineSegment second_segment);
+    LineSegment MergeSegments(vector<LineSegment> segments);
 
     void MergeNearbyBarriers(vector<LineSegment> &merged_barriers, const vector<LineSegment> &initial_barriers);
 };
