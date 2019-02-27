@@ -28,6 +28,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     print log_name
     print why_log_name
     print whyplan_log_name
+    print situation_log_name
 
     #start roscore
     roscore = subprocess.Popen(['roscore'])
@@ -43,6 +44,10 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
 
     # start situations
     situation_process = subprocess.Popen(['rosrun','situation_learner','learn.py'])
+
+    # start logging
+    situation_log_file = open(situation_log_name,"w")
+    situation_log_process = subprocess.Popen(['rostopic','echo','/situations'],stdout=situation_log_file)
 
     # start logging
     log_file = open(log_name,"w")
@@ -115,6 +120,8 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     #why_log_file.close()
     #whyplan_log_process.terminate()
     #whyplan_log_file.close()
+    situation_log_process.terminate()
+    situation_log_file.close()
     time.sleep(1)
 
     roscore.terminate()
@@ -131,7 +138,7 @@ explore = "off"
 
 num_runs = 1
 for i in range(0,num_runs):
-    target_file_name = "targetone.conf"
+    target_file_name = "target.conf"
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
@@ -139,4 +146,5 @@ for i in range(0,num_runs):
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
