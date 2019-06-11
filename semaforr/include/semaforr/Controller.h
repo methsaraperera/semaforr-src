@@ -30,6 +30,7 @@
 // Forward-declare Controller so the typedef below can reference it
 class Controller;
 typedef std::vector<Tier3Advisor*>::iterator advisor3It;
+typedef std::vector<PathPlanner*>::iterator planner2It;
 
 // ROS Controller class 
 class Controller {
@@ -55,15 +56,27 @@ public:
   // getter for planner
   PathPlanner *getPlanner() { return planner; }
 
+  std::vector<PathPlanner*> getPlanners() { return tier2Planners; }
+
+  void updatePlannersModels(semaforr::CrowdModel c) {
+    for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+      PathPlanner *planner = *it;
+      planner->setCrowdModel(c);
+    }
+  }
+
 private:
 
   //FORR decision loop and tiers
   FORRAction FORRDecision();
 
-  FORRActionStats *decisionStats = new FORRActionStats();
+  FORRActionStats *decisionStats;
   
   //Tier 1 advisors are called here
   bool tierOneDecision(FORRAction *decision);
+
+  //Tier 2 planners are called here
+  void tierTwoDecision(Position current);
 
   //Tier 3 advisors are called here
   void tierThreeDecision(FORRAction *decision);
@@ -85,6 +98,7 @@ private:
   // An ordered list of advisors that are consulted by Controller::FORRDecision
   Tier1Advisor *tier1;
   PathPlanner *planner;
+  std::vector<PathPlanner*> tier2Planners;
   std::vector<Tier3Advisor*> tier3Advisors;
   
   // Checks if a given advisor is active
@@ -99,8 +113,11 @@ private:
   bool conveyorsOn;
   bool regionsOn;
   bool doorsOn;
+  bool hallwaysOn;
+  bool barrsOn;
   bool aStarOn;
   bool firstTaskAssigned;
+  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn;
 };
   
 #endif /* CONTROLLER_H */

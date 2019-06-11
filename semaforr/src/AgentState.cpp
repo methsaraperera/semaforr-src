@@ -78,6 +78,21 @@ double AgentState::getDistanceToNearestObstacle(Position pos){
    return min_dis;
 }
 
+//return the nearest obstacle when the robot is in POS using the current laser scan
+Position AgentState::getNearestObstacle(Position pos){ 
+  double min_dis = 1000000;
+  Position min_pos = Position(0,0,0);
+  for(int i = 0; i < laserEndpoints.size(); i++){
+    double x = laserEndpoints[i].get_x();
+    double y = laserEndpoints[i].get_y();
+    double dist = pos.getDistance(Position(x,y,0));
+    if(dist < min_dis){
+      min_dis = dist;
+      min_pos = Position(x,y,0);
+    }
+  }
+  return min_pos;
+}
 
 //Sees if the laser scan intersects with a segment created by 2
 //trailpoints
@@ -111,10 +126,9 @@ bool AgentState::canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, Carte
 //returns true if there is a point that is "visible" by the wall distance vectors to some epsilon.  
 //A point is visible if the distance to a wall distance vector line is < epsilon.
 bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point){
-  ROS_DEBUG_STREAM("AgentState:canSeePoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " <<
-	point.get_x() << "," << point.get_y()); 
+  //ROS_DEBUG_STREAM("AgentState:canSeePoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
   double epsilon = canSeePointEpsilon;
-  ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
   bool canSeePoint = false;
   double ab = laserPos.get_distance(point);
   for(int i = 0; i < givenLaserEndpoints.size(); i++){
@@ -134,11 +148,14 @@ bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, Cartesi
 
 //returns true if there is a point that is "visible" by the wall distance vectors.  
 //A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
-bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point){
-  ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
-  ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
-  bool canSeePoint = false;
+bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
+  //ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
+  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+  bool canAccessPoint = false;
   double distLaserPosToPoint = laserPos.get_distance(point);
+  if(distLaserPosToPoint > distanceLimit){
+    return false;
+  }
   double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
   int index = 0;
   double min_angle = 100000;
@@ -152,6 +169,12 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
       index = i;
     }
   }
+  while (index-2 < 0){
+    index = index + 1;
+  }
+  while (index+2 > givenLaserEndpoints.size()-1){
+    index = index - 1;
+  }
   //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
   int numFree = 0;
   for(int i = -2; i < 3; i++) {
@@ -163,10 +186,30 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
   }
   //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
   if (numFree > 4) {
-    canSeePoint = true;
+    canAccessPoint = true;
   }
   //else, not visible
-  return canSeePoint;
+  //return canAccessPoint;
+  double epsilon = canSeePointEpsilon;
+  bool canSeePoint = false;
+  double ab = laserPos.get_distance(point);
+  for(int i = 0; i < givenLaserEndpoints.size(); i++){
+    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+    double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+    double bc = givenLaserEndpoints[i].get_distance(point);
+    if(((ab + bc) - ac) < epsilon){
+      //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+      //cout << "Distance: "<<distance_to_point<<endl;
+      canSeePoint = true;
+      break;
+    }
+  }
+  if(canSeePoint and canAccessPoint){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
 
@@ -193,9 +236,9 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
 			//cout << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 			//if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j])) {
       //if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j]) and canSeePoint(laser_endpoints[j], pos_history[j], pos_history[i])) {
-      if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j])) {
-				cout << "CanAccessPoint is true" << endl;
-				cout << "Next point: " << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
+      if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j], 5)) {
+				//cout << "CanAccessPoint is true" << endl;
+				//cout << "Next point: " << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 				trailPositions.push_back(pos_history[j]);
 				trailLaserEndpoints.push_back(laser_endpoints[j]);
 				i = j-1;
@@ -206,8 +249,8 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
     trailPositions.push_back(pos_history.back());
     trailLaserEndpoints.push_back(laser_endpoints.back());
   }
-	cout << pos_history[pos_history.size()-1].get_x() << " " << pos_history[pos_history.size()-1].get_y() << endl;
-	cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
+	//cout << pos_history[pos_history.size()-1].get_x() << " " << pos_history[pos_history.size()-1].get_y() << endl;
+	//cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
 	
 	cleanedMarker.first = trailPositions;
 	cleanedMarker.second = trailLaserEndpoints;
@@ -217,9 +260,10 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
 
 //returns true if there is a point that is "visible" by the wall distance vectors to some epsilon.  
 //A point is visible if the distance to a wall distance vector line is < epsilon.
-bool AgentState::canSeePoint(CartesianPoint point){
+bool AgentState::canSeePoint(CartesianPoint point, double distanceLimit){
   CartesianPoint curr(currentPosition.getX(),currentPosition.getY());
-  return canSeePoint(laserEndpoints, curr, point);
+  //return canSeePoint(laserEndpoints, curr, point);
+  return canAccessPoint(laserEndpoints, curr, point, distanceLimit);
 }
 
 void AgentState::transformToEndpoints(){
@@ -301,7 +345,7 @@ double AgentState::getDistanceToObstacle(double rotation_angle){
 
 
 FORRAction AgentState::maxForwardAction(){
- 	ROS_DEBUG("In maxforwardaction");
+ 	//ROS_DEBUG("In maxforwardaction");
 	double error_margin = maxForwardActionBuffer; // margin from obstacles
 	double view = maxForwardActionSweepAngle; // +view radians to -view radians view
 	//double view = 0.7854;
@@ -355,17 +399,17 @@ FORRAction AgentState::get_max_allowed_forward_move(){
 
 
 // returns an Action that takes the robot closest to the target
-FORRAction AgentState::moveTowards(){
+FORRAction AgentState::moveTowards(CartesianPoint target){
     ROS_DEBUG("AgentState :: In moveTowards");
-    double distance_from_target = currentPosition.getDistance(currentTask->getX(), currentTask->getY());
+    double distance_from_target = currentPosition.getDistance(target.get_x(), target.get_y());
     ROS_DEBUG_STREAM("Distance from target : " << distance_from_target);
     // compute the angular difference between the direction to the target and the current robot direction
     double robot_direction = currentPosition.getTheta();
-    double goal_direction = atan2((currentTask->getY() - currentPosition.getY()), (currentTask->getX() - currentPosition.getX()));
+    double goal_direction = atan2((target.get_y() - currentPosition.getY()), (target.get_x() - currentPosition.getX()));
     
     double required_rotation = goal_direction - robot_direction;
 
-    ROS_DEBUG_STREAM("Robot direction : " << robot_direction << ", Goal Direction : " << goal_direction << ", Required rotation : " << required_rotation);
+    //ROS_DEBUG_STREAM("Robot direction : " << robot_direction << ", Goal Direction : " << goal_direction << ", Required rotation : " << required_rotation);
     if(required_rotation > M_PI)
       required_rotation = required_rotation - (2*M_PI);
     if(required_rotation < -M_PI)
@@ -454,3 +498,192 @@ FORRAction AgentState::moveTowards(){
     maxForwardActionBuffer = val6;
     maxForwardActionSweepAngle = val7;
   }
+
+vector <Position> AgentState::getCrowdPositions(geometry_msgs::PoseArray crowdpose){
+  vector <Position> crowdPositions;
+  for(int i = 0; i < crowdpose.poses.size(); i++){
+    double x = crowdpose.poses[i].position.x;
+    double y = crowdpose.poses[i].position.y;
+    tf::Quaternion q(crowdpose.poses[i].orientation.x,crowdpose.poses[i].orientation.y,crowdpose.poses[i].orientation.z,crowdpose.poses[i].orientation.w);
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    crowdPositions.push_back(Position(x,y,yaw));
+  }
+  return crowdPositions;
+}
+
+bool AgentState::crowdModelLearned(){
+  std::vector<double> densities = crowdModel.densities;
+  for(int i = 0; i < densities.size() ; i++){
+    if(densities[i]>0){
+      return true;
+    }
+  }
+  return false;
+}
+
+bool AgentState::riskModelLearned(){
+  std::vector<double> risk = crowdModel.risk;
+  for(int i = 0; i < risk.size() ; i++){
+    if(risk[i]>0){
+      return true;
+    }
+  }
+  return false;
+}
+
+bool AgentState::flowModelLearned(){
+  std::vector<double> left = crowdModel.left;
+  for(int i = 0; i < left.size() ; i++){
+    if(left[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> right = crowdModel.right;
+  for(int i = 0; i < right.size() ; i++){
+    if(right[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> up = crowdModel.up;
+  for(int i = 0; i < up.size() ; i++){
+    if(up[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> down = crowdModel.down;
+  for(int i = 0; i < down.size() ; i++){
+    if(down[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> up_left = crowdModel.up_left;
+  for(int i = 0; i < up_left.size() ; i++){
+    if(up_left[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> up_right = crowdModel.up_right;
+  for(int i = 0; i < up_right.size() ; i++){
+    if(up_right[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> down_left = crowdModel.down_left;
+  for(int i = 0; i < down_left.size() ; i++){
+    if(down_left[i]>0){
+      return true;
+    }
+  }
+  std::vector<double> down_right = crowdModel.down_right;
+  for(int i = 0; i < down_right.size() ; i++){
+    if(down_right[i]>0){
+      return true;
+    }
+  }
+  return false;
+}
+
+double AgentState::getGridValue(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> densities = crowdModel.densities;
+  double gridValue = crowdModel.densities[(floor(y/resolution)*width)+floor(x/resolution)];
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " gridValue = " << gridValue << endl;
+  return gridValue;
+}
+
+double AgentState::getRiskValue(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> risk = crowdModel.risk;
+  double riskValue = crowdModel.risk[(floor(y/resolution)*width)+floor(x/resolution)];
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskValue = " << riskValue << endl;
+  return riskValue;
+}
+
+double AgentState::getFlowValue(double x, double y, double theta){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  //std::vector<double> left = crowdModel.left;
+  double leftValue = crowdModel.left[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> right = crowdModel.right;
+  double rightValue = crowdModel.right[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> up = crowdModel.up;
+  double upValue = crowdModel.up[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> down = crowdModel.down;
+  double downValue = crowdModel.down[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> up_left = crowdModel.up_left;
+  double up_leftValue = crowdModel.up_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> up_right = crowdModel.up_right;
+  double up_rightValue = crowdModel.up_right[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> down_left = crowdModel.down_left;
+  double down_leftValue = crowdModel.down_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  //std::vector<double> down_right = crowdModel.down_right;
+  double down_rightValue = crowdModel.down_right[(floor(y/resolution)*width)+floor(x/resolution)];
+
+  double totalX = leftValue*cos(M_PI) + rightValue*cos(0) + upValue*cos(M_PI/2) + downValue*cos(3*M_PI/2) + up_leftValue*cos(3*M_PI/4) + up_rightValue*cos(M_PI/4) + down_leftValue*cos(5*M_PI/4) + down_rightValue*cos(7*M_PI/4);
+  double totalY = leftValue*sin(M_PI) + rightValue*sin(0) + upValue*sin(M_PI/2) + downValue*sin(3*M_PI/2) + up_leftValue*sin(3*M_PI/4) + up_rightValue*sin(M_PI/4) + down_leftValue*sin(5*M_PI/4) + down_rightValue*sin(7*M_PI/4);
+  double flowMagnitude = sqrt(totalX*totalX + totalY*totalY);
+  double flowTheta = atan2(totalY, totalX);
+
+  double angleDiff = min(abs(flowTheta - theta),(2*M_PI) - abs(flowTheta - theta));
+  double flowValue = 0;
+  if(angleDiff<=M_PI/4){
+    flowValue = flowMagnitude;
+  }
+  else if(angleDiff<=M_PI/2){
+    flowValue = flowMagnitude/2;
+  }
+  else if(angleDiff<=3*M_PI/4){
+    flowValue = -flowMagnitude/2;
+  }
+  else if(angleDiff>3*M_PI/4){
+    flowValue = -flowMagnitude;
+  }
+
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " flowValue = " << flowValue << endl;
+  return flowValue;
+}
+
+double AgentState::getCrowdObservation(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " crowdObservationValue = " << crowdObservationValue << endl;
+  return crowdObservationValue;
+}
+
+double AgentState::getRiskExperience(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  double riskExperienceValue = crowdModel.risk_experiences[(floor(y/resolution)*width)+floor(x/resolution)];
+  //cout << "resolution = " << resolution << " height = " << height << " width = " << width << " riskExperienceValue = " << riskExperienceValue << endl;
+  return riskExperienceValue;
+}
+
+double AgentState::getFLowObservation(double x, double y){
+  int resolution = crowdModel.resolution;
+  int height = crowdModel.height;
+  int width = crowdModel.width;
+  double leftValue = crowdModel.left[(floor(y/resolution)*width)+floor(x/resolution)];
+  double rightValue = crowdModel.right[(floor(y/resolution)*width)+floor(x/resolution)];
+  double upValue = crowdModel.up[(floor(y/resolution)*width)+floor(x/resolution)];
+  double downValue = crowdModel.down[(floor(y/resolution)*width)+floor(x/resolution)];
+  double up_leftValue = crowdModel.up_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  double up_rightValue = crowdModel.up_right[(floor(y/resolution)*width)+floor(x/resolution)];
+  double down_leftValue = crowdModel.down_left[(floor(y/resolution)*width)+floor(x/resolution)];
+  double down_rightValue = crowdModel.down_right[(floor(y/resolution)*width)+floor(x/resolution)];
+
+  double totalX = leftValue*cos(M_PI) + rightValue*cos(0) + upValue*cos(M_PI/2) + downValue*cos(3*M_PI/2) + up_leftValue*cos(3*M_PI/4) + up_rightValue*cos(M_PI/4) + down_leftValue*cos(5*M_PI/4) + down_rightValue*cos(7*M_PI/4);
+  double totalY = leftValue*sin(M_PI) + rightValue*sin(0) + upValue*sin(M_PI/2) + downValue*sin(3*M_PI/2) + up_leftValue*sin(3*M_PI/4) + up_rightValue*sin(M_PI/4) + down_leftValue*sin(5*M_PI/4) + down_rightValue*sin(7*M_PI/4);
+  double flowMagnitude = sqrt(totalX*totalX + totalY*totalY);
+  double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
+  return flowMagnitude*crowdObservationValue;
+}

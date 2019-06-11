@@ -13,11 +13,10 @@ using namespace std;
 //if it does find a trail marker that sees, return the index.  otherwise, return -1
 int FORRTrails::doesTrailHaveVisiblePointToTarget(CartesianPoint target_point, int trail_index, AgentState *agentState){
   for(int j = 0; j < trails[trail_index].size(); j++){
-    if(agentState->canSeePoint(trails[trail_index][j].wallVectorEndpoints, trails[trail_index][j].coordinates, target_point)){
+    if(agentState->canAccessPoint(trails[trail_index][j].wallVectorEndpoints, trails[trail_index][j].coordinates, target_point, 10)){
       //target point is visible along trail at trail marker trails[trail_index][j]
-      cout << "Trail at coordinate "<<trails[trail_index][j].coordinates.get_x()<<","<<
-	trails[trail_index][j].coordinates.get_y()<<" can see target"<<endl;
-      cout<< "Target located at: ("<<target_point.get_x()<<","<<target_point.get_y()<<endl;
+      //cout << "Trail at coordinate "<<trails[trail_index][j].coordinates.get_x()<<","<< trails[trail_index][j].coordinates.get_y()<<" can see target"<<endl;
+      //cout<< "Target located at: ("<<target_point.get_x()<<","<<target_point.get_y()<<endl;
       //trail_marker_sees_point = j;
       return j;
       }
@@ -73,9 +72,9 @@ void FORRTrails::findNearbyTrail(AgentState *agentState){
 	
 	//looks at the intersection between segments
 	if(agentState->canSeeSegment(trails[i][j].coordinates, trails[i][j+1].coordinates)){
-	  cout << "Trail marker at coordinates ("<<trails[i][j].coordinates.get_x()<<","<<
+	  /*cout << "Trail marker at coordinates ("<<trails[i][j].coordinates.get_x()<<","<<
 	    trails[i][j].coordinates.get_y()<<") visible to robot"<<endl;
-	  cout << "----------TRAIL FOUND!---------- i ="<<i<<endl;
+	  cout << "----------TRAIL FOUND!---------- i ="<<i<<endl;*/
 	  chosen_trail = i;
 	  
 	  //if the trail marker that saw the target is greater along the sequence than what you're seeing,
@@ -103,7 +102,7 @@ CartesianPoint FORRTrails::getFurthestVisiblePointOnChosenTrail(AgentState *agen
   if(dir == POSITIVE) {
   //go backwards if direction is positive to grab a further point first if possible
     for(int j = trails[chosen_trail].size()-1; j >= 1; j--){
-      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates)) {
+      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates, 20)) {
         can_see_trail = true;
         return trails[chosen_trail][j].coordinates;
       }
@@ -112,7 +111,7 @@ CartesianPoint FORRTrails::getFurthestVisiblePointOnChosenTrail(AgentState *agen
   else if(dir == NEGATIVE){
   //go forwards if direction is negative to grab a further point first if possible
     for(int j = 0; j < trails[chosen_trail].size(); j++){
-      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates)) {
+      if(agentState->canSeePoint(trails[chosen_trail][j].coordinates, 20)) {
         can_see_trail = true;
         return trails[chosen_trail][j].coordinates;
       }

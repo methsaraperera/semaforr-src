@@ -50,7 +50,6 @@ bool CartesianPoint::operator==(const CartesianPoint& lhs) const{
 }
 
 
-
 /***********************************************************************
                 Line class implementation
 ***********************************************************************/
@@ -130,7 +129,9 @@ pair<CartesianPoint, CartesianPoint> LineSegment::get_endpoints(){
   end_point_1(other.end_point_1), 
   end_point_2(other.end_point_2) {}*/
 
-
+double LineSegment::get_length(){
+  return end_point_1.get_distance(end_point_2);
+}
 
 /**********************************************************************
                   Vector constructors

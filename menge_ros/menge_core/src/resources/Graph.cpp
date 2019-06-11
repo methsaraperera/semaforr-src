@@ -203,7 +203,7 @@ namespace Menge {
 	void Graph::publishPath(RoadMapPath *path){
 		for(size_t i = 0; i < path->getWayPointCount(); i++){
 			Vector2 point = path->getWayPoint(i);
-			std::cout << i << " -> " << point._x << " " << point._y << std::endl; 
+			//std::cout << i << " -> " << point._x << " " << point._y << std::endl; 
 		}
 	}
 

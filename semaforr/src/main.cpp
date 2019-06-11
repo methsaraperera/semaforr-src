@@ -97,9 +97,11 @@ public:
 	// Callback function for pose message
 	void updateCrowdModel(const semaforr::CrowdModel & crowd_model){
 		//ROS_DEBUG("Inside callback for crowd model");
-		cout << crowd_model.height << " " << crowd_model.width << endl;
+		//cout << crowd_model.height << " " << crowd_model.width << endl;
 		//update the crowd model of the belief
 		controller->getPlanner()->setCrowdModel(crowd_model);
+		controller->updatePlannersModels(crowd_model);
+		controller->getBeliefs()->getAgentState()->setCrowdModel(crowd_model);
 	}
 
 	// Callback function for pose message
@@ -154,14 +156,16 @@ public:
 		gettimeofday(&tv,NULL);
 		start_time = tv.tv_sec + (tv.tv_usec/1000000.0);
 		// Run the loop , the input sensing and the output beaming is asynchrounous
+		bool firstMessageReceived;
 		while(nh_.ok()) {
 			// If pos value is not received from menge wait
 			while(init_pos_received == false or init_laser_received == false){
-				ROS_DEBUG("Waiting for first message or laser");
+				//ROS_DEBUG("Waiting for first message or laser");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
-				ros::spinOnce();	
+				ros::spinOnce();
+				firstMessageReceived = true;
 			}
 			gettimeofday(&tv,NULL);
 			end_time = tv.tv_sec + (tv.tv_usec/1000000.0);
@@ -169,11 +173,18 @@ public:
 			//Sense the input and the current target to run the advisors and generate a decision
 			if(action_complete){
 				ROS_INFO_STREAM("Action completed. Save sensor info, Current position: " << current.getX() << " " << current.getY() << " " << current.getTheta());
-				viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+				if(firstMessageReceived == true){
+					firstMessageReceived = false;
+				}
+				else{
+					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+				}
 				gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
+				//ROS_DEBUG("Finished UpdateState");
 				viz_->publish();
+				//ROS_DEBUG("Finished Publish");
 				previous = current;
 				ROS_DEBUG("Check if mission is complete");
 				mission_complete = controller->isMissionComplete();
@@ -212,6 +223,7 @@ public:
 			//ROS_INFO_STREAM("Action Time (sec) : " << actionTimeSec);
 			// Check if the action is complete
 			action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
+			//action_complete = true;
 		}
 	}
 
@@ -316,9 +328,11 @@ int main(int argc, char **argv) {
 		string target_set(argv[2]);
 		string map_config(argv[3]);
 		string map_dimensions(argv[4]);
+		string advisors(argv[5]);
+		string params(argv[6]);
 
-		string advisor_config = path + "/config/advisors.conf";
-		string params_config = path + "/config/params.conf";
+		string advisor_config = path + advisors;
+		string params_config = path + params;
 
 		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions); 
 

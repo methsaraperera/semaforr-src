@@ -9,19 +9,19 @@ astar::astar(Graph *g)
   this->path.clear();
 }
 
-astar::astar(Graph g, Node& start, Node& goal)
+astar::astar(Graph g, Node& start, Node& goal, string name)
 {
   this->graph = &g;
   this->path.clear();
-  search(start.getID(), goal.getID());
+  search(start.getID(), goal.getID(), name);
 }
 
-bool astar::search(int source, int target)
+bool astar::search(int source, int target, string name)
 {
   start = new _VNode(graph->getNode(source));
   goal  = new _VNode(graph->getNode(target));
   open.push(start);
-
+  //int count = 0;
   while (!open.empty())
   {
     _VNode* current = open.top(); open.pop(); // Get and remove the top of the open list
@@ -41,28 +41,55 @@ bool astar::search(int source, int target)
       //double tmpCost = graph->getNode(current->id).getCostTo(tmp->id);
 
       tmp->g = current->g + graph->getNode(current->id).getCostTo(tmp->id);
-      tmp->f = tmp->g + octile_h(tmp, goal); // Compute f for this node
-      tmp->prev = current;
+      if (name == "distance" or name == "combined")
+      {
+        tmp->f = tmp->g + euclidian_h(tmp, goal); // Compute f for this node
+      }
+      else
+      {
+        tmp->f = tmp->g + 0;
+      }
+      tmp->prev.push_back(current);
 
       bool inClosed = false;
       for(uint j = 0; j < closed.size(); j++)
+      {
         if(closed[j]->id == tmp->id)
         {
           inClosed = true;
-          break;
           if(closed[j]->g > tmp->g)
           {
-            printf("closed[j].g = %f, tmp.g = %f\n", closed[j]->g, tmp->g);
+            //printf("closed[j].g = %f, tmp.g = %f\n", closed[j]->g, tmp->g);
             closed[j] = tmp;
           }
+          else if(closed[j]->g == tmp->g)
+          {
+            //printf("closed[j].g = %f, tmp.g = %f\n", closed[j]->g, tmp->g);
+            bool inClosedPrev = false;
+            for(int i = 0; i < closed[j]->prev.size(); i++)
+            {
+              if(closed[j]->prev[i]->id == current->id)
+              {
+                inClosedPrev = true;
+              }
+            }
+            if(inClosedPrev == false)
+            {
+              closed[j]->prev.push_back(current);
+            }
+            //cout << "prev.size = " << closed[j]->prev.size() << endl;
+          }
+          break;
         }
-
+      }
       if(inClosed || !tmp->accessible)
         continue;
 
       push_update(open, tmp);
     }
+    //count++;
   }
+  //cout << "Number of nodes expanded = " << count << endl;
   return false;
 }
 
@@ -95,9 +122,35 @@ void astar::push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare> &pq, 
     {
       found = true;
       if(tmp->g < n->g)
+      {
         pq.push(tmp);
+      }
+      else if(tmp->g == n->g)
+      {
+        //cout << "open->id = " << tmp->id << ", n->id = " << n->id << endl;
+        //printf("open->g = %f, n->g = %f\n", tmp->g, n->g);
+        for(int i = 0; i < n->prev.size(); i++)
+        {
+          bool intmpPrev = false;
+          for(int j = 0; j < tmp->prev.size(); j++)
+          {
+            if(tmp->prev[j]->id == n->prev[i]->id)
+            {
+              intmpPrev = true;
+            }
+          }
+          if(intmpPrev == false)
+          {
+            tmp->prev.push_back(n->prev[i]);
+          }
+        }
+        //cout << "prev.size = " << tmp->prev.size() << endl;
+        pq.push(tmp);
+      }
       else
+      {
         pq.push(n);
+      }
       break;
     }
 
@@ -119,13 +172,205 @@ void astar::push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare> &pq, 
 
 void astar::construct_path(_VNode* g)
 {
+  cout << "Inside construct_path" << endl;
+  _VNode* tmp = g;
   path.clear();
-  while(g->prev != NULL)
+  /*while(!tmp->prev.empty())
   {
-    path.push_front(g->prev->id);
-    g = g->prev;
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    path.push_front(tmp->prev[0]->id);
+    tmp = tmp->prev[0];
   }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
 
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      path.push_front(tmp->prev[1]->id);
+      tmp = tmp->prev[1];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+
+  tmp = g;
+  path.clear();*/
+  while(!tmp->prev.empty())
+  {
+    //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    if(tmp->prev.size()>1)
+    {
+      srand(time(NULL));
+      int random_number = rand() % (tmp->prev.size());
+      path.push_front(tmp->prev[random_number]->id);
+      tmp = tmp->prev[random_number];
+    }
+    else
+    {
+      path.push_front(tmp->prev[0]->id);
+      tmp = tmp->prev[0];
+    }
+  }
+  //cout << "Path size = " << path.size() << endl;
+  paths.push_back(path);
+  //cout << "Number of paths = " << paths.size() << endl;
 }
 
 /* Returns true if left hand side has a lower f value than right hand side */

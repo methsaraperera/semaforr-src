@@ -9,15 +9,16 @@
 class astar {
 public:
   list<int> path;
+  vector< list<int> > paths;
 
   astar (Graph*);
-  astar (Graph, Node&, Node&);
-  bool search(int, int); // Search the graph for a path and return true if found
+  astar (Graph, Node&, Node&, string);
+  bool search(int, int, string); // Search the graph for a path and return true if found
 
   // Wrappers
   bool isPathFound() { return ( !path.empty() || start->id == goal->id ); }
   list<int> getPathToTarget() { return path; }
-
+  vector< list<int> > getPathsToTarget() { return paths; }
 
 private:
 
@@ -57,7 +58,7 @@ private:
           x, y;         // copied from the Node
       double g,        // distance from start
              f;       // g + heuristic
-      _VNode* prev;  // best predecessor to move from, used to built the path
+      vector<_VNode*> prev;  // best predecessor to move from, used to built the path
 
       _VNode(Node &n) // Make a _VNode from a Node
       {
@@ -66,7 +67,7 @@ private:
         this->y = n.getY();
         this->accessible = n.isAccessible();
         g = f = 0;
-        prev = NULL;
+        //prev = NULL;
       }
 
       _VNode(Node n) // Make a _VNode from a Node
@@ -76,7 +77,7 @@ private:
         this->y = n.getY();
         this->accessible = n.isAccessible();
         g = f = 0;
-        prev = NULL;
+        //prev = NULL;
       }
 
   };

@@ -112,7 +112,7 @@ public:
 				std::vector<std::string> vstrings = parseText(fileLine);
 				for(int i=1; i < vstrings.size(); i+=2){
 					actionText.insert( std::pair<std::string,std::string>(vstrings[i],vstrings[i+1]));
-					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -121,7 +121,7 @@ public:
 				for(int i=1; i < vstrings.size(); i+=2){
 					tScoreThreshold.push_back(atof(vstrings[i].c_str()));
 					tScorePhrase.push_back(vstrings[i+1]);
-					ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -129,14 +129,14 @@ public:
 				std::vector<std::string> vstrings = parseText(fileLine);
 				for(int i=1; i < vstrings.size(); i+=2){
 					advSupportRationales.insert( std::pair<std::string,std::string>(vstrings[i],vstrings[i+1]));
-					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 			}
 			else if (fileLine.find("advopposerationales") != std::string::npos){
 				std::vector<std::string> vstrings = parseText(fileLine);
 				for(int i=1; i < vstrings.size(); i+=2){
 					advOpposeRationales.insert( std::pair<std::string,std::string>(vstrings[i],vstrings[i+1]));
-					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 			}
 			else if (fileLine.find("confidencelevel") != std::string::npos){
@@ -144,7 +144,7 @@ public:
 				for(int i=1; i < vstrings.size(); i+=2){
 					confidenceLevelThreshold.push_back(atof(vstrings[i].c_str()));
 					confidenceLevelPhrase.push_back(vstrings[i+1]);
-					ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -153,7 +153,7 @@ public:
 				for(int i=1; i < vstrings.size(); i+=2){
 					giniThreshold.push_back(atof(vstrings[i].c_str()));
 					giniPhrase.push_back(vstrings[i+1]);
-					ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -162,7 +162,7 @@ public:
 				for(int i=1; i < vstrings.size(); i+=2){
 					overallSupportThreshold.push_back(atof(vstrings[i].c_str()));
 					overallSupportPhrase.push_back(vstrings[i+1]);
-					ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -171,7 +171,7 @@ public:
 				for(int i=1; i < vstrings.size(); i+=2){
 					diffOverallSupportThreshold.push_back(atof(vstrings[i].c_str()));
 					diffOverallSupportPhrase.push_back(vstrings[i+1]);
-					ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -179,7 +179,7 @@ public:
 				std::vector<std::string> vstrings = parseText(fileLine);
 				for(int i=1; i < vstrings.size(); i+=2){
 					actioningText.insert( std::pair<std::string,std::string>(vstrings[i],vstrings[i+1]));
-					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
@@ -197,7 +197,7 @@ public:
 		double start_timecv, end_timecv;
 		while(nh_.ok()) {
 			while(init_message_received == false){
-				ROS_DEBUG("Waiting for first message");
+				//ROS_DEBUG("Waiting for first message");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -213,7 +213,7 @@ public:
 			//ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
 
 			if (decisionTier == 1){
-				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensory range and this would get us closer to it.\n" + victoryAlternateActions(chosenAction);
+				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensor range and this would get us closer to it.\n" + victoryAlternateActions(chosenAction);
 			} else if (vetoedActions == "0 1;0 2;0 3;0 4;0 5;" and chosenAction == "30") {
 				//ROS_DEBUG(vetoedActions << endl);
 				decisionTier = 1;
@@ -227,6 +227,7 @@ public:
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 			computationTimeSec = (end_timecv-start_timecv);
+			//ROS_INFO_STREAM("After explanation: " << explanationString.data);
 			logExplanationData();
 			//send the explanation
 			explanations_pub_.publish(explanationString);
@@ -443,23 +444,28 @@ public:
 		}
 		else if (opposePhrases.size() == 0) {
 			if (supportPhrases.size() == 0) {
-				if (slightOpposePhrases.size() > 2) {
-					for (int i = 0; i < slightOpposePhrases.size()-1; i++) {
-						opposeConcat = opposeConcat + slightOpposePhrases[i] + ", ";
+				if (slightSupportPhrases.size() > 0 and slightOpposePhrases.size() > 0) {
+					if (slightOpposePhrases.size() > 2) {
+						for (int i = 0; i < slightOpposePhrases.size()-1; i++) {
+							opposeConcat = opposeConcat + slightOpposePhrases[i] + ", ";
+						}
+						opposeConcat = opposeConcat + "and " + slightOpposePhrases[slightOpposePhrases.size()-1];
+						//ROS_INFO_STREAM("Greater than 2 Slightly Oppose: " << opposeConcat);
 					}
-					opposeConcat = opposeConcat + "and " + slightOpposePhrases[slightOpposePhrases.size()-1];
-					//ROS_INFO_STREAM("Greater than 2 Slightly Oppose: " << opposeConcat);
+					else if (slightOpposePhrases.size() == 2) {
+						opposeConcat = slightOpposePhrases[0] + " and " + slightOpposePhrases[1];
+						//ROS_INFO_STREAM("Equals 2 Slightly Oppose: " << opposeConcat);
+					}
+					else if (slightOpposePhrases.size() == 1) {
+						opposeConcat = slightOpposePhrases[0];
+						//ROS_INFO_STREAM("Equals 1 Slightly Oppose: " << opposeConcat);
+					}
+					explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+					//ROS_INFO_STREAM(explanation);
 				}
-				else if (slightOpposePhrases.size() == 2) {
-					opposeConcat = slightOpposePhrases[0] + " and " + slightOpposePhrases[1];
-					//ROS_INFO_STREAM("Equals 2 Slightly Oppose: " << opposeConcat);
+				else {
+					explanation = "I decided to " + actionText[chosenAction] + " because just as good as anything else.";
 				}
-				else if (slightOpposePhrases.size() == 1) {
-					opposeConcat = slightOpposePhrases[0];
-					//ROS_INFO_STREAM("Equals 1 Slightly Oppose: " << opposeConcat);
-				}
-				explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
-				//ROS_INFO_STREAM(explanation);
 			}
 			else {
 				explanation = "I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
@@ -697,7 +703,8 @@ public:
 	
 	void logExplanationData() {
 		std_msgs::String logData;
-		
+		std::vector<std::string> vstrings = parseText(current_log);
+
 		std::stringstream tscorestream;
 		std::map <std::string, double>::iterator itr;
 		for (itr = advisorTScore.begin(); itr != advisorTScore.end(); itr++) {
@@ -715,7 +722,7 @@ public:
 		}
 		
 		std::stringstream output;
-		output << decisionTier << "\t" << computationTimeSec << "\t" << tscorestream.str() << "\t" << gini << "\t" << overallSupport << "\t" << confidenceLevel << "\t" << difftscoresstream.str() << "\t" << diffoverallsupportsstream.str();
+		output << atof(vstrings[0].c_str()) << "\t" << atof(vstrings[1].c_str()) << "\t" << atof(vstrings[2].c_str()) << "\t" << decisionTier << "\t" << computationTimeSec << "\t" << tscorestream.str() << "\t" << gini << "\t" << overallSupport << "\t" << confidenceLevel << "\t" << difftscoresstream.str() << "\t" << diffoverallsupportsstream.str();
 		
 		logData.data = output.str();
 		explanations_log_pub_.publish(logData);

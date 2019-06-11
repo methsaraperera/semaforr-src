@@ -34,7 +34,13 @@ private:
   ros::Publisher all_targets_pub_;
   ros::Publisher remaining_targets_pub_;
   ros::Publisher region_pub_;
+  ros::Publisher exits_pub_;
+  ros::Publisher skeleton_pub_;
   ros::Publisher conveyor_pub_;
+  ros::Publisher hallway1_pub_;
+  ros::Publisher hallway2_pub_;
+  ros::Publisher hallway3_pub_;
+  ros::Publisher hallway4_pub_;
   ros::Publisher occupancy_pub_;
   ros::Publisher trails_pub_;
   ros::Publisher plan_pub_;
@@ -45,7 +51,10 @@ private:
   ros::Publisher edges_cost_pub_;
   ros::Publisher stats_pub_;
   ros::Publisher doors_pub_;
+  ros::Publisher barriers_pub_;
   ros::Publisher walls_pub_;
+  ros::Publisher pose_pub_;
+  ros::Publisher laser_pub_;
   Controller *con;
   Beliefs *beliefs;
   ros::NodeHandle *nh_;
@@ -64,10 +73,15 @@ public:
     remaining_targets_pub_ = nh_->advertise<geometry_msgs::PoseArray>("remaining_targets", 1);
     plan_pub_ = nh_->advertise<nav_msgs::Path>("plan", 1);
     original_plan_pub_ = nh_->advertise<nav_msgs::Path>("original_plan", 1);
-
     conveyor_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("conveyor", 1);
+    hallway1_pub_ = nh_->advertise<visualization_msgs::Marker>("hallway1", 1);
+    hallway2_pub_ = nh_->advertise<visualization_msgs::Marker>("hallway2", 1);
+    hallway3_pub_ = nh_->advertise<visualization_msgs::Marker>("hallway3", 1);
+    hallway4_pub_ = nh_->advertise<visualization_msgs::Marker>("hallway4", 1);
     occupancy_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("occupancy", 1);
     region_pub_ = nh_->advertise<visualization_msgs::MarkerArray>("region", 1);
+    exits_pub_ = nh_->advertise<visualization_msgs::Marker>("exits", 1);
+    skeleton_pub_ = nh_->advertise<visualization_msgs::Marker>("skeleton", 1);
     nodes1_pub_ = nh_->advertise<visualization_msgs::Marker>("nodes1", 1);
     nodes2_pub_ = nh_->advertise<visualization_msgs::Marker>("nodes2", 1);
     edges_pub_ = nh_->advertise<visualization_msgs::MarkerArray>("edges", 1);
@@ -76,7 +90,10 @@ public:
     trails_pub_ = nh_->advertise<visualization_msgs::Marker>("trail", 1);
     stats_pub_ = nh_->advertise<std_msgs::String>("decision_log", 1);
     doors_pub_ = nh_->advertise<visualization_msgs::Marker>("door", 1);
+    barriers_pub_ = nh_->advertise<visualization_msgs::Marker>("barrier", 1);
     walls_pub_ = nh_->advertise<visualization_msgs::Marker>("walls", 1);
+    pose_pub_ = nh_->advertise<geometry_msgs::PoseStamped>("decision_pose", 1);
+    laser_pub_ = nh_->advertise<sensor_msgs::LaserScan>("decision_laser", 1);
     //declare and create a controller with task, action and advisor configuration
     con = c;
     beliefs = con->getBeliefs();
@@ -101,10 +118,17 @@ public:
 		visualized++;
 	}*/
 	//publish_edges_cost();
-	//publish_conveyor();
-	//publish_region();
-	//publish_trails();
-	//publish_doors();
+	publish_conveyor();
+	publish_hallway1();
+	publish_hallway2();
+	publish_hallway3();
+	publish_hallway4();
+	publish_region();
+	publish_exits();
+	publish_skeleton();
+	publish_trails();
+	publish_doors();
+	publish_barriers();
 	publish_walls();
 	//publish_occupancy();
   }
@@ -327,6 +351,11 @@ public:
 	path.header.stamp = ros::Time::now();
 
 	vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getWaypoints();
+	double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
+	double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
+	//std::stringstream output;
+	//output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
+	//path.header.frame_id = output.str();
 
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;
@@ -342,10 +371,15 @@ public:
  void publish_original_plan(){
 	ROS_DEBUG("Inside publish original plan!!");
 	nav_msgs::Path path;
-	path.header.frame_id = "map";
+	//path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
 
 	vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getOrigWaypoints();
+	double origPathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInNavGraph();
+	double origPathCostInOrigNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInOrigNavGraph();
+	std::stringstream output;
+	output << origPathCostInNavGraph << "\t" << origPathCostInOrigNavGraph;
+	path.header.frame_id = output.str();
 
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;
@@ -373,14 +407,192 @@ public:
 
 	vector< vector<int> > conveyors = beliefs->getSpatialModel()->getConveyors()->getConveyors();
 	for(int j = 0; j < grid.info.height; j++){
-	    for(int i = 0; i < grid.info.width; i++){
-      		grid.data.push_back(conveyors[i][j]);
-    	    }
-  	}
+		for(int i = 0; i < grid.info.width; i++){
+			grid.data.push_back(conveyors[i][j]);
+		}
+	}
 	conveyor_pub_.publish(grid);
   }
 
+  void publish_hallway1(){
+	ROS_DEBUG("Inside publish hallway1");
+	visualization_msgs::Marker marker;
+	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+	cout << "There are currently " << hallways.size() << " hallways" << endl;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 1.0;
+	marker.scale.z = 1.0;
+	marker.lifetime = ros::Duration();
+	for(int i = 0; i < hallways.size(); i++){
+		vector<CartesianPoint> points = hallways[i].getPoints();
+		int hallway_type = hallways[i].getHallwayType();
+		cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
+		if(hallway_type == 0){
+			for(int j = 0; j < points.size(); j++){
+				float x = points[j].get_x();
+				float y = points[j].get_y();
+				geometry_msgs::Point point;
+				point.x = x;
+				point.y = y;
+				point.z = 0;
+				marker.points.push_back(point);
+				std_msgs::ColorRGBA color;
+				color.a = 0.5;
+				color.r = 1.0;
+				color.g = 0.0;
+				color.b = 0.0;
+				marker.colors.push_back(color);
+			}
+		}
+	}
+	hallway1_pub_.publish(marker);
+  }
 
+  void publish_hallway2(){
+	ROS_DEBUG("Inside publish hallway2");
+	visualization_msgs::Marker marker;
+	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+	//cout << "There are currently " << hallways.size() << " hallways" << endl;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 1.0;
+	marker.scale.z = 1.0;
+	marker.lifetime = ros::Duration();
+	for(int i = 0; i < hallways.size(); i++){
+		vector<CartesianPoint> points = hallways[i].getPoints();
+		int hallway_type = hallways[i].getHallwayType();
+		//cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
+		if(hallway_type == 1){
+			for(int j = 0; j < points.size(); j++){
+				float x = points[j].get_x();
+				float y = points[j].get_y();
+				geometry_msgs::Point point;
+				point.x = x;
+				point.y = y;
+				point.z = 0;
+				marker.points.push_back(point);
+				std_msgs::ColorRGBA color;
+				color.a = 0.5;
+				color.r = 0.0;
+				color.g = 1.0;
+				color.b = 0.0;
+				marker.colors.push_back(color);
+			}
+		}
+	}
+	hallway2_pub_.publish(marker);
+  }
+
+  void publish_hallway3(){
+	ROS_DEBUG("Inside publish hallway3");
+	visualization_msgs::Marker marker;
+	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+	//cout << "There are currently " << hallways.size() << " hallways" << endl;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 1.0;
+	marker.scale.z = 1.0;
+	marker.lifetime = ros::Duration();
+	for(int i = 0; i < hallways.size(); i++){
+		vector<CartesianPoint> points = hallways[i].getPoints();
+		int hallway_type = hallways[i].getHallwayType();
+		//cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
+		if(hallway_type == 2){
+			for(int j = 0; j < points.size(); j++){
+				float x = points[j].get_x();
+				float y = points[j].get_y();
+				geometry_msgs::Point point;
+				point.x = x;
+				point.y = y;
+				point.z = 0;
+				marker.points.push_back(point);
+				std_msgs::ColorRGBA color;
+				color.a = 0.5;
+				color.r = 0.0;
+				color.g = 0.0;
+				color.b = 1.0;
+				marker.colors.push_back(color);
+			}
+		}
+	}
+	hallway3_pub_.publish(marker);
+  }
+
+  void publish_hallway4(){
+	ROS_DEBUG("Inside publish hallway4");
+	visualization_msgs::Marker marker;
+	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+	//cout << "There are currently " << hallways.size() << " hallways" << endl;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 1.0;
+	marker.scale.z = 1.0;
+	marker.lifetime = ros::Duration();
+	for(int i = 0; i < hallways.size(); i++){
+		vector<CartesianPoint> points = hallways[i].getPoints();
+		int hallway_type = hallways[i].getHallwayType();
+		//cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
+		if(hallway_type == 3){
+			for(int j = 0; j < points.size(); j++){
+				float x = points[j].get_x();
+				float y = points[j].get_y();
+				geometry_msgs::Point point;
+				point.x = x;
+				point.y = y;
+				point.z = 0;
+				marker.points.push_back(point);
+				std_msgs::ColorRGBA color;
+				color.a = 0.5;
+				color.r = 0.5;
+				color.g = 0.5;
+				color.b = 0.5;
+				marker.colors.push_back(color);
+			}
+		}
+	}
+	hallway4_pub_.publish(marker);
+  }
 
   void publish_occupancy(){
 	ROS_DEBUG("Inside publish occupancy");
@@ -449,6 +661,81 @@ public:
 	}
 	region_pub_.publish(markerArray);
   }
+
+  void publish_exits(){
+	ROS_DEBUG("Inside publish exits");
+	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+	cout << "There are currently " << regions.size() << " regions" << endl;
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 0.15;
+	marker.scale.z = 0.15;
+	// Set the color -- be sure to set alpha to something non-zero!
+	marker.color.r = 0.0f;
+	marker.color.g = 0.0f;
+	marker.color.b = 1.0f;
+	marker.color.a = 0.5;
+	marker.lifetime = ros::Duration();
+
+	for(int i = 0 ; i < regions.size(); i++){
+		vector<FORRExit> exits = regions[i].getExits();
+		for(int j = 0; j < exits.size() ; j++){
+			float x = exits[j].getExitPoint().get_x();
+			float y = exits[j].getExitPoint().get_y();
+			geometry_msgs::Point point;
+			point.x = x;
+			point.y = y;
+			point.z = 0;
+			marker.points.push_back(point);
+		}
+	}
+  	exits_pub_.publish(marker);
+  }
+  void publish_skeleton(){
+  	ROS_DEBUG("Inside publish skeleton");
+  	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+	cout << "There are currently " << regions.size() << " regions" << endl;
+	visualization_msgs::Marker line_list;
+	line_list.header.frame_id = "map";
+	line_list.header.stamp = ros::Time::now();
+	line_list.ns = "basic_shapes";
+	line_list.action = visualization_msgs::Marker::ADD;
+	line_list.id = 1;
+	line_list.type = visualization_msgs::Marker::LINE_LIST;
+	line_list.pose.orientation.w = 1.0;
+	line_list.scale.x = 0.1;
+	line_list.color.r = 1.0;
+	line_list.color.a = 1.0;
+	for(int i = 0 ; i < regions.size(); i++){
+		vector<FORRExit> exits = regions[i].getExits();
+		for(int j = 0; j < exits.size() ; j++){
+			geometry_msgs::Point p1, p2;
+			p1.x = regions[i].getCenter().get_x();
+			p1.y = regions[i].getCenter().get_y();
+			p1.z = 0;
+
+			p2.x = regions[exits[j].getExitRegion()].getCenter().get_x();
+			p2.y = regions[exits[j].getExitRegion()].getCenter().get_y();
+			p2.z = 0;
+
+			line_list.points.push_back(p1);
+			line_list.points.push_back(p2);
+		}
+	}
+  	skeleton_pub_.publish(line_list);
+  }
+
   void publish_trails(){
 	ROS_DEBUG("Inside publish trail");
 	//Goal here is to publish all trails
@@ -484,7 +771,7 @@ public:
 	line_list.scale.x = 0.1;
 	line_list.color.r = 1.0;
 	line_list.color.a = 1.0;
-
+	cout << "There are currently " << trails->getSize() << " trails" << endl;
 	for(int i = 0 ; i < trails->getSize(); i++){
 		vector<TrailMarker> trail = trails->getTrail(i);
 		for(int j = 0; j < trail.size()-1; j++){
@@ -538,6 +825,39 @@ public:
 		}
 	}
 	doors_pub_.publish(line_list);
+  }
+
+    void publish_barriers(){
+	ROS_DEBUG("Inside publish barriers");
+
+	std::vector<LineSegment> barriers = beliefs->getSpatialModel()->getBarriers()->getBarriers();
+	cout << "There are currently " << barriers.size() << " barriers" << endl;
+	visualization_msgs::Marker line_list;
+	line_list.header.frame_id = "map";
+	line_list.header.stamp = ros::Time::now();
+	line_list.ns = "basic_shapes";
+	line_list.action = visualization_msgs::Marker::ADD;
+	line_list.id = 1;
+	line_list.type = visualization_msgs::Marker::LINE_LIST;
+	line_list.pose.orientation.w = 1.0;
+	line_list.scale.x = 0.1;
+	line_list.color.r = 1.0;
+	line_list.color.a = 1.0;
+
+	for(int i = 0 ; i < barriers.size(); i++){
+		geometry_msgs::Point p1, p2;
+		p1.x = barriers[i].get_endpoints().first.get_x();
+		p1.y = barriers[i].get_endpoints().first.get_y();
+		p1.z = 0;
+
+		p2.x = barriers[i].get_endpoints().second.get_x();
+		p2.y = barriers[i].get_endpoints().second.get_y();
+		p2.z = 0;
+
+		line_list.points.push_back(p1);
+		line_list.points.push_back(p2);
+	}
+	barriers_pub_.publish(line_list);
   }
 
   void publish_walls(){
@@ -615,6 +935,16 @@ public:
 	double targetX;
 	double targetY;
 	double robotTheta = beliefs->getAgentState()->getCurrentPosition().getTheta();
+
+	geometry_msgs::PoseStamped poseStamped;
+	poseStamped.header.frame_id = "map";
+	poseStamped.header.stamp = ros::Time::now();
+	poseStamped.pose.position.x = robotX;
+	poseStamped.pose.position.y = robotY;
+	poseStamped.pose.position.z = 0;
+	poseStamped.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, robotTheta);
+	pose_pub_.publish(poseStamped);
+
 	if(beliefs->getAgentState()->getCurrentTask() != NULL) {
 		targetX = beliefs->getAgentState()->getCurrentTask()->getTaskX();
 		targetY = beliefs->getAgentState()->getCurrentTask()->getTaskY();
@@ -624,15 +954,17 @@ public:
 	}
 	vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
 	sensor_msgs::LaserScan laserScan = beliefs->getAgentState()->getCurrentLaserScan();
+	laser_pub_.publish(laserScan);
+
 	FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
-	ROS_DEBUG("After max_forward");
+	//ROS_DEBUG("After max_forward");
 	//vector< vector<CartesianPoint> > allTrace = beliefs->getAgentState()->getAllTrace();
 	list<Task*>& agenda = beliefs->getAgentState()->getAgenda();
 	list<Task*>& all_agenda = beliefs->getAgentState()->getAllAgenda();
-	ROS_DEBUG("After all_agenda");
+	//ROS_DEBUG("After all_agenda");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	vector< vector< CartesianPoint> > trails =  beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-	ROS_DEBUG("After trails");
+	//ROS_DEBUG("After trails");
 	FORRActionType chosenActionType = decision.type;
 	int chosenActionParameter = decision.parameter;
 	int decisionTier = con->getCurrentDecisionStats()->decisionTier;
@@ -640,19 +972,23 @@ public:
 	string advisors = con->getCurrentDecisionStats()->advisors;
 	string advisorComments = con->getCurrentDecisionStats()->advisorComments;
 	string advisorInfluence = con->getCurrentDecisionStats()->advisorInfluence;
-	cout << "vetoedActions = " << vetoedActions << " decisionTier = " << decisionTier << " advisors = " << advisors << " advisorComments = " << advisorComments << endl;
+	double planningComputationTime = con->getCurrentDecisionStats()->planningComputationTime;
+	double learningComputationTime = con->getCurrentDecisionStats()->learningComputationTime;
+	string chosenPlanner = con->getCurrentDecisionStats()->chosenPlanner;
+	//cout << "vetoedActions = " << vetoedActions << " decisionTier = " << decisionTier << " advisors = " << advisors << " advisorComments = " << advisorComments << endl;
 	vector< vector<int> > conveyors = beliefs->getSpatialModel()->getConveyors()->getConveyors();
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
+	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 
-	ROS_DEBUG("After decision statistics");
+	//ROS_DEBUG("After decision statistics");
 	int decisionCount = -1;
 	int currentTask = -1;
 	if(!agenda.empty()){
 		currentTask = all_agenda.size() - agenda.size();
-  		if(currentTask != 0)
-			decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
+  		//if(currentTask != 0)
+		decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
 	}
-	ROS_DEBUG("After decisionCount");
+	//ROS_DEBUG("After decisionCount");
 
 
 	std::stringstream lep;
@@ -661,7 +997,7 @@ public:
  		double y = laserEndpoints[i].get_y();
 		lep << x << "," << y << ";";
 	}
-	ROS_DEBUG("After laserEndpoints");
+	//ROS_DEBUG("After laserEndpoints");
 
 
 	std::stringstream ls;
@@ -673,7 +1009,7 @@ public:
 		}
 		ls << length << ",";
 	}
-	ROS_DEBUG("After laserScan");
+	//ROS_DEBUG("After laserScan");
 	/*int totalSize = 0;
 	for(int i = 0; i < allTrace.size(); i++){
 		totalSize += allTrace[i].size();
@@ -689,7 +1025,7 @@ public:
 		}
 		regionsstream << ";";
 	}
-	ROS_DEBUG("After regions");
+	//ROS_DEBUG("After regions");
 
 
 	std::stringstream trailstream;
@@ -699,7 +1035,7 @@ public:
 		}
 		trailstream << ";";
 	}
-	ROS_DEBUG("After trails");
+	//ROS_DEBUG("After trails");
 
 	std::stringstream conveyorStream;
 	for(int j = 0; j < conveyors.size()-1; j++){
@@ -708,7 +1044,7 @@ public:
 		}
 		conveyorStream << ";";
 	}
-	ROS_DEBUG("After conveyors");
+	//ROS_DEBUG("After conveyors");
 	
 
 	std::stringstream doorStream;
@@ -719,7 +1055,19 @@ public:
 		doorStream << ";";
 	}
 
-	ROS_DEBUG("After doors");
+	//ROS_DEBUG("After doors");
+
+	std::stringstream hallwayStream;
+	for(int i = 0; i < hallways.size(); i++){
+		vector<CartesianPoint> points = hallways[i].getPoints();
+		hallwayStream << hallways[i].getHallwayType();
+		for(int j = 0; j < points.size(); j++){
+			hallwayStream << " " << points[j].get_x() << " " << points[j].get_y();
+		}
+		hallwayStream << ";";
+	}
+
+	//ROS_DEBUG("After hallways");
 
 	std::stringstream planStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
@@ -733,7 +1081,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//planStream << "\t" << plancost;
 	}
-	ROS_DEBUG("After planStream");
+	//ROS_DEBUG("After planStream");
 
 	std::stringstream origPlanStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
@@ -743,11 +1091,11 @@ public:
 			origPlanStream << waypoints[i].get_x() << " " << waypoints[i].get_y();
 			origPlanStream << ";";		
 		}
-		
+
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//origPlanStream << "\t" << plancost;
 	}
-	ROS_DEBUG("After origPlanStream");
+	//ROS_DEBUG("After origPlanStream");
 
 	std::stringstream crowdStream;
 	geometry_msgs::PoseArray crowdpose = beliefs->getAgentState()->getCrowdPose();
@@ -757,7 +1105,7 @@ public:
 		<< " " << crowdpose.poses[i].orientation.y << " " << crowdpose.poses[i].orientation.z << " " << crowdpose.poses[i].orientation.w;
 		crowdStream << ";";
 	}
-	ROS_DEBUG("After crowdStream");
+	//ROS_DEBUG("After crowdStream");
 
 	std::stringstream allCrowdStream;
 	geometry_msgs::PoseArray crowdposeall = beliefs->getAgentState()->getCrowdPoseAll();
@@ -767,7 +1115,7 @@ public:
 		<< " " << crowdposeall.poses[i].orientation.y << " " << crowdposeall.poses[i].orientation.z << " " << crowdposeall.poses[i].orientation.w;
 		allCrowdStream << ";";
 	}
-	ROS_DEBUG("After all crowdStream");
+	//ROS_DEBUG("After all crowdStream");
 
 	std::stringstream crowdModel;
 	semaforr::CrowdModel model = con->getPlanner()->getCrowdModel();
@@ -775,22 +1123,65 @@ public:
 	int height = model.height;
 	int width = model.width;
 	std::vector<double> densities = model.densities;
-	crowdModel << height << " " << width << " " << resolution << " ";
+	std::vector<double> risk = model.risk;
+	crowdModel << height << " " << width << " " << resolution << ";";
 	for(int i = 0; i < densities.size() ; i++){
 		crowdModel << densities[i] << " ";
 	}
+	crowdModel << "\t";
+	for(int i = 0; i < risk.size() ; i++){
+		crowdModel << risk[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> left = model.left;
+	for(int i = 0; i < left.size() ; i++){
+		crowdModel << left[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> right = model.right;
+	for(int i = 0; i < right.size() ; i++){
+		crowdModel << right[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> up = model.up;
+	for(int i = 0; i < up.size() ; i++){
+		crowdModel << up[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> down = model.down;
+	for(int i = 0; i < down.size() ; i++){
+		crowdModel << down[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> up_left = model.up_left;
+	for(int i = 0; i < up_left.size() ; i++){
+		crowdModel << up_left[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> up_right = model.up_right;
+	for(int i = 0; i < up_right.size() ; i++){
+		crowdModel << up_right[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> down_left = model.down_left;
+	for(int i = 0; i < down_left.size() ; i++){
+		crowdModel << down_left[i] << " ";
+	}
+	crowdModel << "\t";
+	std::vector<double> down_right = model.down_right;
+	for(int i = 0; i < down_right.size() ; i++){
+		crowdModel << down_right[i] << " ";
+	}
 
-	ROS_DEBUG("After all crowd model");
+	//ROS_DEBUG("After all crowd model");
 
 	std::stringstream output;
 
-	//output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << advisorInfluence << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << planStream.str();// << "\t" << lep.str() << "\t" << ls.str();
+	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner << "\t" << lep.str() << "\t" << ls.str();// << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence;
 
-	//output << currentTask << "\t" << decisionCount << "\t"<< targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << planStream.str();// << "\t" << lep.str() << "\t" << ls.str();
+	//output << currentTask << "\t" << decisionCount << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << lep.str() << "\t" << ls.str();
 
-	//std::stringstream output;
-
-	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << lep.str() << "\t" << ls.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << crowdModel.str() << "\t" << planStream.str();
+	//output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << lep.str() << "\t" << ls.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << crowdModel.str() << "\t" << planStream.str();
 
 	log.data = output.str();
 	stats_pub_.publish(log);

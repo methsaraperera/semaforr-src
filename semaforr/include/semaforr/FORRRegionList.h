@@ -27,12 +27,12 @@ class FORRRegionList{
   //}
     
   bool isLeaf(FORRRegion region, int numDoors){
-    cout << "In isleaf" << endl;
+    //cout << "In isleaf" << endl;
     vector<FORRExit> exits = region.getExits();
     bool isLeaf = false;
     if(exits.size() <= 1 or numDoors <= 1){
       isLeaf = true;
-      cout << "exits.size = " << exits.size() << " numDoors = " << numDoors << endl;
+      //cout << "exits.size = " << exits.size() << " numDoors = " << numDoors << endl;
       //region.setIsLeaf(isLeaf);
       return isLeaf;
     }
@@ -160,36 +160,45 @@ class FORRRegionList{
     // for every position in the position history vector .. check if a move is from one region to another and save it as gate
     //cout << "In learning exits: size of trace is " << run_trace.size() << endl;
     for(int k = 0; k < run_trace.size() ; k++){
-      vector<CartesianPoint> history = run_trace[k]; 
+      vector<CartesianPoint> history = run_trace[k];
+      vector<CartesianPoint> stepped_history;
       //cout << "Learning exits between regions" << endl;
       int region_id=-1, previous_position_region_id=-1,  begin_region_id, end_region_id, begin_position , end_position;
       bool beginFound = false;
-      for(int j = 0; j < history.size(); j++){  
-	//cout << history[j].get_x() << " " << history[j].get_y() << endl;
-	previous_position_region_id = region_id;
-	region_id = pointInRegions(history[j].get_x(), history[j].get_y());
-	
-	//cout << "previous region id : " << previous_position_region_id << endl;
-	//cout << "current region id : " << region_id << endl;
-	if(region_id == -1){
-	  //cout << "skipping position" << endl;
-	  continue;
-	}
-	// either we have not found a starting region or 
-	if(region_id != -1 && (previous_position_region_id == region_id || beginFound == false)){
-	  beginFound = true;
-	  begin_region_id = region_id;
-	  begin_position = j;
-	  //cout << "Starting position : " << begin_position << endl;
-	  continue;
-	}
-	if(region_id != -1 && region_id != begin_region_id && beginFound == true){
-	  beginFound = false;
-	  end_region_id = region_id;
-	  end_position = j;
-	  //cout << "Ending Position : " << end_position << endl;
-	  saveExit(history[begin_position], history[begin_position+1], begin_region_id, history[end_position-1] , history[end_position] , end_region_id);
-	}
+      double step_size = 0.1;
+      for(int j = 0; j < history.size()-1; j++){
+        double tx,ty;
+        for(double step = 0; step <= 1; step += step_size){
+          tx = (history[j].get_x() * (1-step)) + (history[j+1].get_x() * (step));
+          ty = (history[j].get_y() * (1-step)) + (history[j+1].get_y() * (step));
+          stepped_history.push_back(CartesianPoint(tx,ty));
+        }
+      }
+      for (int j = 0; j < stepped_history.size(); j++){
+        //cout << stepped_history[j].get_x() << " " << stepped_history[j].get_y() << endl;
+        previous_position_region_id = region_id;
+        region_id = pointInRegions(stepped_history[j].get_x(), stepped_history[j].get_y());
+        //cout << "previous region id : " << previous_position_region_id << endl;
+        //cout << "current region id : " << region_id << endl;
+        if(region_id == -1){
+          //cout << "skipping position" << endl;
+          continue;
+        }
+        // either we have not found a starting region or 
+        if(region_id != -1 && (previous_position_region_id == region_id || beginFound == false)){
+          beginFound = true;
+          begin_region_id = region_id;
+          begin_position = j;
+          //cout << "Starting position : " << begin_position << endl;
+          continue;
+        }
+        if(region_id != -1 && region_id != begin_region_id && beginFound == true){
+          beginFound = false;
+          end_region_id = region_id;
+          end_position = j;
+          //cout << "Ending Position : " << end_position << endl;
+          saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id);
+        }
       }
     }
     for(int i = 0; i< regions.size(); i++){
@@ -243,7 +252,7 @@ class FORRRegionList{
   int pointInRegions(double x, double y){
     for(int i = 0; i < regions.size(); i++){
       if(regions[i].inRegion(x, y))
-	return i;
+        return i;
     }
     return -1;
   }

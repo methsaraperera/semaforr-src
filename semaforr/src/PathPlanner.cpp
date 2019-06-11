@@ -39,12 +39,12 @@ int PathPlanner::calcPath(bool cautious){
     Node s, t;
     if ( navGraph->isNode(source) ) {
       if(PATH_DEBUG)
-	cout << signature << "Source is a valid Node in the navigation graph" << endl;
+        cout << signature << "Source is a valid Node in the navigation graph" << endl;
       s = source ;
     }
     else {
       if(PATH_DEBUG)
-	cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
+        cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
       s = getClosestNode(source, target);
     }
     //cout << signature << "Checking if source node is invalid" << endl;
@@ -53,12 +53,12 @@ int PathPlanner::calcPath(bool cautious){
 
     if ( navGraph->isNode(target) ) {
       if(PATH_DEBUG)
-	cout << signature << "Target is a valid Node in the navigation graph" << endl;
+        cout << signature << "Target is a valid Node in the navigation graph" << endl;
       t = target ;
     }
     else {
       if(PATH_DEBUG)
-	cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl;
+        cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl;
       t = getClosestNode(target, source);
     }
     //cout << signature << "Checking if target node is invalid" << endl;
@@ -76,18 +76,25 @@ int PathPlanner::calcPath(bool cautious){
     }
     //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights
-    updateNavGraph();
-    astar newsearch(*navGraph, s, t);
+    if (name != "distance") {
+      cout << "Updating nav graph for non-distance planners" << endl;
+      updateNavGraph();
+    }
+    astar newsearch(*navGraph, s, t, name);
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
+      paths = newsearch.getPathsToTarget();
       objectiveSet = false;
       pathCompleted = false;
 
       if(!cautious)
-	smoothPath(path, s, t);
+        smoothPath(path, s, t);
 
       pathCost = calcPathCost(path);
       pathCalculated = true;
+      for (int i=0; i<paths.size(); i++){
+        pathCosts.push_back(calcPathCost(paths[i]));
+      }
     }
     else {
       return 3;
@@ -98,9 +105,9 @@ int PathPlanner::calcPath(bool cautious){
 
 int PathPlanner::calcOrigPath(bool cautious){
   const string signature = "PathPlanner::calcOrigPath()> ";
-  
+
   if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
-    
+
     if(PATH_DEBUG) {
       cout << signature << "Source:"; 
       source.printNode(); 
@@ -113,12 +120,12 @@ int PathPlanner::calcOrigPath(bool cautious){
     Node s, t;
     if ( originalNavGraph->isNode(source) ) {
       if(PATH_DEBUG)
-  cout << signature << "Source is a valid Node in the navigation graph" << endl; 
+        cout << signature << "Source is a valid Node in the navigation graph" << endl; 
       s = source ;
     }
     else {
       if(PATH_DEBUG)
-  cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
+        cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
       s = getClosestNode(source, target);
     }
     //cout << signature << "Checking if source node is invalid" << endl;
@@ -127,12 +134,12 @@ int PathPlanner::calcOrigPath(bool cautious){
 
     if ( originalNavGraph->isNode(target) ) {
       if(PATH_DEBUG)
-  cout << signature << "Target is a valid Node in the navigation graph" << endl; 
+        cout << signature << "Target is a valid Node in the navigation graph" << endl; 
       t = target ;
     }
     else {
       if(PATH_DEBUG)
-  cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
+        cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
       t = getClosestNode(target, source);
     }
     //cout << signature << "Checking if target node is invalid" << endl;
@@ -149,16 +156,16 @@ int PathPlanner::calcOrigPath(bool cautious){
       cout << endl;
     }
 
-    astar newsearch(*originalNavGraph, s, t);
+    astar newsearch(*originalNavGraph, s, t, "distance");
     if ( newsearch.isPathFound() ) {
       origPath = newsearch.getPathToTarget();
       origObjectiveSet = false;
       origPathCompleted = false;
-      
+
       if(!cautious)
-  smoothPath(origPath, s, t);
-      
-      origPathCost = calcPathCost(origPath); 
+        smoothPath(origPath, s, t);
+
+      origPathCost = calcOrigPathCost(origPath); 
       origPathCalculated = true;
     }
     else {
@@ -170,21 +177,21 @@ int PathPlanner::calcOrigPath(bool cautious){
 
 void PathPlanner::updateNavGraph(){
 	cout << "Updating nav graph before with the current crowd model" << endl;
-	if(crowdModel.densities.size() == 0){
+	if(crowdModel.densities.size() == 0 and (name == "density" or name == "risk" or name == "flow")){
 		cout << "crowdModel not recieved" << endl;
 	}
 	else{
-		cout << crowdModel.height << endl;
-		for(int i = 0 ; i < crowdModel.densities.size(); i++){
+		//cout << crowdModel.height << endl;
+		/*for(int i = 0 ; i < crowdModel.densities.size(); i++){
 			cout << crowdModel.densities[i] << endl;
-		}
+		}*/
 		vector<Edge*> edges = navGraph->getEdges();
 		// compute the extra cost imposed by crowd model on each edge in navGraph
 		for(int i = 0; i < edges.size(); i++){
 			Node toNode = navGraph->getNode(edges[i]->getTo());
 			Node fromNode = navGraph->getNode(edges[i]->getFrom());
 			double oldcost = edges[i]->getDistCost();
-			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, false, oldcost);
+			double newEdgeCostft = computeNewEdgeCost(fromNode, toNode, true, oldcost);
 			double newEdgeCosttf = computeNewEdgeCost(fromNode, toNode, false, oldcost); 
 			navGraph->updateEdgeCost(i, newEdgeCostft, newEdgeCosttf);
 			//cout << "Edge Cost " << oldcost << " -> " << newEdgeCostft << " -> " << newEdgeCosttf << endl;
@@ -195,24 +202,381 @@ void PathPlanner::updateNavGraph(){
 
 double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double oldcost){
 	int b = 30;
-	double s_cost = cellCost(s.getX(), s.getY(), b);
-	double d_cost = cellCost(d.getX(), d.getY(), b);
-	// weights that balance distance, crowd density and crowd flow
-	int w1 = 1;
-	int w2 = 50;
-	int w3 = 200;
+  // weights that balance distance, crowd density and crowd flow
+  int w1 = 1;
+  int w2 = 500;
+  int w3 = 500;
+  int w4 = 500;
+  int w5 = 500;
+  int w6 = 1;
+  int w7 = 1;
+  int w8 = 1;
+  if (name == "smooth"){
+    //cout << "Updating smooth nav graph" << endl;
+    //double smooth_cost = (oldcost * 5);
+    double smooth_cost = 1;
+    return (w6 * smooth_cost);
+  }
+  if (name == "novel"){
+    double ns_cost = novelCost(s.getX(), s.getY());
+    double nd_cost = novelCost(d.getX(), d.getY());
+    /*if (ns_cost > 0 or nd_cost > 0) {
+      cout << "old cost = " << oldcost << " novelCost = " << (ns_cost+nd_cost)/2 << " combined cost = " << (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2) << endl;
+    }*/
+    //return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
+    if (ns_cost > 0 or nd_cost > 0){
+      return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
+    }
+    else{
+      return (w1 * oldcost);
+    }
+  }
+  if (name == "density"){
+    //cout << "Updating density nav graph" << endl;
+    double s_cost = cellCost(s.getX(), s.getY(), b);
+    double d_cost = cellCost(d.getX(), d.getY(), b);
+    //return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
+    if (s_cost > 0 or d_cost > 0){
+      return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2);
+    }
+    else{
+      return (w1 * oldcost);
+    }
+  }
+  if (name == "risk"){
+    //cout << "Updating risk nav graph" << endl;
+    double s_risk_cost = riskCost(s.getX(), s.getY(), b);
+    double d_risk_cost = riskCost(d.getX(), d.getY(), b);
+    //return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+    if (s_risk_cost > 0 or d_risk_cost > 0){
+      return (w1 * oldcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+    }
+    else{
+      return (w1 * oldcost);
+    }
+  }
+  if (name == "flow"){
+    //cout << "updating flow nav graph" << endl;
+    double flowcost = computeCrowdFlow(s,d);
+    if(direction == true){
+      flowcost = flowcost * (-1);
+    }
+    if(flowcost < 0){
+      flowcost = 0;
+    }
+    //return (w1 * oldcost) + (w3 * flowcost);
+    if (flowcost > 0){
+      return (w1 * oldcost) + (w3 * flowcost);
+    }
+    else{
+      return (w1 * oldcost);
+    }
+  }
+  if (name == "spatial"){
+    int sRegion=-1,dRegion=-1;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
+        sRegion = i;
+      }
+      if(regions[i].inRegion(d.getX()/100.0, d.getY()/100.0)){
+        dRegion = i;
+      }
+      if(sRegion >= 0 and dRegion >= 0){
+        break;
+      }
+    }
 
-	double flowcost = computeCrowdFlow(s,d);
-	if(direction == false){
-		flowcost = flowcost * (-1);
-	}
+    double s_door_min_distance = std::numeric_limits<double>::infinity();
+    double s_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(sRegion >= 0){
+      CartesianPoint sPoint = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+      for(int i = 0; i < doors[sRegion].size(); i++) {
+        double doorDistance = doors[sRegion][i].distanceToDoor(sPoint, regions[sRegion]);
+        if (doorDistance < s_door_min_distance){
+          s_door_min_distance = doorDistance;
+        }
+      }
+      vector<FORRExit> exits = regions[sRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = sPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < s_exit_min_distance){
+          s_exit_min_distance = exitDistance;
+        }
+      }
+    }
+
+    double d_door_min_distance = std::numeric_limits<double>::infinity();
+    double d_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(dRegion >= 0){
+      CartesianPoint dPoint = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
+      for(int i = 0; i < doors[dRegion].size(); i++) {
+        double doorDistance = doors[dRegion][i].distanceToDoor(dPoint, regions[dRegion]);
+        if (doorDistance < d_door_min_distance){
+          d_door_min_distance = doorDistance;
+        }
+      }
+      vector<FORRExit> exits = regions[dRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = dPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < d_exit_min_distance){
+          d_exit_min_distance = exitDistance;
+        }
+      }
+    }
+
+    if (sRegion >= 0 and dRegion >= 0){
+      return (w1 * oldcost) * 0.25;
+    }
+    else if (sRegion >= 0 and dRegion == -1){
+      if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.5;
+      }
+      else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.75;
+      }
+      else{
+        return (w1 * oldcost) * 1;
+      }
+    }
+    else if (sRegion ==-1 and dRegion >= 0){
+      if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.5;
+      }
+      else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
+        return (w1 * oldcost) * 0.75;
+      }
+      else{
+        return (w1 * oldcost) * 1;
+      }
+    }
+    else{
+      return (w1 * oldcost) * 10;
+    }
+  }
+  if (name == "hallwayer"){
+    double sHallway=0, dHallway=0;
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
+        sHallway++;
+      }
+      if(hallways[i].pointInAggregate(CartesianPoint(d.getX()/100.0, d.getY()/100.0))){
+        dHallway++;
+      }
+    }
+    if (sHallway > 0 and dHallway > 0){
+      return (w1 * oldcost) * 1/((sHallway+dHallway)/2);
+    }
+    else{
+      return (w1 * oldcost) * 10;
+    }
+  }
+  if (name == "conveys"){
+    double sconveycost = computeConveyorCost(s.getX(), s.getY());
+    double dconveycost = computeConveyorCost(d.getX(), d.getY());
+    //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
+    if (sconveycost > 0 and dconveycost > 0){
+      return (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
+    }
+    else{
+      return (w7 * oldcost * 10);
+    }
+  }
+  if (name == "trailer"){
+    //cout << "updating trailer nav graph" << endl;
+    double strailcount = 0;
+    double dtrailcount = 0;
+    //cout << "trails.size() = " << trails.size() << endl;
+    for(int i = 0; i < trails.size(); i++){
+      //cout << "trails[i].size() = " << trails[i].size() << endl;
+      for(int j = 0; j < trails[i].size(); j++){
+        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) <= 0.5){
+          strailcount++;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
+        }
+        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) <= 0.5){
+          dtrailcount++;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
+        }
+      }
+    }
+    //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
+    //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
+    if (strailcount > 0 and dtrailcount > 0){
+      return (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
+    }
+    else{
+      return (w7 * oldcost * 10);
+    }
+  }
+  if (name == "combined"){
+    /*double s_cost = cellCost(s.getX(), s.getY(), b);
+    double d_cost = cellCost(d.getX(), d.getY(), b);
+    double s_risk_cost = riskCost(s.getX(), s.getY(), b);
+    double d_risk_cost = riskCost(d.getX(), d.getY(), b);
+    double flowcost = computeCrowdFlow(s,d);
+    double ns_cost = novelCost(s.getX(), s.getY());
+    double nd_cost = novelCost(d.getX(), d.getY());
+    double smooth_cost = (oldcost * 5);
+    double sconveycost = computeConveyorCost(s.getX(), s.getY());
+    double dconveycost = computeConveyorCost(d.getX(), d.getY());
+    if(direction == true){
+      flowcost = flowcost * (-1);
+    }
+    if(flowcost < 0){
+      flowcost = 0;
+    }
+    return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost) + (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));*/
+    int sRegion=-1,dRegion=-1;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
+        sRegion = i;
+      }
+      if(regions[i].inRegion(d.getX()/100.0, d.getY()/100.0)){
+        dRegion = i;
+      }
+      if(sRegion >= 0 and dRegion >= 0){
+        break;
+      }
+    }
+
+    double s_door_min_distance = std::numeric_limits<double>::infinity();
+    double s_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(sRegion >= 0){
+      CartesianPoint sPoint = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+      for(int i = 0; i < doors[sRegion].size(); i++) {
+        double doorDistance = doors[sRegion][i].distanceToDoor(sPoint, regions[sRegion]);
+        if (doorDistance < s_door_min_distance){
+          s_door_min_distance = doorDistance;
+        }
+      }
+      vector<FORRExit> exits = regions[sRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = sPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < s_exit_min_distance){
+          s_exit_min_distance = exitDistance;
+        }
+      }
+    }
+
+    double d_door_min_distance = std::numeric_limits<double>::infinity();
+    double d_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(dRegion >= 0){
+      CartesianPoint dPoint = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
+      for(int i = 0; i < doors[dRegion].size(); i++) {
+        double doorDistance = doors[dRegion][i].distanceToDoor(dPoint, regions[dRegion]);
+        if (doorDistance < d_door_min_distance){
+          d_door_min_distance = doorDistance;
+        }
+      }
+      vector<FORRExit> exits = regions[dRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = dPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < d_exit_min_distance){
+          d_exit_min_distance = exitDistance;
+        }
+      }
+    }
+    double sHallway=0, dHallway=0;
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
+        sHallway++;
+      }
+      if(hallways[i].pointInAggregate(CartesianPoint(d.getX()/100.0, d.getY()/100.0))){
+        dHallway++;
+      }
+    }
+    double sconveycost = computeConveyorCost(s.getX(), s.getY());
+    double dconveycost = computeConveyorCost(d.getX(), d.getY());
+    //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
+    double strailcount = 0;
+    double dtrailcount = 0;
+    //cout << "trails.size() = " << trails.size() << endl;
+    for(int i = 0; i < trails.size(); i++){
+      //cout << "trails[i].size() = " << trails[i].size() << endl;
+      for(int j = 0; j < trails[i].size(); j++){
+        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) <= 0.5){
+          strailcount++;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
+        }
+        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) <= 0.5){
+          dtrailcount++;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
+        }
+      }
+    }
+    //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
+    //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
+    double finalcost = (w1 * oldcost) * 10;
+    if (sRegion >= 0 and dRegion >= 0){
+      if ((w1 * oldcost) * 0.25 < finalcost){
+        finalcost = (w1 * oldcost) * 0.25;
+      }
+    }
+    else if (sRegion >= 0 and dRegion == -1){
+      if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
+        if ((w1 * oldcost) * 0.5 < finalcost){
+          finalcost = (w1 * oldcost) * 0.5;
+        }
+      }
+      else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
+        if ((w1 * oldcost) * 0.75 < finalcost){
+          finalcost = (w1 * oldcost) * 0.75;
+        }
+      }
+      else if ((w1 * oldcost) * 1 < finalcost){
+        finalcost = (w1 * oldcost) * 1;
+      }
+    }
+    else if (sRegion ==-1 and dRegion >= 0){
+      if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
+        if ((w1 * oldcost) * 0.5 < finalcost){
+          finalcost = (w1 * oldcost) * 0.5;
+        }
+      }
+      else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
+        if ((w1 * oldcost) * 0.75 < finalcost){
+          finalcost = (w1 * oldcost) * 0.75;
+        }
+      }
+      else if ((w1 * oldcost) * 1 < finalcost){
+        finalcost = (w1 * oldcost) * 1;
+      }
+    }
+    if (sHallway > 0 and dHallway > 0){
+      if ((w1 * oldcost) * 1/((sHallway+dHallway)/2) < finalcost){
+        finalcost = (w1 * oldcost) * 1/((sHallway+dHallway)/2);
+      }
+    }
+    if (sconveycost > 0 and dconveycost > 0){
+      if ((w7 * oldcost * 1/((sconveycost + dconveycost)/2)) < finalcost){
+        finalcost = (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
+      }
+    }
+    if (strailcount > 0 and dtrailcount > 0){
+      if ((w7 * oldcost * 1/((strailcount + dtrailcount)/2)) < finalcost){
+        finalcost = (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
+      }
+    }
+    return finalcost;
+  }
+
+  //double newEdgeCost = (oldcost * flowcost);
+  //double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2);
+
 	//cout << "Flow cost --------- " << endl;
-	//cout << "Flow cost    :" << flowcost << endl;
-	//cout << "Node penalty : " << d_density << " * " << s_density << endl;
-	//double newEdgeCost = (oldcost * flowcost);
-	double newEdgeCost = (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost);
-	//cout << "Old cost : " << oldcost << " new cost : " << newEdgeCost << std::endl;
-	return newEdgeCost;
+  /*if (s_cost > 0 or d_cost > 0 or flowcost > 0 or s_risk_cost > 0 or d_risk_cost > 0){
+    cout << "Dist cost    :" << oldcost << endl;
+  	cout << "Node penalty : " << s_cost << " + " << d_cost << endl;
+    cout << "Flow cost    :" << flowcost << endl;
+    cout << "Risk penalty : " << s_risk_cost << " + " << d_risk_cost << endl;
+  	//cout << "Old cost : " << oldcost << " new cost : " << newEdgeCost << std::endl;
+    cout << "New cost    :" << newEdgeCost << endl;
+  }*/
+	//return newEdgeCost;
 }
 
 
@@ -238,6 +602,28 @@ double PathPlanner::cellCost(int nodex, int nodey, int buffer){
 	//return d;
 }
 
+
+double PathPlanner::riskCost(int nodex, int nodey, int buffer){
+  int x = (int)((nodex/100.0)/crowdModel.resolution);
+  int x1 = (int)(((nodex+buffer)/100.0)/crowdModel.resolution);
+  int x2 = (int)(((nodex-buffer)/100.0)/crowdModel.resolution);
+  int y = (int)((nodey/100.0)/crowdModel.resolution);
+  int y1 = (int)(((nodey+buffer)/100.0)/crowdModel.resolution);
+  int y2 = (int)(((nodey-buffer)/100.0)/crowdModel.resolution);
+
+  //std::cout << "x " << x << " y " << y;
+  double d = crowdModel.risk[(y * crowdModel.width) + x];
+  double d1 = crowdModel.risk[(y1 * crowdModel.width) + x];
+  double d2 = crowdModel.risk[(y2 * crowdModel.width) + x];
+  double d3 = crowdModel.risk[(y * crowdModel.width) + x1];
+  double d4 = crowdModel.risk[(y * crowdModel.width) + x2];
+  //std::cout << " Cell cost " << d << std::endl;
+  //return (d + d1 + d2 + d3 + d4)/5;
+  double da = std::max(std::max(d, d1),d2);
+  double db = std::max(d3, d4);
+  return std::max(da,db);
+  //return d;
+}
 
 // Projection of crowd flow vectors on vector at s and d and then take the average
 double PathPlanner::computeCrowdFlow(Node s, Node d){
@@ -298,12 +684,32 @@ double PathPlanner::computeCrowdFlow(Node s, Node d){
 	return cost;
 }
 
+double PathPlanner::novelCost(int nodex, int nodey){
+  //cout << "Inside novelCost : Node x = " << (nodex/100.0) << " Node y = " << (nodey/100.0) << endl;
+  //cout << "Modified Node x = " << (int)(((nodex/100.0)/(map_width*1.0)) * boxes_width) << " Modified Node y = " << (int)(((nodey/100.0)/(map_height*1.0)) * boxes_height) << endl;
+  //cout << "novelCost = " << posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)] << endl;
+  return posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
+}
+
+double PathPlanner::computeConveyorCost(int nodex, int nodey){
+  //cout << "Inside computeConveyorCost : Node x = " << (nodex/100.0) << " Node y = " << (nodey/100.0) << endl;
+  //cout << "ConveyorCost = " << conveyors->getGridValue((nodex/100.0),(nodey/100.0)) << endl;
+  return conveyors->getGridValue((nodex/100.0),(nodey/100.0));
+}
+
 
 double PathPlanner::projection(double flow_angle, double flow_length, double xs, double ys, double xd, double yd){
-	double pi = 3.145;
-	double edge_angle = atan2((ys - yd),(xs - xd));
-	edge_angle = (edge_angle > 0 ? edge_angle : (2*pi + edge_angle));
+	//double pi = 3.145;
+	double edge_angle = atan2((ys - yd),(xs - xd))+M_PI;
+	//edge_angle = (edge_angle > 0 ? edge_angle : (2*pi + edge_angle));
+  edge_angle = (edge_angle < (2*M_PI) ? edge_angle : (0.0));
 	double theta = flow_angle - edge_angle;
+  if(theta>M_PI){
+    theta = theta-2*M_PI;
+  }
+  else if(theta<-M_PI){
+    theta = theta+2*M_PI;
+  }
 	//cout << "Flow angle: " << flow_angle << " Edge angle: " << edge_angle << " Diff: " << theta << endl;
 	return flow_length * cos(theta);
 }
@@ -321,7 +727,7 @@ bool PathPlanner::isAccessible(Node s, Node t) {
   if ( s.getID() == Node::invalid_node_index || t.getID() == Node::invalid_node_index )
     return false;
 
-  astar newsearch(*navGraph, s, t);
+  astar newsearch(*navGraph, s, t, name);
   if ( newsearch.isPathFound() )
     return true;
 
@@ -397,7 +803,7 @@ list<pair<int,int> > PathPlanner::getPathXYBetween(int x1, int y1, int x2, int y
   }
 
   // calculate the path. if no path is found return the path_points list empty
-  astar newsearch(*navGraph, s, t);
+  astar newsearch(*navGraph, s, t, name);
   if(newsearch.isPathFound()) {
     path_c = newsearch.getPathToTarget();
     smoothPath(path_c, s, t);
@@ -459,7 +865,7 @@ double PathPlanner::calcPathCost(list<int> p){
   // add reaching from source and to target costs
   // Note: This will double count when called from estimateCost() and calcPath()
 
-  if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
+  /*if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
     if ( !p.empty() ){
       pcost += Map::distance(source.getX(), source.getY(),
 					     navGraph->getNode(p.front()).getX(),
@@ -471,7 +877,41 @@ double PathPlanner::calcPathCost(list<int> p){
     else
       pcost += Map::distance(source.getX(), source.getY(),
 					     target.getX(), target.getY());
+  }*/
+
+  return pcost;
+}
+
+double PathPlanner::calcOrigPathCost(list<int> p){
+  double pcost = 0;
+  list<int>::iterator iter;
+  int first;
+  Edge * e;
+
+  for( iter = p.begin(); iter != p.end() ; iter++ ){
+    first = *iter++;
+    if (iter != p.end()){
+      e = originalNavGraph->getEdge(first, *iter);
+      pcost += e->getCost(true);
+    }
+    iter--;
   }
+  // add reaching from source and to target costs
+  // Note: This will double count when called from estimateCost() and calcPath()
+
+  /*if ( source.getID() != Node::invalid_node_index && target.getID() != Node::invalid_node_index ){
+    if ( !p.empty() ){
+      pcost += Map::distance(source.getX(), source.getY(),
+               navGraph->getNode(p.front()).getX(),
+               navGraph->getNode(p.front()).getY());
+      pcost += Map::distance(navGraph->getNode(p.back()).getX(),
+               navGraph->getNode(p.back()).getY(),
+               target.getX(), target.getY());
+    }
+    else
+      pcost += Map::distance(source.getX(), source.getY(),
+               target.getX(), target.getY());
+  }*/
 
   return pcost;
 }
@@ -528,7 +968,7 @@ double PathPlanner::estimateCost(Node s, Node t, int l){
   double pathCost = Map::distance(s.getX(), s.getY(), sn.getX(), sn.getY());
   pathCost += Map::distance(t.getX(), t.getY(), tn.getX(), tn.getY());
 
-  astar nsearch(*navGraph, sn, tn);
+  astar nsearch(*navGraph, sn, tn, name);
   if ( nsearch.isPathFound() ){
     list<int> p = nsearch.getPathToTarget();
     pathCost += calcPathCost(p);
@@ -604,37 +1044,35 @@ Node PathPlanner::getClosestNode(Node n, Node ref){
       double d = Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() );
 
       if(PATH_DEBUG){
-	cout << "\tChecking ";
-	(*iter)->printNode();
-	cout << endl;
-	cout << "\tDistance between the n and this node: " << d << endl;
+        cout << "\tChecking ";
+        (*iter)->printNode();
+        cout << endl;
+        cout << "\tDistance between the n and this node: " << d << endl;
       }
 
       double d_t = 0.0;
       if(ref.getID() != Node::invalid_node_index)
-	d_t = Map::distance((*iter)->getX(), (*iter)->getY(), ref.getX(), ref.getY());
+        d_t = Map::distance((*iter)->getX(), (*iter)->getY(), ref.getX(), ref.getY());
 
       if(PATH_DEBUG)
-	cout << "\tDistance between this node to ref: " << d_t << endl;
+        cout << "\tDistance between this node to ref: " << d_t << endl;
       // d + d_t < dist, was the earlier version, not sure why?
-      if (( d < dist ) &&
-	  !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) &&
-	  (*iter)->isAccessible()) {
-	//cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
-	dist = d + d_t;
-	temp = (*(*iter));
-	if(PATH_DEBUG) {
-	  cout << "\tFound a new candidate!: ";
-	  temp.printNode();
-	  cout << endl << endl;
-	}
+      if (( d < dist ) && !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) && (*iter)->isAccessible()) {
+        //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
+        dist = d + d_t;
+        temp = (*(*iter));
+        if(PATH_DEBUG) {
+          cout << "\tFound a new candidate!: ";
+          temp.printNode();
+          cout << endl << endl;
+        }
       }
     }
 
     if(temp.getID() == Node::invalid_node_index) {
       s_radius += 0.1 * s_radius;
       if(PATH_DEBUG)
-	cout << signature << "Didn't find a suitable candidate. Increasing search radius to: " << s_radius << endl;
+        cout << signature << "Didn't find a suitable candidate. Increasing search radius to: " << s_radius << endl;
     }
 
   } while(temp.getID() == Node::invalid_node_index && s_radius <= max_radius);

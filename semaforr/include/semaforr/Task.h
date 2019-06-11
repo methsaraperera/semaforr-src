@@ -57,7 +57,8 @@ class Task {
 	}
   }
 
-
+  bool getIsPlanActive(){return isPlanActive;}
+  
   int getDecisionCount(){return decision_count;} 
  
   int incrementDecisionCount() {decision_count += 1;}
@@ -68,7 +69,7 @@ class Task {
 
   FORRAction saveDecision(FORRAction decision){
 	decisionSequence->push_back(decision);
-	cout << "After decisionToPush" << endl;
+	//cout << "After decisionToPush" << endl;
   }
 
   vector<Position> *getPositionHistory(){return pos_hist;}
@@ -94,68 +95,113 @@ class Task {
   vector<CartesianPoint> getWaypoints(){return waypoints;}
   vector<CartesianPoint> getOrigWaypoints(){return origWaypoints;}
 
+  list<int> getWaypointInds(){return waypointInd;}
+  vector< list<int> > getPlansInds(){return plansInds;}
+
   // generates new waypoints given currentposition and a planner
   bool generateWaypoints(Position source, PathPlanner *planner){
 	waypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
-        Node s(1, source.getX()*100, source.getY()*100);
+	Node s(1, source.getX()*100, source.getY()*100);
 	planner->setSource(s);
 	Node t(1, x*100, y*100);
 	planner->setTarget(t);
 
-        cout << "plan generation status" << planner->calcPath(true) << endl;
+	cout << "plan generation status" << planner->calcPath(true) << endl;
 
-	list<int> path = planner->getPath();
+	waypointInd = planner->getPath();
+	plansInds = planner->getPaths();
 	Graph *navGraph = planner->getGraph();
-
-	list<int>::iterator it;
-	for ( it = path.begin(); it != path.end(); it++ ){
+	if(waypointInd.size() > 0){
+		isPlanActive = true;
+	}
+	else{
+		isPlanActive = false;
+	}
+	/*list<int>::iterator it;
+	for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 		double x = navGraph->getNode(*it).getX()/100.0;
 		double y = navGraph->getNode(*it).getY()/100.0;
-    		cout << x << " " << y << endl;
+		cout << x << " " << y << endl;
 		CartesianPoint waypoint(x,y);
 		waypoints.push_back(waypoint);
 		//if atleast one point is generated
 		cout << "Plan active is true" << endl;
 		isPlanActive = true;
-  	}
-	setupNextWaypoint(source);
+	}
+	setupNextWaypoint(source);*/
 	planner->resetPath();
 	cout << "plan generation complete" << endl;
-   }
+  }
 
   bool generateOriginalWaypoints(Position source, PathPlanner *planner){
-  	cout << "inside generate original waypoints" << endl;
 	origWaypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
-	cout << "before set source and target" << endl;
 	Node s(1, source.getX()*100, source.getY()*100);
 	planner->setSource(s);
 	Node t(1, x*100, y*100);
 	planner->setTarget(t);
 
 	cout << "plan generation status" << planner->calcOrigPath(true) << endl;
-	cout << "plan generation complete" << endl;
+
 	list<int> path = planner->getOrigPath();
 	Graph *navGraph = planner->getOrigGraph();
-	cout << "before waypoint creation" << endl;
 	list<int>::iterator it;
 	for ( it = path.begin(); it != path.end(); it++ ){
 		double x = navGraph->getNode(*it).getX()/100.0;
 		double y = navGraph->getNode(*it).getY()/100.0;
-    		cout << x << " " << y << endl;
 		CartesianPoint waypoint(x,y);
 		origWaypoints.push_back(waypoint);
+  	}
+  	origPathCostInOrigNavGraph = planner->getOrigPathCost();
+  	origPathCostInNavGraph = planner->calcPathCost(path);
+  	/*vector<CartesianPoint> skippedwaypoints;
+	for(int i = 0; i < origWaypoints.size(); i+=4){
+		skippedwaypoints.push_back(origWaypoints[i]);
+	}
+	origWaypoints = skippedwaypoints;*/
+	planner->resetOrigPath();
+	cout << "plan generation complete" << endl;
+  }
+
+  bool generateWaypointsFromInds(Position source, PathPlanner *planner, list<int> indices){
+	waypoints.clear();
+	//a_star planner works in cms so all units are converts into cm
+	//once plan is generated waypoints are stored in meters
+	//Node s(1, source.getX()*100, source.getY()*100);
+	//planner->setSource(s);
+	//Node t(1, x*100, y*100);
+	//planner->setTarget(t);
+
+	//cout << "plan generation status" << planner->calcPath(true) << endl;
+	waypointInd = indices;
+	Graph *navGraph = planner->getGraph();
+	list<int>::iterator it;
+	for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+		double x = navGraph->getNode(*it).getX()/100.0;
+		double y = navGraph->getNode(*it).getY()/100.0;
+		//cout << x << " " << y << endl;
+		CartesianPoint waypoint(x,y);
+		waypoints.push_back(waypoint);
 		//if atleast one point is generated
 		//cout << "Plan active is true" << endl;
-		//isPlanActive = true;
-  	}
+		isPlanActive = true;
+	}
+	pathCostInNavGraph = planner->getPathCost();
+	pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
+	vector<CartesianPoint> skippedwaypoints;
+	for(int i = 0; i < waypoints.size(); i+=5){
+		skippedwaypoints.push_back(waypoints[i]);
+	}
+	waypoints = skippedwaypoints;
 	//setupNextWaypoint(source);
-	planner->resetOrigPath();
-	cout << "waypoint generation complete" << endl;
-   }  
+	setupNearestWaypoint(source);
+	//planner->resetPath();
+	//cout << "plan generation complete" << endl;
+  }
+
 
    double planCost(vector<CartesianPoint> waypoints, PathPlanner *planner, Position source, Position target){
    	double cost = planner->calcPathCost(waypoints, source, target);
@@ -171,7 +217,7 @@ class Task {
 		wy = waypoints[0].get_y();
 		dis = currentPosition.getDistance(wx, wy);
 		if(dis < 0.75){
-			cout << "found waypoing with dist < 0.75" << endl;
+			cout << "found waypoint with dist < 0.75" << endl;
 			waypoints.erase(waypoints.begin());
 		}
 		else{
@@ -186,6 +232,36 @@ class Task {
 		isPlanActive = false;
 	}
 	cout << "end setup next waypoint" << endl;
+   }
+
+   void setupNearestWaypoint(Position currentPosition){
+   	cout << "inside setup nearest waypoint" << endl;
+	double dis;
+	int farthest = 0;
+	//cout << "waypoints size: " << waypoints.size() << endl;
+	for (int i = 0; i < waypoints.size(); i++){
+		dis = currentPosition.getDistance(waypoints[i].get_x(), waypoints[i].get_y());
+		if(dis < 0.75){
+			//cout << "found waypoint with dist < 0.75: " << i << endl;
+			farthest = i;
+		}
+	}
+	if(farthest == 0){
+		waypoints.erase(waypoints.begin());
+	}
+	else{
+		waypoints.erase(waypoints.begin(), waypoints.begin()+farthest);
+	}
+	wx = waypoints[0].get_x();
+	wy = waypoints[0].get_y();
+	//cout << "check plan active: " << waypoints.size() << endl;
+	if(waypoints.size() > 0){
+		isPlanActive = true;
+	}
+	else{
+		isPlanActive = false;
+	}
+	//cout << "end setup next waypoint" << endl;
    }
 
   
@@ -207,14 +283,34 @@ class Task {
 	}
 	return status;
    }
-  
+
+   bool isAnyWaypointComplete(Position currentPosition){
+	bool status = false;
+	for (int i = 0; i < waypoints.size(); i++){
+		double dis = currentPosition.getDistance(waypoints[i].get_x(), waypoints[i].get_y());
+		if (isPlanActive && (dis < 0.75)){
+			status = true;
+			break;
+		}
+	}
+	return status;
+   }
+
+  double getPathCostInNavGraph(){return pathCostInNavGraph;}
+  double getPathCostInNavOrigGraph(){return pathCostInNavOrigGraph;}
+  double getOrigPathCostInOrigNavGraph(){return origPathCostInOrigNavGraph;}
+  double getOrigPathCostInNavGraph(){return origPathCostInNavGraph;}
    
  private:
   
   // Current plan generated by A*, stored as waypoints , index 0 being the beginning of the plan
   vector<CartesianPoint> waypoints;
-
   vector<CartesianPoint> origWaypoints;
+  double pathCostInNavGraph, pathCostInNavOrigGraph;
+  double origPathCostInOrigNavGraph, origPathCostInNavGraph;
+
+  list<int> waypointInd;
+  vector< list<int> > plansInds;
 
   CartesianPoint currentWaypoint;
 

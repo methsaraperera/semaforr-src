@@ -148,14 +148,14 @@ bool Map::isPathObstructed(double x0, double y0, double x1, double y1 ){
       if(Map::isPointInBuffer(x0,y0)) return true;
       if(Map::isPointInBuffer(x1,y1)) return true;
       if(distance > (stepSize * 2)){
-      	for(int step = 0; step <= distance; step += stepSize ){
-		double t = step/distance;
-  		double xtest = (x0 * t) + ((1-t)*x1);
-  		double ytest = (y0 * t) + ((1-t)*y1);
-		if(Map::isPointInBuffer(xtest,ytest) == true){
-			return true;
-		}
-      	}
+        for(int step = 0; step <= distance; step += stepSize ){
+          double t = step/distance;
+          double xtest = (x0 * t) + ((1-t)*x1);
+          double ytest = (y0 * t) + ((1-t)*y1);
+          if(Map::isPointInBuffer(xtest,ytest) == true){
+            return true;
+          }
+        }
       }
       return false;
 }

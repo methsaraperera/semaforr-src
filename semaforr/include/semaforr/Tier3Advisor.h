@@ -729,29 +729,478 @@ class Tier3LearnSpatialModelRotation : public Tier3Advisor{
 };
 
 
-class Tier3ActiveLearner : public Tier3Advisor{
+class Tier3Curiosity : public Tier3Advisor{
  public: 
-  Tier3ActiveLearner(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
-  Tier3ActiveLearner();
+  Tier3Curiosity(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Curiosity();
   
-  virtual ~Tier3ActiveLearner(){};
+  virtual ~Tier3Curiosity(){};
   virtual double actionComment(FORRAction action);
   virtual void set_commenting();
 
 };
 
 
-class Tier3ActiveLearnerRotation : public Tier3Advisor{
+class Tier3CuriosityRotation : public Tier3Advisor{
  public: 
-  Tier3ActiveLearnerRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
-  Tier3ActiveLearnerRotation();
+  Tier3CuriosityRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3CuriosityRotation();
   
-  virtual ~Tier3ActiveLearnerRotation(){};
+  virtual ~Tier3CuriosityRotation(){};
   virtual double actionComment(FORRAction action);
   virtual void set_commenting();
 
 };
 
+
+class Tier3Enfilade : public Tier3Advisor{
+ public: 
+  Tier3Enfilade(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Enfilade();
+  
+  virtual ~Tier3Enfilade(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3EnfiladeRotation : public Tier3Advisor{
+ public: 
+  Tier3EnfiladeRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3EnfiladeRotation();
+  
+  virtual ~Tier3EnfiladeRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Thigmotaxis : public Tier3Advisor{
+ public: 
+  Tier3Thigmotaxis(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Thigmotaxis();
+  
+  virtual ~Tier3Thigmotaxis(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3ThigmotaxisRotation : public Tier3Advisor{
+ public: 
+  Tier3ThigmotaxisRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3ThigmotaxisRotation();
+  
+  virtual ~Tier3ThigmotaxisRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3VisualScanRotation : public Tier3Advisor{
+ public: 
+  Tier3VisualScanRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3VisualScanRotation();
+  
+  virtual ~Tier3VisualScanRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3LeastAngle : public Tier3Advisor{
+ public: 
+  Tier3LeastAngle(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3LeastAngle();
+  
+  virtual ~Tier3LeastAngle(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3LeastAngleRotation : public Tier3Advisor{
+ public: 
+  Tier3LeastAngleRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3LeastAngleRotation();
+  
+  virtual ~Tier3LeastAngleRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Interpersonal : public Tier3Advisor{
+ public: 
+  Tier3Interpersonal(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Interpersonal();
+  
+  virtual ~Tier3Interpersonal(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3InterpersonalRotation : public Tier3Advisor{
+ public: 
+  Tier3InterpersonalRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3InterpersonalRotation();
+  
+  virtual ~Tier3InterpersonalRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+/*class Tier3Formation : public Tier3Advisor{
+ public: 
+  Tier3Formation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Formation();
+  
+  virtual ~Tier3Formation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FormationRotation : public Tier3Advisor{
+ public: 
+  Tier3FormationRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FormationRotation();
+  
+  virtual ~Tier3FormationRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};*/
+
+class Tier3Front : public Tier3Advisor{
+ public: 
+  Tier3Front(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Front();
+  
+  virtual ~Tier3Front(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FrontRotation : public Tier3Advisor{
+ public: 
+  Tier3FrontRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FrontRotation();
+  
+  virtual ~Tier3FrontRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Rear : public Tier3Advisor{
+ public: 
+  Tier3Rear(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Rear();
+  
+  virtual ~Tier3Rear(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3RearRotation : public Tier3Advisor{
+ public: 
+  Tier3RearRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3RearRotation();
+  
+  virtual ~Tier3RearRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Side : public Tier3Advisor{
+ public: 
+  Tier3Side(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Side();
+  
+  virtual ~Tier3Side(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3SideRotation : public Tier3Advisor{
+ public: 
+  Tier3SideRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3SideRotation();
+  
+  virtual ~Tier3SideRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Visible : public Tier3Advisor{
+ public: 
+  Tier3Visible(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Visible();
+  
+  virtual ~Tier3Visible(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3VisibleRotation : public Tier3Advisor{
+ public: 
+  Tier3VisibleRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3VisibleRotation();
+  
+  virtual ~Tier3VisibleRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+/*class Tier3Wait : public Tier3Advisor{
+ public: 
+  Tier3Wait(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Wait();
+  
+  virtual ~Tier3Wait(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3WaitRotation : public Tier3Advisor{
+ public: 
+  Tier3WaitRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3WaitRotation();
+  
+  virtual ~Tier3WaitRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};*/
+
+class Tier3CrowdAvoid : public Tier3Advisor{
+ public: 
+  Tier3CrowdAvoid(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3CrowdAvoid();
+  
+  virtual ~Tier3CrowdAvoid(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3CrowdAvoidRotation : public Tier3Advisor{
+ public: 
+  Tier3CrowdAvoidRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3CrowdAvoidRotation();
+  
+  virtual ~Tier3CrowdAvoidRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3FindTheCrowd : public Tier3Advisor{
+ public: 
+  Tier3FindTheCrowd(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FindTheCrowd();
+  
+  virtual ~Tier3FindTheCrowd(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FindTheCrowdRotation : public Tier3Advisor{
+ public: 
+  Tier3FindTheCrowdRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FindTheCrowdRotation();
+  
+  virtual ~Tier3FindTheCrowdRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3RiskAvoid : public Tier3Advisor{
+ public: 
+  Tier3RiskAvoid(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3RiskAvoid();
+  
+  virtual ~Tier3RiskAvoid(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3RiskAvoidRotation : public Tier3Advisor{
+ public: 
+  Tier3RiskAvoidRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3RiskAvoidRotation();
+  
+  virtual ~Tier3RiskAvoidRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3FindTheRisk : public Tier3Advisor{
+ public: 
+  Tier3FindTheRisk(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FindTheRisk();
+  
+  virtual ~Tier3FindTheRisk(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FindTheRiskRotation : public Tier3Advisor{
+ public: 
+  Tier3FindTheRiskRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FindTheRiskRotation();
+  
+  virtual ~Tier3FindTheRiskRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3FlowAvoid : public Tier3Advisor{
+ public: 
+  Tier3FlowAvoid(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FlowAvoid();
+  
+  virtual ~Tier3FlowAvoid(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FlowAvoidRotation : public Tier3Advisor{
+ public: 
+  Tier3FlowAvoidRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FlowAvoidRotation();
+  
+  virtual ~Tier3FlowAvoidRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3FindTheFlow : public Tier3Advisor{
+ public: 
+  Tier3FindTheFlow(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FindTheFlow();
+  
+  virtual ~Tier3FindTheFlow(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FindTheFlowRotation : public Tier3Advisor{
+ public: 
+  Tier3FindTheFlowRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FindTheFlowRotation();
+  
+  virtual ~Tier3FindTheFlowRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Follow : public Tier3Advisor{
+ public: 
+  Tier3Follow(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Follow();
+  
+  virtual ~Tier3Follow(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3FollowRotation : public Tier3Advisor{
+ public: 
+  Tier3FollowRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3FollowRotation();
+  
+  virtual ~Tier3FollowRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Crossroads : public Tier3Advisor{
+ public: 
+  Tier3Crossroads(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Crossroads();
+  
+  virtual ~Tier3Crossroads(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3CrossroadsRotation : public Tier3Advisor{
+ public: 
+  Tier3CrossroadsRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3CrossroadsRotation();
+  
+  virtual ~Tier3CrossroadsRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+class Tier3Stay : public Tier3Advisor{
+ public: 
+  Tier3Stay(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3Stay();
+  
+  virtual ~Tier3Stay(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
+
+
+class Tier3StayRotation : public Tier3Advisor{
+ public: 
+  Tier3StayRotation(Beliefs *beliefs, string name, string description, double weight, double *magic_init, bool is_active = true);
+  Tier3StayRotation();
+  
+  virtual ~Tier3StayRotation(){};
+  virtual double actionComment(FORRAction action);
+  virtual void set_commenting();
+
+};
 #endif
 
 

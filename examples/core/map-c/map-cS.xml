@@ -2,7 +2,6 @@
 
 <Experiment version="2.0">
 	<SpatialQuery type="kd-tree" test_visibility="false" />
-	
     <OpenSteer max_force="8" leak_through="0.1" reaction_time="0.5" />
     <Common time_step="0.1" />
     <GCF reaction_time="0.5" max_agent_dist="2" max_agent_force="3" agent_interp_width="0.1" nu_agent="0.35" />
@@ -14,7 +13,7 @@
 
     <AgentProfile name="group1" >
 		<OpenSteer tau="3" tauObst="6" />
-        <Common max_angle_vel="360" max_neighbors="10" obstacleSet="1" neighbor_dist="5" r="0.19" class="1" pref_speed="1.04" max_speed="2" max_accel="5" priority="0.0" external="1"/>
+        <Common max_angle_vel="360" max_neighbors="10" obstacleSet="1" neighbor_dist="5" r="0.19" class="1" pref_speed="1.04" max_speed="2" max_accel="5" priority="0.0" external="1" start_angle="-1.91986" end_angle="1.9194" increment="0.005817" range_max="25"/>
 		<PedVO factor="1.57" buffer="0.9" tau="3" tauObst="0.1" turningBias="1.0" />
         <GCF stand_depth="0.18" move_scale="0.53" slow_width="0.25" sway_change="0.05" orient_weight="0.75" />
         <Helbing mass="80" />
@@ -33,17 +32,11 @@
         <ProfileSelector type="const" name="group1" />
 		<StateSelector type="const" name="Walk1" />
 		<Generator type="explicit" displace_dist="u" displace_min="0.0" displace_max="1.0" >
-			<Agent p_x="10" p_y="20"/>
+			<Agent p_x="15" p_y="15"/>
 		</Generator>
     </AgentGroup>
 
-    <AgentGroup>
-        <StateSelector type="const" name="Walk2" />
-		<ProfileSelector type="const" name="group2" />
-		<Generator type="explicit">
-			<Agent p_x="10" p_y="30" />
-		</Generator>
-    </AgentGroup>
+
 <ObstacleSet type="explicit" class="1">
     <Obstacle closed="1"> 
     <Vertex p_x="3.300000" p_y="4.133333" />
@@ -102,6 +95,30 @@
     <Obstacle closed="1"> 
     <Vertex p_x="11.800000" p_y="15.066667" />
     <Vertex p_x="17.200000" p_y="15.066667" />
+    </Obstacle>
+
+
+    <Obstacle closed="1"> 
+    <Vertex p_x="0.200000" p_y="0.250000" />
+    <Vertex p_x="20.400000" p_y="0.250000" />
+    </Obstacle>
+
+
+    <Obstacle closed="1"> 
+    <Vertex p_x="0.200000" p_y="0.300000" />
+    <Vertex p_x="0.150000" p_y="19.200000" />
+    </Obstacle>
+
+
+    <Obstacle closed="1"> 
+    <Vertex p_x="0.150000" p_y="19.250000" />
+    <Vertex p_x="20.400000" p_y="19.250000" />
+    </Obstacle>
+
+
+    <Obstacle closed="1"> 
+    <Vertex p_x="20.450000" p_y="0.200000" />
+    <Vertex p_x="20.350000" p_y="19.200000" />
     </Obstacle>
 </ObstacleSet>
 

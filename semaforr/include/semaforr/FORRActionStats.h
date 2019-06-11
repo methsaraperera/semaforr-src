@@ -20,9 +20,12 @@ class FORRActionStats {
     std::string advisors;
     std::string advisorComments;
     std::string advisorInfluence;
+    double planningComputationTime;
+    double learningComputationTime;
+    std::string chosenPlanner;
 
-    FORRActionStats(int decTier, std::string vActions, std::string adv, std::string advComments, std::string advInfluence) : decisionTier(decTier), vetoedActions(vActions), advisors(adv), advisorComments(advComments), advisorInfluence(advInfluence) {};
-    FORRActionStats(): decisionTier(0), vetoedActions(" "), advisors(" "), advisorComments(" "), advisorInfluence(" ") {};
+    FORRActionStats(int decTier, std::string vActions, std::string adv, std::string advComments, std::string advInfluence, double planTime, double learnTime, std::string chsPlan) : decisionTier(decTier), vetoedActions(vActions), advisors(adv), advisorComments(advComments), advisorInfluence(advInfluence), planningComputationTime(planTime), learningComputationTime(learnTime), chosenPlanner(chsPlan) {};
+    FORRActionStats(): decisionTier(0), vetoedActions(" "), advisors(" "), advisorComments(" "), advisorInfluence(" "), planningComputationTime(0), learningComputationTime(0), chosenPlanner(" ") {};
 
 };
 

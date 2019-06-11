@@ -12,6 +12,12 @@
 #include "FORRGeometry.h"
 #include <semaforr/CrowdModel.h>
 #include <math.h>
+#include <vector>
+#include "FORRConveyors.h"
+#include "FORRRegion.h"
+#include "FORRExit.h"
+#include "FORRDoors.h"
+#include "Aggregate.h"
 
 /*! 
   \brief PathPlanner class in PathPlanner module
@@ -21,15 +27,33 @@
 
 class PathPlanner {
 private: 
-  Graph * navGraph; 
+  Graph * navGraph;
   Graph * originalNavGraph;
   Map map;
   semaforr::CrowdModel crowdModel;
   Node source, target; 
-  list<int> path; 
+  list<int> path;
+  vector< list<int> > paths;
   double pathCost;
   list<int> origPath; 
   double origPathCost;
+  vector <double> pathCosts;
+  string name;
+  vector< vector<int> > posHistMap;
+  vector< vector<double> > posHistMapNorm;
+  double width;
+  double height;
+  int granularity;
+  int boxes_width;
+  int boxes_height;
+  int map_height;
+  int map_width;
+  //SpatialModel* spatialModel;
+  FORRConveyors* conveyors;
+  vector<FORRRegion> regions;
+  vector< vector<Door> > doors;
+  vector< vector<CartesianPoint> > trails;
+  vector<Aggregate> hallways;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -39,7 +63,6 @@ private:
   bool origObjectiveSet;
   bool origPathCompleted;
   bool origPathCalculated;
-
 
   void smoothPath(list<int>&, Node, Node);
   double computeCrowdFlow(Node s, Node d);
@@ -51,17 +74,20 @@ public:
     \param Node starting point (source)
     \param Node destination point (target)
   */
- PathPlanner(Graph * g, Map& m, Node s, Node t): navGraph(g), map(m), source(s), target(t), pathCalculated(false){}
+ PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false){}
 
-  int calcPath(bool cautious = false); 
+  int calcPath(bool cautious = false);
   int calcOrigPath(bool cautious = false);
 
   /*! \return list of node indexes of waypoints */
   list<int> getPath(){ return path; }
   list<int> getOrigPath(){ return origPath; }
 
+  vector< list<int> > getPaths(){ return paths; }
+
   void resetPath() { 
     path.clear();
+    paths.clear();
     pathCompleted = true; 
     pathCalculated = false;
   }
@@ -80,6 +106,84 @@ public:
   void setOriginalNavGraph(Graph * navGraph){ 
     originalNavGraph = navGraph;
   }
+  void setPosHistory(vector< vector<CartesianPoint> > all_trace){
+    posHistMap.clear();
+    posHistMapNorm.clear();
+    if (name == "novel" or name == "combined"){
+      width = navGraph->getMap()->getLength()/100;
+      height = navGraph->getMap()->getHeight()/100;
+      granularity = 10;
+      boxes_width = width/granularity;
+      boxes_height = height/granularity;
+      map_height = height;
+      map_width = width;
+      for(int i = 0; i < boxes_width; i++){
+        vector<int> col;
+        for(int j = 0; j < boxes_height; j++){
+          col.push_back(0);
+        }
+        posHistMap.push_back(col);
+      }
+      //cout << "width = " << width << " height = " << height << " granularity = " << granularity << " boxes_width = " << boxes_width << " boxes_height = " << boxes_height << " map_width = " << map_width << " map_height = " << map_height << endl;
+      for(int i = 0; i < all_trace.size(); i++){
+        for(int j = 0; j < all_trace[i].size(); j++) {
+          //cout << "Pose " << i << ", " << j << " : x = " << all_trace[i][j].get_x() << " y = " << all_trace[i][j].get_y() << endl;
+          //cout << "Modified x = " << (int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width) << " Modified y = " << (int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height) << endl;
+          posHistMap[(int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width)][(int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height)] += 1;
+        }
+      }
+      double cmax=-1.0, cmin=1000000.0;
+      for(int i = 0; i < boxes_width; i++){
+        for(int j = 0; j < boxes_height; j++){
+          if(posHistMap[i][j]>cmax){
+            cmax = posHistMap[i][j];
+          }
+          if(posHistMap[i][j]<cmin){
+            cmin = posHistMap[i][j];
+          }
+        }
+      }
+      //cout << "max = " << cmax << " min = " << cmin << endl;
+      for(int i = 0; i < boxes_width; i++){
+        vector<double> colm;
+        for(int j = 0; j < boxes_height; j++){
+          //cout << "Cell val = " << posHistMap[i][j] << " Normed = " << ((double)posHistMap[i][j]-cmin)/(cmax-cmin) << endl;
+          double normedCellVal = ((double)posHistMap[i][j]-cmin)/(cmax-cmin);
+          //cout << "normedCellVal = " << normedCellVal << endl;
+          colm.push_back(normedCellVal);
+        }
+        posHistMapNorm.push_back(colm);
+      }
+      /*for(int i = 0; i < boxes_width; i++){
+        for(int j = 0; j < boxes_height; j++){
+          cout << posHistMapNorm[i][j] << " ";
+        }
+        cout << endl;
+      }*/
+    }
+  }
+
+  void setSpatialModel(FORRConveyors* cv, vector<FORRRegion> rgs, vector< vector<Door> > drs, vector< vector<CartesianPoint> > trl, vector<Aggregate> hlwys){
+    conveyors = cv;
+    regions = rgs;
+    doors = drs;
+    vector< vector<CartesianPoint> > interpolatedTrails;
+    for(int i = 0; i < trl.size(); i++){
+      vector<CartesianPoint> tempTrail;
+      for(int j = 0; j < trl[i].size()-1; j++){
+        double step_size = 0.1;
+        for(double step = 0; step < 1; step += step_size){
+          double tx = (trl[i][j+1].get_x() * step) + (trl[i][j].get_x() * (1-step));
+          double ty = (trl[i][j+1].get_y() * step) + (trl[i][j].get_y() * (1-step));
+          tempTrail.push_back(CartesianPoint(tx,ty));
+        }
+      }
+      tempTrail.push_back(trl[i][trl[i].size()-1]);
+      interpolatedTrails.push_back(tempTrail);
+    }
+    trails = interpolatedTrails;
+    hallways = hlwys;
+  }
 
   void updateNavGraph();
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
@@ -97,7 +201,15 @@ public:
 
   Node getTarget(){ return target; }
 
+  string getName(){ return name;}
+
   double cellCost(int sx, int sy, int buffer);
+
+  double riskCost(int sx, int sy, int buffer);
+
+  double novelCost(int sx, int sy);
+
+  double computeConveyorCost(int sx, int sy);
 
   void setTarget(Node t){ target = t; }
 
@@ -154,10 +266,12 @@ public:
   bool pathEmpty() { return path.empty(); }
 
   double getPathCost() { return pathCost; }
+  double getOrigPathCost() { return origPathCost; }
 
   double getRemainingPathLength(double x, double y);  
     
   double calcPathCost(list<int>);
+  double calcOrigPathCost(list<int>);
   double calcPathCost(vector<CartesianPoint> waypoints, Position source, Position target);
 
   double estimateCost(Node, Node, int); 

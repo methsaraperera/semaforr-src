@@ -111,7 +111,7 @@ class CountCrowdModel:
 
     # update the visiblity of grid map based on laser data from the robot
     def update_visibility(self):
-	print "in update visibility"
+	#print "in update visibility"
 	# reset visibility to false by default
 	self.is_grid_active = [[False for x in range(self.division)] for y in range(self.division)]
 	# for every laser scan
@@ -154,7 +154,7 @@ class CountCrowdModel:
 	    y_index = int(floor(y / cell_height))
 	    if(self.is_grid_active[x_index][y_index] == True):
 	        self.crowd_count[x_index][y_index] = (self.crowd_count[x_index][y_index] * self.alpha) + 1
-		print "->", x, y, theta
+		#print "->", x, y, theta
 		if((theta < (pi/8)) and (theta >= (-pi/8))):
 		    #print "right"
 		    self.crowd_r[x_index][y_index] += 1
@@ -330,7 +330,7 @@ class CountCrowdModel:
 
     def normalize(self, list_of_floats, minimum, maximum):
 	max_number = max(list_of_floats)
-	print max_number
+	#print max_number
 	if max_number == 0:
 	    return [int(x) for x in list_of_floats]
 	else:
@@ -338,9 +338,9 @@ class CountCrowdModel:
 
     
     def normalize_float(self, list_of_floats, minimum, maximum):
-	print "in normalization function" 
+	#print "in normalization function" 
 	max_number = max(list_of_floats)
-	print max_number
+	#print max_number
 	if max_number == 0:
 	    return [x for x in list_of_floats]
 	else:

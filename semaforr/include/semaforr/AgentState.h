@@ -27,6 +27,7 @@
 #include <ros/console.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/PoseArray.h>
+#include <tf/transform_datatypes.h>
 
 using namespace std;
 
@@ -40,6 +41,7 @@ public:
     forward_set = new set<FORRAction>();
     rotation_set = new set<FORRAction>();
     rotateMode = true;
+    //rotateMode = false;
     numMoves = moveArrMax;
     numRotates = rotateArrMax;
 
@@ -63,7 +65,7 @@ public:
   }
   
   // Best possible move towards the target
-  FORRAction moveTowards();
+  FORRAction moveTowards(CartesianPoint target);
 
   set<FORRAction> *getActionSet(){return action_set;}
   set<FORRAction> *getForwardActionSet(){return forward_set;}
@@ -102,18 +104,40 @@ public:
   }
   
   Task *getCurrentTask() { return currentTask; }
-  void setCurrentTask(Task *task, Position current, PathPlanner *planner, bool aStarOn) { 
+  /*void setCurrentTask(Task *task, Position current, PathPlanner *planner, bool aStarOn) { 
     currentTask = task; 
     if(aStarOn){
     	currentTask->generateWaypoints(current, planner);
     } 
-  }
-  void generateOrigWaypoints(Position current, PathPlanner *planner, bool aStarOn) { 
-    if(aStarOn){
-      currentTask->generateOriginalWaypoints(current, planner);
-    } 
+  }*/
+
+  void setCurrentTask(Task *task){
+    currentTask = task;
+    ROS_DEBUG_STREAM("Current task set");
   }
 
+  list<int> getWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+    if(aStarOn){
+      ROS_DEBUG_STREAM("Generating waypoints");
+      currentTask->generateWaypoints(current, planner);
+      return currentTask->getWaypointInds();
+    }
+  }
+
+  vector< list<int> > getPlansWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+    if(aStarOn){
+      ROS_DEBUG_STREAM("Generating multiple sets of waypoints");
+      currentTask->generateWaypoints(current, planner);
+      return currentTask->getPlansInds();
+    }
+  }
+
+  void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn, list<int> indices){
+    if(aStarOn){
+      currentTask->generateWaypointsFromInds(current, planner, indices);
+      //currentTask->generateOriginalWaypoints(current, planner);
+    }
+  }
 
   set<FORRAction> *getVetoedActions() { 
 	//std::cout << "returning vetoed action list " << vetoedActions->size() << std::endl;
@@ -135,13 +159,17 @@ public:
   //Merge finish task and skip task they are both doing the same right now
   void finishTask() {
     if (currentTask != NULL){
-	//save the current task position into all_trace
-    	vector<CartesianPoint> trace;
-        vector<Position> *pos_hist = currentTask->getPositionHistory();
-    	for(int i = 0 ; i < pos_hist->size() ; i++){
-		trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
-	}
-	all_trace.push_back(trace);
+      //save the current task position into all_trace
+      vector<CartesianPoint> trace;
+      vector<Position> *pos_hist = currentTask->getPositionHistory();
+      for(int i = 0 ; i < pos_hist->size() ; i++){
+        trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+      }
+      all_trace.push_back(trace);
+      vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
+      for(int i = 0 ; i < laser_hist->size() ; i++){
+        all_laser_history.push_back((*laser_hist)[i]);
+      }
       agenda.remove(currentTask);
     }
     rotateMode = true;
@@ -149,6 +177,7 @@ public:
   }
 
   vector< vector<CartesianPoint> > getAllTrace(){return all_trace;}
+  vector< vector<CartesianPoint> > getAllLaserHistory(){return all_laser_history;}
 
   void skipTask() {
     if (currentTask != NULL)
@@ -173,10 +202,13 @@ public:
   // Returns distance from obstacle 
   double getDistanceToNearestObstacle(Position pos);
 
+  // Returns nearest obstacle 
+  Position getNearestObstacle(Position pos);
+
   // returns distance to obstacle in the direction of rotation
   double getDistanceToObstacle(double rotation_angle);
   double getDistanceToForwardObstacle(){
-	ROS_DEBUG("in getDistance to forward obstacle");
+	//ROS_DEBUG("in getDistance to forward obstacle");
 	if(currentLaserScan.ranges.size() == 0)
 		return 25;
 	return currentLaserScan.ranges[currentLaserScan.ranges.size()/2];
@@ -188,8 +220,8 @@ public:
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
   bool canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point);
-  bool canSeePoint(CartesianPoint point);
-  bool canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point);
+  bool canSeePoint(CartesianPoint point, double distanceLimit);
+  bool canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
   std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > > getCleanedTrailMarkers();
 
   double getMovement(int para){return move[para];}
@@ -205,10 +237,27 @@ public:
 	currentCrowd = crowdpose;
   }
 
+  vector <Position> getCrowdPositions(geometry_msgs::PoseArray crowdpose);
+
   geometry_msgs::PoseArray getCrowdPoseAll(){ return allCrowd;}
   void setCrowdPoseAll(geometry_msgs::PoseArray crowdposeall){
 	allCrowd = crowdposeall;
   }
+
+  void setCrowdModel(semaforr::CrowdModel c){ 
+    crowdModel = c;
+  }
+  semaforr::CrowdModel getCrowdModel(){ return crowdModel;}
+
+  bool crowdModelLearned();
+  bool riskModelLearned();
+  bool flowModelLearned();
+  double getGridValue(double x, double y);
+  double getRiskValue(double x, double y);
+  double getFlowValue(double x, double y, double theta);
+  double getCrowdObservation(double x, double y);
+  double getRiskExperience(double x, double y);
+  double getFLowObservation(double x, double y);
 
  private:
 
@@ -224,6 +273,9 @@ public:
 
   // All position history of all targets
   vector< vector<CartesianPoint> > all_trace;
+
+  // All laser history of all targets
+  vector< vector<CartesianPoint> > all_laser_history;
 
   // set of vetoed actions that the robot cant execute in its current state
   set<FORRAction> *vetoedActions;
@@ -276,6 +328,9 @@ public:
 
   // All crowd positions
   geometry_msgs::PoseArray allCrowd;
+
+  // Current crowd model
+  semaforr::CrowdModel crowdModel;
 
   //Rotate mode tells if the t3 should rotate or move
   bool rotateMode;

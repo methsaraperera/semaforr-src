@@ -28,6 +28,37 @@ struct Door {
     int str;
     Door(): startPoint(), endPoint(), str(0) { }
     Door(FORRExit s, FORRExit e, int currStr): startPoint(s), endPoint(e), str(currStr) { }
+
+    double calculateFixedAngle(double regionX, double regionY, double exitX, double exitY){
+        //Calculate the angle of the exit from the center of the region
+        double angle = atan2((exitY - regionY), (exitX - regionX));
+        double fixedAngle = angle;
+        //If the angle is negative (clockwise), translate it to standard counter clockwise.
+        if (angle < 0) {
+            fixedAngle = angle + 2*M_PI;
+        }
+        return fixedAngle;
+    }
+    
+    double distanceToDoor(CartesianPoint point, FORRRegion region) {
+        double pointX = point.get_x();
+        double pointY = point.get_y();
+        double regionX = region.getCenter().get_x();
+        double regionY = region.getCenter().get_y();
+        double regionR = region.getRadius();
+        double startPointAngle = calculateFixedAngle(regionX, regionY, startPoint.getExitPoint().get_x(), startPoint.getExitPoint().get_y());
+        double endPointAngle = calculateFixedAngle(regionX, regionY, endPoint.getExitPoint().get_x(), endPoint.getExitPoint().get_y());
+        double pointAngle = calculateFixedAngle(regionX, regionY, pointX, pointY);
+        if(pointAngle <= endPointAngle and pointAngle >= startPointAngle) {
+            return (point.get_distance(region.getCenter()) - regionR);
+        }
+        else if (point.get_distance(startPoint.getExitPoint()) <= point.get_distance(endPoint.getExitPoint())) {
+            return point.get_distance(startPoint.getExitPoint());
+        }
+        else {
+            return point.get_distance(endPoint.getExitPoint());
+        }
+    }
 };
 
 /* FORRDoors class
@@ -222,26 +253,6 @@ public:
             fixedAngle = angle + 2*M_PI;
         }
         return fixedAngle;
-    }
-
-    double distanceToDoor(CartesianPoint point, FORRRegion region, Door door) {
-        double pointX = point.get_x();
-        double pointY = point.get_y();
-        double regionX = region.getCenter().get_x();
-        double regionY = region.getCenter().get_y();
-        double regionR = region.getRadius();
-        double startPointAngle = calculateFixedAngle(regionX, regionY, door.startPoint.getExitPoint().get_x(), door.startPoint.getExitPoint().get_y());
-        double endPointAngle = calculateFixedAngle(regionX, regionY, door.endPoint.getExitPoint().get_x(), door.endPoint.getExitPoint().get_y());
-        double pointAngle = calculateFixedAngle(regionX, regionY, pointX, pointY);
-        if(pointAngle <= endPointAngle and pointAngle >= startPointAngle) {
-            return (point.get_distance(region.getCenter()) - regionR);
-        }
-        else if (point.get_distance(door.startPoint.getExitPoint()) <= point.get_distance(door.endPoint.getExitPoint())) {
-            return point.get_distance(door.startPoint.getExitPoint());
-        }
-        else {
-            return point.get_distance(door.endPoint.getExitPoint());
-        }
     }
 
 private:
