@@ -169,6 +169,12 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
       index = i;
     }
   }
+  while (index-2 < 0){
+    index = index + 1;
+  }
+  while (index+2 > givenLaserEndpoints.size()-1){
+    index = index - 1;
+  }
   //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
   int numFree = 0;
   for(int i = -2; i < 3; i++) {
@@ -230,7 +236,7 @@ std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > >
 			//cout << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 			//if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j])) {
       //if(canSeePoint(laser_endpoints[i], pos_history[i], pos_history[j]) and canSeePoint(laser_endpoints[j], pos_history[j], pos_history[i])) {
-      if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j], 10)) {
+      if(canAccessPoint(laser_endpoints[i], pos_history[i], pos_history[j], 5)) {
 				//cout << "CanAccessPoint is true" << endl;
 				//cout << "Next point: " << pos_history[j].get_x() << " " << pos_history[j].get_y() << endl;
 				trailPositions.push_back(pos_history[j]);

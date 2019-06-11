@@ -2,47 +2,51 @@
 import rospy
 import numpy as np
 np.set_printoptions(threshold=np.inf)
-from scipy.cluster.vq import vq, kmeans, whiten
-from scipy.cluster.hierarchy import fclusterdata
-from sklearn.cluster import DBSCAN
-from sklearn.cluster import AffinityPropagation
-from sklearn import metrics
+import scipy.spatial as scp
+import networkx as nx
 from sklearn.cluster import KMeans
-from sklearn.cluster import MiniBatchKMeans
-from sklearn.cluster import MeanShift
-from sklearn.cluster import SpectralClustering
-from sklearn.cluster import AgglomerativeClustering
-from matplotlib import pyplot as plt
-from scipy.cluster.hierarchy import dendrogram
-from sklearn.decomposition import PCA
-from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.preprocessing import StandardScaler
-#import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from geometry_msgs.msg import PoseArray, Pose, Point, PoseStamped
 from sensor_msgs.msg import LaserScan
-#from nav_msgs.msg import OccupancyGrid
-#from semaforr.msg import CrowdModel
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 from std_msgs.msg import String, Header
 import re
-#import itertools
 import tf
 from math import sqrt, floor, sin, cos, atan2
-#import sys
-#from cusum import Cusum
+
+def dfun(u, v):
+	dist = sqrt((u[1] - v[1])*(u[1] - v[1]))
+	# print u[1], v[1], dist
+	anglediff = u[0] - v[0]
+	if anglediff > 3.141592654:
+		anglediff = anglediff - (2 * 3.141592654)
+	if anglediff < -3.141592654:
+		anglediff = anglediff + (2 * 3.141592654)
+	# print u[0], v[0], anglediff
+	# return dist + abs(anglediff)
+	total = 2
+	if abs(anglediff) < 0.0872665:
+		total = total - 1
+	if dist < 0.5:
+		total = total - 1
+	return total
 
 class SituationModel:
 	def __init__(self, num):
 		# set up this python class as ros node and initialize publisher and subscriber
 		rospy.init_node('situation_model')
-		rospy.Subscriber("decision_pose", PoseStamped, self.pose_data, queue_size=1000)
-		rospy.Subscriber("decision_laser", LaserScan, self.laser_data, queue_size=1000)
-		rospy.Subscriber("decision_log", String, self.decision_data, queue_size=1000)
-		self.pub_situations = rospy.Publisher('situations', String, queue_size=1000)
+		rospy.Subscriber("decision_pose", PoseStamped, self.pose_data, queue_size=10000)
+		rospy.Subscriber("decision_log", String, self.decision_data, queue_size=10000)
+		rospy.Subscriber("decision_laser", LaserScan, self.laser_data, queue_size=10000)
+		self.pub_situations = rospy.Publisher('situations', String, queue_size=10000)
 		self.robot_pose = []
 		self.laser_scan = []
 		self.decisions = []
+		self.trails = []
+		self.laser_end_points = []
+		self.data_num = 0
 		self.num_clusters = num
 
 	# calls the callback for each of the subscriber
@@ -53,8 +57,8 @@ class SituationModel:
 	def laser_data(self, data):
 		self.laser_scan.append(np.array(data.ranges).astype('float'))
 		print "receiving laser_scan data message", len(self.laser_scan)
-		if len(self.laser_scan) % 100 == 0 and len(self.laser_scan) == len(self.robot_pose) and len(self.laser_scan) >= 100:
-			self.publish_situations()
+		# if len(self.laser_scan) % 50 == 0 and len(self.laser_scan) == len(self.robot_pose) and len(self.laser_scan) >= 50:
+		# 	self.publish_situations()
 
 	# receive and save the robot pose data
 	def pose_data(self, data):
@@ -69,286 +73,265 @@ class SituationModel:
 	# receive and save the robot's decision log
 	def decision_data(self, data):
 		new_data = re.split(r'\t',data.data)
-		new_data = np.array(new_data[0:11]).astype('float')
-		self.decisions.append(new_data)
+		new_data_values = np.array(new_data[0:11]).astype('float')
+		self.decisions.append(new_data_values)
+		new_data_trails = re.split(r';',new_data[19])
+		# print new_data_trails
+		new_data_trails = filter(None, new_data_trails)
+		self.trails = []
+		for trail in new_data_trails:
+			# print trail
+			trail_data = re.split(r' ',trail)
+			trail_data = filter(None, trail_data)
+			trail_data = np.array(trail_data).astype('float')
+			parsed_trail_data = []
+			for i in range(0,len(trail_data),2):
+				parsed_trail_data.append([trail_data[i], trail_data[i+1]])
+			self.trails.append(parsed_trail_data)
+		# print self.trails
+		new_data_lep = re.split(r';',new_data[26])
+		# print new_data_lep
+		new_data_lep = filter(None, new_data_lep)
+		lep = []
+		for pair in new_data_lep:
+			lep.append(np.array(re.split(r',',pair)).astype('float'))
+		self.laser_end_points.append(lep)
+		# print lep
 		print "receiving decision log data message", len(self.decisions)
+		if len(self.decisions) > 1:
+			if len(self.laser_scan) == len(self.robot_pose) and len(self.laser_scan) == len(self.decisions) and len(self.robot_pose) == len(self.decisions) and self.decisions[-1][0] != self.decisions[-2][0]:
+				print len(self.laser_scan), len(self.robot_pose), len(self.decisions)
+				self.data_num = len(self.laser_scan)-3
+				self.publish_situations()
 
 	def publish_situations(self):
-		#numClusters = [2,3,4,5,6,7,8,9,10,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100]
-		numClusters = [2,3,4,5,6,7,8,9,10,12,14,16,18,20,25,30,35,40,45,50]
-		features = np.array(self.laser_scan)
-		# features2 = []
-		# features11 = []
-		# features22 = []
-		# #features44 = []
-		# #features110 = []
-		# for item in features:
-		# 	features2.append([np.mean(item[0:330]),np.mean(item[330:])])
-		# 	features11.append([np.mean(item[0:60]),np.mean(item[60:120]),np.mean(item[120:180]),np.mean(item[180:240]),np.mean(item[240:300]),np.mean(item[300:360]),np.mean(item[360:420]),np.mean(item[420:480]),np.mean(item[480:540]),np.mean(item[540:600]),np.mean(item[600:])])
-		# 	features22.append([np.mean(item[0:30]),np.mean(item[30:60]),np.mean(item[60:90]),np.mean(item[90:120]),np.mean(item[120:150]),np.mean(item[150:180]),np.mean(item[180:210]),np.mean(item[210:240]),np.mean(item[240:270]),np.mean(item[270:300]),np.mean(item[300:330]),np.mean(item[330:360]),np.mean(item[360:390]),np.mean(item[390:420]),np.mean(item[420:450]),np.mean(item[450:480]),np.mean(item[480:510]),np.mean(item[510:540]),np.mean(item[540:570]),np.mean(item[570:600]),np.mean(item[600:630]),np.mean(item[630:])])
-		# features2 = np.array(features2)
-		# features11 = np.array(features11)
-		# features22 = np.array(features22)
-		pca5 = PCA(n_components=5)
-		pca10 = PCA(n_components=10)
-		# pca20 = PCA(n_components=20)
-		# pca100 = PCA(n_components=100)
-		pca5.fit(features)
-		pca10.fit(features)
-		# pca20.fit(features)
-		# pca100.fit(features)
-		print pca5.components_
-		print pca10.components_
-		# #print pca20.explained_variance_
-		print pca5.explained_variance_ratio_
-		print pca10.explained_variance_ratio_
-		# print pca20.explained_variance_ratio_
-		# print pca100.explained_variance_ratio_
-		features_pca5 = pca5.transform(features)
-		features_pca10 = pca10.transform(features)
-		# features_pca20 = pca20.transform(features)
-		# features_pca100 = pca100.transform(features)
-		# print features.shape, features_pca5.shape, features_pca10.shape, features_pca20.shape, features_pca100.shape
-		#print pca20.singular_values_
-		print len(self.laser_scan), len(self.robot_pose)
-		#whitened = whiten(features)
-		#stdev = np.std(features, axis = 0)
-		print self.robot_pose
-		new_features_5 = []
-		new_features_10 = []
-		for val in range(0, len(features_pca5)):
+		ActionsComp = []
+		Actions = []
+		# Moves = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5]
+		# Moves = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4,4.25,4.5,4.75,5,5.25,5.5,5.75,6,6.25,6.5,6.75,7,7.25,7.5,7.75,8,8.25,8.5,8.75,9,9.25,9.5,9.75,10]
+		# Moves = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5,5.1,5.2,5.3,5.4,5.5,5.6,5.7,5.8,5.9,6,6.1,6.2,6.3,6.4,6.5,6.6,6.7,6.8,6.9,7,7.1,7.2,7.3,7.4,7.5,7.6,7.7,7.8,7.9,8,8.1,8.2,8.3,8.4,8.5,8.6,8.7,8.8,8.9,9,9.1,9.2,9.3,9.4,9.5,9.6,9.7,9.8,9.9,10,10.1,10.2,10.3,10.4,10.5,10.6,10.7,10.8,10.9,11,11.1,11.2,11.3,11.4,11.5,11.6,11.7,11.8,11.9,12,12.1,12.2,12.3,12.4,12.5,12.6,12.7,12.8,12.9,13,13.1,13.2,13.3,13.4,13.5,13.6,13.7,13.8,13.9,14,14.1,14.2,14.3,14.4,14.5,14.6,14.7,14.8,14.9,15,15.1,15.2,15.3,15.4,15.5,15.6,15.7,15.8,15.9,16,16.1,16.2,16.3,16.4,16.5,16.6,16.7,16.8,16.9,17,17.1,17.2,17.3,17.4,17.5,17.6,17.7,17.8,17.9,18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.1,19.2,19.3,19.4,19.5,19.6,19.7,19.8,19.9,20,20.1,20.2,20.3,20.4,20.5,20.6,20.7,20.8,20.9,21,21.1,21.2,21.3,21.4,21.5,21.6,21.7,21.8,21.9,22,22.1,22.2,22.3,22.4,22.5,22.6,22.7,22.8,22.9,23,23.1,23.2,23.3,23.4,23.5,23.6,23.7,23.8,23.9,24,24.1,24.2,24.3,24.4,24.5,24.6,24.7,24.8,24.9,25]
+		# Moves = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5,5.1,5.2,5.3,5.4,5.5,5.6,5.7,5.8,5.9,6,6.1,6.2,6.3,6.4,6.5,6.6,6.7,6.8,6.9,7,7.1,7.2,7.3,7.4,7.5,7.6,7.7,7.8,7.9,8,8.1,8.2,8.3,8.4,8.5,8.6,8.7,8.8,8.9,9,9.1,9.2,9.3,9.4,9.5,9.6,9.7,9.8,9.9,10]
+		# Moves = [0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0]
+		Moves = [0.45, 1.2, 3.6, 7.6]
+		LaserScans = np.array(self.laser_scan[0:self.data_num])
+		for val in Moves:
+			ActionsComp.append(LaserScans >= val)
+		ActionsComp = np.array(ActionsComp)
+		for i in range(0,len(LaserScans)):
+			Actions.append(ActionsComp[:,i].flatten().astype('int'))
+		# for scan in range(0,self.data_num,1):
+		# 	Values = []
+		# 	for dist in range(0,len(self.laser_scan[scan]),1):
+		# 		for val in Moves:
+		# 			if self.laser_scan[scan][dist] >= val:
+		# 				Values.append(1)
+		# 			else:
+		# 				Values.append(0)
+		# 	Actions.append(Values)
+		# print Actions
+		CityBlockDistances = scp.distance.pdist(Actions, 'cityblock')
+		SimilarityMatrix = scp.distance.squareform(CityBlockDistances)
+		Threshold = (float(len(Moves)) * float(len(self.laser_scan[0])))*0.03
+		print "Threshold", Threshold
+		SimilarityMatrixInt = (np.array(SimilarityMatrix) <= Threshold).astype(int)
+		np.fill_diagonal(SimilarityMatrixInt, 0)
+		adjacency_matrix = np.array(SimilarityMatrixInt)
+		rows, cols = np.where(adjacency_matrix == 1)
+		edges = zip(rows.tolist(), cols.tolist())
+		gr = nx.Graph()
+		gr.add_edges_from(edges)
+		ConnectedComponents = sorted(nx.connected_components(gr), key = len, reverse=True)
+		print "ConnectedComponents", ConnectedComponents
+		FilteredComponents = []
+		for component in ConnectedComponents:
+			if len(component) >= 2:
+				FilteredComponents.append(np.array(list(component)))
+		ActionClusters = []
+		for i in range(0,len(Actions)):
+			cluster_found = 0
+			for j in range(0,len(FilteredComponents)):
+				if i in FilteredComponents[j]:
+					ActionClusters.append(j)
+					cluster_found = 1
+			if cluster_found == 0:
+				ActionClusters.append(-1)
+		situation = 'ActionClusters_'+str(self.data_num)+' '+str(ActionClusters)
+		print situation
+		self.pub_situations.publish(situation)
+
+		Targets = []
+		for val in range(0, self.data_num,1):
 			merger = []
-			for num in features_pca5[val]:
-				merger.append(num)
-			# for num in self.robot_pose[val]:
-			# 	merger.append(num)
 			targetX = self.decisions[val][4]
 			targetY = self.decisions[val][5]
 			distToTarget = sqrt((self.robot_pose[val][0] - targetX) * (self.robot_pose[val][0] - targetX) + (self.robot_pose[val][1] - targetY) * (self.robot_pose[val][1] - targetY))
 			merger.append(distToTarget)
-			angleToTarget = atan2(self.robot_pose[val][1] - targetY, self.robot_pose[val][0] - targetX)
-			angleDiff = abs(atan2(sin(angleToTarget - self.robot_pose[val][2]), cos(angleToTarget - self.robot_pose[val][2])))
-			# print self.robot_pose[val][0], self.robot_pose[val][1], self.robot_pose[val][2], targetX, targetY, angleToTarget, angleDiff
-			merger.append(angleDiff)
-			# merger.append(self.decisions[val][9])
-			# merger.append(self.decisions[val][10])
-			new_features_5.append(merger)
-			merger = []
-			for num in features_pca10[val]:
-				merger.append(num)
-			merger.append(distToTarget)
-			merger.append(angleDiff)
-			new_features_10.append(merger)
-		new_features_5 = np.array(new_features_5)
-		print new_features_5
-		scaler5 = StandardScaler()
-		scaler5.fit(new_features_5)
-		new_features_scaled_5 = scaler5.transform(new_features_5)
-		new_features_10 = np.array(new_features_10)
-		print new_features_10
-		scaler10 = StandardScaler()
-		scaler10.fit(new_features_10)
-		new_features_scaled_10 = scaler10.transform(new_features_10)
-		# clusteringdb65 = DBSCAN(eps=65, min_samples=2, algorithm='brute').fit(features)
-		# clusteringdb70 = DBSCAN(eps=70, min_samples=2, algorithm='brute').fit(features)
-		# clusteringdb75 = DBSCAN(eps=75, min_samples=2, algorithm='brute').fit(features)
-		# clusteringdbm65 = DBSCAN(eps=65, min_samples=2, metric='manhattan').fit(features)
-		# clusteringdbm70 = DBSCAN(eps=70, min_samples=2, metric='manhattan').fit(features)
-		# clusteringdbm75 = DBSCAN(eps=75, min_samples=2, metric='manhattan').fit(features)
-		# clusteringdbpca5 = DBSCAN().fit(features_pca5)
-		# clusteringdbpca10 = DBSCAN().fit(features_pca10)
-		# clusteringdbpca20 = DBSCAN().fit(features_pca20)
-		# clusteringdbpca100 = DBSCAN().fit(features_pca100)
-		# clusteringaf = AffinityPropagation(max_iter=500).fit(features)
-		# clusteringafpca5 = AffinityPropagation(max_iter=500).fit(features_pca5)
-		# clusteringafnew = AffinityPropagation(max_iter=500).fit(new_features)
-		# clusteringafnewsc = AffinityPropagation(max_iter=500).fit(new_features_scaled)
-		# clusteringafpca10 = AffinityPropagation(max_iter=500).fit(features_pca10)
-		# clusteringafpca20 = AffinityPropagation(max_iter=500).fit(features_pca20)
-		# clusteringafpca100 = AffinityPropagation(max_iter=500).fit(features_pca100)
-		# print 'clusteringdb65', clusteringdb65.labels_
-		# print 'clusteringdb70', clusteringdb70.labels_
-		# print 'clusteringdb75', clusteringdb75.labels_
-		# print 'clusteringdbm65', clusteringdbm65.labels_
-		# print 'clusteringdbm70', clusteringdbm70.labels_
-		# print 'clusteringdbm75', clusteringdbm75.labels_
-		# print 'clusteringdbpca5', clusteringdbpca5.labels_
-		# print 'clusteringdbpca10', clusteringdbpca10.labels_
-		# print 'clusteringdbpca20', clusteringdbpca20.labels_
-		# print 'clusteringdbpca100', clusteringdbpca100.labels_
-		# print 'clusteringaf', clusteringaf.labels_
-		# print 'clusteringafpca5', clusteringafpca5.labels_
-		# print 'clusteringafnew', clusteringafnew.labels_
-		# print 'clusteringafnewsc', clusteringafnewsc.labels_
-		# print 'clusteringafpca10', clusteringafpca10.labels_
-		# print 'clusteringafpca20', clusteringafpca20.labels_
-		# print 'clusteringafpca100', clusteringafpca100.labels_
-		# situation = 'clusteringdb65_'+str(len(self.laser_scan))+' '+str(clusteringdb65.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdb70_'+str(len(self.laser_scan))+' '+str(clusteringdb70.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdb75_'+str(len(self.laser_scan))+' '+str(clusteringdb75.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbm65_'+str(len(self.laser_scan))+' '+str(clusteringdbm65.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbm70_'+str(len(self.laser_scan))+' '+str(clusteringdbm70.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbm75_'+str(len(self.laser_scan))+' '+str(clusteringdbm75.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbpca5_'+str(len(self.laser_scan))+' '+str(clusteringdbpca5.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbpca10_'+str(len(self.laser_scan))+' '+str(clusteringdbpca10.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbpca20_'+str(len(self.laser_scan))+' '+str(clusteringdbpca20.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringdbpca100_'+str(len(self.laser_scan))+' '+str(clusteringdbpca100.components_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringaf_'+str(len(self.laser_scan))+' '+str(clusteringaf.cluster_centers_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringafpca5_'+str(len(self.laser_scan))+' '+str(clusteringafpca5.cluster_centers_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringafnew_'+str(len(self.laser_scan))+' '+str(clusteringafnew.cluster_centers_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringafnewsc_'+str(len(self.laser_scan))+' '+str(scaler.inverse_transform(clusteringafnewsc.cluster_centers_))
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringafpca10_'+str(len(self.laser_scan))+' '+str(clusteringafpca10.cluster_centers_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringafpca20_'+str(len(self.laser_scan))+' '+str(clusteringafpca20.cluster_centers_)
-		# self.pub_situations.publish(situation)
-		# situation = 'clusteringafpca100_'+str(len(self.laser_scan))+' '+str(clusteringafpca100.cluster_centers_)
-		# self.pub_situations.publish(situation)
-		# max_score1 = -2.0
-		# best_value1 = -1
-		# max_score2 = -2.0
-		# best_value2 = -1
-		# for value in [2,50]:
-		# 	clusteringacew = AgglomerativeClustering(n_clusters=value, affinity='euclidean', linkage='ward', compute_full_tree= True).fit(new_features)
-		# 	clusteringacewsc = AgglomerativeClustering(n_clusters=value, affinity='euclidean', linkage='ward', compute_full_tree= True).fit(new_features_scaled)
-		# 	value_score1 = metrics.silhouette_score(new_features, clusteringacew.labels_, metric='euclidean')
-		# 	value_score2 = metrics.silhouette_score(new_features_scaled, clusteringacewsc.labels_, metric='euclidean')
-		# 	print value, value_score1, value_score2
-		# 	if value_score1 > max_score1:
-		# 		max_score1 = value_score1
-		# 		best_value1 = value
-		# 	if value_score2 > max_score2:
-		# 		max_score2 = value_score2
-		# 		best_value2 = value
-		# clusteringacew = AgglomerativeClustering(n_clusters=best_value1, affinity='euclidean', linkage='ward', compute_full_tree= True).fit(new_features)
-		# children = clusteringacew.children_
-		# distance = np.arange(children.shape[0])
-		# no_of_observations = np.arange(2, children.shape[0]+2)
-		# linkage_matrix = np.column_stack([children, distance, no_of_observations]).astype(float)
-		# plt.title('Hierarchical Clustering Dendrogram '+str(len(self.laser_scan))+'_'+str(best_value1))
-		# dendrogram(linkage_matrix, labels=clusteringacew.labels_, leaf_rotation=360)
-		# figure = plt.gcf()
-		# figure.set_size_inches(60, 40)
-		# figure.savefig('Dendrogram_best_'+str(len(self.laser_scan))+'_'+str(best_value1)+'.svg', dpi = 400)
-		# plt.close()
-		# print 'clusteringacew_best_value_'+str(best_value1), max_score1, clusteringacew.labels_
-		# acewcluster_centers = NearestCentroid()
-		# acewcluster_centers.fit(new_features,clusteringacew.labels_)
-		# situation = 'clusteringacew_best_value_'+str(len(self.laser_scan))+'_'+str(best_value1)+' '+str(acewcluster_centers.centroids_)
-		# self.pub_situations.publish(situation)
-		# clusteringacewsc = AgglomerativeClustering(n_clusters=best_value2, affinity='euclidean', linkage='ward', compute_full_tree= True).fit(new_features_scaled)
-		# children = clusteringacewsc.children_
-		# distance = np.arange(children.shape[0])
-		# no_of_observations = np.arange(2, children.shape[0]+2)
-		# linkage_matrix = np.column_stack([children, distance, no_of_observations]).astype(float)
-		# plt.title('Hierarchical Clustering Dendrogram SC '+str(len(self.laser_scan))+'_'+str(best_value2))
-		# dendrogram(linkage_matrix, labels=clusteringacewsc.labels_, leaf_rotation=360)
-		# figure = plt.gcf()
-		# figure.set_size_inches(60, 40)
-		# figure.savefig('Dendrogram_bestsc_'+str(len(self.laser_scan))+'_'+str(best_value2)+'.svg', dpi = 400)
-		# plt.close()
-		# print 'clusteringacewsc_best_value_'+str(best_value2), max_score2, clusteringacewsc.labels_
-		# acewcluster_centers = NearestCentroid()
-		# acewcluster_centers.fit(new_features,clusteringacewsc.labels_)
-		# situation = 'clusteringacewsc_best_value_'+str(len(self.laser_scan))+'_'+str(best_value2)+' '+str(scaler.inverse_transform(acewcluster_centers.centroids_))
-		# self.pub_situations.publish(situation)
-		for value in numClusters:
-			if len(self.laser_scan) > value:
-				#centroids, distortion = kmeans(whitened,value)
-				#clx, disttocent = vq(whitened,centroids)
-				#hierclustlabel = fclusterdata(whitened, t = 20, criterion='distance')
-				clusteringkm = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(new_features_scaled_5)
-				clusteringkmsc = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(new_features_scaled_10)
-				# clusteringkm2 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features2)
-				# clusteringkm11 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features11)
-				# clusteringkm22 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features22)
-				# clusteringkmpca5 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features_pca5)
-				# clusteringkmpca10 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features_pca10)
-				# clusteringkmpca20 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features_pca20)
-				# clusteringkmpca100 = KMeans(n_clusters=value, n_init=50, max_iter=1000).fit(features_pca100)
-				#clusteringmbkm = MiniBatchKMeans(n_clusters=value, batch_size=10, max_iter=10).fit(features)
-				#clusteringms = MeanShift().fit(features)
-				#clusteringsc = SpectralClustering(n_clusters=value, eigen_solver='arpack').fit(features)
-				# clusteringacew = AgglomerativeClustering(n_clusters=value, affinity='euclidean', linkage='ward', compute_full_tree= True).fit(features)
-				# children = clusteringacew.children_
-				# distance = np.arange(children.shape[0])
-				# no_of_observations = np.arange(2, children.shape[0]+2)
-				# linkage_matrix = np.column_stack([children, distance, no_of_observations]).astype(float)
-				# #fig = plt.figure()
-				# plt.title('Hierarchical Clustering Dendrogram '+str(len(self.laser_scan))+'_'+str(value))
-				# dendrogram(linkage_matrix, labels=clusteringacew.labels_, leaf_rotation=360)
-				# #plt.show()
-				# figure = plt.gcf()
-				# figure.set_size_inches(60, 40)
-				# figure.savefig('Dendrogram_'+str(len(self.laser_scan))+'_'+str(value)+'.svg', dpi = 400)
-				# plt.close()
-				#clusteringacec = AgglomerativeClustering(n_clusters=value, affinity='euclidean', linkage='complete').fit(features)
-				#clusteringacea = AgglomerativeClustering(n_clusters=value, affinity='euclidean', linkage='average').fit(features)
-				#clusteringaces = AgglomerativeClustering(n_clusters=value, affinity='euclidean', linkage='single').fit(features)
-				#clusteringacmc = AgglomerativeClustering(n_clusters=value, affinity='manhattan', linkage='complete').fit(features)
-				#clusteringacma = AgglomerativeClustering(n_clusters=value, affinity='manhattan', linkage='average').fit(features)
-				#clusteringacms = AgglomerativeClustering(n_clusters=value, affinity='manhattan', linkage='single').fit(features)
-				#clusteringaccc = AgglomerativeClustering(n_clusters=value, affinity='cosine', linkage='complete').fit(features)
-				#clusteringacca = AgglomerativeClustering(n_clusters=value, affinity='cosine', linkage='average').fit(features)
-				#clusteringaccs = AgglomerativeClustering(n_clusters=value, affinity='cosine', linkage='single').fit(features)
-				#newcentroids = np.array([clx[:,i] * stdev[i] for i in range(0,len(stdev))]).transpose()
-				situation = 'clusteringkm_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(scaler5.inverse_transform(clusteringkm.cluster_centers_))
-				self.pub_situations.publish(situation)
-				situation = 'clusteringkmsc_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(scaler10.inverse_transform(clusteringkmsc.cluster_centers_))
-				self.pub_situations.publish(situation)
-				# situation = 'clusteringkm2_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(clusteringkm2.cluster_centers_)
-				# self.pub_situations.publish(situation)
-				# situation = 'clusteringkm11_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(clusteringkm11.cluster_centers_)
-				# self.pub_situations.publish(situation)
-				# situation = 'clusteringkmpca5_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(pca5.inverse_transform(clusteringkmpca5.cluster_centers_))
-				# self.pub_situations.publish(situation)
-				# situation = 'clusteringkmpca10_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(pca10.inverse_transform(clusteringkmpca10.cluster_centers_))
-				# self.pub_situations.publish(situation)
-				# situation = 'clusteringkmpca10_'+str(len(self.laser_scan))+'_'+str(value)+' '+str(pca10.inverse_transform(clusteringkmpca10.cluster_centers_))
-				# self.pub_situations.publish(situation)
-				#print clx
-				#print hierclustlabel
-				print value, 'clusteringkmsc5', clusteringkm.labels_
-				print value, 'clusteringkmsc10', clusteringkmsc.labels_
-				# print 'clusteringkm2', clusteringkm2.labels_
-				# print 'clusteringkm11', clusteringkm11.labels_
-				# print 'clusteringkm22', clusteringkm22.labels_
-				# print value, 'clusteringkmpca5', clusteringkmpca5.labels_
-				# print 'clusteringkmpca10', clusteringkmpca10.labels_
-				# print 'clusteringkmpca20', clusteringkmpca20.labels_
-				# print 'clusteringkmpca100', clusteringkmpca100.labels_
-				#print clusteringmbkm.labels_
-				#print clusteringms.labels_
-				#print 'clusteringsc', clusteringsc.labels_
-				# print 'clusteringacew', clusteringacew.labels_
-				#print clusteringacec.labels_
-				#print clusteringacea.labels_
-				#print clusteringaces.labels_
-				#print clusteringacmc.labels_
-				#print clusteringacma.labels_
-				#print clusteringacms.labels_
-				#print clusteringaccc.labels_
-				#print clusteringacca.labels_
-				#print clusteringaccs.labels_
-				#print metrics.silhouette_score(features, clx, metric='euclidean'), metrics.silhouette_score(features, hierclustlabel, metric='euclidean'), metrics.silhouette_score(features, clusteringdb.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringaf.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringkm.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringmbkm.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringms.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringsc.labels_, metric='euclidean')
-				#print metrics.silhouette_score(features, clusteringacew.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacec.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacea.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringaces.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacmc.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacma.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacms.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringaccc.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacca.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringaccs.labels_, metric='euclidean')
-				#print value, metrics.silhouette_score(features, clx, metric='euclidean'), metrics.silhouette_score(features, clusteringkm.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringmbkm.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacew.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacec.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringacmc.labels_, metric='euclidean'), metrics.silhouette_score(features, clusteringaccc.labels_, metric='euclidean')
-				#print value, metrics.silhouette_score(features, clusteringkm.labels_, metric='euclidean'), metrics.silhouette_score(features2, clusteringkm2.labels_, metric='euclidean'), metrics.silhouette_score(features11, clusteringkm11.labels_, metric='euclidean'), metrics.silhouette_score(features22, clusteringkm22.labels_, metric='euclidean'), metrics.silhouette_score(features_pca5, clusteringkmpca5.labels_, metric='euclidean'), metrics.silhouette_score(features_pca10, clusteringkmpca10.labels_, metric='euclidean'), metrics.silhouette_score(features_pca20, clusteringkmpca20.labels_, metric='euclidean'), metrics.silhouette_score(features_pca100, clusteringkmpca100.labels_, metric='euclidean')
-				#print value, metrics.calinski_harabaz_score(features, clusteringkm.labels_), metrics.calinski_harabaz_score(features2, clusteringkm2.labels_), metrics.calinski_harabaz_score(features11, clusteringkm11.labels_), metrics.calinski_harabaz_score(features22, clusteringkm22.labels_), metrics.calinski_harabaz_score(features_pca5, clusteringkmpca5.labels_), metrics.calinski_harabaz_score(features_pca10, clusteringkmpca10.labels_), metrics.calinski_harabaz_score(features_pca20, clusteringkmpca20.labels_), metrics.calinski_harabaz_score(features_pca100, clusteringkmpca100.labels_)
-				#print value, metrics.davies_bouldin_score(features, clusteringkm.labels_), metrics.davies_bouldin_score(features2, clusteringkm2.labels_), metrics.davies_bouldin_score(features11, clusteringkm11.labels_), metrics.davies_bouldin_score(features22, clusteringkm22.labels_), metrics.davies_bouldin_score(features_pca5, clusteringkmpca5.labels_), metrics.davies_bouldin_score(features_pca10, clusteringkmpca10.labels_), metrics.davies_bouldin_score(features_pca20, clusteringkmpca20.labels_), metrics.davies_bouldin_score(features_pca100, clusteringkmpca100.labels_)
+			angleToTarget = atan2((self.robot_pose[val][1] - targetY), (self.robot_pose[val][0] - targetX))
+			RequiredRotation = angleToTarget - self.robot_pose[val][2]
+			if RequiredRotation > 3.141592654:
+				RequiredRotation = RequiredRotation - (2 * 3.141592654)
+			if RequiredRotation < -3.141592654:
+				RequiredRotation = RequiredRotation + (2 * 3.141592654)
+			merger.append(RequiredRotation)
+			Targets.append(merger)
+		Targets = np.array(Targets)
+		# scaler = StandardScaler()
+		# scaler.fit(Targets)
+		# TargetsScaled = scaler.transform(Targets)
+		# NumClusters = 20
+		# if self.data_num<20:
+		# 	NumClusters = self.data_num - 1
+		# TargetClusters = KMeans(n_clusters=NumClusters, n_init=50, max_iter=1000).fit(TargetsScaled)
+		# situation = 'TargetClusters_'+str(self.data_num)+' '+str(TargetClusters.labels_)
+		CustomDistances = scp.distance.pdist(Targets, dfun)
+		SimilarityMatrix = scp.distance.squareform(CustomDistances)
+		SimilarityMatrixInt = (np.array(SimilarityMatrix) == 0).astype(int)
+		np.fill_diagonal(SimilarityMatrixInt, 0)
+		adjacency_matrix = np.array(SimilarityMatrixInt)
+		rows, cols = np.where(adjacency_matrix == 1)
+		edges = zip(rows.tolist(), cols.tolist())
+		gr = nx.Graph()
+		gr.add_edges_from(edges)
+		cliques = sorted(list(nx.find_cliques(gr)), key = len, reverse=True)
+		filtered_cliques = []
+		while len(cliques) > 0:
+			filtered_cliques.append(cliques[0])
+			cliques.remove(cliques[0])
+			cliques_to_remove = []
+			for val in cliques:
+				item_in_clique = False
+				for item in filtered_cliques[-1]:
+					if item in val:
+						item_in_clique = True
+				if item_in_clique == True:
+					cliques_to_remove.append(val)
+			for item in cliques_to_remove:
+				cliques.remove(item)
+		filtered_cliques = np.array(filtered_cliques)
+		cluster_values = []
+		for i in range(0,len(Targets)):
+			cluster_found = 0
+			for j in range(0,len(filtered_cliques)):
+				if i in filtered_cliques[j]:
+					cluster_values.append(j)
+					cluster_found = 1
+			if cluster_found == 0:
+				cluster_values.append(-1)
+		situation = 'TargetClusters_'+str(self.data_num)+' '+str(cluster_values)
+		print situation
+		self.pub_situations.publish(situation)
+
+		TargetTrailMarker = []
+		for i in range(0, self.data_num,1):
+			# print len(self.trails), self.decisions[i][0]
+			CurrentTrail = self.trails[int(self.decisions[i][0])]
+			CurrentPose = self.robot_pose[i]
+			CurrentLaser = self.laser_end_points[i]
+			found = False
+			for j in range(len(CurrentTrail)-1, -1, -1):
+				if self.can_access_point(CurrentLaser, CurrentPose, CurrentTrail[j], 20):
+					TargetTrailMarker.append(CurrentTrail[j])
+					found = True
+					# print i
+					break
+			if found == False:
+				TargetTrailMarker.append([self.decisions[i][4], self.decisions[i][5]])
+			# print i
+		BestActions = []
+		# print len(TargetTrailMarker), self.data_num
+		for i in range(0, self.data_num,1):
+			CurrentPose = self.robot_pose[i]
+			# print i
+			CurrentTrailMarker = TargetTrailMarker[i]
+			distance_from_tm = sqrt((CurrentPose[0]-CurrentTrailMarker[0])*(CurrentPose[0]-CurrentTrailMarker[0])+(CurrentPose[1]-CurrentTrailMarker[1])*(CurrentPose[1]-CurrentTrailMarker[1]))
+			distance_from_obstacle = 100000
+			error_margin = 0.05
+			start_view = int(-0.35/0.005817)+330
+			end_view = int(0.35/0.005817)+330
+			for angle in range(start_view, end_view+1):
+				if self.laser_scan[i][angle] < distance_from_obstacle:
+					distance_from_obstacle = self.laser_scan[i][angle]
+			distance_from_obstacle = distance_from_obstacle - error_margin
+			robot_direction = CurrentPose[2]
+			goal_direction = atan2((CurrentTrailMarker[1] - CurrentPose[1]), (CurrentTrailMarker[0] - CurrentPose[0]))
+			RequiredRotation = goal_direction - robot_direction
+			if RequiredRotation > 3.141592654:
+				RequiredRotation = RequiredRotation - (2 * 3.141592654)
+			if RequiredRotation < -3.141592654:
+				RequiredRotation = RequiredRotation + (2 * 3.141592654)
+			ActionValues = []
+			move = [0, 0.2, 0.4, 0.8, 1.6, 3.2]
+			rotate = [0, 0.25, 0.5, 1, 2]
+			numMoves = 6
+			numRotates = 5
+			rotIntensity = 0
+			while (rotIntensity < numRotates and abs(RequiredRotation) > rotate[rotIntensity]):
+				rotIntensity = rotIntensity + 1
+			if rotIntensity > 1:
+				if RequiredRotation < 0:
+					ActionValues.append([1,rotIntensity-1])
+				else:
+					ActionValues.append([2,rotIntensity-1])
+			else:
+				ActionValues.append([0,0])
+			intensity = 0
+			while (intensity < numMoves and distance_from_tm > move[intensity]):
+				intensity = intensity + 1
+			obstacle_intensity = 0
+			while (obstacle_intensity < numMoves and distance_from_obstacle > move[obstacle_intensity]):
+				obstacle_intensity = obstacle_intensity + 1
+			if intensity > obstacle_intensity:
+				intensity = obstacle_intensity
+			ActionValues.append([0,intensity-1])
+			BestActions.append(ActionValues)
+		situation = 'BestActions_'+str(self.data_num)+' '+str(BestActions)
+		print situation
+		self.pub_situations.publish(situation)
+
+	def can_access_point(self, laser, pose, point, distance):
+		canAccessPoint = False;
+		distLaserPosToPoint = sqrt((pose[0]-point[0])*(pose[0]-point[0])+(pose[1]-point[1])*(pose[1]-point[1]))
+		if distLaserPosToPoint > distance:
+			return False
+		point_direction = atan2((point[1] - pose[1]), (point[0] - pose[0]))
+		index = 0
+		min_angle = 100000
+
+		for i in range(0, len(laser)):
+			laser_direction = atan2((laser[i][1] - pose[1]), (laser[i][0] - pose[0]))
+			if abs(laser_direction - point_direction) < min_angle:
+				min_angle = abs(laser_direction - point_direction)
+				index = i
+		# print "index", index, len(laser)
+		while index-2 < 0:
+			index = index +1
+		while index+2 > len(laser)-1:
+			index = index -1
+		# print "index", index, len(laser)
+		num_free = 0
+		for i in range(-2, 3):
+			# print "index+i", index+i, len(laser)
+			distLaserEndPointToLaserPos = sqrt((pose[0]-laser[index+i][0])*(pose[0]-laser[index+i][0])+(pose[1]-laser[index+i][1])*(pose[1]-laser[index+i][1]))
+			# print laser[index+i]
+			if distLaserEndPointToLaserPos > distLaserPosToPoint:
+				num_free = num_free + 1
+
+		if num_free > 4:
+			canAccessPoint = True
+
+		epsilon = 0.005
+		canSeePoint = False
+		ab = distLaserPosToPoint
+		for i in range(0,len(laser)):
+			ac = sqrt((pose[0]-laser[i][0])*(pose[0]-laser[i][0])+(pose[1]-laser[i][1])*(pose[1]-laser[i][1]))
+			bc = sqrt((point[0]-laser[i][0])*(point[0]-laser[i][0])+(point[1]-laser[i][1])*(point[1]-laser[i][1]))
+			if ((ab + bc) - ac) < epsilon:
+				canSeePoint = True
+				break
+		if canSeePoint or canAccessPoint:
+			return True
+		else:
+			return False
 
 situation_model = SituationModel(10)
 situation_model.listen()
