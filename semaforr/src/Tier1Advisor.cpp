@@ -129,7 +129,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
       if(forward.parameter >= decision->parameter and decision->parameter != 0){
-        ROS_DEBUG("Waypoint in sight and no obstacles , victory advisor to take decision");
+        ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
         decisionMade = true;
       }
     }
@@ -139,7 +139,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
     (*decision) = beliefs->getAgentState()->moveTowards(task);
     FORRAction forward = beliefs->getAgentState()->maxForwardAction();
     if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
-      ROS_DEBUG("Target in sight and no obstacles , victory advisor to take decision");
+      ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
       decisionMade = true;
     }
     /*vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();

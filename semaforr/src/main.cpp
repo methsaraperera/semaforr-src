@@ -160,7 +160,7 @@ public:
 		while(nh_.ok()) {
 			// If pos value is not received from menge wait
 			while(init_pos_received == false or init_laser_received == false){
-				//ROS_DEBUG("Waiting for first message or laser");
+				ROS_DEBUG("Waiting for first message or laser");
 				//wait for some time
 				rate.sleep();
 				// Sense input 

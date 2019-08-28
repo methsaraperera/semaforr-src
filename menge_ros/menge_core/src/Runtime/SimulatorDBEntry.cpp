@@ -66,6 +66,7 @@ namespace Menge {
 	Agents::SimulatorInterface * SimulatorDBEntry::initSimulator( const std::string & sceneFileName, bool VERBOSE ) {
 		Agents::SimulatorInterface * sim = getNewSimulator();
 		Agents::AgentInitializer * agentInit = getAgentInitalizer();
+		// ROS_INFO_STREAM(" Before loading XML ");
 		Agents::SimXMLLoader loader( sim );
 		logger.line();
 		if ( ! loader.loadFromXML( sceneFileName, agentInit, VERBOSE ) ) {
@@ -139,7 +140,7 @@ namespace Menge {
 													  bool visualize, 
 													  bool VERBOSE, ros::NodeHandle *nh ) 
 	{
-
+		// ROS_INFO_STREAM(" Inside simulator creation ");
 		_sim = initSimulator( sceneFile, VERBOSE );
 		if ( !_sim ) {
 			return 0x0;

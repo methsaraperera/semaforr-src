@@ -14,7 +14,7 @@ from visualization_msgs.msg import MarkerArray
 from std_msgs.msg import String, Header
 import re
 import tf
-from math import sqrt, floor, sin, cos, atan2
+from math import sqrt, floor, sin, cos, atan2, ceil, radians
 
 def dfun(u, v):
 	dist = sqrt((u[1] - v[1])*(u[1] - v[1]))
@@ -57,6 +57,8 @@ class SituationModel:
 	def laser_data(self, data):
 		self.laser_scan.append(np.array(data.ranges).astype('float'))
 		print "receiving laser_scan data message", len(self.laser_scan)
+		if np.amax(self.laser_scan[-1]) > 20:
+			print "max range detected"
 		# if len(self.laser_scan) % 50 == 0 and len(self.laser_scan) == len(self.robot_pose) and len(self.laser_scan) >= 50:
 		# 	self.publish_situations()
 
@@ -105,20 +107,20 @@ class SituationModel:
 				self.publish_situations()
 
 	def publish_situations(self):
-		ActionsComp = []
+		# ActionsComp = []
 		Actions = []
 		# Moves = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5]
 		# Moves = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4,4.25,4.5,4.75,5,5.25,5.5,5.75,6,6.25,6.5,6.75,7,7.25,7.5,7.75,8,8.25,8.5,8.75,9,9.25,9.5,9.75,10]
 		# Moves = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5,5.1,5.2,5.3,5.4,5.5,5.6,5.7,5.8,5.9,6,6.1,6.2,6.3,6.4,6.5,6.6,6.7,6.8,6.9,7,7.1,7.2,7.3,7.4,7.5,7.6,7.7,7.8,7.9,8,8.1,8.2,8.3,8.4,8.5,8.6,8.7,8.8,8.9,9,9.1,9.2,9.3,9.4,9.5,9.6,9.7,9.8,9.9,10,10.1,10.2,10.3,10.4,10.5,10.6,10.7,10.8,10.9,11,11.1,11.2,11.3,11.4,11.5,11.6,11.7,11.8,11.9,12,12.1,12.2,12.3,12.4,12.5,12.6,12.7,12.8,12.9,13,13.1,13.2,13.3,13.4,13.5,13.6,13.7,13.8,13.9,14,14.1,14.2,14.3,14.4,14.5,14.6,14.7,14.8,14.9,15,15.1,15.2,15.3,15.4,15.5,15.6,15.7,15.8,15.9,16,16.1,16.2,16.3,16.4,16.5,16.6,16.7,16.8,16.9,17,17.1,17.2,17.3,17.4,17.5,17.6,17.7,17.8,17.9,18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.1,19.2,19.3,19.4,19.5,19.6,19.7,19.8,19.9,20,20.1,20.2,20.3,20.4,20.5,20.6,20.7,20.8,20.9,21,21.1,21.2,21.3,21.4,21.5,21.6,21.7,21.8,21.9,22,22.1,22.2,22.3,22.4,22.5,22.6,22.7,22.8,22.9,23,23.1,23.2,23.3,23.4,23.5,23.6,23.7,23.8,23.9,24,24.1,24.2,24.3,24.4,24.5,24.6,24.7,24.8,24.9,25]
 		# Moves = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4,4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9,5,5.1,5.2,5.3,5.4,5.5,5.6,5.7,5.8,5.9,6,6.1,6.2,6.3,6.4,6.5,6.6,6.7,6.8,6.9,7,7.1,7.2,7.3,7.4,7.5,7.6,7.7,7.8,7.9,8,8.1,8.2,8.3,8.4,8.5,8.6,8.7,8.8,8.9,9,9.1,9.2,9.3,9.4,9.5,9.6,9.7,9.8,9.9,10]
 		# Moves = [0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0]
-		Moves = [0.45, 1.2, 3.6, 7.6]
+		# Moves = [0.45, 1.2, 3.6, 7.6]
 		LaserScans = np.array(self.laser_scan[0:self.data_num])
-		for val in Moves:
-			ActionsComp.append(LaserScans >= val)
-		ActionsComp = np.array(ActionsComp)
-		for i in range(0,len(LaserScans)):
-			Actions.append(ActionsComp[:,i].flatten().astype('int'))
+		# for val in Moves:
+		# 	ActionsComp.append(LaserScans >= val)
+		# ActionsComp = np.array(ActionsComp)
+		# for i in range(0,len(LaserScans)):
+		# 	Actions.append(ActionsComp[:,i].flatten().astype('int'))
 		# for scan in range(0,self.data_num,1):
 		# 	Values = []
 		# 	for dist in range(0,len(self.laser_scan[scan]),1):
@@ -129,9 +131,20 @@ class SituationModel:
 		# 				Values.append(0)
 		# 	Actions.append(Values)
 		# print Actions
+		for scan in LaserScans:
+			values = np.zeros((51,51))
+			angle = radians(-110.0)
+			for dist in scan:
+				for i in np.arange(0.0, ceil(dist), 0.1):
+					x = int(round(i * cos(angle)))+25
+					y = int(round(i * sin(angle)))+25
+					values[x][y] = 1
+				angle = angle + radians(1.0/3.0)
+			Actions.append(values[16:].flatten())
 		CityBlockDistances = scp.distance.pdist(Actions, 'cityblock')
 		SimilarityMatrix = scp.distance.squareform(CityBlockDistances)
-		Threshold = (float(len(Moves)) * float(len(self.laser_scan[0])))*0.03
+		# Threshold = (float(len(Moves)) * float(len(self.laser_scan[0])))*0.03
+		Threshold = 10
 		print "Threshold", Threshold
 		SimilarityMatrixInt = (np.array(SimilarityMatrix) <= Threshold).astype(int)
 		np.fill_diagonal(SimilarityMatrixInt, 0)
@@ -142,15 +155,15 @@ class SituationModel:
 		gr.add_edges_from(edges)
 		ConnectedComponents = sorted(nx.connected_components(gr), key = len, reverse=True)
 		print "ConnectedComponents", ConnectedComponents
-		FilteredComponents = []
-		for component in ConnectedComponents:
-			if len(component) >= 2:
-				FilteredComponents.append(np.array(list(component)))
+		# FilteredComponents = []
+		# for component in ConnectedComponents:
+		# 	if len(component) >= 2:
+		# 		FilteredComponents.append(np.array(list(component)))
 		ActionClusters = []
 		for i in range(0,len(Actions)):
 			cluster_found = 0
-			for j in range(0,len(FilteredComponents)):
-				if i in FilteredComponents[j]:
+			for j in range(0,len(ConnectedComponents)):
+				if i in ConnectedComponents[j]:
 					ActionClusters.append(j)
 					cluster_found = 1
 			if cluster_found == 0:

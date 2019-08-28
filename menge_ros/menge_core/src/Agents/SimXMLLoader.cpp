@@ -52,6 +52,7 @@ Any questions or comments should be sent to the authors {menge,geom}@cs.unc.edu
 #include "AgentInitializer.h"
 #include "os.h"
 #include "Core.h"
+// #include <ros/ros.h>
 
 namespace Menge {
 
@@ -71,16 +72,19 @@ namespace Menge {
 			//	a) available for reading
 			//	b) valid xml
 			//	c) An "Experiment"
+			// ROS_INFO_STREAM("Loading from xml " << filename);
 			if ( verbose ) logger << Logger::INFO_MSG << "Loading from xml: " << filename << ".";
 			TiXmlDocument xml( filename );
 			bool loadOkay = xml.LoadFile();
 
 			if ( !loadOkay ) {	// load xml file
+				// ROS_INFO_STREAM("Could not load simulation configuration xml (" << filename << ") due to xml syntax errors.");
+				// ROS_INFO_STREAM(xml.ErrorDesc());
 				logger << Logger::ERR_MSG << "Could not load simulation configuration xml (" << filename << ") due to xml syntax errors.\n";
 				logger << "\t" << xml.ErrorDesc();
 				return false;
 			}
-
+			// ROS_INFO_STREAM("xml loaded correctly");
 			TiXmlElement* experimentNode = xml.RootElement();	
 			if( ! experimentNode ) {
 				logger << Logger::ERR_MSG << "Scene configuration (" << filename << ") does not contain a root element.";

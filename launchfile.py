@@ -37,7 +37,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # start menge simulator
     menge_sim_process = subprocess.Popen(['rosrun','menge_sim','menge_sim','-p',map_xml])
     print "waiting,,"
-    time.sleep(10)
+    time.sleep(30)
 
     # start crowd model
     #crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
@@ -53,17 +53,17 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     log_file = open(log_name,"w")
     log_process = subprocess.Popen(['rostopic','echo','/decision_log'],stdout=log_file)
 
-    why_explanations_file = open(why_explanations_name,"w")
-    why_explanations_process = subprocess.Popen(['rostopic','echo','/explanations'],stdout=why_explanations_file)
+    # why_explanations_file = open(why_explanations_name,"w")
+    # why_explanations_process = subprocess.Popen(['rostopic','echo','/explanations'],stdout=why_explanations_file)
 
-    whyplan_explanations_file = open(whyplan_explanations_name,"w")
-    whyplan_explanations_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_explanations_file)
+    # whyplan_explanations_file = open(whyplan_explanations_name,"w")
+    # whyplan_explanations_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_explanations_file)
 
-    why_log_file = open(why_log_name,"w")
-    why_log_process = subprocess.Popen(['rostopic','echo','/explanations_log'],stdout=why_log_file)
+    # why_log_file = open(why_log_name,"w")
+    # why_log_process = subprocess.Popen(['rostopic','echo','/explanations_log'],stdout=why_log_file)
 
-    whyplan_log_file = open(whyplan_log_name,"w")
-    whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
+    # whyplan_log_file = open(whyplan_log_name,"w")
+    # whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
 
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params])
@@ -75,12 +75,12 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # print "waiting,,"
 
     # start why
-    why_process = subprocess.Popen(['rosrun','why','why'])
-    print "waiting,,"
+    # why_process = subprocess.Popen(['rosrun','why','why'])
+    # print "waiting,,"
 
     # start why_plan
-    why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
-    print "waiting,,"
+    # why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
+    # print "waiting,,"
    
     rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
 
@@ -104,22 +104,22 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
 
     rviz_process.terminate()
     
-    print "Terminating crowd model"
+    # print "Terminating crowd model"
     #crowd_process.terminate()
     # situation_process.terminate()
-    why_process.terminate()
-    why_plan_process.terminate()
-    print "Why terminated!"
+    # why_process.terminate()
+    # why_plan_process.terminate()
+    # print "Why terminated!"
     log_process.terminate()
     log_file.close()
-    why_explanations_process.terminate()
-    why_explanations_file.close()
-    whyplan_explanations_process.terminate()
-    whyplan_explanations_file.close()
-    why_log_process.terminate()
-    why_log_file.close()
-    whyplan_log_process.terminate()
-    whyplan_log_file.close()
+    # why_explanations_process.terminate()
+    # why_explanations_file.close()
+    # whyplan_explanations_process.terminate()
+    # whyplan_explanations_file.close()
+    # why_log_process.terminate()
+    # why_log_file.close()
+    # whyplan_log_process.terminate()
+    # whyplan_log_file.close()
     # situation_log_process.terminate()
     # situation_log_file.close()
     time.sleep(1)
@@ -128,7 +128,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(10)
     print "roscore terminated!"
 
-map_name = "gradcenter-5"
+map_name = "map-a"
 density = "on"
 flow = "on"
 risk = "on"
@@ -138,7 +138,7 @@ explore = "off"
 
 num_runs = 1
 for i in range(0,num_runs):
-    target_file_name = "targetExplanations.conf"
+    target_file_name = "target.conf"
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
