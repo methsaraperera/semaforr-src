@@ -330,11 +330,13 @@ int main(int argc, char **argv) {
 		string map_dimensions(argv[4]);
 		string advisors(argv[5]);
 		string params(argv[6]);
+		string situations(argv[7])
 
 		string advisor_config = path + advisors;
 		string params_config = path + params;
+		string situation_config = path + situations;
 
-		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions); 
+		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions, situation_config); 
 
 		ROS_INFO("Controller Initialized");
 		RobotDriver driver(nh, controller);

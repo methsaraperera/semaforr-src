@@ -50,14 +50,14 @@ std::map <FORRAction, double> Tier3Advisor::allAdvice(){
   //cout << "Decision Count : " << beliefs->getAgentState()->getCurrentTask()->getDecisionCount() << endl;
   
   //cout << "Rotation mode : " << inRotateMode << endl;
-  /*action_set = beliefs->getAgentState()->getActionSet();
-  inRotateMode = true;*/
-  if(inRotateMode){
+  action_set = beliefs->getAgentState()->getActionSet();
+  inRotateMode = true;
+  /*if(inRotateMode){
 	action_set = beliefs->getAgentState()->getRotationActionSet();
   }
   else{
 	action_set = beliefs->getAgentState()->getForwardActionSet();
-  }
+  }*/
 
   std::map <FORRAction, double> result;
  

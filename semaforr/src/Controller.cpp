@@ -575,11 +575,45 @@ void Controller::initialize_tasks(string filename){
 }
 
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Read from the config file and intialize tasks
+//
+//
+void Controller::initialize_situations(string filename){
+  string fileLine;
+  std::ifstream file(filename.c_str());
+  ROS_DEBUG_STREAM("Reading read_task_file:" << filename);
+  //cout << "Inside file in tasks " << endl;
+  if(!file.is_open()){
+    ROS_DEBUG("Unable to locate or read situation config file!");
+  }
+  while(getline(file, fileLine)){
+    //cout << "Inside while in tasks" << endl;
+    if(fileLine[0] == '#')  // skip comment lines
+      continue;
+    else{
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      int count = atoi(vstrings[0].c_str());
+      vector<int> values;
+      for (int i=1; i<vstrings.size(); i++){
+        values.push_back(atoi(vstrings[i].c_str()));
+      }
+      beliefs->getSpatialModel()->getSituations()->createSituations(count, values);
+    }
+  }
+}
+
+
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Initialize the controller and setup messaging to ROS
 //
 //
-Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions){
+Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions, string situation_config){
 
   // Initialize robot parameters from a config file
   initialize_params(params_config);
@@ -603,6 +637,9 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   tier1 = new Tier1Advisor(beliefs);
   firstTaskAssigned = false;
   decisionStats = new FORRActionStats();
+
+  // Initialize situations
+  initialize_situations(situation_config)
 }
 
 
@@ -816,16 +853,18 @@ bool Controller::tierOneDecision(FORRAction *decision){
   //decision making tier1 advisor
   bool decisionMade = false;
   if(tier1->advisorVictory(decision)){ 
-	ROS_INFO_STREAM("Advisor victory has made a decision " << decision->type << " " << decision->parameter);
-	decisionStats->decisionTier = 1;
-	decisionMade = true;	
+    ROS_INFO_STREAM("Advisor victory has made a decision " << decision->type << " " << decision->parameter);
+    decisionStats->decisionTier = 1;
+    decisionMade = true;
   }
   else{
-  	// group of vetoing tier1 advisors which adds to the list of vetoed actions
-	ROS_INFO("Advisor avoid wall will veto actions");
-  	tier1->advisorAvoidWalls();
-	ROS_INFO("Advisor not opposite will veto actions");
-  	tier1->advisorNotOpposite();
+    // group of vetoing tier1 advisors which adds to the list of vetoed actions
+    // ROS_INFO("Advisor avoid wall will veto actions");
+    // tier1->advisorAvoidWalls();
+    // ROS_INFO("Advisor not opposite will veto actions");
+    // tier1->advisorNotOpposite();
+    ROS_INFO("Advisor situation will veto actions");
+    tier1->advisorSituation();
   }
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   std::stringstream vetoList;

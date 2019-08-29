@@ -36,7 +36,7 @@ typedef std::vector<PathPlanner*>::iterator planner2It;
 class Controller {
 public:
 
-  Controller(string, string, string, string, string);
+  Controller(string, string, string, string, string, string);
   
   //main sense decide loop, receives the input messages and calls the FORRDecision function
   FORRAction decide();
@@ -91,6 +91,7 @@ private:
   void initialize_tasks(std::string);
   void initialize_params(std::string);
   void initialize_planner(std::string,std::string, int &l, int &h);
+  void initialize_situations(std::string);
   
   // Knowledge component of robot
   Beliefs *beliefs;

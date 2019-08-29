@@ -128,7 +128,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       ROS_DEBUG("Waypoint in sight , victory advisor active");
       (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-      if(forward.parameter >= decision->parameter and decision->parameter != 0){
+      if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
         ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
         decisionMade = true;
       }
@@ -182,3 +182,27 @@ bool Tier1Advisor::advisorAvoidWalls(){
   return false; 
 }
 
+bool Tier1Advisor::advisorSituation(){
+  ROS_DEBUG("In advisor situation");
+  // Find closest situation based on similarity to median
+  FORRSituations current_situation = 
+  sensor_msgs::LaserScan beliefs->getAgentState()->getCurrentLaserScan()
+  // Veto actions not allowed based on situation
+  set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+  set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
+
+
+  FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
+  ROS_DEBUG_STREAM("Max allowed forward action : " << max_forward.type << " " << max_forward.parameter);
+  int intensity = max_forward.parameter;
+  
+  set<FORRAction> *forward_set = beliefs->getAgentState()->getForwardActionSet();
+  for(int i = forward_set->size()-1 ; i > 0; i--){
+    FORRAction a(FORWARD,i);
+    if(i > intensity){
+      ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+      vetoedActions->insert(a);
+    }
+  }
+  return false; 
+}
