@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
 		string map_dimensions(argv[4]);
 		string advisors(argv[5]);
 		string params(argv[6]);
-		string situations(argv[7])
+		string situations(argv[7]);
 
 		string advisor_config = path + advisors;
 		string params_config = path + params;

@@ -569,7 +569,7 @@ void Controller::initialize_tasks(string filename){
       double x = atof(vstrings[0].c_str());
       double y = atof(vstrings[1].c_str());
       beliefs->getAgentState()->addTask(x,y);
-      ROS_DEBUG_STREAM("Task:" << x << " " << y << endl);
+      ROS_DEBUG_STREAM("Task: " << x << " " << y << endl);
     }
   }
 }
@@ -583,7 +583,7 @@ void Controller::initialize_tasks(string filename){
 void Controller::initialize_situations(string filename){
   string fileLine;
   std::ifstream file(filename.c_str());
-  ROS_DEBUG_STREAM("Reading read_task_file:" << filename);
+  ROS_DEBUG_STREAM("Reading read_situation_file:" << filename);
   //cout << "Inside file in tasks " << endl;
   if(!file.is_open()){
     ROS_DEBUG("Unable to locate or read situation config file!");
@@ -598,11 +598,12 @@ void Controller::initialize_situations(string filename){
       std::istream_iterator<std::string> end;
       std::vector<std::string> vstrings(begin, end);
       int count = atoi(vstrings[0].c_str());
-      vector<int> values;
+      vector<float> values;
       for (int i=1; i<vstrings.size(); i++){
-        values.push_back(atoi(vstrings[i].c_str()));
+        values.push_back(atof(vstrings[i].c_str()));
       }
       beliefs->getSpatialModel()->getSituations()->createSituations(count, values);
+      ROS_DEBUG_STREAM("Situation: " << count << endl);
     }
   }
 }
@@ -621,11 +622,11 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   // Initialize planner and map dimensions
   int l,h;
   initialize_planner(map_config,map_dimensions,l,h);
-
+  
   // Initialize the agent's 'beliefs' of the world state with the map and nav
   // graph and spatial models
   beliefs = new Beliefs(l, h, 2, arrMove, arrRotate, moveArrMax, rotateArrMax); // Hunter Fourth
-
+  
   // Initialize advisors and weights from config file
   initialize_advisors(advisor_config);
 
@@ -639,7 +640,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   decisionStats = new FORRActionStats();
 
   // Initialize situations
-  initialize_situations(situation_config)
+  initialize_situations(situation_config);
 }
 
 
@@ -647,6 +648,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan, geometry_msgs::PoseArray crowdpose, geometry_msgs::PoseArray crowdposeall){
   cout << "In update state" << endl;
   beliefs->getAgentState()->setCurrentSensor(current, laser_scan);
+  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan);
   beliefs->getAgentState()->setCrowdPose(crowdpose);
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
@@ -670,6 +672,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
       learnSpatialModel(beliefs->getAgentState());
       ROS_DEBUG("Finished Learning Spatial Model!!");
+      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getAgentState()->getCurrentTask()->getTaskX(), beliefs->getAgentState()->getCurrentTask()->getTaskY(), beliefs->getAgentState()->getCurrentTask()->getPositionHistory(), beliefs->getAgentState()->getCurrentTask()->getLaserHistory(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
     }
     //Clear existing task and associated plans
     beliefs->getAgentState()->finishTask();
@@ -859,12 +862,12 @@ bool Controller::tierOneDecision(FORRAction *decision){
   }
   else{
     // group of vetoing tier1 advisors which adds to the list of vetoed actions
-    // ROS_INFO("Advisor avoid wall will veto actions");
-    // tier1->advisorAvoidWalls();
-    // ROS_INFO("Advisor not opposite will veto actions");
-    // tier1->advisorNotOpposite();
-    ROS_INFO("Advisor situation will veto actions");
-    tier1->advisorSituation();
+    ROS_INFO("Advisor avoid wall will veto actions");
+    tier1->advisorAvoidWalls();
+    ROS_INFO("Advisor not opposite will veto actions");
+    tier1->advisorNotOpposite();
+    // ROS_INFO("Advisor situation will veto actions");
+    // tier1->advisorSituation();
   }
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   std::stringstream vetoList;
@@ -1086,7 +1089,7 @@ void Controller::tierThreeDecision(FORRAction *decision){
   // Loop through map advisor created and find command with the highest vote
   double maxAdviceStrength = -1000;
   for(mapIt iterator = allComments.begin(); iterator != allComments.end(); iterator++){
-    //cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << endl;
+    cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << endl;
     if(iterator->second > maxAdviceStrength){
       maxAdviceStrength = iterator->second;
     }

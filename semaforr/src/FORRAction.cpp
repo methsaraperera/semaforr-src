@@ -35,3 +35,10 @@ bool FORRAction::operator < (const FORRAction &action) const{
   else
     return false;
 }
+
+bool FORRAction::operator == (const FORRAction &action) const{
+  if(type == action.type and parameter == action.parameter)
+    return true;
+  else
+    return false;
+}

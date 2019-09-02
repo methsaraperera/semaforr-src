@@ -198,6 +198,7 @@ public:
   
   Position getExpectedPositionAfterAction(FORRAction action);
 
+  Position getExpectedPositionAfterAction(FORRAction action, vector<CartesianPoint> initialLaser, Position currPosition);
 
   // Returns distance from obstacle 
   double getDistanceToNearestObstacle(Position pos);
@@ -207,11 +208,18 @@ public:
 
   // returns distance to obstacle in the direction of rotation
   double getDistanceToObstacle(double rotation_angle);
+  double getDistanceToObstacle(Position initialPosition, vector<CartesianPoint> initialLaser, double rotation_angle);
   double getDistanceToForwardObstacle(){
 	//ROS_DEBUG("in getDistance to forward obstacle");
 	if(currentLaserScan.ranges.size() == 0)
 		return 25;
 	return currentLaserScan.ranges[currentLaserScan.ranges.size()/2];
+  }
+  double getDistanceToForwardObstacle(Position initialPosition, vector<CartesianPoint> initialLaser){
+    //ROS_DEBUG("in getDistance to forward obstacle");
+    if(initialLaser.size() == 0)
+      return 25;
+    return initialPosition.getDistance(initialLaser[initialLaser.size()/2].get_x(), initialLaser[initialLaser.size()/2].get_y());
   }
 
   FORRAction maxForwardAction();
@@ -262,8 +270,8 @@ public:
  private:
 
   // Stores the move and rotate action values
-  double move[100];  
-  double rotate[100];
+  double move[300];  
+  double rotate[300];
   int numMoves, numRotates;
 
   FORRAction get_max_allowed_forward_move();
@@ -338,6 +346,8 @@ public:
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);
   Position afterAngularMove(Position initialPosition, double angle);
+  Position afterLinearMove(Position initialPosition, vector<CartesianPoint> initialLaser, double distance);
+  Position afterAngularMove(Position initialPosition, vector<CartesianPoint> initialLaser, double angle);
 
   // Parameters
   double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle;

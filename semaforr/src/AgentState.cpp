@@ -37,7 +37,7 @@ Position AgentState::getExpectedPositionAfterAction(FORRAction action){
   }
   return result;
 }
-  
+
 
 Position AgentState::afterLinearMove(Position initialPosition, double distance){
   if(distance > getDistanceToForwardObstacle()) distance = getDistanceToForwardObstacle();
@@ -54,6 +54,56 @@ Position AgentState::afterAngularMove(Position initialPosition, double angle){
   double new_angle = (angle + initialPosition.getTheta());
   
   double distance = getDistanceToObstacle(new_angle);
+  //max is the maximum look ahead in meters 
+  double max = move[numMoves-1];
+  if(distance > max) distance = max;
+
+  double new_x = initialPosition.getX() + (distance * cos(new_angle));
+  double new_y = initialPosition.getY() + (distance * sin(new_angle));
+  
+  return Position(new_x, new_y, new_angle);
+}
+
+
+Position AgentState::getExpectedPositionAfterAction(FORRAction action, vector<CartesianPoint> initialLaser, Position currPosition){
+  Position result; 
+  int intensity = action.parameter;
+  FORRActionType type = action.type;
+  Position initialPosition = currPosition;
+  
+  switch(type){
+  case FORWARD:
+    result = afterLinearMove(initialPosition, initialLaser, move[intensity]);
+    break;
+  case RIGHT_TURN:
+    result = afterAngularMove(initialPosition, initialLaser, -rotate[intensity]);
+    break;
+  case LEFT_TURN:
+    result = afterAngularMove(initialPosition, initialLaser, rotate[intensity]);
+    break;
+  case PAUSE:
+    result = initialPosition;
+    break;
+  }
+  return result;
+}
+  
+
+Position AgentState::afterLinearMove(Position initialPosition, vector<CartesianPoint> initialLaser, double distance){
+  if(distance > getDistanceToForwardObstacle(initialPosition, initialLaser)) distance = getDistanceToForwardObstacle(initialPosition, initialLaser);
+
+  double new_x = initialPosition.getX() + (distance * cos(initialPosition.getTheta()));
+  double new_y = initialPosition.getY() + (distance * sin(initialPosition.getTheta()));
+  
+  return Position(new_x, new_y, initialPosition.getTheta());
+}
+
+
+Position AgentState::afterAngularMove(Position initialPosition, vector<CartesianPoint> initialLaser, double angle){
+
+  double new_angle = (angle + initialPosition.getTheta());
+  
+  double distance = getDistanceToObstacle(initialPosition, initialLaser, new_angle);
   //max is the maximum look ahead in meters 
   double max = move[numMoves-1];
   if(distance > max) distance = max;
@@ -341,6 +391,66 @@ double AgentState::getDistanceToObstacle(double rotation_angle){
 		//cout << currentLaserScan.ranges[index] << endl;
 		return currentLaserScan.ranges[index];
 	}
+}
+
+
+double AgentState::getDistanceToObstacle(Position initialPosition, vector<CartesianPoint> initialLaser, double rotation_angle){
+  //ROS_DEBUG("In getDistanceToObstacle");
+  // one increment in the laser range scan is 1/3 degrees, i.e 0.005817 in radians  
+  int index = (int)(rotation_angle/(laserScanRadianIncrement));
+  //ROS_DEBUG("In getDistanceToObstacle after index");
+  //shift the index in the positive
+  index = index + 330;
+  //ROS_DEBUG("In getDistanceToObstacle after index shift");
+  if(index < 0) index = 0;
+  //ROS_DEBUG("In getDistanceToObstacle after first if");
+  if(index > 659) index = 659;
+  //ROS_DEBUG("In getDistanceToObstacle after second if");
+  //cout << index << " " << currentLaserScan.ranges.size() << endl;
+  if(initialLaser.size() == 0) { return maxLaserRange; }
+  //cout << currentLaserScan.ranges[index] << endl;
+  
+  double r_x = initialPosition.getX();
+  double r_y = initialPosition.getY();
+  double r_ang = initialPosition.getTheta();
+  CartesianPoint current_point(r_x,r_y);
+  double r = robotFootPrint+robotFootPrintBuffer; // fetch robot's footprint plus 0.1 meter buffer
+  
+  Vector v1 = Vector(current_point, r_ang+(M_PI/2), r);
+  Vector v2 = Vector(current_point, r_ang-(M_PI/2), r);
+  
+  Vector parallel1 = Vector(v1.get_endpoint(), r_ang, maxLaserRange);
+  Vector parallel2 = Vector(v2.get_endpoint(), r_ang, maxLaserRange);
+  
+  Vector laserVector = Vector(current_point, r_ang+rotation_angle, maxLaserRange);
+  
+  CartesianPoint intersectionPoint = CartesianPoint();
+  double distance_to_laser = initialPosition.getDistance(initialLaser[index].get_x(), initialLaser[index].get_y());
+  
+  if(do_intersect(parallel1, laserVector, intersectionPoint)){
+    if(intersectionPoint.get_distance(current_point) < distance_to_laser){
+      //cout << "25" << endl;
+      return maxLaserRange;
+    }
+    else {
+      //cout << currentLaserScan.ranges[index] << endl;
+      return distance_to_laser;
+    }
+  }
+  else if(do_intersect(parallel2, laserVector, intersectionPoint)){
+    if(intersectionPoint.get_distance(current_point) < distance_to_laser){
+      //cout << "25" << endl;
+      return maxLaserRange;
+    }
+    else {
+      //cout << currentLaserScan.ranges[index] << endl;
+      return distance_to_laser;
+    }
+  }
+  else {
+    //cout << currentLaserScan.ranges[index] << endl;
+    return distance_to_laser;
+  }
 }
 
 

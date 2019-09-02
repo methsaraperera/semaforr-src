@@ -9,6 +9,10 @@ Written by Raj Korpan, 2019
 #define FORRSITUATIONS_H
 
 #include <FORRGeometry.h>
+#include <Position.h>
+#include <FORRTrails.h>
+#include <AgentState.h>
+#include <FORRAction.h>
 #include <vector>
 #include <string>
 #include <math.h>
@@ -31,26 +35,62 @@ using namespace std;
 class FORRSituations{
 public:
     FORRSituations(){
-        situations = vector< vector<int> >();
+        situations = vector< vector<float> >();
         situation_counts = vector<int>();
     };
-    vector<LineSegment> getSituations(){return situations;}
+    vector< vector<float> > getSituations(){return situations;}
     ~FORRSituations(){};
 
     void clearAllSituations(){
         situations.clear();
     }
-    void createSituations(int count, vector<int> values); //Initialize situations from config
 
-    void addObservationToSituations(); //Modify situations from new observations
+    //Initialize situations from config
+    void createSituations(int count, vector<float> values){
+        situations.push_back(values);
+        situation_counts.push_back(count);
+        vector< vector<float> > grid;
+        for(int i = 0; i < 51; i++){
+            vector<float> col;
+            for(int j = 0; j < 51; j++){
+                col.push_back(0);
+            }
+            grid.push_back(col);
+        }
+        for (int i = 0; i < values.size(); i++){
+            int row = i / 51 + 16;
+            int col = i %51;
+            grid[row][col] = values[i];
+        }
+        for(int i = 16; i < grid.size(); i++){
+            for(int j = 0; j < grid[i].size(); j++){
+                if(grid[i][j] == 0){
+                    cout << "0.0 ";
+                }
+                else{
+                    cout << floor(grid[i][j]*10+0.5)/10 << " ";
+                }
+            }
+            cout << endl;
+        }
+    }
 
-    void updateSituations(); //Update situations from new clustering
+    //Modify situations from new observations
+    void addObservationToSituations(sensor_msgs::LaserScan ls);
 
-    vector<int> identifySituation(sensor_msgs::LaserScan ls); //Fit laserscan to a situation
+    //Update situations from new clustering
+    void updateSituations();
+
+    //Fit laserscan to a situation
+    vector<int> identifySituation(sensor_msgs::LaserScan ls);
+
+    //Associate situations with actions based on trails and target
+    void learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail);
 
 private:
-    vector< vector<int> > situations;
+    vector< vector<float> > situations;
     vector<int> situation_counts;
+    vector<int> situation_assignments;
 };
 
 #endif

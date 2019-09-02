@@ -38,6 +38,8 @@ class FORRAction {
     // accepts const argument otherwise compiler will kill you
     bool operator < (const FORRAction &action) const;
 
+    bool operator == (const FORRAction &action) const;
+
     // I need constructor now that this is a class
     FORRAction(FORRActionType actionType, int par):type(actionType), parameter(par) {};
     // Also default constructor once you defined others

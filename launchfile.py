@@ -7,7 +7,7 @@ import rospy
 import time
 import subprocess
 
-def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params):
+def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations):
     project_home = "/home/rajkochhar/catkin_ws1/src"
     menge_path = project_home+"/examples/core"
     semaforr_path = project_home+"/semaforr"
@@ -37,17 +37,17 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # start menge simulator
     menge_sim_process = subprocess.Popen(['rosrun','menge_sim','menge_sim','-p',map_xml])
     print "waiting,,"
-    time.sleep(30)
+    time.sleep(10)
 
     # start crowd model
     #crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
 
     # start situations
-    # situation_process = subprocess.Popen(['rosrun','situation_learner','learn.py'])
+    situation_process = subprocess.Popen(['rosrun','situation_learner','learn.py'])
 
     # start logging
-    # situation_log_file = open(situation_log_name,"w")
-    # situation_log_process = subprocess.Popen(['rostopic','echo','/situations'],stdout=situation_log_file)
+    situation_log_file = open(situation_log_name,"w")
+    situation_log_process = subprocess.Popen(['rostopic','echo','/situations'],stdout=situation_log_file)
 
     # start logging
     log_file = open(log_name,"w")
@@ -66,7 +66,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
 
     # start semaforr
-    semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params])
+    semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params, situations])
     print "waiting,,"
     time.sleep(2)
     
@@ -106,7 +106,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     
     # print "Terminating crowd model"
     #crowd_process.terminate()
-    # situation_process.terminate()
+    situation_process.terminate()
     # why_process.terminate()
     # why_plan_process.terminate()
     # print "Why terminated!"
@@ -120,8 +120,8 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # why_log_file.close()
     # whyplan_log_process.terminate()
     # whyplan_log_file.close()
-    # situation_log_process.terminate()
-    # situation_log_file.close()
+    situation_log_process.terminate()
+    situation_log_file.close()
     time.sleep(1)
 
     roscore.terminate()
@@ -142,9 +142,10 @@ for i in range(0,num_runs):
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
+    situations = "/config/situations.conf"
     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params)
+    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)

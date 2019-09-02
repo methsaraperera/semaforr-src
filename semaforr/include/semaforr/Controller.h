@@ -106,8 +106,8 @@ private:
   bool isAdvisorActive(string advisorName);
 
   double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle;
-  double arrMove[100];
-  double arrRotate[100];
+  double arrMove[300];
+  double arrRotate[300];
   int moveArrMax, rotateArrMax;
   int taskDecisionLimit;
   bool trailsOn;
