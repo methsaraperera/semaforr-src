@@ -138,7 +138,7 @@ explore = "off"
 
 num_runs = 1
 for i in range(0,num_runs):
-    target_file_name = "target.conf"
+    target_file_name = "targetall.conf"
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"

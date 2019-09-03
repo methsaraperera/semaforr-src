@@ -354,5 +354,5 @@ class SituationModel:
 			angle = angle + increment
 		self.action_grid_data.append(values[16:].flatten())
 
-situation_model = SituationModel(10, 10, 0.95)
+situation_model = SituationModel(15, 10, 0.95)
 situation_model.listen()

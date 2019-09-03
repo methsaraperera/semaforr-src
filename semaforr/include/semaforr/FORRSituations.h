@@ -91,6 +91,7 @@ private:
     vector< vector<float> > situations;
     vector<int> situation_counts;
     vector<int> situation_assignments;
+    map< vector<int>, vector<FORRAction> > action_assignments;
 };
 
 #endif

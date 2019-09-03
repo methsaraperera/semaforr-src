@@ -55,17 +55,17 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls) {
   }
   int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
   // cout << min_pos << " " << situation_counts[min_pos] << endl;
-  vector<float> min_sit = situations[min_pos];
-  vector<float> min_sit_counts;
-  for(int i = 0; i < min_sit.size(); i++){
-    // cout << (min_sit[i]*((float)(situation_counts[min_pos]))) << " " << ((float)(new_situation[i])) << " " << ((float)(situation_counts[min_pos]+1)) << " " << (((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1))) << endl;
-    min_sit_counts.push_back(((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1)));
-  }
-  situations[min_pos] = min_sit_counts;
-  situation_counts[min_pos] = situation_counts[min_pos]+1;
-  for(int i = 0; i < situation_counts.size(); i++){
-    cout << "Situation " << i << " : " << situation_counts[i] << endl;
-  }
+  // vector<float> min_sit = situations[min_pos];
+  // vector<float> min_sit_counts;
+  // for(int i = 0; i < min_sit.size(); i++){
+  //   // cout << (min_sit[i]*((float)(situation_counts[min_pos]))) << " " << ((float)(new_situation[i])) << " " << ((float)(situation_counts[min_pos]+1)) << " " << (((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1))) << endl;
+  //   min_sit_counts.push_back(((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1)));
+  // }
+  // situations[min_pos] = min_sit_counts;
+  // situation_counts[min_pos] = situation_counts[min_pos]+1;
+  // for(int i = 0; i < situation_counts.size(); i++){
+  //   cout << "Situation " << i << " : " << situation_counts[i] << endl;
+  // }
   situation_assignments.push_back(min_pos);
 }
 
@@ -159,15 +159,28 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
     for(int j = trail.size()-1; j >= 1; j--){
       if(agentState->canAccessPoint((*laser_hist)[i], CartesianPoint((*pos_hist)[i].getX(), (*pos_hist)[i].getY()), trail[j].coordinates, 20)) {
         target_distances.push_back((*pos_hist)[i].getDistance(target));
-        target_angles.push_back(atan2(((*pos_hist)[i].getY() - target.getY()), ((*pos_hist)[i].getX() - target.getX())));
+        double angle_to_target = atan2((target.getY() - (*pos_hist)[i].getY()), (target.getX() - (*pos_hist)[i].getX()));
+        double required_rotation = angle_to_target - (*pos_hist)[i].getTheta();
+        if(required_rotation > M_PI){
+          required_rotation = required_rotation - (2 * M_PI);
+        }
+        if(required_rotation < -M_PI){
+          required_rotation = required_rotation + (2 * M_PI);
+        }
+        target_angles.push_back(required_rotation);
         // cout << "found furthest trail marker" << endl;
         std::map <FORRAction, double> result;
         typedef map<FORRAction, double>::iterator mapIt;
         for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
           FORRAction forrAction = *actionIter;
-          Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, (*laser_hist)[i], (*pos_hist)[i]);
-          result[forrAction] = expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y());
-          // cout << forrAction.type << " " << forrAction.parameter << " " << expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()) << endl;
+          if(forrAction.type == PAUSE){
+            continue;
+          }
+          else{
+            Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, (*laser_hist)[i], (*pos_hist)[i]);
+            result[forrAction] = expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y());
+            // cout << forrAction.type << " " << forrAction.parameter << " " << expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()) << endl;
+          }
         }
         double minDistanceToTrailMarker = 1000000;
         for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
@@ -190,6 +203,68 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
   }
   // cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << current_situation_assignments.size() << endl;
   for(int i = 0; i < target_distances.size(); i++){
-    cout << "Action Assignment " << i << " : " << target_distances[i] << " " << target_angles[i] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << " " << current_situation_assignments[i] << endl; 
+    cout << "Action Assignment " << i << " : " << target_distances[i] << " " << target_angles[i] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << " " << current_situation_assignments[i] << endl;
+    vector<int> assignment_values;
+    assignment_values.push_back(current_situation_assignments[i]);
+    if(target_distances[i] <= 1){
+      assignment_values.push_back(1);
+    }
+    else if(target_distances[i] <= 2){
+      assignment_values.push_back(2);
+    }
+    else if(target_distances[i] <= 4){
+      assignment_values.push_back(4);
+    }
+    else if(target_distances[i] <= 8){
+      assignment_values.push_back(8);
+    }
+    else if(target_distances[i] <= 16){
+      assignment_values.push_back(16);
+    }
+    else if(target_distances[i] <= 32){
+      assignment_values.push_back(32);
+    }
+    else if(target_distances[i] <= 64){
+      assignment_values.push_back(64);
+    }
+    else if(target_distances[i] <= 128){
+      assignment_values.push_back(128);
+    }
+
+    if(target_angles[i] >= -M_PI/8.0 and target_angles[i] < M_PI/8.0){
+      assignment_values.push_back(1);
+    }
+    else if(target_angles[i] >= M_PI/8.0 and target_angles[i] < 3.0*M_PI/8.0){
+      assignment_values.push_back(2);
+    }
+    else if(target_angles[i] >= 3.0*M_PI/8.0 and target_angles[i] < 5.0*M_PI/8.0){
+      assignment_values.push_back(3);
+    }
+    else if(target_angles[i] >= 5.0*M_PI/8.0 and target_angles[i] < 7.0*M_PI/8.0){
+      assignment_values.push_back(4);
+    }
+    else if(target_angles[i] >= 7.0*M_PI/8.0 or target_angles[i] < -7.0*M_PI/8.0){
+      assignment_values.push_back(5);
+    }
+    else if(target_angles[i] >= -7.0*M_PI/8.0 and target_angles[i] < -5.0*M_PI/8.0){
+      assignment_values.push_back(6);
+    }
+    else if(target_angles[i] >= -5.0*M_PI/8.0 and target_angles[i] < -3.0*M_PI/8.0){
+      assignment_values.push_back(7);
+    }
+    else if(target_angles[i] >= -3.0*M_PI/8.0 and target_angles[i] < -M_PI/8.0){
+      assignment_values.push_back(8);
+    }
+    if(assignment_values.size() == 3){
+      if(action_assignments.count(assignment_values) == 0){
+        action_assignments.insert(pair< vector<int>, vector<FORRAction> >(assignment_values, vector<FORRAction>()));
+      }
+      else{
+        for(int j = 0; j < action_assignments[assignment_values].size(); j++){
+          cout << "Action Prediction " << i << " : " << action_assignments[assignment_values][j].type << " " << action_assignments[assignment_values][j].parameter << endl;
+        }
+      }
+      action_assignments[assignment_values].push_back(trail_actions[i]);
+    }
   }
 }
