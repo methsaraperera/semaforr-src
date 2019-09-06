@@ -132,7 +132,7 @@ class SituationModel:
 		print "receiving decision log data message", len(self.decisions)
 		if len(self.decisions) > 1:
 			# if len(self.laser_scan) == len(self.robot_pose) and len(self.laser_scan) == len(self.decisions) and len(self.robot_pose) == len(self.decisions) and self.decisions[-1][0] != self.decisions[-2][0]:
-			if len(self.action_grid_data) > 500 and self.decisions[-1][0] != self.decisions[-2][0]:
+			if len(self.action_grid_data) > 300 and self.decisions[-1][0] != self.decisions[-2][0]:
 				print len(self.laser_scan), len(self.robot_pose), len(self.decisions)
 				self.data_num = len(self.laser_scan)-3
 				self.publish_situations()

@@ -22,6 +22,7 @@ Written by Raj Korpan, 2019
 #include <map>
 #include <set>
 #include <sensor_msgs/LaserScan.h>
+#include <std_msgs/String.h>
 
 using namespace std;
 
@@ -43,6 +44,9 @@ public:
 
     void clearAllSituations(){
         situations.clear();
+        situation_counts.clear();
+        situation_assignments.clear();
+        action_assignments.clear();
     }
 
     //Initialize situations from config
@@ -79,7 +83,7 @@ public:
     void addObservationToSituations(sensor_msgs::LaserScan ls);
 
     //Update situations from new clustering
-    void updateSituations();
+    void updateSituations(AgentState *agentState, std_msgs::String sits, vector< Position > *position_hist, vector< vector<CartesianPoint> > *laser_hist, vector< sensor_msgs::LaserScan > ls_hist, vector< vector< TrailMarker> > trails);
 
     //Fit laserscan to a situation
     vector<int> identifySituation(sensor_msgs::LaserScan ls);

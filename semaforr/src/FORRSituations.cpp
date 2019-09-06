@@ -66,15 +66,49 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls) {
   // for(int i = 0; i < situation_counts.size(); i++){
   //   cout << "Situation " << i << " : " << situation_counts[i] << endl;
   // }
-  situation_assignments.push_back(min_pos);
+  if(distances[min_pos] <= 150){
+    situation_assignments.push_back(min_pos);
+  }
+  else{
+    situation_assignments.push_back(-1);
+  }
 }
 
 
 //----------------------//------------------------//
 
 
-void FORRSituations::updateSituations() {
+void FORRSituations::updateSituations(AgentState *agentState, std_msgs::String sits, vector< Position > *position_hist, vector< vector<CartesianPoint> > *laser_hist, vector< sensor_msgs::LaserScan > ls_hist, vector< vector< TrailMarker> > trails) {
+  cout << "In update situations" << endl;
   clearAllSituations();
+  cout << "Cleared situations" << endl;
+  string input_data = sits.data;
+  std::istringstream iss(input_data);
+  for(std::string line; std::getline(iss, line); ){
+    std::stringstream ss(line);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string> vstrings(begin, end);
+    int count = atoi(vstrings[0].c_str());
+    vector<float> values;
+    for (int i=1; i<vstrings.size(); i++){
+      values.push_back(atof(vstrings[i].c_str()));
+    }
+    createSituations(count, values);
+    cout << "Situation: " << count << endl;
+  }
+  list<Task*> agenda = agentState->getAllAgenda();
+  cout << position_hist->size() << " " << laser_hist->size() << " " << ls_hist.size() << " " << trails.size() << " " << agenda.size() << endl;
+  for(int i = 0; i < ls_hist.size(); i++){
+    addObservationToSituations(ls_hist[i]);
+  }
+  int i = 0;
+  for(list<Task*>::iterator it = agenda.begin(); it != agenda.end(); it++){
+    double x = (*it)->getTaskX();
+    double y = (*it)->getTaskY();
+    learnSituationActions(agentState, x, y, position_hist, laser_hist, trails[i]);
+    i++;
+  }
 }
 
 
@@ -151,7 +185,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
   vector<double> target_angles;
   vector<FORRAction> trail_actions;
   vector<int> current_situation_assignments(situation_assignments.end() - pos_hist->size(), situation_assignments.end());
-  // cout << trail.size() << endl;
+  cout << pos_hist->size() << " " << laser_hist->size() << " " << trail.size() << " " << current_situation_assignments.size() << endl;
 
   set<FORRAction> *action_set = agentState->getActionSet();
   set<FORRAction>::iterator actionIter;
@@ -173,7 +207,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
         typedef map<FORRAction, double>::iterator mapIt;
         for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
           FORRAction forrAction = *actionIter;
-          if(forrAction.type == PAUSE){
+          if(forrAction.type == PAUSE or forrAction.type == FORWARD){
             continue;
           }
           else{
@@ -201,7 +235,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
     }
     // cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << current_situation_assignments.size() << endl;
   }
-  // cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << current_situation_assignments.size() << endl;
+  cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << current_situation_assignments.size() << endl;
   for(int i = 0; i < target_distances.size(); i++){
     cout << "Action Assignment " << i << " : " << target_distances[i] << " " << target_angles[i] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << " " << current_situation_assignments[i] << endl;
     vector<int> assignment_values;
@@ -267,4 +301,5 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
       action_assignments[assignment_values].push_back(trail_actions[i]);
     }
   }
+  cout << "Finished action assignment" << endl;
 }

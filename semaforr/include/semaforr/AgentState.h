@@ -62,6 +62,8 @@ public:
     //double r[] = {0, 0.25, 0.5, 1, 2};
     for(int i = 0 ; i < numMoves ; i++) move[i] = arrMove[i];
     for(int i = 0 ; i < numRotates ; i++) rotate[i] = arrRotate[i];
+    all_position_trace = new vector<Position>();
+    all_laser_history = new vector< vector<CartesianPoint> >();
   }
   
   // Best possible move towards the target
@@ -96,6 +98,7 @@ public:
   void setCurrentSensor(Position p, sensor_msgs::LaserScan scan) { 
 	currentPosition = p;
      	currentLaserScan = scan;
+      all_laserscan_history.push_back(scan);
      	transformToEndpoints();
 	if(currentTask != NULL){
 		//save the current position and laser endpoints 
@@ -164,11 +167,12 @@ public:
       vector<Position> *pos_hist = currentTask->getPositionHistory();
       for(int i = 0 ; i < pos_hist->size() ; i++){
         trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+        all_position_trace->push_back((*pos_hist)[i]);
       }
       all_trace.push_back(trace);
       vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
       for(int i = 0 ; i < laser_hist->size() ; i++){
-        all_laser_history.push_back((*laser_hist)[i]);
+        all_laser_history->push_back((*laser_hist)[i]);
       }
       agenda.remove(currentTask);
     }
@@ -177,7 +181,9 @@ public:
   }
 
   vector< vector<CartesianPoint> > getAllTrace(){return all_trace;}
-  vector< vector<CartesianPoint> > getAllLaserHistory(){return all_laser_history;}
+  vector< Position > *getAllPositionTrace(){return all_position_trace;}
+  vector< vector<CartesianPoint> > *getAllLaserHistory(){return all_laser_history;}
+  vector< sensor_msgs::LaserScan > getAllLaserScanHistory(){return all_laserscan_history;}
 
   void skipTask() {
     if (currentTask != NULL)
@@ -281,9 +287,11 @@ public:
 
   // All position history of all targets
   vector< vector<CartesianPoint> > all_trace;
+  vector< Position > *all_position_trace;
 
   // All laser history of all targets
-  vector< vector<CartesianPoint> > all_laser_history;
+  vector< vector<CartesianPoint> > *all_laser_history;
+  vector< sensor_msgs::LaserScan > all_laserscan_history;
 
   // set of vetoed actions that the robot cant execute in its current state
   set<FORRAction> *vetoedActions;
