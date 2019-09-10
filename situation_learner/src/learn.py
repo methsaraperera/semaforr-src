@@ -155,8 +155,8 @@ class SituationModel:
 				values = values + str(Mean_Values[i][j]) + " "
 			situations = situations+"\n"+str(Mean_Counts[i])+" "+values[:-1]
 
-		print situations
-		self.pub_situations.publish(situations)
+		print situations[1:]
+		self.pub_situations.publish(situations[1:])
 
 		# Targets = []
 		# for val in range(0, self.data_num,1):

@@ -83,15 +83,19 @@ void FORRSituations::updateSituations(AgentState *agentState, std_msgs::String s
   clearAllSituations();
   cout << "Cleared situations" << endl;
   string input_data = sits.data;
+  cout << sits.data << endl;
   std::istringstream iss(input_data);
   for(std::string line; std::getline(iss, line); ){
+    cout << line << endl;
     std::stringstream ss(line);
     std::istream_iterator<std::string> begin(ss);
     std::istream_iterator<std::string> end;
     std::vector<std::string> vstrings(begin, end);
     int count = atoi(vstrings[0].c_str());
+    cout << count << endl;
     vector<float> values;
     for (int i=1; i<vstrings.size(); i++){
+      cout << atof(vstrings[i].c_str()) << endl;
       values.push_back(atof(vstrings[i].c_str()));
     }
     createSituations(count, values);
@@ -102,13 +106,25 @@ void FORRSituations::updateSituations(AgentState *agentState, std_msgs::String s
   for(int i = 0; i < ls_hist.size(); i++){
     addObservationToSituations(ls_hist[i]);
   }
+  vector<int> decision_count = agentState->getTaskDecisionCount();
   int i = 0;
+  int j = 0;
   for(list<Task*>::iterator it = agenda.begin(); it != agenda.end(); it++){
     double x = (*it)->getTaskX();
     double y = (*it)->getTaskY();
-    learnSituationActions(agentState, x, y, position_hist, laser_hist, trails[i]);
+    int task_count = decision_count[i];
+    cout << i << " " << j << " " << task_count << endl;
+    vector< Position > *pos_dec;
+    vector< vector<CartesianPoint> > *las_dec;
+    for(int k = j; k < j+task_count; k++){
+      pos_dec->push_back((*position_hist)[k]);
+      las_dec->push_back((*laser_hist)[k]);
+    }
+    learnSituationActions(agentState, x, y, pos_dec, las_dec, trails[i]);
     i++;
+    j = j + task_count;
   }
+  cout << "Finished updateSituations" << endl;
 }
 
 
@@ -179,6 +195,65 @@ vector<int> FORRSituations::identifySituation(sensor_msgs::LaserScan ls) {
 //----------------------//------------------------//
 
 
+int FORRSituations::identifySituationAssignment(sensor_msgs::LaserScan ls) {
+  double angle = ls.angle_min;
+  double increment = ls.angle_increment;
+  vector<float> laser_ranges = ls.ranges;
+  vector< vector<int> > grid;
+  for(int i = 0; i < 51; i++){
+    vector<int> col;
+    for(int j = 0; j < 51; j++){
+      col.push_back(0);
+    }
+    grid.push_back(col);
+  }
+  for(int i = 0; i < laser_ranges.size(); i++){
+    for(double j = 0.0; j <= laser_ranges[i]; j+=0.9){
+      int x = (int)(round(j * cos(angle)))+25;
+      int y = (int)(round(j * sin(angle)))+25;
+      grid[x][y] = 1;
+      x = (int)(j * cos(angle))+25;
+      y = (int)(j * sin(angle))+25;
+      grid[x][y] = 1;
+      x = (int)(floor(j * cos(angle)))+25;
+      y = (int)(floor(j * sin(angle)))+25;
+      grid[x][y] = 1;
+      x = (int)(ceil(j * cos(angle)))+25;
+      y = (int)(ceil(j * sin(angle)))+25;
+      grid[x][y] = 1;
+    }
+    angle = angle + increment;
+  }
+  vector<int> new_situation;
+  for(int i = 16; i < grid.size(); i++){
+    for(int j = 0; j < grid[i].size(); j++){
+      new_situation.push_back(grid[i][j]);
+      // cout << grid[i][j] << " ";
+    }
+    // cout << endl;
+  }
+  vector<float> distances;
+  for(int i = 0; i < situations.size(); i++){
+    float dist = 0;
+    for(int j = 0; j < new_situation.size(); j++){
+      dist += abs(situations[i][j] - (float)(new_situation[j]));
+    }
+    cout << "Situation dist " << i << " : " << dist << endl;
+    distances.push_back(dist);
+  }
+  int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
+  if(distances[min_pos] <= 150){
+    return min_pos;
+  }
+  else{
+    return -1;
+  }
+}
+
+
+//----------------------//------------------------//
+
+
 void FORRSituations::learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail) {
   Position target(x,y,0);
   vector<double> target_distances;
@@ -186,6 +261,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
   vector<FORRAction> trail_actions;
   vector<int> current_situation_assignments(situation_assignments.end() - pos_hist->size(), situation_assignments.end());
   cout << pos_hist->size() << " " << laser_hist->size() << " " << trail.size() << " " << current_situation_assignments.size() << endl;
+  vector<int> trail_situation_assignments;
 
   set<FORRAction> *action_set = agentState->getActionSet();
   set<FORRAction>::iterator actionIter;
@@ -202,12 +278,14 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
           required_rotation = required_rotation + (2 * M_PI);
         }
         target_angles.push_back(required_rotation);
+        trail_situation_assignments.push_back(current_situation_assignments[i]);
         // cout << "found furthest trail marker" << endl;
         std::map <FORRAction, double> result;
         typedef map<FORRAction, double>::iterator mapIt;
         for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
           FORRAction forrAction = *actionIter;
-          if(forrAction.type == PAUSE or forrAction.type == FORWARD){
+          if(forrAction.type == PAUSE){
+          // if(forrAction.type == PAUSE or forrAction.type == FORWARD){
             continue;
           }
           else{
@@ -233,13 +311,13 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
         break;
       }
     }
-    // cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << current_situation_assignments.size() << endl;
+    // cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << trail_situation_assignments.size() << endl;
   }
-  cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << current_situation_assignments.size() << endl;
+  cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << trail_situation_assignments.size() << endl;
   for(int i = 0; i < target_distances.size(); i++){
-    cout << "Action Assignment " << i << " : " << target_distances[i] << " " << target_angles[i] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << " " << current_situation_assignments[i] << endl;
+    cout << "Action Assignment " << i << " : " << target_distances[i] << " " << target_angles[i] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << " " << trail_situation_assignments[i] << endl;
     vector<int> assignment_values;
-    assignment_values.push_back(current_situation_assignments[i]);
+    assignment_values.push_back(trail_situation_assignments[i]);
     if(target_distances[i] <= 1){
       assignment_values.push_back(1);
     }
@@ -302,4 +380,107 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
     }
   }
   cout << "Finished action assignment" << endl;
+}
+
+
+//----------------------//------------------------//
+
+
+double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction action){
+  Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
+  Position curr = agentState->getCurrentPosition();
+  double target_dist = curr.getDistance(target);
+
+  double angle_to_target = atan2((target.getY() - curr.getY()), (target.getX() - curr.getX()));
+  double required_rotation = angle_to_target - curr.getTheta();
+  if(required_rotation > M_PI){
+    required_rotation = required_rotation - (2 * M_PI);
+  }
+  if(required_rotation < -M_PI){
+    required_rotation = required_rotation + (2 * M_PI);
+  }
+  double target_angle = required_rotation;
+  int sit_assignment = identifySituationAssignment(agentState->getCurrentLaserScan());
+  vector<int> assignment_values;
+  assignment_values.push_back(sit_assignment);
+  if(target_dist <= 1){
+    assignment_values.push_back(1);
+  }
+  else if(target_dist <= 2){
+    assignment_values.push_back(2);
+  }
+  else if(target_dist <= 4){
+    assignment_values.push_back(4);
+  }
+  else if(target_dist <= 8){
+    assignment_values.push_back(8);
+  }
+  else if(target_dist <= 16){
+    assignment_values.push_back(16);
+  }
+  else if(target_dist <= 32){
+    assignment_values.push_back(32);
+  }
+  else if(target_dist <= 64){
+    assignment_values.push_back(64);
+  }
+  else if(target_dist <= 128){
+    assignment_values.push_back(128);
+  }
+
+  if(target_angle >= -M_PI/8.0 and target_angle < M_PI/8.0){
+    assignment_values.push_back(1);
+  }
+  else if(target_angle >= M_PI/8.0 and target_angle < 3.0*M_PI/8.0){
+    assignment_values.push_back(2);
+  }
+  else if(target_angle >= 3.0*M_PI/8.0 and target_angle < 5.0*M_PI/8.0){
+    assignment_values.push_back(3);
+  }
+  else if(target_angle >= 5.0*M_PI/8.0 and target_angle < 7.0*M_PI/8.0){
+    assignment_values.push_back(4);
+  }
+  else if(target_angle >= 7.0*M_PI/8.0 or target_angle < -7.0*M_PI/8.0){
+    assignment_values.push_back(5);
+  }
+  else if(target_angle >= -7.0*M_PI/8.0 and target_angle < -5.0*M_PI/8.0){
+    assignment_values.push_back(6);
+  }
+  else if(target_angle >= -5.0*M_PI/8.0 and target_angle < -3.0*M_PI/8.0){
+    assignment_values.push_back(7);
+  }
+  else if(target_angle >= -3.0*M_PI/8.0 and target_angle < -M_PI/8.0){
+    assignment_values.push_back(8);
+  }
+  if(assignment_values.size() == 3){
+    if(action_assignments.count(assignment_values) == 0){
+      return 1.0;
+    }
+    else{
+      map< FORRAction, double > action_weights;
+      map< FORRAction, double >::iterator awit;
+      set<FORRAction> *action_set = agentState->getActionSet();
+      set<FORRAction>::iterator actionIter;
+      for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+        FORRAction forrAction = *actionIter;
+        action_weights[forrAction] = 1.0;
+      }
+      for(int j = 0; j < action_assignments[assignment_values].size(); j++){
+        action_weights[action_assignments[assignment_values][j]] += 1.0;
+      }
+      double max_value = 0.0;
+      for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
+        cout << awit->first.type << " " << awit->first.parameter << " " << awit->second << endl;
+        if(awit->second > max_value){
+          max_value = awit->second;
+        }
+      }
+      for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
+        awit->second = awit->second / max_value;
+      }
+      cout << action_weights[action] << endl;
+      return action_weights[action];
+    }
+  }
+  return 1.0;
 }

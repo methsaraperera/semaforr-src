@@ -109,7 +109,7 @@ public:
 	void updateSituations(const std_msgs::String & situations){
 		//ROS_DEBUG("Inside callback for situations");
 		//update the situations of the belief
-		controller->getBeliefs()->getSpatialModel()->getSituations()->updateSituations(controller->getBeliefs()->getAgentState(), situations, controller->getBeliefs()->getAgentState()->getAllPositionTrace(), controller->getBeliefs()->getAgentState()->getAllLaserHistory(), controller->getBeliefs()->getAgentState()->getAllLaserScanHistory(), controller->getBeliefs()->getSpatialModel()->getTrails()->getTrails());
+		// controller->getBeliefs()->getSpatialModel()->getSituations()->updateSituations(controller->getBeliefs()->getAgentState(), situations, controller->getBeliefs()->getAgentState()->getAllPositionTrace(), controller->getBeliefs()->getAgentState()->getAllLaserHistory(), controller->getBeliefs()->getAgentState()->getAllLaserScanHistory(), controller->getBeliefs()->getSpatialModel()->getTrails()->getTrails());
 	}
 
 	// Callback function for pose message

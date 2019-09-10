@@ -174,6 +174,7 @@ public:
       for(int i = 0 ; i < laser_hist->size() ; i++){
         all_laser_history->push_back((*laser_hist)[i]);
       }
+      task_decision_count.push_back(currentTask->getDecisionCount());
       agenda.remove(currentTask);
     }
     rotateMode = true;
@@ -184,6 +185,8 @@ public:
   vector< Position > *getAllPositionTrace(){return all_position_trace;}
   vector< vector<CartesianPoint> > *getAllLaserHistory(){return all_laser_history;}
   vector< sensor_msgs::LaserScan > getAllLaserScanHistory(){return all_laserscan_history;}
+
+  vector<int> getTaskDecisionCount(){return task_decision_count;}
 
   void skipTask() {
     if (currentTask != NULL)
@@ -292,6 +295,9 @@ public:
   // All laser history of all targets
   vector< vector<CartesianPoint> > *all_laser_history;
   vector< sensor_msgs::LaserScan > all_laserscan_history;
+
+  // Decision count by task
+  vector<int> task_decision_count;
 
   // set of vetoed actions that the robot cant execute in its current state
   set<FORRAction> *vetoedActions;

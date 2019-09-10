@@ -88,8 +88,14 @@ public:
     //Fit laserscan to a situation
     vector<int> identifySituation(sensor_msgs::LaserScan ls);
 
+    //Get situation assignment for current laserscan
+    int identifySituationAssignment(sensor_msgs::LaserScan ls);
+
     //Associate situations with actions based on trails and target
     void learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail);
+
+    //Return weights for actions based on situations
+    double getWeightForAction(AgentState *agentState, FORRAction action);
 
 private:
     vector< vector<float> > situations;
