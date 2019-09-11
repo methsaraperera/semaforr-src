@@ -15,18 +15,22 @@ void Tier1Advisor::advisorNotOpposite(){
   FORRAction lastlastAction = actions[size - 2];
   FORRAction lastlastlastAction = actions[size - 3];
   ROS_DEBUG_STREAM("Controller::advisorNotOpposite > " << lastAction.type << " " << lastAction.parameter << ", " << lastlastAction.type << " " << lastlastAction.parameter << ", " << lastlastlastAction.type << " " << lastlastlastAction.parameter); 
-  /*if(((lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN) and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN){
+  if(((lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN) and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN){
     ROS_DEBUG("Not opposite active ");
-    if(lastlastAction.type == RIGHT_TURN or lastAction.type == RIGHT_TURN)    for(int i = 1; i < 6 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
-    else                                     for(int i = 1; i < 6 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
-  }*/
-  if(lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN){
-    if(lastAction.type == PAUSE){
-      ROS_DEBUG("Not opposite active ");
-      if(lastlastAction.type == RIGHT_TURN)    for(int i = 1; i < rotation_set->size()/2+1 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
-      else                                     for(int i = 1; i < rotation_set->size()/2+1 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+    if((lastlastAction.type == RIGHT_TURN and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN){
+      for(int i = 1; i < 6 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+    }
+    else if((lastlastAction.type == LEFT_TURN and lastAction.type == PAUSE) or lastAction.type == LEFT_TURN){
+      for(int i = 1; i < 6 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
     }
   }
+  // if(lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN){
+  //   if(lastAction.type == PAUSE){
+  //     ROS_DEBUG("Not opposite active ");
+  //     if(lastlastAction.type == RIGHT_TURN)    for(int i = 1; i < rotation_set->size()/2+1 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+  //     else                                     for(int i = 1; i < rotation_set->size()/2+1 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+  //   }
+  // }
   ROS_DEBUG("leaving notOpposite");
   return;
 }
@@ -115,12 +119,12 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   bool decisionMade = false;
   CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
   ROS_DEBUG("Check if target can be spotted using laser scan");
-  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 10);
+  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 5);
   
   if(targetInSight == false){
     ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
-    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 10);
+    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 5);
     if(waypointInSight == false){
       ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
     }

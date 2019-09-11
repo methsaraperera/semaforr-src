@@ -71,12 +71,16 @@ public:
                 if(grid[i][j] == 0){
                     cout << "0.0 ";
                 }
+                else if(grid[i][j] == 1){
+                    cout << "1.0 ";
+                }
                 else{
                     cout << floor(grid[i][j]*10+0.5)/10 << " ";
                 }
             }
             cout << endl;
         }
+        cout << endl;
     }
 
     //Modify situations from new observations
@@ -92,7 +96,7 @@ public:
     int identifySituationAssignment(sensor_msgs::LaserScan ls);
 
     //Associate situations with actions based on trails and target
-    void learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail);
+    void learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail, int begin_vec, int end_vec);
 
     //Return weights for actions based on situations
     double getWeightForAction(AgentState *agentState, FORRAction action);

@@ -77,17 +77,19 @@ class Task {
   void clearPositionHistory(){pos_hist->clear();}
 
   void saveSensor(Position currentPosition, vector<CartesianPoint> laserEndpoints){
-	if(pos_hist->size() < 1){
-		pos_hist->push_back(currentPosition);
-		laser_hist->push_back(laserEndpoints);
-	}
-	else{	
-     		Position pos = pos_hist->back();
-     		if(!(pos == currentPosition)) {
-			pos_hist->push_back(currentPosition);
-			laser_hist->push_back(laserEndpoints);
-		}
-	}
+  	pos_hist->push_back(currentPosition);
+  	laser_hist->push_back(laserEndpoints);
+	// if(pos_hist->size() < 1){
+	// 	pos_hist->push_back(currentPosition);
+	// 	laser_hist->push_back(laserEndpoints);
+	// }
+	// else{	
+ //     		Position pos = pos_hist->back();
+ //     		if(!(pos == currentPosition)) {
+	// 		pos_hist->push_back(currentPosition);
+	// 		laser_hist->push_back(laserEndpoints);
+	// 	}
+	// }
   }
 
   vector< vector <CartesianPoint> > *getLaserHistory(){return laser_hist;}

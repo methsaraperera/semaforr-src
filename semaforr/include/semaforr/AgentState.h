@@ -98,10 +98,10 @@ public:
   void setCurrentSensor(Position p, sensor_msgs::LaserScan scan) { 
 	currentPosition = p;
      	currentLaserScan = scan;
-      all_laserscan_history.push_back(scan);
      	transformToEndpoints();
 	if(currentTask != NULL){
 		//save the current position and laser endpoints 
+    all_laserscan_history.push_back(scan);
 		currentTask->saveSensor(p,laserEndpoints);
 	}
   }

@@ -672,7 +672,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
       learnSpatialModel(beliefs->getAgentState());
       ROS_DEBUG("Finished Learning Spatial Model!!");
-      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getAgentState()->getCurrentTask()->getTaskX(), beliefs->getAgentState()->getCurrentTask()->getTaskY(), beliefs->getAgentState()->getCurrentTask()->getPositionHistory(), beliefs->getAgentState()->getCurrentTask()->getLaserHistory(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
+      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getAgentState()->getCurrentTask()->getTaskX(), beliefs->getAgentState()->getCurrentTask()->getTaskY(), beliefs->getAgentState()->getCurrentTask()->getPositionHistory(), beliefs->getAgentState()->getCurrentTask()->getLaserHistory(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1), -1, -1);
       ROS_DEBUG("Finished Learning Situations!!");
     }
     //Clear existing task and associated plans
@@ -1089,21 +1089,23 @@ void Controller::tierThreeDecision(FORRAction *decision){
   
   // Loop through map advisor created and find command with the highest vote
   double maxAdviceStrength = -1000;
+  double maxWeight;
   for(mapIt iterator = allComments.begin(); iterator != allComments.end(); iterator++){
     double action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), iterator->first);
     cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
     if(action_weight * iterator->second > maxAdviceStrength){
       maxAdviceStrength = action_weight * iterator->second;
+      maxWeight = action_weight;
     }
   }
-  //cout << "Max vote strength " << maxAdviceStrength << endl;
+  cout << "Max vote strength " << maxAdviceStrength << endl;
   
   for(mapIt iterator = allComments.begin(); iterator!=allComments.end(); iterator++){
-    if(iterator->second == maxAdviceStrength)
+    if(maxWeight * iterator->second == maxAdviceStrength)
       best_decisions.push_back(iterator->first);
   }
   
-  //cout << "There are " << best_decisions.size() << " decisions that got the highest grade " << endl;
+  cout << "There are " << best_decisions.size() << " decisions that got the highest grade " << endl;
   if(best_decisions.size() == 0){
       (*decision) = FORRAction(PAUSE,0);
   }

@@ -548,6 +548,8 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
       while(distance_from_target > move[intensity] and intensity < numMoves) {
         intensity++;
       }
+      if(intensity > 1)
+        intensity--;
       ROS_DEBUG_STREAM("Move Intensity : " << intensity);
       int max_allowed = maxForwardAction().parameter;
       if(intensity > max_allowed){

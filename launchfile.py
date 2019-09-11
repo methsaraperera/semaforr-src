@@ -142,7 +142,7 @@ for i in range(0,num_runs):
     log_name = map_name + "_" + str(i) + ".txt"
     advisors = "/config/advisors0.conf"
     params = "/config/params0.conf"
-    situations = "/config/situations1.conf"
+    situations = "/config/situations2.conf"
     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"

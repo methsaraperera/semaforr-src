@@ -77,6 +77,7 @@ class SituationModel:
 		self.num_clusters = num_clus
 		self.min_cluster_size = min_clus
 		self.probability_cutoff = prob_cut
+		self.learning_threshold = 500
 
 	# calls the callback for each of the subscriber
 	def listen(self):
@@ -132,10 +133,11 @@ class SituationModel:
 		print "receiving decision log data message", len(self.decisions)
 		if len(self.decisions) > 1:
 			# if len(self.laser_scan) == len(self.robot_pose) and len(self.laser_scan) == len(self.decisions) and len(self.robot_pose) == len(self.decisions) and self.decisions[-1][0] != self.decisions[-2][0]:
-			if len(self.action_grid_data) > 300 and self.decisions[-1][0] != self.decisions[-2][0]:
+			if len(self.action_grid_data) > self.learning_threshold and self.decisions[-1][0] != self.decisions[-2][0]:
 				print len(self.laser_scan), len(self.robot_pose), len(self.decisions)
 				self.data_num = len(self.laser_scan)-3
 				self.publish_situations()
+				self.learning_threshold = self.learning_threshold + 500
 
 	def publish_situations(self):
 		Actions = np.array(self.action_grid_data[0:self.data_num])
@@ -155,7 +157,7 @@ class SituationModel:
 				values = values + str(Mean_Values[i][j]) + " "
 			situations = situations+"\n"+str(Mean_Counts[i])+" "+values[:-1]
 
-		print situations[1:]
+		# print situations[1:]
 		self.pub_situations.publish(situations[1:])
 
 		# Targets = []
