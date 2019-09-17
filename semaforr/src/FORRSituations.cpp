@@ -7,7 +7,7 @@ using namespace std;
 //----------------------//------------------------//
 
 
-void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls) {
+void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing) {
   double angle = ls.angle_min;
   double increment = ls.angle_increment;
   vector<float> laser_ranges = ls.ranges;
@@ -37,9 +37,11 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls) {
     angle = angle + increment;
   }
   vector<int> new_situation;
+  vector<float> new_situation_float;
   for(int i = 16; i < grid.size(); i++){
     for(int j = 0; j < grid[i].size(); j++){
       new_situation.push_back(grid[i][j]);
+      new_situation_float.push_back((float)(grid[i][j]));
       cout << grid[i][j] << " ";
     }
     cout << endl;
@@ -50,28 +52,64 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls) {
     for(int j = 0; j < new_situation.size(); j++){
       dist += abs(situations[i][j] - (float)(new_situation[j]));
     }
-    cout << "Situation dist " << i << " : " << dist << endl;
+    cout << "Situation " << i << " " << situation_counts[i] << " dist : " << dist << endl;
     distances.push_back(dist);
   }
   int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
-  // cout << min_pos << " " << situation_counts[min_pos] << endl;
-  // vector<float> min_sit = situations[min_pos];
-  // vector<float> min_sit_counts;
-  // for(int i = 0; i < min_sit.size(); i++){
-  //   // cout << (min_sit[i]*((float)(situation_counts[min_pos]))) << " " << ((float)(new_situation[i])) << " " << ((float)(situation_counts[min_pos]+1)) << " " << (((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1))) << endl;
-  //   min_sit_counts.push_back(((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1)));
-  // }
-  // situations[min_pos] = min_sit_counts;
-  // situation_counts[min_pos] = situation_counts[min_pos]+1;
-  // for(int i = 0; i < situation_counts.size(); i++){
-  //   cout << "Situation " << i << " : " << situation_counts[i] << endl;
-  // }
-  if(distances[min_pos] <= 100){
-    situation_assignments.push_back(min_pos);
+  if(distances[min_pos] <= dist_cutoff){
+    situation_observations.push_back(SituationMarker(ls, pose, min_pos));
+    // situation_assignments.push_back(min_pos);
+    // situation_laserscans.push_back(ls);
+    if(add_to_existing){
+      // cout << min_pos << " " << situation_counts[min_pos] << endl;
+      vector<float> min_sit = situations[min_pos];
+      vector<float> min_sit_counts;
+      for(int i = 0; i < min_sit.size(); i++){
+        // cout << (min_sit[i]*((float)(situation_counts[min_pos]))) << " " << ((float)(new_situation[i])) << " " << ((float)(situation_counts[min_pos]+1)) << " " << (((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1))) << endl;
+        min_sit_counts.push_back(((min_sit[i]*((float)(situation_counts[min_pos])))+((float)(new_situation[i])))/((float)(situation_counts[min_pos]+1)));
+      }
+      situations[min_pos] = min_sit_counts;
+      situation_counts[min_pos] = situation_counts[min_pos]+1;
+      // for(int i = 0; i < situation_counts.size(); i++){
+      //   cout << "Situation " << i << " : " << situation_counts[i] << endl;
+      // }
+    }
   }
+  // else if(add_to_existing){
+  //   situation_assignments.push_back(situations.size());
+  //   situation_laserscans.push_back(ls);
+  //   situation_counts.push_back(1);
+  //   situations.push_back(new_situation_float);
+  // }
   else{
-    situation_assignments.push_back(-1);
+    situation_observations.push_back(SituationMarker(ls, pose, -1));
+    // situation_assignments.push_back(-1);
+    // situation_laserscans.push_back(ls);
   }
+}
+
+
+//----------------------//------------------------//
+
+
+void FORRSituations::clusterOutlierObservations(){
+  vector<SituationMarker> observations_for_clustering;
+  vector<int> observation_inds;
+  for(int i = 0; i < situation_observations.size(); i++){
+    if(situation_observations[i].assignment == -1){
+      int matched_situation = identifySituationAssignment(situation_observations[i].ls);
+      cout << i << " " << situation_observations[i].assignment << " " << matched_situation << endl;
+      if(matched_situation != -1){
+        situation_observations[i].assignment = matched_situation;
+        cout << i << " " << situation_observations[i].assignment << " " << matched_situation << endl;
+      }
+      else{
+        observations_for_clustering.push_back(situation_observations[i]);
+        observation_inds.push_back(i);
+      }
+    }
+  }
+  cout << observations_for_clustering.size() << " " << observation_inds.size() << endl;
 }
 
 
@@ -104,7 +142,7 @@ void FORRSituations::updateSituations(AgentState *agentState, std_msgs::String s
   list<Task*> agenda = agentState->getAllAgenda();
   cout << position_hist->size() << " " << laser_hist->size() << " " << ls_hist.size() << " " << trails.size() << " " << agenda.size() << endl;
   for(int i = 0; i < ls_hist.size(); i++){
-    addObservationToSituations(ls_hist[i]);
+    addObservationToSituations(ls_hist[i], (*position_hist)[i], false);
   }
   vector<int> decision_count = agentState->getTaskDecisionCount();
   int i = 0;
@@ -122,7 +160,7 @@ void FORRSituations::updateSituations(AgentState *agentState, std_msgs::String s
       las_dec->push_back((*laser_hist)[k]);
     }
     // cout << pos_dec->size() << " " << las_dec->size() << endl;
-    learnSituationActions(agentState, x, y, pos_dec, las_dec, trails[i], j, j+task_count);
+    // learnSituationActions(agentState, x, y, pos_dec, las_dec, trails[i], j, j+task_count);
     i++;
     j = j + task_count;
     if(i == trails.size()){
@@ -247,7 +285,7 @@ int FORRSituations::identifySituationAssignment(sensor_msgs::LaserScan ls) {
     distances.push_back(dist);
   }
   int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
-  if(distances[min_pos] <= 100){
+  if(distances[min_pos] <= dist_cutoff){
     return min_pos;
   }
   else{
@@ -259,38 +297,41 @@ int FORRSituations::identifySituationAssignment(sensor_msgs::LaserScan ls) {
 //----------------------//------------------------//
 
 
-void FORRSituations::learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail, int begin_vec, int end_vec) {
-  Position target(x,y,0);
+void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailMarker> trail, int begin_vec, int end_vec) {
+  Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
   vector<double> target_distances;
   vector<double> target_angles;
   vector<FORRAction> trail_actions;
-  vector<int> current_situation_assignments;
+  vector<SituationMarker> current_situation_observations;
+  // vector<int> current_situation_assignments;
   // cout << begin_vec << " " << end_vec << endl;
   if(begin_vec == -1 and end_vec == -1){
-    vector<int> c_situation_assignments(situation_assignments.end() - pos_hist->size(), situation_assignments.end());
-    current_situation_assignments = c_situation_assignments;
+    vector<SituationMarker> c_situation_observations(situation_observations.end() - agentState->getCurrentTask()->getPositionHistory()->size(), situation_observations.end());
+    current_situation_observations = c_situation_observations;
+    // vector< sensor_msgs::LaserScan > *laser_scan_hist = agentState->getCurrentTask()->getLaserScanHistory();
+    // for(int i = 0; i < laser_scan_hist->size(); i++){
+    //   current_situation_assignments.push_back(identifySituationAssignment((*laser_scan_hist)[i]));
+    // }
   }
-  else{
-    // vector<int>::iterator bit = situation_assignments.begin();
-    // advance(bit, begin);
-    // vector<int>::iterator eit = situation_assignments.begin();
-    // advance(eit, begin + end);
-    // vector<int> c_situation_assignments(bit, eit);
-    vector<int> c_situation_assignments(situation_assignments.begin() + begin_vec, situation_assignments.begin() + end_vec);
-    // cout << c_situation_assignments.size() << endl;
-    current_situation_assignments = c_situation_assignments;
-  }
+  // else{
+  //   vector<int> c_situation_assignments(situation_assignments.begin() + begin_vec, situation_assignments.begin() + end_vec);
+  //   // cout << c_situation_assignments.size() << endl;
+  //   current_situation_assignments = c_situation_assignments;
+  // }
   // cout << pos_hist->size() << " " << laser_hist->size() << " " << trail.size() << " " << current_situation_assignments.size() << endl;
+  cout << trail.size() << " " << current_situation_observations.size() << endl;
   vector<int> trail_situation_assignments;
 
   set<FORRAction> *action_set = agentState->getActionSet();
   set<FORRAction>::iterator actionIter;
-  for(int i = 0 ; i < pos_hist->size() ; i++){
+  // for(int i = 0 ; i < pos_hist->size() ; i++){
+  for(int i = 0 ; i < current_situation_observations.size() ; i++){
     for(int j = trail.size()-1; j >= 1; j--){
-      if(agentState->canAccessPoint((*laser_hist)[i], CartesianPoint((*pos_hist)[i].getX(), (*pos_hist)[i].getY()), trail[j].coordinates, 20)) {
-        target_distances.push_back((*pos_hist)[i].getDistance(target));
-        double angle_to_target = atan2((target.getY() - (*pos_hist)[i].getY()), (target.getX() - (*pos_hist)[i].getX()));
-        double required_rotation = angle_to_target - (*pos_hist)[i].getTheta();
+      vector<CartesianPoint> current_laser = agentState->transformToEndpoints(current_situation_observations[i].pose, current_situation_observations[i].ls);
+      if(agentState->canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 20)) {
+        target_distances.push_back(current_situation_observations[i].pose.getDistance(target));
+        double angle_to_target = atan2((target.getY() - current_situation_observations[i].pose.getY()), (target.getX() - current_situation_observations[i].pose.getX()));
+        double required_rotation = angle_to_target - current_situation_observations[i].pose.getTheta();
         if(required_rotation > M_PI){
           required_rotation = required_rotation - (2 * M_PI);
         }
@@ -298,7 +339,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
           required_rotation = required_rotation + (2 * M_PI);
         }
         target_angles.push_back(required_rotation);
-        trail_situation_assignments.push_back(current_situation_assignments[i]);
+        trail_situation_assignments.push_back(current_situation_observations[i].assignment);
         // cout << "found furthest trail marker" << endl;
         std::map <FORRAction, double> result;
         typedef map<FORRAction, double>::iterator mapIt;
@@ -309,7 +350,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
             continue;
           }
           else{
-            Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, (*laser_hist)[i], (*pos_hist)[i]);
+            Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, current_laser, current_situation_observations[i].pose);
             result[forrAction] = expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y());
             // cout << forrAction.type << " " << forrAction.parameter << " " << expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()) << endl;
           }
@@ -338,10 +379,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
     // cout << "Action Assignment " << i << " : " << target_distances[i] << " " << target_angles[i] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << " " << trail_situation_assignments[i] << endl;
     vector<int> assignment_values;
     assignment_values.push_back(trail_situation_assignments[i]);
-    if(target_distances[i] <= 1){
-      assignment_values.push_back(1);
-    }
-    else if(target_distances[i] <= 2){
+    if(target_distances[i] <= 2){
       assignment_values.push_back(2);
     }
     else if(target_distances[i] <= 4){
@@ -361,6 +399,9 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
     }
     else if(target_distances[i] <= 128){
       assignment_values.push_back(128);
+    }
+    else if(target_distances[i] <= 256){
+      assignment_values.push_back(256);
     }
 
     if(target_angles[i] >= -M_PI/8.0 and target_angles[i] < M_PI/8.0){
@@ -408,16 +449,28 @@ void FORRSituations::learnSituationActions(AgentState *agentState, double x, dou
     set<FORRAction>::iterator actionIter;
     for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
       FORRAction forrAction = *actionIter;
-      action_weights[forrAction] = 0.0;
+      action_weights[forrAction] = 1.0;
     }
     for(int j = 0; j < aait->second.size(); j++){
       action_weights[aait->second[j]] += 1.0;
     }
+    double max_value = 0.0;
     for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
-      cout << aait->first[0] << " " << aait->first[1] << " " << aait->first[2] << " " << awit->first.type << " " << awit->first.parameter << " " << awit->second << endl;
+      // cout << awit->first.type << " " << awit->first.parameter << " " << awit->second << endl;
+      if(awit->second > max_value){
+        max_value = awit->second;
+      }
     }
+
+    for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
+      cout << aait->first[0] << " " << aait->first[1] << " " << aait->first[2] << " " << awit->first.type << " " << awit->first.parameter << " " << awit->second-1 << endl;
+      awit->second = awit->second / max_value;
+    }
+    action_assignment_weights[aait->first] = action_weights;
   }
   // cout << "Finished action assignment" << endl;
+  // printSituations();
+  clusterOutlierObservations();
 }
 
 
@@ -441,10 +494,7 @@ double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction act
   int sit_assignment = identifySituationAssignment(agentState->getCurrentLaserScan());
   vector<int> assignment_values;
   assignment_values.push_back(sit_assignment);
-  if(target_dist <= 1){
-    assignment_values.push_back(1);
-  }
-  else if(target_dist <= 2){
+  if(target_dist <= 2){
     assignment_values.push_back(2);
   }
   else if(target_dist <= 4){
@@ -464,6 +514,9 @@ double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction act
   }
   else if(target_dist <= 128){
     assignment_values.push_back(128);
+  }
+  else if(target_dist <= 256){
+    assignment_values.push_back(256);
   }
 
   if(target_angle >= -M_PI/8.0 and target_angle < M_PI/8.0){
@@ -495,29 +548,7 @@ double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction act
       return 1.0;
     }
     else{
-      map< FORRAction, double > action_weights;
-      map< FORRAction, double >::iterator awit;
-      set<FORRAction> *action_set = agentState->getActionSet();
-      set<FORRAction>::iterator actionIter;
-      for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
-        FORRAction forrAction = *actionIter;
-        action_weights[forrAction] = 1.0;
-      }
-      for(int j = 0; j < action_assignments[assignment_values].size(); j++){
-        action_weights[action_assignments[assignment_values][j]] += 1.0;
-      }
-      double max_value = 0.0;
-      for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
-        // cout << awit->first.type << " " << awit->first.parameter << " " << awit->second << endl;
-        if(awit->second > max_value){
-          max_value = awit->second;
-        }
-      }
-      for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
-        awit->second = awit->second / max_value;
-      }
-      // cout << action_weights[action] << endl;
-      return action_weights[action];
+      return action_assignment_weights[assignment_values][action];
     }
   }
   return 1.0;

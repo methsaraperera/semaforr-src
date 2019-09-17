@@ -648,7 +648,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan, geometry_msgs::PoseArray crowdpose, geometry_msgs::PoseArray crowdposeall){
   cout << "In update state" << endl;
   beliefs->getAgentState()->setCurrentSensor(current, laser_scan);
-  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan);
+  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan, current, true);
   beliefs->getAgentState()->setCrowdPose(crowdpose);
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
@@ -672,7 +672,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
       learnSpatialModel(beliefs->getAgentState());
       ROS_DEBUG("Finished Learning Spatial Model!!");
-      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getAgentState()->getCurrentTask()->getTaskX(), beliefs->getAgentState()->getCurrentTask()->getTaskY(), beliefs->getAgentState()->getCurrentTask()->getPositionHistory(), beliefs->getAgentState()->getCurrentTask()->getLaserHistory(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1), -1, -1);
+      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1), -1, -1);
       ROS_DEBUG("Finished Learning Situations!!");
     }
     //Clear existing task and associated plans
@@ -681,6 +681,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
+      if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > 50){
+        aStarOn = false;
+      }
       ROS_DEBUG("Selecting Next Task");
       if(aStarOn){
         tierTwoDecision(current);
@@ -711,6 +714,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //beliefs->getAgentState()->skipTask();
       beliefs->getAgentState()->finishTask();
       if(beliefs->getAgentState()->getAgenda().size() > 0){
+        if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > 50){
+          aStarOn = false;
+        }
         if(aStarOn){
           tierTwoDecision(current);
         }
@@ -720,6 +726,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
     }
   }
+  
   //ROS_DEBUG("End Of UpdateState");
 }
 

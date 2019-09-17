@@ -26,6 +26,14 @@ Written by Raj Korpan, 2019
 
 using namespace std;
 
+class SituationMarker{
+public:
+    sensor_msgs::LaserScan ls;
+    Position pose;
+    int assignment;
+    SituationMarker(sensor_msgs::LaserScan laser, Position ps, int a): ls(laser), pose(ps), assignment(a){}
+};
+
 //=========================================================//=========================================================//
 
 /* FORRSituations class
@@ -38,6 +46,7 @@ public:
     FORRSituations(){
         situations = vector< vector<float> >();
         situation_counts = vector<int>();
+        dist_cutoff = 75;
     };
     vector< vector<float> > getSituations(){return situations;}
     ~FORRSituations(){};
@@ -45,8 +54,10 @@ public:
     void clearAllSituations(){
         situations.clear();
         situation_counts.clear();
-        situation_assignments.clear();
+        // situation_assignments.clear();
         action_assignments.clear();
+        situation_observations.clear();
+        action_assignment_weights.clear();
     }
 
     //Initialize situations from config
@@ -83,29 +94,87 @@ public:
         cout << endl;
     }
 
-    //Modify situations from new observations
-    void addObservationToSituations(sensor_msgs::LaserScan ls);
+    //Print situations
+    void printSituations(){
+        for(int k = 0; k < situations.size(); k++){
+            vector<float> values = situations[k];
+            vector< vector<float> > grid;
+            for(int i = 0; i < 51; i++){
+                vector<float> col;
+                for(int j = 0; j < 51; j++){
+                    col.push_back(0);
+                }
+                grid.push_back(col);
+            }
+            for (int i = 0; i < values.size(); i++){
+                int row = i / 51 + 16;
+                int col = i %51;
+                grid[row][col] = values[i];
+            }
+            cout << situation_counts[k] << " ";
+            for(int i = 16; i < grid.size(); i++){
+                for(int j = 0; j < grid[i].size(); j++){
+                    if(grid[i][j] == 0){
+                        cout << "0.0 ";
+                    }
+                    else if(grid[i][j] == 1){
+                        cout << "1.0 ";
+                    }
+                    else{
+                        cout << grid[i][j] << " ";
+                    }
+                }
+                cout << endl;
+            }
+            cout << endl;
+        }
+    }
 
-    //Update situations from new clustering
+    // Modify situations from new observations
+    void addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing);
+
+    // Cluster outliers
+    void clusterOutlierObservations();
+
+    // Update situations from new clustering
     void updateSituations(AgentState *agentState, std_msgs::String sits, vector< Position > *position_hist, vector< vector<CartesianPoint> > *laser_hist, vector< sensor_msgs::LaserScan > ls_hist, vector< vector< TrailMarker> > trails);
 
-    //Fit laserscan to a situation
+    // Fit laserscan to a situation
     vector<int> identifySituation(sensor_msgs::LaserScan ls);
 
-    //Get situation assignment for current laserscan
+    // Get situation assignment for current laserscan
     int identifySituationAssignment(sensor_msgs::LaserScan ls);
 
-    //Associate situations with actions based on trails and target
-    void learnSituationActions(AgentState *agentState, double x, double y, vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector<TrailMarker> trail, int begin_vec, int end_vec);
+    // Associate situations with actions based on trails and target
+    void learnSituationActions(AgentState *agentState, vector<TrailMarker> trail, int begin_vec, int end_vec);
 
-    //Return weights for actions based on situations
+    // Return weights for actions based on situations
     double getWeightForAction(AgentState *agentState, FORRAction action);
 
 private:
+    // Learned views
     vector< vector<float> > situations;
+
+    // Number of instances per view
     vector<int> situation_counts;
-    vector<int> situation_assignments;
+
+    // Situation observations
+    vector<SituationMarker> situation_observations;
+
+    // View assignment for observations
+    // vector<int> situation_assignments;
+
+    // Laser observations
+    // vector<sensor_msgs::LaserScan> situation_laserscans;
+
+    // Assignment of actions for situations
     map< vector<int>, vector<FORRAction> > action_assignments;
+
+    // Weights for actions for situations
+    map< vector<int>, map< FORRAction, double > > action_assignment_weights;
+
+    // Threshold for adding to situations
+    float dist_cutoff;
 };
 
 #endif

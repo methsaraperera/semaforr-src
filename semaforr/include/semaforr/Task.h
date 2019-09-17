@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <sensor_msgs/LaserScan.h>
 
 class Task {
   
@@ -34,6 +35,7 @@ class Task {
       decisionSequence = new std::vector<FORRAction>;
       pos_hist = new vector<Position>();
       laser_hist = new vector< vector<CartesianPoint> >();
+      laser_scan_hist = new vector< sensor_msgs::LaserScan >();
     }
 
   double getTaskX(){ return x;}
@@ -76,9 +78,10 @@ class Task {
 
   void clearPositionHistory(){pos_hist->clear();}
 
-  void saveSensor(Position currentPosition, vector<CartesianPoint> laserEndpoints){
+  void saveSensor(Position currentPosition, vector<CartesianPoint> laserEndpoints, sensor_msgs::LaserScan ls){
   	pos_hist->push_back(currentPosition);
   	laser_hist->push_back(laserEndpoints);
+  	laser_scan_hist->push_back(ls);
 	// if(pos_hist->size() < 1){
 	// 	pos_hist->push_back(currentPosition);
 	// 	laser_hist->push_back(laserEndpoints);
@@ -93,6 +96,8 @@ class Task {
   }
 
   vector< vector <CartesianPoint> > *getLaserHistory(){return laser_hist;}
+
+  vector< sensor_msgs::LaserScan > *getLaserScanHistory(){return laser_scan_hist;}
 
   vector<CartesianPoint> getWaypoints(){return waypoints;}
   vector<CartesianPoint> getOrigWaypoints(){return origWaypoints;}
@@ -194,7 +199,7 @@ class Task {
 	pathCostInNavGraph = planner->getPathCost();
 	pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
 	vector<CartesianPoint> skippedwaypoints;
-	for(int i = 0; i < waypoints.size(); i+=5){
+	for(int i = 0; i < waypoints.size(); i+=7){
 		skippedwaypoints.push_back(waypoints[i]);
 	}
 	waypoints = skippedwaypoints;
@@ -332,6 +337,9 @@ class Task {
 
   // Laser scan history as is:
   vector< vector<CartesianPoint> > *laser_hist; 
+
+  // Laser scan history sensor
+  vector< sensor_msgs::LaserScan > *laser_scan_hist;
 
   // Cleaned Position History, along with its corresponding laser scan data : Set of cleaned positions
   std::pair < std::vector<CartesianPoint>, std::vector<vector<CartesianPoint> > > *cleaned_trail;

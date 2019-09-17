@@ -102,7 +102,7 @@ public:
 	if(currentTask != NULL){
 		//save the current position and laser endpoints 
     all_laserscan_history.push_back(scan);
-		currentTask->saveSensor(p,laserEndpoints);
+		currentTask->saveSensor(p,laserEndpoints, scan);
 	}
   }
   
@@ -204,6 +204,8 @@ public:
   }
 
   sensor_msgs::LaserScan getCurrentLaserScan(){return currentLaserScan;}
+
+  vector<CartesianPoint> transformToEndpoints(Position p, sensor_msgs::LaserScan scan);
   
   Position getExpectedPositionAfterAction(FORRAction action);
 

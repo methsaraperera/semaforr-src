@@ -335,6 +335,26 @@ void AgentState::transformToEndpoints(){
     }    
 }
 
+vector<CartesianPoint> AgentState::transformToEndpoints(Position p, sensor_msgs::LaserScan scan){
+    // ROS_DEBUG("Convert laser scan to endpoints");
+    double start_angle = scan.angle_min;
+    double increment = scan.angle_increment;
+    vector<CartesianPoint> les;
+
+    double r_x = p.getX();
+    double r_y = p.getY();
+    double r_ang = p.getTheta();
+    CartesianPoint current_point(r_x,r_y);
+  
+    for(int i = 0 ; i < scan.ranges.size(); i++){
+       Vector v = Vector(current_point, start_angle + r_ang, scan.ranges[i]);
+       CartesianPoint endpoint = v.get_endpoint();
+       start_angle = start_angle + increment;
+       les.push_back(endpoint);
+    }
+    return les;
+}
+
 double AgentState::getDistanceToObstacle(double rotation_angle){
 	//ROS_DEBUG("In getDistanceToObstacle");
 	// one increment in the laser range scan is 1/3 degrees, i.e 0.005817 in radians  
