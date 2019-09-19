@@ -94,84 +94,47 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
 
 void FORRSituations::clusterOutlierObservations(){
   vector< vector<float> > action_grids_for_clustering;
-  vector<SituationMarker> observations_for_clustering;
+  // vector<SituationMarker> observations_for_clustering;
   vector<int> observation_inds;
   for(int i = 0; i < situation_observations.size(); i++){
     if(situation_observations[i].assignment == -1){
-      int matched_situation = identifySituationAssignment(situation_observations[i].ls);
-      cout << i << " " << situation_observations[i].assignment << " " << matched_situation << endl;
+      int matched_situation = identifySituationAssignment(situation_observations[i].action_grid);
+      // cout << "Before " << i << " " << situation_observations[i].assignment << " " << matched_situation << endl;
       if(matched_situation != -1){
         situation_observations[i].assignment = matched_situation;
-        cout << i << " " << situation_observations[i].assignment << " " << matched_situation << endl;
+        // cout << "After " << i << " " << situation_observations[i].assignment << " " << matched_situation << endl;
       }
       else{
-        observations_for_clustering.push_back(situation_observations[i]);
+        // observations_for_clustering.push_back(situation_observations[i]);
         observation_inds.push_back(i);
         action_grids_for_clustering.push_back(situation_observations[i].action_grid);
       }
     }
   }
-  cout << observations_for_clustering.size() << " " << observation_inds.size() << " " << action_grids_for_clustering.size() << endl;
-  SpectralCluster clustering = SpectralCluster(15, 15, 0.95);
-  vector<int> results = clustering.cluster(action_grids_for_clustering);
-}
-
-
-//----------------------//------------------------//
-
-
-void FORRSituations::updateSituations(AgentState *agentState, std_msgs::String sits, vector< Position > *position_hist, vector< vector<CartesianPoint> > *laser_hist, vector< sensor_msgs::LaserScan > ls_hist, vector< vector< TrailMarker> > trails) {
-  cout << "In update situations" << endl;
-  clearAllSituations();
-  cout << "Cleared situations" << endl;
-  string input_data = sits.data;
-  // cout << sits.data << endl;
-  std::istringstream iss(input_data);
-  for(std::string line; std::getline(iss, line); ){
-    // cout << line << endl;
-    std::stringstream ss(line);
-    std::istream_iterator<std::string> begin(ss);
-    std::istream_iterator<std::string> end;
-    std::vector<std::string> vstrings(begin, end);
-    int count = atoi(vstrings[0].c_str());
-    // cout << count << endl;
-    vector<float> values;
-    for (int i=1; i<vstrings.size(); i++){
-      // cout << atof(vstrings[i].c_str()) << endl;
-      values.push_back(atof(vstrings[i].c_str()));
-    }
-    createSituations(count, values);
-    // cout << "Situation: " << count << endl;
-  }
-  list<Task*> agenda = agentState->getAllAgenda();
-  cout << position_hist->size() << " " << laser_hist->size() << " " << ls_hist.size() << " " << trails.size() << " " << agenda.size() << endl;
-  for(int i = 0; i < ls_hist.size(); i++){
-    addObservationToSituations(ls_hist[i], (*position_hist)[i], false);
-  }
-  vector<int> decision_count = agentState->getTaskDecisionCount();
-  int i = 0;
-  int j = 0;
-  for(list<Task*>::iterator it = agenda.begin(); it != agenda.end(); it++){
-    double x = (*it)->getTaskX();
-    double y = (*it)->getTaskY();
-    int task_count = decision_count[i];
-    // cout << i << " " << j << " " << task_count << endl;
-    vector< Position > *pos_dec = new vector<Position>;
-    vector< vector<CartesianPoint> > *las_dec = new vector< vector<CartesianPoint> >;
-    for(int k = j; k < j+task_count; k++){
-      // cout << k << endl;
-      pos_dec->push_back((*position_hist)[k]);
-      las_dec->push_back((*laser_hist)[k]);
-    }
-    // cout << pos_dec->size() << " " << las_dec->size() << endl;
-    // learnSituationActions(agentState, x, y, pos_dec, las_dec, trails[i], j, j+task_count);
-    i++;
-    j = j + task_count;
-    if(i == trails.size()){
-      break;
+  cout << "Unclustered obs size: " << observation_inds.size() << " " << action_grids_for_clustering.size() << endl;
+  if(action_grids_for_clustering.size() > 200){
+    SpectralCluster clustering = SpectralCluster(15, 10, 50, 0.95);
+    int situation_ind = situations.size();
+    vector< vector<float> > results = clustering.cluster(action_grids_for_clustering);
+    if(results.size() > 0){
+      for(int i = 0; i < results.size(); i++){
+        int count = (int)(results[i][0]);
+        vector<float> values = results[i];
+        values.erase(values.begin());
+        createSituations(count, values);
+      }
+      vector<int> new_assignments = clustering.clusterAssignments();
+      cout << "New assignments size: " << observation_inds.size() << " " << new_assignments.size() << " " << situation_ind << endl;
+      for(int i = 0; i < observation_inds.size(); i++){
+        int matched_situation = new_assignments[i];
+        // cout << "Before " << i << " " << situation_observations[observation_inds[i]].assignment << " " << matched_situation << endl;
+        if(matched_situation != -1){
+          situation_observations[observation_inds[i]].assignment = matched_situation + situation_ind;
+          // cout << "After " << i << " " << situation_observations[observation_inds[i]].assignment << " " << matched_situation + situation_ind << endl;
+        }
+      }
     }
   }
-  cout << "Finished updateSituations" << endl;
 }
 
 
@@ -301,28 +264,36 @@ int FORRSituations::identifySituationAssignment(sensor_msgs::LaserScan ls) {
 //----------------------//------------------------//
 
 
-void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailMarker> trail, int begin_vec, int end_vec) {
+int FORRSituations::identifySituationAssignment(vector<float> action_grid) {
+  vector<float> distances;
+  for(int i = 0; i < situations.size(); i++){
+    float dist = 0;
+    for(int j = 0; j < action_grid.size(); j++){
+      dist += abs(situations[i][j] - action_grid[j]);
+    }
+    // cout << "Situation dist " << i << " : " << dist << endl;
+    distances.push_back(dist);
+  }
+  int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
+  if(distances[min_pos] <= dist_cutoff){
+    return min_pos;
+  }
+  else{
+    return -1;
+  }
+}
+
+
+//----------------------//------------------------//
+
+
+void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailMarker> trail) {
   Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
   vector<double> target_distances;
   vector<double> target_angles;
   vector<FORRAction> trail_actions;
-  vector<SituationMarker> current_situation_observations;
-  // vector<int> current_situation_assignments;
-  // cout << begin_vec << " " << end_vec << endl;
-  if(begin_vec == -1 and end_vec == -1){
-    vector<SituationMarker> c_situation_observations(situation_observations.end() - agentState->getCurrentTask()->getPositionHistory()->size(), situation_observations.end());
-    current_situation_observations = c_situation_observations;
-    // vector< sensor_msgs::LaserScan > *laser_scan_hist = agentState->getCurrentTask()->getLaserScanHistory();
-    // for(int i = 0; i < laser_scan_hist->size(); i++){
-    //   current_situation_assignments.push_back(identifySituationAssignment((*laser_scan_hist)[i]));
-    // }
-  }
-  // else{
-  //   vector<int> c_situation_assignments(situation_assignments.begin() + begin_vec, situation_assignments.begin() + end_vec);
-  //   // cout << c_situation_assignments.size() << endl;
-  //   current_situation_assignments = c_situation_assignments;
-  // }
-  // cout << pos_hist->size() << " " << laser_hist->size() << " " << trail.size() << " " << current_situation_assignments.size() << endl;
+  clusterOutlierObservations();
+  vector<SituationMarker> current_situation_observations(situation_observations.end() - agentState->getCurrentTask()->getPositionHistory()->size(), situation_observations.end());
   cout << trail.size() << " " << current_situation_observations.size() << endl;
   vector<int> trail_situation_assignments;
 
@@ -473,8 +444,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
     action_assignment_weights[aait->first] = action_weights;
   }
   // cout << "Finished action assignment" << endl;
-  // printSituations();
-  clusterOutlierObservations();
+  printSituations();
 }
 
 

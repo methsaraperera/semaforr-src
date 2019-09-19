@@ -14,7 +14,7 @@ def clusterActions(n_clus, n_neigh, min_clus_size, data):
 	for i in range(0,n_clus):
 		if np.count_nonzero(clusters == i) < min_clus_size:
 			cluster_vals.append(i)
-	print cluster_vals
+	# print cluster_vals
 	cluster_labels = []
 	for val in clusters:
 		if val in cluster_vals:
@@ -39,7 +39,7 @@ def classifyActions(data, clusters, newdata, prob_cutoff, min_clus_size):
 	for i in range(0,len(set(cluster_labels))):
 		if np.count_nonzero(clusters == i) < min_clus_size:
 			cluster_vals.append(i)
-	print cluster_vals
+	# print cluster_vals
 	cluster_labels_new = []
 	for val in cluster_labels:
 		if val in cluster_vals:
@@ -49,7 +49,7 @@ def classifyActions(data, clusters, newdata, prob_cutoff, min_clus_size):
 	return np.array(cluster_labels_new)
 
 def publish_situations():
-	print "inside publish_situations"
+	# print "inside publish_situations"
 	action_grid_data = []
 	path = os.path.expanduser('~/catkin_ws1/src/situation_learner/config/')
 	for filename in os.listdir(path):
@@ -61,12 +61,25 @@ def publish_situations():
 					if len(line) > 1:
 						line = np.array(line[:-1]).astype('float')
 						action_grid_data.append(line)
-	print len(action_grid_data), len(action_grid_data[0]), num_clusters, min_cluster_size, probability_cutoff
+	# print len(action_grid_data), len(action_grid_data[0]), num_clusters, min_cluster_size, probability_cutoff
 	Actions = np.array(action_grid_data)
-	if len(Actions) > num_clusters:
-		clustersSC = clusterActions(num_clusters, 15, min_cluster_size, Actions)
-		clusters = classifyActions(Actions, clustersSC, Actions, probability_cutoff, min_cluster_size)
-		print clusters
+	if len(Actions)*2 > num_clusters:
+		clustersSC = clusterActions(num_clusters, num_neighbors, min_cluster_size, Actions)
+		if len(set(clustersSC)) > 2:
+			clusters = classifyActions(Actions, clustersSC, Actions, probability_cutoff, min_cluster_size)
+		else:
+			clusters = clustersSC
+		# print clusters
+		clus_values = sorted(set(clusters))
+		if clus_values[0] == -1:
+			clus_values = clus_values[1:]
+		clusters_renumbered = []
+		for val in clusters:
+			if val == -1:
+				clusters_renumbered.append(str(val))
+			else:
+				clusters_renumbered.append(str(clus_values.index(val)))
+		print clusters_renumbered
 		Mean_Values = []
 		Mean_Counts = []
 		for i in range(0, num_clusters):
@@ -83,10 +96,41 @@ def publish_situations():
 		file1 = open(os.path.join(path, "clusters.txt"),"w")
 		file1.writelines(situations[1:])
 		file1.close()
+		file2 = open(os.path.join(path, "clusterassignments.txt"),"w")
+		for val in clusters_renumbered[:-1]:
+			file2.writelines(val + "\n")
+		file2.writelines(clusters_renumbered[-1])
+		file2.close()
+	else:
+		file1 = open(os.path.join(path, "clusters.txt"),"w")
+		file1.writelines("#")
+		file1.close()
+		file2 = open(os.path.join(path, "clusterassignments.txt"),"w")
+		file2.writelines("#")
+		file2.close()
 
-print "inside learn.py"
-num_clusters = 10
-min_cluster_size = 10
-probability_cutoff = 0.95
-print "situation_model created"
+# print "inside learn.py"
+num_clusters = 0
+min_cluster_size = 0
+num_neighbors = 0
+probability_cutoff = 0
+
+path = os.path.expanduser('~/catkin_ws1/src/situation_learner/config/')
+for filename in os.listdir(path):
+	if fnmatch.fnmatch(filename, 'params.conf'):
+		filename = os.path.join(path,filename)
+		with open(filename,'r') as fin:
+			for line in fin:
+				line = re.split(r' ',line)
+				if len(line) > 1:
+					if line[0] == "num_clusters":
+						num_clusters = int(line[1])
+					elif line[0] == "min_cluster_size":
+						min_cluster_size = int(line[1])
+					elif line[0] == "num_neighbors":
+						num_neighbors = int(line[1])
+					elif line[0] == "probability_cutoff":
+						probability_cutoff = float(line[1])
+
+# print "situation_model created"
 publish_situations()

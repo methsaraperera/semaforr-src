@@ -39,13 +39,12 @@ private:
 	ros::NodeHandle nh_;
 	//! We will be publishing to the "cmd_vel" topic to issue commands
 	ros::Publisher cmd_vel_pub_;
-	//! We will be listening to /pose, /laserscan and /crowd_model, /crowd_pose, and /situations topics
+	//! We will be listening to /pose, /laserscan and /crowd_model, /crowd_pose topics
 	ros::Subscriber sub_pose_;
 	ros::Subscriber sub_laser_;
 	ros::Subscriber sub_crowd_model_;
 	ros::Subscriber sub_crowd_pose_;
 	ros::Subscriber sub_crowd_pose_all_;
-	ros::Subscriber sub_situations_;
 	// Current position and previous stopping position of the robot
 	Position current, previous;
 	// Current and previous laser scan
@@ -72,7 +71,6 @@ public:
 		sub_crowd_model_ = nh_.subscribe("crowd_model", 1000, &RobotDriver::updateCrowdModel, this);
 		sub_crowd_pose_ = nh_.subscribe("crowd_pose", 1000, &RobotDriver::updateCrowdPose, this);
 		sub_crowd_pose_all_ = nh_.subscribe("crowd_pose_all", 1000, &RobotDriver::updateCrowdPoseAll, this);
-		sub_situations_ = nh_.subscribe("situations", 1000, &RobotDriver::updateSituations, this);
 		//declare and create a controller with task, action and advisor configuration
 		controller = con;
 		init_pos_received = false;
@@ -105,12 +103,6 @@ public:
 		controller->getPlanner()->setCrowdModel(crowd_model);
 		controller->updatePlannersModels(crowd_model);
 		controller->getBeliefs()->getAgentState()->setCrowdModel(crowd_model);
-	}
-
-	void updateSituations(const std_msgs::String & situations){
-		//ROS_DEBUG("Inside callback for situations");
-		//update the situations of the belief
-		// controller->getBeliefs()->getSpatialModel()->getSituations()->updateSituations(controller->getBeliefs()->getAgentState(), situations, controller->getBeliefs()->getAgentState()->getAllPositionTrace(), controller->getBeliefs()->getAgentState()->getAllLaserHistory(), controller->getBeliefs()->getAgentState()->getAllLaserScanHistory(), controller->getBeliefs()->getSpatialModel()->getTrails()->getTrails());
 	}
 
 	// Callback function for pose message

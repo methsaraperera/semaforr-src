@@ -48,7 +48,7 @@ public:
     FORRSituations(){
         situations = vector< vector<float> >();
         situation_counts = vector<int>();
-        dist_cutoff = 75;
+        dist_cutoff = 150;
     };
     vector< vector<float> > getSituations(){return situations;}
     ~FORRSituations(){};
@@ -56,7 +56,6 @@ public:
     void clearAllSituations(){
         situations.clear();
         situation_counts.clear();
-        // situation_assignments.clear();
         action_assignments.clear();
         situation_observations.clear();
         action_assignment_weights.clear();
@@ -66,34 +65,34 @@ public:
     void createSituations(int count, vector<float> values){
         situations.push_back(values);
         situation_counts.push_back(count);
-        vector< vector<float> > grid;
-        for(int i = 0; i < 51; i++){
-            vector<float> col;
-            for(int j = 0; j < 51; j++){
-                col.push_back(0);
-            }
-            grid.push_back(col);
-        }
-        for (int i = 0; i < values.size(); i++){
-            int row = i / 51 + 16;
-            int col = i %51;
-            grid[row][col] = values[i];
-        }
-        for(int i = 16; i < grid.size(); i++){
-            for(int j = 0; j < grid[i].size(); j++){
-                if(grid[i][j] == 0){
-                    cout << "0.0 ";
-                }
-                else if(grid[i][j] == 1){
-                    cout << "1.0 ";
-                }
-                else{
-                    cout << floor(grid[i][j]*10+0.5)/10 << " ";
-                }
-            }
-            cout << endl;
-        }
-        cout << endl;
+        // vector< vector<float> > grid;
+        // for(int i = 0; i < 51; i++){
+        //     vector<float> col;
+        //     for(int j = 0; j < 51; j++){
+        //         col.push_back(0);
+        //     }
+        //     grid.push_back(col);
+        // }
+        // for (int i = 0; i < values.size(); i++){
+        //     int row = i / 51 + 16;
+        //     int col = i %51;
+        //     grid[row][col] = values[i];
+        // }
+        // for(int i = 16; i < grid.size(); i++){
+        //     for(int j = 0; j < grid[i].size(); j++){
+        //         if(grid[i][j] == 0){
+        //             cout << "0.0 ";
+        //         }
+        //         else if(grid[i][j] == 1){
+        //             cout << "1.0 ";
+        //         }
+        //         else{
+        //             cout << floor(grid[i][j]*10+0.5)/10 << " ";
+        //         }
+        //     }
+        //     cout << endl;
+        // }
+        // cout << endl;
     }
 
     //Print situations
@@ -138,17 +137,17 @@ public:
     // Cluster outliers
     void clusterOutlierObservations();
 
-    // Update situations from new clustering
-    void updateSituations(AgentState *agentState, std_msgs::String sits, vector< Position > *position_hist, vector< vector<CartesianPoint> > *laser_hist, vector< sensor_msgs::LaserScan > ls_hist, vector< vector< TrailMarker> > trails);
-
     // Fit laserscan to a situation
     vector<int> identifySituation(sensor_msgs::LaserScan ls);
 
     // Get situation assignment for current laserscan
     int identifySituationAssignment(sensor_msgs::LaserScan ls);
 
+    // Get situation assignment for current action_grid
+    int identifySituationAssignment(vector<float> action_grid);
+
     // Associate situations with actions based on trails and target
-    void learnSituationActions(AgentState *agentState, vector<TrailMarker> trail, int begin_vec, int end_vec);
+    void learnSituationActions(AgentState *agentState, vector<TrailMarker> trail);
 
     // Return weights for actions based on situations
     double getWeightForAction(AgentState *agentState, FORRAction action);
@@ -162,12 +161,6 @@ private:
 
     // Situation observations
     vector<SituationMarker> situation_observations;
-
-    // View assignment for observations
-    // vector<int> situation_assignments;
-
-    // Laser observations
-    // vector<sensor_msgs::LaserScan> situation_laserscans;
 
     // Assignment of actions for situations
     map< vector<int>, vector<FORRAction> > action_assignments;
