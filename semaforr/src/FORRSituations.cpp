@@ -57,7 +57,7 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
   }
   int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
   if(distances[min_pos] <= dist_cutoff){
-    situation_observations.push_back(SituationMarker(ls, pose, min_pos));
+    situation_observations.push_back(SituationMarker(ls, pose, min_pos, new_situation_float));
     // situation_assignments.push_back(min_pos);
     // situation_laserscans.push_back(ls);
     if(add_to_existing){
@@ -82,7 +82,7 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
   //   situations.push_back(new_situation_float);
   // }
   else{
-    situation_observations.push_back(SituationMarker(ls, pose, -1));
+    situation_observations.push_back(SituationMarker(ls, pose, -1, new_situation_float));
     // situation_assignments.push_back(-1);
     // situation_laserscans.push_back(ls);
   }
@@ -93,6 +93,7 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
 
 
 void FORRSituations::clusterOutlierObservations(){
+  vector< vector<float> > action_grids_for_clustering;
   vector<SituationMarker> observations_for_clustering;
   vector<int> observation_inds;
   for(int i = 0; i < situation_observations.size(); i++){
@@ -106,10 +107,13 @@ void FORRSituations::clusterOutlierObservations(){
       else{
         observations_for_clustering.push_back(situation_observations[i]);
         observation_inds.push_back(i);
+        action_grids_for_clustering.push_back(situation_observations[i].action_grid);
       }
     }
   }
-  cout << observations_for_clustering.size() << " " << observation_inds.size() << endl;
+  cout << observations_for_clustering.size() << " " << observation_inds.size() << " " << action_grids_for_clustering.size() << endl;
+  SpectralCluster clustering = SpectralCluster(15, 15, 0.95);
+  vector<int> results = clustering.cluster(action_grids_for_clustering);
 }
 
 

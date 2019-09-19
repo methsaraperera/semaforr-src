@@ -13,6 +13,7 @@ Written by Raj Korpan, 2019
 #include <FORRTrails.h>
 #include <AgentState.h>
 #include <FORRAction.h>
+#include <Clustering.h>
 #include <vector>
 #include <string>
 #include <math.h>
@@ -31,7 +32,8 @@ public:
     sensor_msgs::LaserScan ls;
     Position pose;
     int assignment;
-    SituationMarker(sensor_msgs::LaserScan laser, Position ps, int a): ls(laser), pose(ps), assignment(a){}
+    vector<float> action_grid;
+    SituationMarker(sensor_msgs::LaserScan laser, Position ps, int a, vector<float> ag): ls(laser), pose(ps), assignment(a), action_grid(ag){}
 };
 
 //=========================================================//=========================================================//

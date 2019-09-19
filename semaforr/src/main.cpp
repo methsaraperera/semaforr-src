@@ -26,6 +26,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_datatypes.h>
 #include <semaforr/CrowdModel.h>
+#include <python2.7/Python.h>
 
 
 using namespace std;
@@ -149,6 +150,7 @@ public:
 	void run(){ 
 		//ROS_DEBUG("main::run()");  	
 		//Declares the message to be sent
+		Py_Initialize();
 		geometry_msgs::Twist base_cmd;
 
 		ros::Rate rate(30.0);
@@ -233,6 +235,7 @@ public:
 			action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
 			//action_complete = true;
 		}
+		Py_Finalize();
 	}
 
 

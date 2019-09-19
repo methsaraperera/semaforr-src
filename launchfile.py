@@ -43,11 +43,11 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     #crowd_process = subprocess.Popen(['rosrun','crowd_learner','learn.py',density, flow, risk, cusum, discount, explore])
 
     # start situations
-    situation_process = subprocess.Popen(['rosrun','situation_learner','learn.py'])
+    # situation_process = subprocess.Popen(['rosrun','situation_learner','learn.py'])
 
     # start logging
-    situation_log_file = open(situation_log_name,"w")
-    situation_log_process = subprocess.Popen(['rostopic','echo','/situations'],stdout=situation_log_file)
+    # situation_log_file = open(situation_log_name,"w")
+    # situation_log_process = subprocess.Popen(['rostopic','echo','/situations'],stdout=situation_log_file)
 
     # start logging
     log_file = open(log_name,"w")
@@ -106,7 +106,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     
     # print "Terminating crowd model"
     #crowd_process.terminate()
-    situation_process.terminate()
+    # situation_process.terminate()
     # why_process.terminate()
     # why_plan_process.terminate()
     # print "Why terminated!"
@@ -120,8 +120,8 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # why_log_file.close()
     # whyplan_log_process.terminate()
     # whyplan_log_file.close()
-    situation_log_process.terminate()
-    situation_log_file.close()
+    # situation_log_process.terminate()
+    # situation_log_file.close()
     time.sleep(1)
 
     roscore.terminate()
