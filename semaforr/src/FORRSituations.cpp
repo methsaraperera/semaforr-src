@@ -134,6 +134,7 @@ void FORRSituations::clusterOutlierObservations(){
         }
       }
     }
+    clustering.eraseFiles();
   }
 }
 
@@ -439,6 +440,14 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
 
     for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
       cout << aait->first[0] << " " << aait->first[1] << " " << aait->first[2] << " " << awit->first.type << " " << awit->first.parameter << " " << awit->second-1 << endl;
+      vector<double> assignment_counts;
+      assignment_counts.push_back(aait->first[0]);
+      assignment_counts.push_back(aait->first[1]);
+      assignment_counts.push_back(aait->first[2]);
+      assignment_counts.push_back(awit->first.type);
+      assignment_counts.push_back(awit->first.parameter);
+      assignment_counts.push_back(awit->second-1);
+      action_assignment_combinations.push_back(assignment_counts);
       awit->second = awit->second / max_value;
     }
     action_assignment_weights[aait->first] = action_weights;

@@ -979,6 +979,9 @@ public:
 	vector< vector<int> > conveyors = beliefs->getSpatialModel()->getConveyors()->getConveyors();
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+	vector< vector<float> > situations = beliefs->getSpatialModel()->getSituations()->getSituations();
+    vector< vector<double> > situation_assignments = beliefs->getSpatialModel()->getSituations()->getSituationActionAssignments();
+    vector<int> situation_counts = beliefs->getSpatialModel()->getSituations()->getSituationCounts();
 
 	//ROS_DEBUG("After decision statistics");
 	int decisionCount = -1;
@@ -1175,9 +1178,28 @@ public:
 
 	//ROS_DEBUG("After all crowd model");
 
+	std::stringstream situationStream;
+	for(int i = 0; i < situations.size(); i++){
+		situationStream << situation_counts[i] << " ";
+		for(int j = 0; j < situations[i].size(); j++){
+			situationStream << situations[i][j] << " ";
+		}
+		situationStream << ";";
+	}
+	//ROS_DEBUG("After situations");
+
+	std::stringstream situationAssignmentStream;
+	for(int i = 0; i < situation_assignments.size(); i++){
+		for(int j = 0; j < situation_assignments[i].size(); j++){
+			situationAssignmentStream << situation_assignments[i][j] << " ";
+		}
+		situationAssignmentStream << ";";
+	}
+	//ROS_DEBUG("After situation assignments");
+
 	std::stringstream output;
 
-	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner << "\t" << lep.str() << "\t" << ls.str();// << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence;
+	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner << "\t" << lep.str() << "\t" << ls.str() << "\t" << situationStream.str() << "\t" << situationAssignmentStream.str();// << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence;
 
 	//output << currentTask << "\t" << decisionCount << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << lep.str() << "\t" << ls.str();
 

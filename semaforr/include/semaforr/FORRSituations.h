@@ -18,6 +18,7 @@ Written by Raj Korpan, 2019
 #include <string>
 #include <math.h>
 #include <iostream>
+#include <fstream>
 #include <cmath>        //for atan2 and M_PI
 #include <algorithm>
 #include <map>
@@ -48,9 +49,11 @@ public:
     FORRSituations(){
         situations = vector< vector<float> >();
         situation_counts = vector<int>();
-        dist_cutoff = 150;
+        dist_cutoff = 125;
     };
     vector< vector<float> > getSituations(){return situations;}
+    vector< vector<double> > getSituationActionAssignments(){return action_assignment_combinations;}
+    vector<int> getSituationCounts(){return situation_counts;}
     ~FORRSituations(){};
 
     void clearAllSituations(){
@@ -167,6 +170,9 @@ private:
 
     // Weights for actions for situations
     map< vector<int>, map< FORRAction, double > > action_assignment_weights;
+
+    // Action assignment counts
+    vector< vector<double> > action_assignment_combinations;
 
     // Threshold for adding to situations
     float dist_cutoff;

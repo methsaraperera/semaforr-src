@@ -107,6 +107,10 @@ public:
         return assignments;
     }
 
+    void eraseFiles(){
+        system("exec rm -r /home/rajkochhar/catkin_ws1/src/situation_learner/config/*");
+    }
+
 private:
     vector< vector<float> > clusters;
     int n_neighbors;

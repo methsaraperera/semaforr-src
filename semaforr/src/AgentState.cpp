@@ -235,7 +235,7 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
     }
   }
   //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
-  if (numFree > 4) {
+  if (numFree > 2) {
     canAccessPoint = true;
   }
   //else, not visible

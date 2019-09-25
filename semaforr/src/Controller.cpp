@@ -714,7 +714,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //beliefs->getAgentState()->skipTask();
       beliefs->getAgentState()->finishTask();
       if(beliefs->getAgentState()->getAgenda().size() > 0){
-        if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > 50){
+        if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > 24){
           aStarOn = false;
         }
         if(aStarOn){
