@@ -155,6 +155,14 @@ void Controller::initialize_params(string filename){
       maxForwardActionSweepAngle = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("maxForwardActionSweepAngle " << maxForwardActionSweepAngle);
     }
+    else if (fileLine.find("planLimit") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      planLimit = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("planLimit " << planLimit);
+    }
     else if (fileLine.find("trailsOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -202,6 +210,14 @@ void Controller::initialize_params(string filename){
       std::vector<std::string> vstrings(begin, end);
       barrsOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("barrsOn " << barrsOn);
+    }
+    else if (fileLine.find("situationsOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      situationsOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("situationsOn " << situationsOn);
     }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
@@ -714,7 +730,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //beliefs->getAgentState()->skipTask();
       beliefs->getAgentState()->finishTask();
       if(beliefs->getAgentState()->getAgenda().size() > 0){
-        if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > 24){
+        if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > planLimit - 1){
           aStarOn = false;
         }
         if(aStarOn){
@@ -1098,7 +1114,10 @@ void Controller::tierThreeDecision(FORRAction *decision){
   double maxAdviceStrength = -1000;
   double maxWeight;
   for(mapIt iterator = allComments.begin(); iterator != allComments.end(); iterator++){
-    double action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), iterator->first);
+    double action_weight = 1.0;
+    if(situationsOn){
+      action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), iterator->first);
+    }
     cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
     if(action_weight * iterator->second > maxAdviceStrength){
       maxAdviceStrength = action_weight * iterator->second;

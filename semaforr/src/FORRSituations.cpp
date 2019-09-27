@@ -416,7 +416,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
       action_assignments[assignment_values].push_back(trail_actions[i]);
     }
   }
-
+  action_assignment_combinations.clear();
   map< vector<int>, vector<FORRAction> >::iterator aait;
   for(aait = action_assignments.begin(); aait != action_assignments.end(); aait++){
     map< FORRAction, double > action_weights;
@@ -439,7 +439,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
     }
 
     for(awit = action_weights.begin(); awit != action_weights.end(); awit++){
-      cout << aait->first[0] << " " << aait->first[1] << " " << aait->first[2] << " " << awit->first.type << " " << awit->first.parameter << " " << awit->second-1 << endl;
+      // cout << aait->first[0] << " " << aait->first[1] << " " << aait->first[2] << " " << awit->first.type << " " << awit->first.parameter << " " << awit->second-1 << endl;
       vector<double> assignment_counts;
       assignment_counts.push_back(aait->first[0]);
       assignment_counts.push_back(aait->first[1]);
@@ -453,7 +453,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
     action_assignment_weights[aait->first] = action_weights;
   }
   // cout << "Finished action assignment" << endl;
-  printSituations();
+  // printSituations();
 }
 
 

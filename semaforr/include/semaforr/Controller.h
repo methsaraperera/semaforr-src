@@ -110,6 +110,7 @@ private:
   double arrRotate[300];
   int moveArrMax, rotateArrMax;
   int taskDecisionLimit;
+  int planLimit;
   bool trailsOn;
   bool conveyorsOn;
   bool regionsOn;
@@ -117,6 +118,7 @@ private:
   bool hallwaysOn;
   bool barrsOn;
   bool aStarOn;
+  bool situationsOn;
   bool firstTaskAssigned;
   bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn;
 };
