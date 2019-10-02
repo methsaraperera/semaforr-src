@@ -7,7 +7,7 @@ using namespace std;
 //----------------------//------------------------//
 
 
-void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing) {
+void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing, FORRAction actual_action) {
   double angle = ls.angle_min;
   double increment = ls.angle_increment;
   vector<float> laser_ranges = ls.ranges;
@@ -57,7 +57,7 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
   }
   int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
   if(distances[min_pos] <= dist_cutoff){
-    situation_observations.push_back(SituationMarker(ls, pose, min_pos, new_situation_float));
+    situation_observations.push_back(SituationMarker(ls, pose, min_pos, new_situation_float, actual_action));
     // situation_assignments.push_back(min_pos);
     // situation_laserscans.push_back(ls);
     if(add_to_existing){
@@ -82,7 +82,7 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
   //   situations.push_back(new_situation_float);
   // }
   else{
-    situation_observations.push_back(SituationMarker(ls, pose, -1, new_situation_float));
+    situation_observations.push_back(SituationMarker(ls, pose, -1, new_situation_float, actual_action));
     // situation_assignments.push_back(-1);
     // situation_laserscans.push_back(ls);
   }
@@ -293,6 +293,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
   vector<double> target_distances;
   vector<double> target_angles;
   vector<FORRAction> trail_actions;
+  vector<FORRAction> actual_actions;
   clusterOutlierObservations();
   vector<SituationMarker> current_situation_observations(situation_observations.end() - agentState->getCurrentTask()->getPositionHistory()->size(), situation_observations.end());
   cout << trail.size() << " " << current_situation_observations.size() << endl;
@@ -316,6 +317,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
         }
         target_angles.push_back(required_rotation);
         trail_situation_assignments.push_back(current_situation_observations[i].assignment);
+        actual_actions.push_back(current_situation_observations[i].actual_action);
         // cout << "found furthest trail marker" << endl;
         std::map <FORRAction, double> result;
         typedef map<FORRAction, double>::iterator mapIt;
@@ -407,13 +409,23 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
     if(assignment_values.size() == 3){
       if(action_assignments.count(assignment_values) == 0){
         action_assignments.insert(pair< vector<int>, vector<FORRAction> >(assignment_values, vector<FORRAction>()));
+        accuracy_action_assignments.insert(pair< vector<int>, vector<double> >(assignment_values, vector<double>()));
+      }
+      // else{
+      //   for(int j = 0; j < action_assignments[assignment_values].size(); j++){
+      //     // cout << "Action Prediction " << i << " : " << action_assignments[assignment_values][j].type << " " << action_assignments[assignment_values][j].parameter << endl;
+      //   }
+      // }
+      action_assignments[assignment_values].push_back(trail_actions[i]);
+      if(trail_actions[i] == actual_actions[i]){
+        accuracy_action_assignments[assignment_values].push_back(1.0);
+      }
+      else if(trail_actions[i].type == actual_actions[i].type){
+        accuracy_action_assignments[assignment_values].push_back(0.5);
       }
       else{
-        for(int j = 0; j < action_assignments[assignment_values].size(); j++){
-          // cout << "Action Prediction " << i << " : " << action_assignments[assignment_values][j].type << " " << action_assignments[assignment_values][j].parameter << endl;
-        }
+        accuracy_action_assignments[assignment_values].push_back(0.0);
       }
-      action_assignments[assignment_values].push_back(trail_actions[i]);
     }
   }
   action_assignment_combinations.clear();
@@ -535,4 +547,87 @@ double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction act
     }
   }
   return 1.0;
+}
+
+
+//----------------------//------------------------//
+
+
+double FORRSituations::getAccuracyForSituation(AgentState *agentState){
+  Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
+  Position curr = agentState->getCurrentPosition();
+  double target_dist = curr.getDistance(target);
+
+  double angle_to_target = atan2((target.getY() - curr.getY()), (target.getX() - curr.getX()));
+  double required_rotation = angle_to_target - curr.getTheta();
+  if(required_rotation > M_PI){
+    required_rotation = required_rotation - (2 * M_PI);
+  }
+  if(required_rotation < -M_PI){
+    required_rotation = required_rotation + (2 * M_PI);
+  }
+  double target_angle = required_rotation;
+  int sit_assignment = identifySituationAssignment(agentState->getCurrentLaserScan());
+  vector<int> assignment_values;
+  assignment_values.push_back(sit_assignment);
+  if(target_dist <= 2){
+    assignment_values.push_back(2);
+  }
+  else if(target_dist <= 4){
+    assignment_values.push_back(4);
+  }
+  else if(target_dist <= 8){
+    assignment_values.push_back(8);
+  }
+  else if(target_dist <= 16){
+    assignment_values.push_back(16);
+  }
+  else if(target_dist <= 32){
+    assignment_values.push_back(32);
+  }
+  else if(target_dist <= 64){
+    assignment_values.push_back(64);
+  }
+  else if(target_dist <= 128){
+    assignment_values.push_back(128);
+  }
+  else if(target_dist <= 256){
+    assignment_values.push_back(256);
+  }
+
+  if(target_angle >= -M_PI/8.0 and target_angle < M_PI/8.0){
+    assignment_values.push_back(1);
+  }
+  else if(target_angle >= M_PI/8.0 and target_angle < 3.0*M_PI/8.0){
+    assignment_values.push_back(2);
+  }
+  else if(target_angle >= 3.0*M_PI/8.0 and target_angle < 5.0*M_PI/8.0){
+    assignment_values.push_back(3);
+  }
+  else if(target_angle >= 5.0*M_PI/8.0 and target_angle < 7.0*M_PI/8.0){
+    assignment_values.push_back(4);
+  }
+  else if(target_angle >= 7.0*M_PI/8.0 or target_angle < -7.0*M_PI/8.0){
+    assignment_values.push_back(5);
+  }
+  else if(target_angle >= -7.0*M_PI/8.0 and target_angle < -5.0*M_PI/8.0){
+    assignment_values.push_back(6);
+  }
+  else if(target_angle >= -5.0*M_PI/8.0 and target_angle < -3.0*M_PI/8.0){
+    assignment_values.push_back(7);
+  }
+  else if(target_angle >= -3.0*M_PI/8.0 and target_angle < -M_PI/8.0){
+    assignment_values.push_back(8);
+  }
+  if(assignment_values.size() == 3){
+    if(action_assignments.count(assignment_values) == 0){
+      return 0.0;
+    }
+    else{
+      double num_instances = accuracy_action_assignments[assignment_values].size();
+      double sum_of_instances = accumulate(accuracy_action_assignments[assignment_values].begin(), accuracy_action_assignments[assignment_values].end(), 0.0);
+      return sum_of_instances/num_instances;
+    }
+  }
+  return 0.0;
 }

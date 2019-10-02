@@ -189,55 +189,74 @@ bool Tier1Advisor::advisorAvoidWalls(){
 bool Tier1Advisor::advisorSituation(){
   ROS_DEBUG("In advisor situation");
   // Find closest situation based on similarity to median
-  vector<int> current_situation = beliefs->getSpatialModel()->getSituations()->identifySituation(beliefs->getAgentState()->getCurrentLaserScan());
-  vector< vector<int> > grid;
-  for(int i = 0; i < 51; i++){
-    vector<int> col;
-    for(int j = 0; j < 51; j++){
-      col.push_back(0);
-    }
-    grid.push_back(col);
-  }
-  for (int i = 0; i < current_situation.size(); i++){
-    int row = i / 51 + 16;
-    int col = i %51;
-    grid[row][col] = current_situation[i];
-  }
-  for(int i = 16; i < grid.size(); i++){
-    for(int j = 0; j < grid[i].size(); j++){
-      cout << grid[i][j] << " ";
-    }
-    cout << endl;
-  }
-  // Veto actions not allowed based on situation
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
-  Position initialPosition = beliefs->getAgentState()->getCurrentPosition();
-  set<FORRAction>::iterator actionIter;
-  for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
-    FORRAction forrAction = *actionIter;
-    if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
-      continue;
-    }
-    else{
-      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-      double x = 25.0 - initialPosition.getX() + expectedPosition.getX();
-      double y = 25.0 - initialPosition.getY() + expectedPosition.getY();
-      int x1 = (int)(round(x));
-      int y1 = (int)(round(y));
-      int x2 = (int)(x);
-      int y2 = (int)(y);
-      int x3 = (int)(floor(x));
-      int y3 = (int)(floor(y));
-      int x4 = (int)(ceil(x));
-      int y4 = (int)(ceil(y));
-      // cout << initialPosition.getX() << " " << initialPosition.getY() << " " << expectedPosition.getX() << " " << expectedPosition.getY() << " " << x << " " << y << " " << x1 << " " << y1 << " " << x2 << " " << y2 << " " << x3 << " " << y3 << " " << x4 << " " << y4 << " " << grid[x1][y1] << " " << grid[x2][y2] << " " << grid[x3][y3] << " " << grid[x4][y4] << endl;
-      if(grid[x1][y1] == 0 or grid[x2][y2] == 0 or grid[x3][y3] == 0 or grid[x4][y4] == 0){
-        FORRAction a(forrAction.type,forrAction.parameter);
-        ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
-        vetoedActions->insert(a);
+  double accuracy = beliefs->getSpatialModel()->getSituations()->getAccuracyForSituation(beliefs->getAgentState());
+  if(accuracy >= 0.75){
+    for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+      FORRAction forrAction = *actionIter;
+      if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+        continue;
+      }
+      else{
+        double action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), forrAction);
+        if(action_weight < 0.25){
+          FORRAction a(forrAction.type,forrAction.parameter);
+          ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+          vetoedActions->insert(a);
+        }
       }
     }
   }
-  return false; 
+  // vector<int> current_situation = beliefs->getSpatialModel()->getSituations()->identifySituation(beliefs->getAgentState()->getCurrentLaserScan());
+  // vector< vector<int> > grid;
+  // for(int i = 0; i < 51; i++){
+  //   vector<int> col;
+  //   for(int j = 0; j < 51; j++){
+  //     col.push_back(0);
+  //   }
+  //   grid.push_back(col);
+  // }
+  // for (int i = 0; i < current_situation.size(); i++){
+  //   int row = i / 51 + 16;
+  //   int col = i %51;
+  //   grid[row][col] = current_situation[i];
+  // }
+  // for(int i = 16; i < grid.size(); i++){
+  //   for(int j = 0; j < grid[i].size(); j++){
+  //     cout << grid[i][j] << " ";
+  //   }
+  //   cout << endl;
+  // }
+  // // Veto actions not allowed based on situation
+  // set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+  // set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
+  // Position initialPosition = beliefs->getAgentState()->getCurrentPosition();
+  // set<FORRAction>::iterator actionIter;
+  // for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+  //   FORRAction forrAction = *actionIter;
+  //   if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+  //     continue;
+  //   }
+  //   else{
+  //     Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+  //     double x = 25.0 - initialPosition.getX() + expectedPosition.getX();
+  //     double y = 25.0 - initialPosition.getY() + expectedPosition.getY();
+  //     int x1 = (int)(round(x));
+  //     int y1 = (int)(round(y));
+  //     int x2 = (int)(x);
+  //     int y2 = (int)(y);
+  //     int x3 = (int)(floor(x));
+  //     int y3 = (int)(floor(y));
+  //     int x4 = (int)(ceil(x));
+  //     int y4 = (int)(ceil(y));
+  //     // cout << initialPosition.getX() << " " << initialPosition.getY() << " " << expectedPosition.getX() << " " << expectedPosition.getY() << " " << x << " " << y << " " << x1 << " " << y1 << " " << x2 << " " << y2 << " " << x3 << " " << y3 << " " << x4 << " " << y4 << " " << grid[x1][y1] << " " << grid[x2][y2] << " " << grid[x3][y3] << " " << grid[x4][y4] << endl;
+  //     if(grid[x1][y1] == 0 or grid[x2][y2] == 0 or grid[x3][y3] == 0 or grid[x4][y4] == 0){
+  //       FORRAction a(forrAction.type,forrAction.parameter);
+  //       ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+  //       vetoedActions->insert(a);
+  //     }
+  //   }
+  // }
+  return false;
 }

@@ -23,6 +23,7 @@ Written by Raj Korpan, 2019
 #include <algorithm>
 #include <map>
 #include <set>
+#include <numeric>
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/String.h>
 
@@ -34,7 +35,8 @@ public:
     Position pose;
     int assignment;
     vector<float> action_grid;
-    SituationMarker(sensor_msgs::LaserScan laser, Position ps, int a, vector<float> ag): ls(laser), pose(ps), assignment(a), action_grid(ag){}
+    FORRAction actual_action;
+    SituationMarker(sensor_msgs::LaserScan laser, Position ps, int a, vector<float> ag, FORRAction aa): ls(laser), pose(ps), assignment(a), action_grid(ag), actual_action(aa){}
 };
 
 //=========================================================//=========================================================//
@@ -135,7 +137,7 @@ public:
     }
 
     // Modify situations from new observations
-    void addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing);
+    void addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing, FORRAction actual_action);
 
     // Cluster outliers
     void clusterOutlierObservations();
@@ -155,6 +157,9 @@ public:
     // Return weights for actions based on situations
     double getWeightForAction(AgentState *agentState, FORRAction action);
 
+    // Returns accuracy for situation
+    double getAccuracyForSituation(AgentState *agentState);
+
 private:
     // Learned views
     vector< vector<float> > situations;
@@ -167,6 +172,9 @@ private:
 
     // Assignment of actions for situations
     map< vector<int>, vector<FORRAction> > action_assignments;
+
+    // Accuracy of action assignments
+    map< vector<int>, vector<double> > accuracy_action_assignments;
 
     // Weights for actions for situations
     map< vector<int>, map< FORRAction, double > > action_assignment_weights;

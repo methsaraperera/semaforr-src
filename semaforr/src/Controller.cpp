@@ -96,7 +96,7 @@ void Controller::initialize_params(string filename){
       std::istream_iterator<std::string> begin(ss);
       std::istream_iterator<std::string> end;
       std::vector<std::string> vstrings(begin, end);
-      taskDecisionLimit = atof(vstrings[1].c_str());
+      taskDecisionLimit = atoi(vstrings[1].c_str());
       ROS_DEBUG_STREAM("decisionlimit " << taskDecisionLimit);
     }
     else if (fileLine.find("canSeePointEpsilon") != std::string::npos) {
@@ -160,7 +160,7 @@ void Controller::initialize_params(string filename){
       std::istream_iterator<std::string> begin(ss);
       std::istream_iterator<std::string> end;
       std::vector<std::string> vstrings(begin, end);
-      planLimit = atof(vstrings[1].c_str());
+      planLimit = atoi(vstrings[1].c_str());
       ROS_DEBUG_STREAM("planLimit " << planLimit);
     }
     else if (fileLine.find("trailsOn") != std::string::npos) {
@@ -664,7 +664,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan, geometry_msgs::PoseArray crowdpose, geometry_msgs::PoseArray crowdposeall){
   cout << "In update state" << endl;
   beliefs->getAgentState()->setCurrentSensor(current, laser_scan);
-  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan, current, true);
+  // beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan, current, true);
   beliefs->getAgentState()->setCrowdPose(crowdpose);
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
@@ -697,7 +697,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
     if(beliefs->getAgentState()->getAgenda().size() > 0){
       //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
-      if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > 50){
+      ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
+      if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
         aStarOn = false;
       }
       ROS_DEBUG("Selecting Next Task");
@@ -730,7 +731,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //beliefs->getAgentState()->skipTask();
       beliefs->getAgentState()->finishTask();
       if(beliefs->getAgentState()->getAgenda().size() > 0){
-        if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() > planLimit - 1){
+        ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
+        if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
           aStarOn = false;
         }
         if(aStarOn){
@@ -866,7 +868,9 @@ FORRAction Controller::FORRDecision()
   else{
     beliefs->getAgentState()->setRotateMode(false);
   }
-
+  Position current = beliefs->getAgentState()->getCurrentPosition();
+  sensor_msgs::LaserScan laser_scan = beliefs->getAgentState()->getCurrentLaserScan();
+  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan, current, true, *decision);
   return *decision;
 }
 
@@ -890,8 +894,10 @@ bool Controller::tierOneDecision(FORRAction *decision){
     tier1->advisorAvoidWalls();
     ROS_INFO("Advisor not opposite will veto actions");
     tier1->advisorNotOpposite();
-    // ROS_INFO("Advisor situation will veto actions");
-    // tier1->advisorSituation();
+    if(situationsOn){
+      ROS_INFO("Advisor situation will veto actions");
+      tier1->advisorSituation();
+    }
   }
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   std::stringstream vetoList;
