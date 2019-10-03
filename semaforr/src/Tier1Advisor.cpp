@@ -192,14 +192,20 @@ bool Tier1Advisor::advisorSituation(){
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
   double accuracy = beliefs->getSpatialModel()->getSituations()->getAccuracyForSituation(beliefs->getAgentState());
+  cout << "Situation accuracy: " << accuracy << endl;
   if(accuracy >= 0.75){
+    set<FORRAction>::iterator actionIter;
     for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
       FORRAction forrAction = *actionIter;
       if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
         continue;
       }
+      else if(forrAction.type == PAUSE){
+        continue;
+      }
       else{
         double action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), forrAction);
+        cout << "action_weight " << action_weight << endl;
         if(action_weight < 0.25){
           FORRAction a(forrAction.type,forrAction.parameter);
           ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);

@@ -192,50 +192,50 @@ explore = "off"
 #     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
-num_runs = 10
-for i in range(6,num_runs):
-    target_file_name = "target100.conf"
-    log_name = map_name + "_spatial_sit_plan_" + str(i) + ".txt"
-    advisors = "/config/advisors1.conf"
-    params = "/config/params4.conf"
-    situations = "/config/situations2.conf"
-    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+# num_runs = 10
+# for i in range(6,num_runs):
+#     target_file_name = "target100.conf"
+#     log_name = map_name + "_spatial_sit_plan_" + str(i) + ".txt"
+#     advisors = "/config/advisors1.conf"
+#     params = "/config/params4.conf"
+#     situations = "/config/situations2.conf"
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+
+# num_runs = 10
+# for i in range(0,num_runs):
+#     target_file_name = "target100.conf"
+#     log_name = map_name + "_spatial_sit_noplan_" + str(i) + ".txt"
+#     advisors = "/config/advisors1.conf"
+#     params = "/config/params5.conf"
+#     situations = "/config/situations2.conf"
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+
+# num_runs = 10
+# for i in range(0,num_runs):
+#     target_file_name = "target100.conf"
+#     log_name = map_name + "_spatial_nosit_plan_" + str(i) + ".txt"
+#     advisors = "/config/advisors1.conf"
+#     params = "/config/params6.conf"
+#     situations = "/config/situations2.conf"
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
 num_runs = 10
-for i in range(0,num_runs):
-    target_file_name = "target100.conf"
-    log_name = map_name + "_spatial_sit_noplan_" + str(i) + ".txt"
-    advisors = "/config/advisors1.conf"
-    params = "/config/params5.conf"
-    situations = "/config/situations2.conf"
-    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
-
-num_runs = 10
-for i in range(0,num_runs):
-    target_file_name = "target100.conf"
-    log_name = map_name + "_spatial_nosit_plan_" + str(i) + ".txt"
-    advisors = "/config/advisors1.conf"
-    params = "/config/params6.conf"
-    situations = "/config/situations2.conf"
-    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
-
-num_runs = 10
-for i in range(0,num_runs):
+for i in range(4,num_runs):
     target_file_name = "target100.conf"
     log_name = map_name + "_spatial_nosit_noplan_" + str(i) + ".txt"
     advisors = "/config/advisors1.conf"
@@ -248,31 +248,31 @@ for i in range(0,num_runs):
     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
-# num_runs = 10
-# for i in range(0,num_runs):
-for i in [5, 8]:
-    target_file_name = "target100.conf"
-    log_name = map_name + "_nosit_plan_" + str(i) + ".txt"
-    advisors = "/config/advisors0.conf"
-    params = "/config/params0.conf"
-    situations = "/config/situations2.conf"
-    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+# # num_runs = 10
+# # for i in range(0,num_runs):
+# for i in [5, 8]:
+#     target_file_name = "target100.conf"
+#     log_name = map_name + "_nosit_plan_" + str(i) + ".txt"
+#     advisors = "/config/advisors0.conf"
+#     params = "/config/params0.conf"
+#     situations = "/config/situations2.conf"
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
-num_runs = 10
-for i in range(1,num_runs):
-    target_file_name = "target100.conf"
-    log_name = map_name + "_nosit_noplan_" + str(i) + ".txt"
-    advisors = "/config/advisors0.conf"
-    params = "/config/params1.conf"
-    situations = "/config/situations2.conf"
-    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+# num_runs = 10
+# for i in range(1,num_runs):
+#     target_file_name = "target100.conf"
+#     log_name = map_name + "_nosit_noplan_" + str(i) + ".txt"
+#     advisors = "/config/advisors0.conf"
+#     params = "/config/params1.conf"
+#     situations = "/config/situations2.conf"
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
