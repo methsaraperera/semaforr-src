@@ -25,7 +25,7 @@ bool astar::search(int source, int target, string name)
   while (!open.empty())
   {
     _VNode* current = open.top(); open.pop(); // Get and remove the top of the open list
-
+    // cout << current->x << " " << current->y << " " << current->g << " " << current->f << endl;
     if(current->id == target) // Found the path
     {
       construct_path(current);
@@ -175,6 +175,7 @@ void astar::construct_path(_VNode* g)
   cout << "Inside construct_path" << endl;
   _VNode* tmp = g;
   path.clear();
+  paths.clear();
   /*while(!tmp->prev.empty())
   {
     //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;

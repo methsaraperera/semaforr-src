@@ -894,10 +894,10 @@ bool Controller::tierOneDecision(FORRAction *decision){
     tier1->advisorAvoidWalls();
     ROS_INFO("Advisor not opposite will veto actions");
     tier1->advisorNotOpposite();
-    if(situationsOn){
-      ROS_INFO("Advisor situation will veto actions");
-      tier1->advisorSituation();
-    }
+    // if(situationsOn){
+    //   ROS_INFO("Advisor situation will veto actions");
+    //   tier1->advisorSituation();
+    // }
   }
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   std::stringstream vetoList;
@@ -957,11 +957,11 @@ void Controller::tierTwoDecision(Position current){
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       vector<double> planCost;
-      //ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
+      // ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
       for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
         double costOfPlan = planner->calcPathCost(*vt);
         planCost.push_back(costOfPlan);
-        //ROS_DEBUG_STREAM("Cost = " << costOfPlan);
+        // ROS_DEBUG_STREAM("Cost = " << costOfPlan);
       }
       planCosts.push_back(planCost);
     }
@@ -973,15 +973,15 @@ void Controller::tierTwoDecision(Position current){
       double min = *min_element(it->begin(), it->end());
       double norm_factor = (max - min)/10;
       vector<double> planCostNormalized;
-      //ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
+      // ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
       for (doubIT vt = it->begin(); vt != it->end(); vt++){
         if (max != min){
           planCostNormalized.push_back((*vt - min)/norm_factor);
-          //ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
+          // ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
         }
         else{
           planCostNormalized.push_back(0);
-          //ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
+          // ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
         }
       }
       planCostsNormalized.push_back(planCostNormalized);
@@ -990,18 +990,18 @@ void Controller::tierTwoDecision(Position current){
     vector<double> totalCosts;
     for (int i = 0; i < plans.size(); i++){
       double cost=0;
-      //ROS_DEBUG_STREAM("Computing total cost = " << cost);
+      // ROS_DEBUG_STREAM("Computing total cost = " << cost);
       for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
         cost += it->at(i);
-        //ROS_DEBUG_STREAM("cost = " << cost);
+        // ROS_DEBUG_STREAM("cost = " << cost);
       }
-      //ROS_DEBUG_STREAM("Final cost = " << cost);
+      // ROS_DEBUG_STREAM("Final cost = " << cost);
       totalCosts.push_back(cost);
     }
-    double minCost=1000;
-    //ROS_DEBUG_STREAM("Computing min cost");
+    double minCost=100000;
+    // ROS_DEBUG_STREAM("Computing min cost");
     for (int i=0; i < totalCosts.size(); i++){
-      //ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
+      // ROS_DEBUG_STREAM("Total cost = " << totalCosts[i]);
       if (totalCosts[i] < minCost){
         minCost = totalCosts[i];
       }
@@ -1014,7 +1014,7 @@ void Controller::tierTwoDecision(Position current){
         minCombinedCost = totalCosts[i];
       }
     }*/
-    //ROS_DEBUG_STREAM("Min cost = " << minCost);
+    // ROS_DEBUG_STREAM("Min cost = " << minCost);
     //ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
 
     vector<string> bestPlanNames;
@@ -1023,13 +1023,13 @@ void Controller::tierTwoDecision(Position current){
       if(totalCosts[i] == minCost){
         bestPlanNames.push_back(plannerNames[i]);
         bestPlanInds.push_back(i);
-        //ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
+        // ROS_DEBUG_STREAM("Best plan " << plannerNames[i]);
       }
     }
 
     srand(time(NULL));
     int random_number = rand() % (bestPlanInds.size());
-    //ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
+    ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
     ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
     decisionStats->chosenPlanner = bestPlanNames.at(random_number);
     beliefs->getAgentState()->setCurrentWaypoints(current,tier2Planners[0],aStarOn, plans.at(bestPlanInds.at(random_number)));

@@ -108,9 +108,9 @@ public:
 		publish_all_targets();
 		publish_remaining_targets();
 	}
-	//publish_nodes();
-	//publish_reachable_nodes();
-	//publish_edges();
+	// publish_nodes();
+	// publish_reachable_nodes();
+	// publish_edges();
         /*if(visualized < 5){
 		publish_nodes();
 		publish_reachable_nodes();
@@ -993,6 +993,7 @@ public:
 	}
 	//ROS_DEBUG("After decisionCount");
 
+	cout << "Current task " << currentTask << " and decision number " << decisionCount << " with overall time " << overallTimeSec << " and computation time " << computationTimeSec << endl;
 
 	std::stringstream lep;
 	for(int i = 0; i < laserEndpoints.size(); i++){

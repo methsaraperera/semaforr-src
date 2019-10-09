@@ -626,7 +626,7 @@ double FORRSituations::getAccuracyForSituation(AgentState *agentState){
     else{
       double num_instances = accuracy_action_assignments[assignment_values].size();
       double sum_of_instances = accumulate(accuracy_action_assignments[assignment_values].begin(), accuracy_action_assignments[assignment_values].end(), 0.0);
-      cout << num_instances << " " << sum_of_instances << " " <<  sum_of_instances/num_instances << endl;
+      cout << num_instances << " " << sum_of_instances << " " << sum_of_instances/num_instances << endl;
       return sum_of_instances/num_instances;
     }
   }

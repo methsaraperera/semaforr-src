@@ -11,7 +11,7 @@ Graph::Graph(Map * m, int p): map(m) {
 
   int l = map->getLength();
   int h = map->getHeight();
-  cout << l << h << proximity << endl;
+  cout << l << " " << h << " " << proximity << endl;
   // create nodes
   for( int x = 0; x < l; x++ ){
     vector<int> column; 
@@ -93,7 +93,7 @@ bool Graph::isEdge(Edge e) {
 void Graph::generateNavGraph() {
   int l = map->getLength();
   int h = map->getHeight();
-  cout << l << h << endl;
+  cout << l << " " << h << endl;
   // create nodes
   int index = 0;
   for( int x = 0; x < l; x += proximity ){
@@ -137,17 +137,17 @@ void Graph::generateNavGraph() {
 	if ( map->isPathObstructed(x1,y1,x2,y2)){
 	 	multiplier += 20;
 	}
-	if ( map->isPointInBuffer( x1, y1+(proximity*1.5) ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x1, y1+(proximity) ) ){
+	 	multiplier += 1;
 	}
-	if ( map->isPointInBuffer( x1, y1-(proximity*1.5) ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x1, y1-(proximity) ) ){
+	 	multiplier += 1;
 	}
-	if ( map->isPointInBuffer( x1+(proximity*1.5), y1 ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x1+(proximity), y1 ) ){
+	 	multiplier += 1;
 	}
-	if ( map->isPointInBuffer( x1-(proximity*1.5), y1 ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x1-(proximity), y1 ) ){
+	 	multiplier += 1;
 	}
 	/*
 	if ( map->isPointInBuffer( x1+(proximity*1.5), y1+(proximity*1.5) ) ){
@@ -177,17 +177,17 @@ void Graph::generateNavGraph() {
 	}
 	*/
 
-	if ( map->isPointInBuffer( x2, y2+(proximity*1.5) ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x2, y2+(proximity) ) ){
+	 	multiplier += 1;
 	}
-	if ( map->isPointInBuffer( x2, y2-(proximity*1.5) ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x2, y2-(proximity) ) ){
+	 	multiplier += 1;
 	}
-	if ( map->isPointInBuffer( x2+(proximity*1.5), y2 ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x2+(proximity), y2 ) ){
+	 	multiplier += 1;
 	}
-	if ( map->isPointInBuffer( x2-(proximity*1.5), y2 ) ){
-	 	multiplier += 5;
+	if ( map->isPointInBuffer( x2-(proximity), y2 ) ){
+	 	multiplier += 1;
 	}
 	
 	e->setDistCost(multiplier * distCost);
