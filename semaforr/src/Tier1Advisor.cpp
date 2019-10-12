@@ -119,12 +119,12 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   bool decisionMade = false;
   CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
   ROS_DEBUG("Check if target can be spotted using laser scan");
-  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 5);
+  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 10);
   
   if(targetInSight == false){
     ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
-    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 5);
+    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 10);
     if(waypointInSight == false){
       ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
     }
@@ -265,4 +265,152 @@ bool Tier1Advisor::advisorSituation(){
   //   }
   // }
   return false;
+}
+
+bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
+  ROS_DEBUG("Begin get out advisor");
+  // if the robot is in a confined space and it sees a way out then take the action that does that.
+  bool decisionMade = false;
+  if(beliefs->getAgentState()->getRobotConfined()){
+    vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
+    set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
+    int size = actions.size();
+    cout << "actions size " << size << " rotation size " << rotation_set->size()/2 << endl;
+    if(size >= 3){
+      FORRAction lastAction = actions[size - 1];
+      FORRAction lastlastAction = actions[size - 2];
+      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << " lastlastAction " <<  lastlastAction.type << " " << lastlastAction.parameter << endl;
+      if((lastlastAction.type == RIGHT_TURN and lastlastAction.parameter == rotation_set->size()/2 and lastAction.type == RIGHT_TURN and lastAction.parameter == rotation_set->size()/2) or beliefs->getAgentState()->getGetOutTriggered()){
+        beliefs->getAgentState()->setGetOutTriggered(true);
+        cout << "overlay turned poses" << endl;
+        vector< sensor_msgs::LaserScan > laser_scan_hist = beliefs->getAgentState()->getAllLaserScanHistory();
+        vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+        CartesianPoint current_position = CartesianPoint((*positionHis)[positionHis->size()-1].getX(), (*positionHis)[positionHis->size()-1].getY());
+        cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << endl;
+        vector<Position> last_three_positions;
+        last_three_positions.push_back((*positionHis)[positionHis->size()-1]);
+        last_three_positions.push_back((*positionHis)[positionHis->size()-2]);
+        last_three_positions.push_back((*positionHis)[positionHis->size()-3]);
+        vector< sensor_msgs::LaserScan > last_three_lasers;
+        last_three_lasers.push_back(laser_scan_hist[laser_scan_hist.size()-1]);
+        last_three_lasers.push_back(laser_scan_hist[laser_scan_hist.size()-2]);
+        last_three_lasers.push_back(laser_scan_hist[laser_scan_hist.size()-3]);
+        // vector<int> current_situation = beliefs->getSpatialModel()->getSituations()->identifySituation(laser_scan_hist[laser_scan_hist.size()-1]);
+        // vector<int> previous_situation = beliefs->getSpatialModel()->getSituations()->identifySituation(laser_scan_hist[laser_scan_hist.size()-2]);
+        // vector< vector<int> > grid = beliefs->getSpatialModel()->getSituations()->overlaySituations(laser_scan_hist[laser_scan_hist.size()-1], laser_scan_hist[laser_scan_hist.size()-2], current_position, previous_position);
+        vector< vector<int> > grid = beliefs->getSpatialModel()->getSituations()->overlaySituations(last_three_lasers, last_three_positions);
+        double cos_curr = cos((*positionHis)[positionHis->size()-1].getTheta());
+        double sin_curr = sin((*positionHis)[positionHis->size()-1].getTheta());
+        double x_curr = (*positionHis)[positionHis->size()-1].getX();
+        double y_curr = (*positionHis)[positionHis->size()-1].getY();
+        vector<CartesianPoint> potential_destinations;
+        for(int i = 0; i < grid.size(); i++){
+          for(int j = 0; j < grid[i].size(); j++){
+            if(grid[i][j] == 1){
+              double new_x = (i-25)*cos_curr - (j-25)*sin_curr + x_curr;
+              double new_y = (j-25)*cos_curr + (i-25)*sin_curr + y_curr;
+              cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << endl;
+              potential_destinations.push_back(CartesianPoint(new_x, new_y));
+            }
+          }
+        }
+        CartesianPoint farthest_position;
+        double max_distance = 0;
+        for(int i = 0; i < potential_destinations.size(); i++){
+          double dist_to_potential = potential_destinations[i].get_distance(current_position);
+          if(dist_to_potential > max_distance){
+            max_distance = dist_to_potential;
+            farthest_position = potential_destinations[i];
+          }
+        }
+        cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
+        (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
+        FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+        if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+          ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
+          decisionMade = true;
+        }
+      }
+      else{
+        cout << "else make turn" << endl;
+        beliefs->getAgentState()->setGetOutTriggered(false);
+        (*decision) = FORRAction(RIGHT_TURN, rotation_set->size()/2);
+        decisionMade = true;
+      }
+    }
+  }
+  else{
+    beliefs->getAgentState()->setGetOutTriggered(false);
+  }
+  cout << "decisionMade " << decisionMade << endl;
+  // sensor_msgs::LaserScan scan = beliefs->getAgentState()->getCurrentLaserScan();
+  // vector<CartesianPoint> scan_endpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+  // double count = scan.ranges.size();
+  
+  // if(count == 0){
+  //   return decisionMade;
+  // }
+  // double confined_count = 0;
+  // vector<CartesianPoint> open_endpoints;
+  // vector<pair<double, int> > vp;
+  // for(int i = 0 ; i < scan.ranges.size(); i++){
+  //   if(scan.ranges[i] <= 2){
+  //     confined_count++;
+  //   }
+  //   // if(scan.ranges[i] > 2){
+  //   //   open_endpoints.push_back(scan_endpoints[i]);
+  //   // }
+  //   vp.push_back(make_pair(scan.ranges[i], i));
+  // }
+  // sort(vp.begin(), vp.end());
+  // for (int i = vp.size() - 1; i >= vp.size() - 4; i--){
+  //   open_endpoints.push_back(scan_endpoints[vp[i].second]);
+  // }
+  // vector<int> current_situation = beliefs->getSpatialModel()->getSituations()->identifySituation(beliefs->getAgentState()->getCurrentLaserScan());
+  // double sum_of_situation = accumulate(current_situation.begin(), current_situation.end(), 0.0);
+  // ROS_DEBUG_STREAM("Percent confined " << confined_count/count << " Number open " << open_endpoints.size() << " Situation sum " << sum_of_situation);
+
+  
+  // double laser_threshold = 0.95;
+  // double sum_threshold = 20;
+  // if(nearby > 0){
+  //   laser_threshold = laser_threshold - (0.05 * nearby);
+  //   sum_threshold = sum_threshold + (2 * nearby);
+  // }
+  // ROS_DEBUG_STREAM("Nearby " << nearby << " laser_threshold " << laser_threshold << " sum_threshold " << sum_threshold);
+
+  // if((confined_count/count > laser_threshold or sum_of_situation < sum_threshold) and open_endpoints.size() > 0){
+  //   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+  //   set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
+  //   map< FORRAction, double > potential_actions;
+  //   set<FORRAction>::iterator actionIter;
+  //   typedef map<FORRAction, double>::iterator mapIt;
+  //   for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+  //     FORRAction forrAction = *actionIter;
+  //     if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+  //       continue;
+  //     }
+  //     else if(forrAction.type == PAUSE){
+  //       continue;
+  //     }
+  //     else{
+  //       Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+  //       double dist_to_open = 0;
+  //       for(int i = 0; i < open_endpoints.size(); i++){
+  //         dist_to_open += open_endpoints[i].get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+  //       }
+  //       potential_actions[forrAction] = dist_to_open;
+  //       ROS_DEBUG_STREAM("Potential action : " << forrAction.type << " " << forrAction.parameter << " dist_to_open " << dist_to_open);
+  //     }
+  //   }
+  //   double minDistance = 1000000;
+  //   for(mapIt iterator = potential_actions.begin(); iterator != potential_actions.end(); iterator++){
+  //     if(iterator->second < minDistance){
+  //       minDistance = iterator->second;
+  //       (*decision) = iterator->first;
+  //       decisionMade = true;
+  //     }
+  //   }
+  // }
+  return decisionMade;
 }

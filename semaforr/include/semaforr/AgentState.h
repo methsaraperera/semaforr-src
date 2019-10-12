@@ -44,6 +44,8 @@ public:
     //rotateMode = false;
     numMoves = moveArrMax;
     numRotates = rotateArrMax;
+    robotConfined = false;
+    getOutTriggered = false;
 
     for(int i = 1; i < numRotates; i++){
       action_set->insert(FORRAction(LEFT_TURN, i));
@@ -235,6 +237,12 @@ public:
 
   FORRAction maxForwardAction();
 
+  bool getRobotConfined();
+  bool getGetOutTriggered(){return getOutTriggered;}
+  void setGetOutTriggered(bool status){
+    getOutTriggered = status;
+  }
+
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
@@ -358,6 +366,10 @@ public:
 
   //Rotate mode tells if the t3 should rotate or move
   bool rotateMode;
+
+  // Robot confined currently
+  bool robotConfined;
+  bool getOutTriggered;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);

@@ -192,9 +192,9 @@ explore = "off"
 #     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
-num_runs = 3
-for i in range(2,num_runs):
-    target_file_name = "targettraintest.conf"
+num_runs = 4
+for i in range(3,num_runs):
+    target_file_name = "targetone.conf"
     log_name = map_name + "_spatial_sit_plan_" + str(i) + ".txt"
     advisors = "/config/advisors1.conf"
     params = "/config/params4.conf"

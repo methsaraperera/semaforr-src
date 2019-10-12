@@ -631,6 +631,32 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
     maxForwardActionSweepAngle = val7;
   }
 
+bool AgentState::getRobotConfined(){
+  ROS_DEBUG("AgentState :: In getRobotConfined");
+  Position current_position = currentPosition;
+  vector<Position> *pos_hist = currentTask->getPositionHistory();
+  int startPosition = 0;
+  if (pos_hist->size() > 10){
+    startPosition = pos_hist->size() - 10;
+  }
+  cout << "startPosition " << startPosition << " pos_hist " << pos_hist->size() << endl;
+  int nearby = 0;
+  for(int i = startPosition; i < pos_hist->size(); i++){
+    if(current_position.getDistance((*pos_hist)[i]) <= 2){
+      nearby++;
+    }
+  }
+  cout << "nearby " << nearby << endl;
+  if(nearby >= 10){
+    robotConfined = true;
+  }
+  else{
+    robotConfined = false;
+  }
+  cout << "robotConfined " << robotConfined << endl;
+  return robotConfined;
+}
+
 vector <Position> AgentState::getCrowdPositions(geometry_msgs::PoseArray crowdpose){
   vector <Position> crowdPositions;
   for(int i = 0; i < crowdpose.poses.size(); i++){

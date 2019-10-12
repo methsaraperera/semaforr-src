@@ -138,16 +138,16 @@ void Graph::generateNavGraph() {
 	 	multiplier += 20;
 	}
 	if ( map->isPointInBuffer( x1, y1+(proximity) ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	if ( map->isPointInBuffer( x1, y1-(proximity) ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	if ( map->isPointInBuffer( x1+(proximity), y1 ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	if ( map->isPointInBuffer( x1-(proximity), y1 ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	/*
 	if ( map->isPointInBuffer( x1+(proximity*1.5), y1+(proximity*1.5) ) ){
@@ -178,16 +178,16 @@ void Graph::generateNavGraph() {
 	*/
 
 	if ( map->isPointInBuffer( x2, y2+(proximity) ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	if ( map->isPointInBuffer( x2, y2-(proximity) ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	if ( map->isPointInBuffer( x2+(proximity), y2 ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	if ( map->isPointInBuffer( x2-(proximity), y2 ) ){
-	 	multiplier += 1;
+	 	multiplier += 2;
 	}
 	
 	e->setDistCost(multiplier * distCost);

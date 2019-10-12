@@ -888,6 +888,11 @@ bool Controller::tierOneDecision(FORRAction *decision){
     decisionStats->decisionTier = 1;
     decisionMade = true;
   }
+  else if(tier1->advisorGetOut(decision)){
+    ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
+    decisionStats->decisionTier = 1;
+    decisionMade = true;
+  }
   else{
     // group of vetoing tier1 advisors which adds to the list of vetoed actions
     ROS_INFO("Advisor avoid wall will veto actions");

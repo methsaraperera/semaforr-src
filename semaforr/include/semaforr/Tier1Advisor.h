@@ -24,6 +24,8 @@ public:
 
 	bool advisorSituation();
 
+	bool advisorGetOut(FORRAction *decision);
+
 	bool advisorVictory(FORRAction *decision);
 	
 private:
