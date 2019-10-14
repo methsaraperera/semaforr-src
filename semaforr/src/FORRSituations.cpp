@@ -42,9 +42,9 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
     for(int j = 0; j < grid[i].size(); j++){
       new_situation.push_back(grid[i][j]);
       new_situation_float.push_back((float)(grid[i][j]));
-      cout << grid[i][j] << " ";
+      // cout << grid[i][j] << " ";
     }
-    cout << endl;
+    // cout << endl;
   }
   vector<float> distances;
   for(int i = 0; i < situations.size(); i++){
@@ -52,7 +52,7 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
     for(int j = 0; j < new_situation.size(); j++){
       dist += abs(situations[i][j] - (float)(new_situation[j]));
     }
-    cout << "Situation " << i << " " << situation_counts[i] << " dist : " << dist << endl;
+    // cout << "Situation " << i << " " << situation_counts[i] << " dist : " << dist << endl;
     distances.push_back(dist);
   }
   int min_pos = distance(distances.begin(),min_element(distances.begin(),distances.end()));
@@ -209,11 +209,7 @@ vector<int> FORRSituations::identifySituation(sensor_msgs::LaserScan ls) {
 
 vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::LaserScan> laserscans, vector<Position> poses){
   sensor_msgs::LaserScan ls1 = laserscans[0];
-  sensor_msgs::LaserScan ls2 = laserscans[1];
-  sensor_msgs::LaserScan ls3 = laserscans[2];
   Position pose1 = poses[0];
-  Position pose2 = poses[1];
-  Position pose3 = poses[2];
 
   double angle1 = ls1.angle_min;
   double increment1 = ls1.angle_increment;
@@ -229,7 +225,7 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
   }
   for(int i = 0; i < laser_ranges1.size(); i++){
     // cout << angle1 << " " << laser_ranges1[i] << endl;
-    for(double j = 0.0; j <= laser_ranges1[i]; j+=0.9){
+    for(double j = 0.0; j <= laser_ranges1[i]; j+=0.1){
       int x = (int)(round(j * cos(angle1)))+25;
       int y = (int)(round(j * sin(angle1)))+25;
       grid[x][y] = 1;
@@ -245,51 +241,42 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
     }
     angle1 = angle1 + increment1;
   }
-  double required_rotation = 0 - pose1.getTheta();
-  cout << "pose1 " << pose1.getTheta() << " pose2 " << pose2.getTheta() << " pose3 " << pose3.getTheta() << " required_rotation " << required_rotation << endl;
-  double angle2 = ls2.angle_min + required_rotation;
-  double increment2 = ls2.angle_increment;
-  vector<float> laser_ranges2 = ls2.ranges;
-  cout << "angle2 " << angle2 << " increment2 " << increment2 << " laser_ranges2 " << laser_ranges2.size() << endl;
-  for(int i = 0; i < laser_ranges2.size(); i++){
-    // cout << angle2 << " " << laser_ranges2[i] << endl;
-    for(double j = 0.0; j <= laser_ranges2[i]; j+=0.9){
-      int x = (int)(round(j * cos(angle2)))+25;
-      int y = (int)(round(j * sin(angle2)))+25;
-      grid[x][y] = 1;
-      x = (int)(j * cos(angle2))+25;
-      y = (int)(j * sin(angle2))+25;
-      grid[x][y] = 1;
-      x = (int)(floor(j * cos(angle2)))+25;
-      y = (int)(floor(j * sin(angle2)))+25;
-      grid[x][y] = 1;
-      x = (int)(ceil(j * cos(angle2)))+25;
-      y = (int)(ceil(j * sin(angle2)))+25;
-      grid[x][y] = 1;
+  for(int i = 0; i < grid.size(); i++){
+    for(int j = 0; j < grid[i].size(); j++){
+      cout << grid[i][j] << " ";
     }
-    angle2 = angle2 + increment2;
+    cout << endl;
   }
-  double angle3 = ls3.angle_min + required_rotation;
-  double increment3 = ls3.angle_increment;
-  vector<float> laser_ranges3 = ls3.ranges;
-  cout << "angle3 " << angle3 << " increment3 " << increment3 << " laser_ranges3 " << laser_ranges3.size() << endl;
-  for(int i = 0; i < laser_ranges3.size(); i++){
-    // cout << angle3 << " " << laser_ranges3[i] << endl;
-    for(double j = 0.0; j <= laser_ranges3[i]; j+=0.9){
-      int x = (int)(round(j * cos(angle3)))+25;
-      int y = (int)(round(j * sin(angle3)))+25;
-      grid[x][y] = 1;
-      x = (int)(j * cos(angle3))+25;
-      y = (int)(j * sin(angle3))+25;
-      grid[x][y] = 1;
-      x = (int)(floor(j * cos(angle3)))+25;
-      y = (int)(floor(j * sin(angle3)))+25;
-      grid[x][y] = 1;
-      x = (int)(ceil(j * cos(angle3)))+25;
-      y = (int)(ceil(j * sin(angle3)))+25;
-      grid[x][y] = 1;
+  double required_rotation = 0 - pose1.getTheta();
+  for(int k = 1; k < laserscans.size(); k++){
+    sensor_msgs::LaserScan ls2 = laserscans[k];
+    Position pose2 = poses[k];
+    cout << "pose1 theta " << pose1.getTheta() << " pose2 theta " << pose2.getTheta() << " required_rotation " << required_rotation << endl;
+    double angle2 = ls2.angle_min + pose2.getTheta() + required_rotation;
+    double increment2 = ls2.angle_increment;
+    vector<float> laser_ranges2 = ls2.ranges;
+    cout << "angle2 " << angle2 << " increment2 " << increment2 << " laser_ranges2 " << laser_ranges2.size() << endl;
+    double required_x_shift = pose2.getX() - pose1.getX();
+    double required_y_shift = pose2.getY() - pose1.getY();
+    cout << "pose1 " << pose1.getX() << " " << pose1.getY() << " pose2 " << pose2.getX() << " " << pose2.getY() << " required_x_shift " << required_x_shift << " required_y_shift " << required_y_shift << endl;
+    for(int i = 0; i < laser_ranges2.size(); i++){
+      // cout << angle2 << " " << laser_ranges2[i] << endl;
+      for(double j = 0.0; j <= laser_ranges2[i]; j+=0.1){
+        int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
+        int y = (int)(round(j * sin(angle2)))+25;
+        grid[x][y] = 1;
+        x = (int)(j * cos(angle2) + required_x_shift)+25;
+        y = (int)(j * sin(angle2) + required_y_shift)+25;
+        grid[x][y] = 1;
+        x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
+        y = (int)(floor(j * sin(angle2) + required_y_shift))+25;
+        grid[x][y] = 1;
+        x = (int)(ceil(j * cos(angle2) + required_x_shift))+25;
+        y = (int)(ceil(j * sin(angle2) + required_y_shift))+25;
+        grid[x][y] = 1;
+      }
+      angle2 = angle2 + increment2;
     }
-    angle3 = angle3 + increment3;
   }
   for(int i = 0; i < grid.size(); i++){
     for(int j = 0; j < grid[i].size(); j++){

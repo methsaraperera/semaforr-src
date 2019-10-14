@@ -46,6 +46,7 @@ public:
     numRotates = rotateArrMax;
     robotConfined = false;
     getOutTriggered = false;
+    farthestPoint = CartesianPoint(0.0,0.0);
 
     for(int i = 1; i < numRotates; i++){
       action_set->insert(FORRAction(LEFT_TURN, i));
@@ -237,11 +238,20 @@ public:
 
   FORRAction maxForwardAction();
 
-  bool getRobotConfined();
-  bool getGetOutTriggered(){return getOutTriggered;}
+  bool getRobotConfined(int decisionLimit, double distanceLimit);
+  bool getGetOutTriggered(){
+    cout << "getOutTriggered " << getOutTriggered << endl;
+    return getOutTriggered;
+  }
   void setGetOutTriggered(bool status){
     getOutTriggered = status;
   }
+  void setGetOutTriggered(bool status, CartesianPoint farthest_point){
+    getOutTriggered = status;
+    farthestPoint = farthest_point;
+  }
+  CartesianPoint getFarthestPoint(){return farthestPoint;}
+  
 
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
@@ -370,6 +380,7 @@ public:
   // Robot confined currently
   bool robotConfined;
   bool getOutTriggered;
+  CartesianPoint farthestPoint;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);

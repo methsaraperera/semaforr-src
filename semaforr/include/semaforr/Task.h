@@ -199,7 +199,7 @@ class Task {
 	pathCostInNavGraph = planner->getPathCost();
 	pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
 	vector<CartesianPoint> skippedwaypoints;
-	for(int i = 0; i < waypoints.size(); i+=2){
+	for(int i = 0; i < waypoints.size(); i+=1){
 		skippedwaypoints.push_back(waypoints[i]);
 	}
 	waypoints = skippedwaypoints;
