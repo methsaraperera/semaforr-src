@@ -60,6 +60,7 @@ class Task {
   }
 
   bool getIsPlanActive(){return isPlanActive;}
+  void setIsPlanActive(bool status){isPlanActive = status;}
   
   int getDecisionCount(){return decision_count;} 
  

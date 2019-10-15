@@ -297,11 +297,12 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
     //   (*decision) = FORRAction(RIGHT_TURN, 2);
     //   decisionMade = true;
     // }
-    if(beliefs->getAgentState()->getRobotConfined(30, 0.2)){
+    if(beliefs->getAgentState()->getRobotConfined(20, 0.2, 5)){
+      cout << "stuck in place" << endl;
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
   }
-  else if(beliefs->getAgentState()->getRobotConfined(10, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()),1.0))){
+  else if(beliefs->getAgentState()->getRobotConfined(20, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 15)){
     vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
     int size = actions.size();
@@ -318,6 +319,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << endl;
         vector<Position> last_positions;
         vector< sensor_msgs::LaserScan > last_lasers;
+        vector< vector<CartesianPoint> > last_endpoints;
         int previous_count = 3;
         if(size > 5){
           previous_count = 5;
@@ -325,6 +327,12 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         for(int i = 1; i < previous_count+1; i++){
           last_positions.push_back((*positionHis)[positionHis->size()-i]);
           last_lasers.push_back(laser_scan_hist[laser_scan_hist.size()-i]);
+          last_endpoints.push_back(beliefs->getAgentState()->transformToEndpoints((*positionHis)[positionHis->size()-i], laser_scan_hist[laser_scan_hist.size()-i]));
+        }
+        for(int i = 0; i < last_endpoints.size(); i++){
+          for(int j = 0; j < last_endpoints[i].size(); j++){
+            cout << last_endpoints[i][j].get_x() << " " << last_endpoints[i][j].get_y() << endl;
+          }
         }
         vector< vector<int> > grid = beliefs->getSpatialModel()->getSituations()->overlaySituations(last_lasers, last_positions);
         double cos_curr = cos((*positionHis)[positionHis->size()-1].getTheta());
@@ -334,19 +342,28 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         vector<CartesianPoint> potential_destinations;
         for(int i = 0; i < grid.size(); i++){
           for(int j = 0; j < grid[i].size(); j++){
-            if(grid[i][j] == 1){
+            if(grid[i][j] >= 1){
               double new_x = (i-25)*cos_curr - (j-25)*sin_curr + x_curr;
               double new_y = (j-25)*cos_curr + (i-25)*sin_curr + y_curr;
-              cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << beliefs->getAgentState()->canSeePoint(CartesianPoint(new_x, new_y), 20) << endl;
-              potential_destinations.push_back(CartesianPoint(new_x, new_y));
+              bool anyVisible = false;
+              for(int k = 0; k < last_endpoints.size(); k++){
+                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 20)){
+                  anyVisible = true;
+                }
+              }
+              cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << anyVisible << endl;
+              if(anyVisible){
+                potential_destinations.push_back(CartesianPoint(new_x, new_y));
+              }
             }
           }
         }
+        
         CartesianPoint farthest_position;
         double max_distance = 0;
         for(int i = 0; i < potential_destinations.size(); i++){
           double dist_to_potential = potential_destinations[i].get_distance(current_position);
-          if(dist_to_potential > max_distance and dist_to_potential < 5){
+          if(dist_to_potential > max_distance and dist_to_potential < 10){
             max_distance = dist_to_potential;
             farthest_position = potential_destinations[i];
           }
@@ -358,6 +375,11 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
           ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
           decisionMade = true;
+        }
+        if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
+          cout << "No plan exists, add new farthest_position as waypoint" << endl;
+          beliefs->getAgentState()->getCurrentTask()->getWaypoints().push_back(farthest_position);
+          beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(true);
         }
       }
       else{

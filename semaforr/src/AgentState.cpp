@@ -175,25 +175,26 @@ bool AgentState::canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, Carte
 
 //returns true if there is a point that is "visible" by the wall distance vectors to some epsilon.  
 //A point is visible if the distance to a wall distance vector line is < epsilon.
-bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point){
-  //ROS_DEBUG_STREAM("AgentState:canSeePoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
-  double epsilon = canSeePointEpsilon;
-  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
-  bool canSeePoint = false;
-  double ab = laserPos.get_distance(point);
-  for(int i = 0; i < givenLaserEndpoints.size(); i++){
-    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-    double ac = laserPos.get_distance(givenLaserEndpoints[i]);
-    double bc = givenLaserEndpoints[i].get_distance(point);
-    if(((ab + bc) - ac) < epsilon){
-      //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
-      //cout << "Distance: "<<distance_to_point<<endl;
-      canSeePoint = true;
-      break;
-    }
-  }
-  //else, not visible
-  return canSeePoint;
+bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
+  // //ROS_DEBUG_STREAM("AgentState:canSeePoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
+  // double epsilon = canSeePointEpsilon;
+  // //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+  // bool canSeePoint = false;
+  // double ab = laserPos.get_distance(point);
+  // for(int i = 0; i < givenLaserEndpoints.size(); i++){
+  //   //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+  //   double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+  //   double bc = givenLaserEndpoints[i].get_distance(point);
+  //   if(((ab + bc) - ac) < epsilon){
+  //     //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+  //     //cout << "Distance: "<<distance_to_point<<endl;
+  //     canSeePoint = true;
+  //     break;
+  //   }
+  // }
+  // //else, not visible
+  // return canSeePoint;
+  return canAccessPoint(givenLaserEndpoints, laserPos, point, distanceLimit);
 }
 
 //returns true if there is a point that is "visible" by the wall distance vectors.  
@@ -631,16 +632,18 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
     maxForwardActionSweepAngle = val7;
   }
 
-bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit){
+bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, double coverageLimit){
   ROS_DEBUG("AgentState :: In getRobotConfined");
+  cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << endl;
   Position current_position = currentPosition;
   vector<Position> *pos_hist = currentTask->getPositionHistory();
   int startPosition = 0;
   if(pos_hist->size() > decisionLimit+1){
     startPosition = pos_hist->size() - decisionLimit - 1;
   }
-  cout << "startPosition " << startPosition << " pos_hist " << pos_hist->size() << endl;
-  if(pos_hist->size() < 2){
+  int middlePosition = startPosition+3*decisionLimit/4;
+  cout << "startPosition " << startPosition << " middlePosition " << middlePosition << " pos_hist " << pos_hist->size() << endl;
+  if(pos_hist->size() < decisionLimit){
     robotConfined = false;
     return robotConfined;
   }
@@ -651,7 +654,87 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit){
     }
   }
   cout << "nearby " << nearby << endl;
-  if(nearby >= decisionLimit){
+  vector< vector <CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
+  cout << "laser_hist " << laser_hist->size() << endl;
+  vector< vector<int> > grid_firsthalf;
+  for(int i = 0; i < 250; i++){
+    vector<int> col;
+    for(int j = 0; j < 250; j++){
+      col.push_back(0);
+    }
+    grid_firsthalf.push_back(col);
+  }
+  vector<int> initial_coverage;
+  for(int k = startPosition; k < middlePosition; k++){
+    for(int l = 0; l < (*laser_hist)[k].size(); l++){
+      double x1 = (*pos_hist)[k].getX();
+      double y1 = (*pos_hist)[k].getY();
+      double x2 = (*laser_hist)[k][l].get_x();
+      double y2 = (*laser_hist)[k][l].get_y();
+      double step_size = 0.1;
+      double tx,ty;
+      for(double step = 0; step <= 1; step += step_size){
+        tx = (int)(round((x1 * step) + (x2 * (1-step))));
+        ty = (int)(round((y1 * step) + (y2 * (1-step))));
+        grid_firsthalf[tx][ty] = 1;
+      }
+    }
+    for(int i = 0; i < 250; i++){
+      for(int j = 0; j < 250; j++){
+        initial_coverage.push_back(grid_firsthalf[i][j]);
+      }
+    }
+  }
+  cout << "initial_coverage " << initial_coverage.size() << endl;
+  vector< vector<int> > total_coverages;
+  for(int k = middlePosition; k < laser_hist->size()-1; k++){
+    vector< vector<int> > grid;
+    for(int i = 0; i < 250; i++){
+      vector<int> col;
+      for(int j = 0; j < 250; j++){
+        col.push_back(0);
+      }
+      grid.push_back(col);
+    }
+    for(int l = 0; l < (*laser_hist)[k].size(); l++){
+      double x1 = (*pos_hist)[k].getX();
+      double y1 = (*pos_hist)[k].getY();
+      double x2 = (*laser_hist)[k][l].get_x();
+      double y2 = (*laser_hist)[k][l].get_y();
+      double step_size = 0.1;
+      double tx,ty;
+      for(double step = 0; step <= 1; step += step_size){
+        tx = (int)(round((x1 * step) + (x2 * (1-step))));
+        ty = (int)(round((y1 * step) + (y2 * (1-step))));
+        grid[tx][ty] = 1;
+      }
+    }
+    vector<int> coverage;
+    for(int i = 0; i < 250; i++){
+      for(int j = 0; j < 250; j++){
+        coverage.push_back(grid[i][j]);
+      }
+    }
+    total_coverages.push_back(coverage);
+  }
+  cout << "total_coverages " << total_coverages.size() << endl;
+  vector<int> change_in_converages;
+  for(int i = 0; i < total_coverages.size(); i++){
+    int change = 0;
+    for(int j = 0; j < total_coverages[i].size(); j++){
+      change += abs(total_coverages[i][j] - initial_coverage[j]);
+    }
+    change_in_converages.push_back(change);
+    cout << i << " " << change << endl;
+  }
+  int change_count = 0;
+  for(int i = 0; i < change_in_converages.size(); i++){
+    if(change_in_converages[i] <= coverageLimit){
+      change_count++;
+    }
+  }
+  cout << "change_count " << change_count << endl;
+  if(nearby >= decisionLimit or change_count >= change_in_converages.size()){
     robotConfined = true;
   }
   else{

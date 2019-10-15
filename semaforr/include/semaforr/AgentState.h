@@ -238,7 +238,7 @@ public:
 
   FORRAction maxForwardAction();
 
-  bool getRobotConfined(int decisionLimit, double distanceLimit);
+  bool getRobotConfined(int decisionLimit, double distanceLimit, double coverageLimit);
   bool getGetOutTriggered(){
     cout << "getOutTriggered " << getOutTriggered << endl;
     return getOutTriggered;
@@ -256,7 +256,7 @@ public:
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
-  bool canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point);
+  bool canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
   bool canSeePoint(CartesianPoint point, double distanceLimit);
   bool canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
   std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > > getCleanedTrailMarkers();

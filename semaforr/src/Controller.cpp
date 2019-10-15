@@ -723,6 +723,10 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     ROS_DEBUG("No active plan, setting up new plan!!");
     tierTwoDecision(current);
   }
+  else if(waypointReached == true){
+    ROS_DEBUG("Temporary Waypoint reached!!");
+    beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(false);
+  }
   // otherwise if task Decision limit reached, skip task 
   if(beliefs->getAgentState()->getCurrentTask() != NULL){
     if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){

@@ -228,16 +228,24 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
     for(double j = 0.0; j <= laser_ranges1[i]; j+=0.1){
       int x = (int)(round(j * cos(angle1)))+25;
       int y = (int)(round(j * sin(angle1)))+25;
-      grid[x][y] = 1;
-      x = (int)(j * cos(angle1))+25;
-      y = (int)(j * sin(angle1))+25;
-      grid[x][y] = 1;
-      x = (int)(floor(j * cos(angle1)))+25;
-      y = (int)(floor(j * sin(angle1)))+25;
-      grid[x][y] = 1;
-      x = (int)(ceil(j * cos(angle1)))+25;
-      y = (int)(ceil(j * sin(angle1)))+25;
-      grid[x][y] = 1;
+      if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        grid[x][y] += 1;
+      }
+      // x = (int)(j * cos(angle1))+25;
+      // y = (int)(j * sin(angle1))+25;
+      // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+      //   grid[x][y] += 1;
+      // }
+      // x = (int)(floor(j * cos(angle1)))+25;
+      // y = (int)(floor(j * sin(angle1)))+25;
+      // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+      //   grid[x][y] += 1;
+      // }
+      // x = (int)(ceil(j * cos(angle1)))+25;
+      // y = (int)(ceil(j * sin(angle1)))+25;
+      // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+      //   grid[x][y] += 1;
+      // }
     }
     angle1 = angle1 + increment1;
   }
@@ -264,16 +272,24 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
       for(double j = 0.0; j <= laser_ranges2[i]; j+=0.1){
         int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
         int y = (int)(round(j * sin(angle2)))+25;
-        grid[x][y] = 1;
-        x = (int)(j * cos(angle2) + required_x_shift)+25;
-        y = (int)(j * sin(angle2) + required_y_shift)+25;
-        grid[x][y] = 1;
-        x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
-        y = (int)(floor(j * sin(angle2) + required_y_shift))+25;
-        grid[x][y] = 1;
-        x = (int)(ceil(j * cos(angle2) + required_x_shift))+25;
-        y = (int)(ceil(j * sin(angle2) + required_y_shift))+25;
-        grid[x][y] = 1;
+        if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+          grid[x][y] += 1;
+        }
+        // x = (int)(j * cos(angle2) + required_x_shift)+25;
+        // y = (int)(j * sin(angle2) + required_y_shift)+25;
+        // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        //   grid[x][y] += 1;
+        // }
+        // x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
+        // y = (int)(floor(j * sin(angle2) + required_y_shift))+25;
+        // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        //   grid[x][y] += 1;
+        // }
+        // x = (int)(ceil(j * cos(angle2) + required_x_shift))+25;
+        // y = (int)(ceil(j * sin(angle2) + required_y_shift))+25;
+        // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        //   grid[x][y] += 1;
+        // }
       }
       angle2 = angle2 + increment2;
     }
