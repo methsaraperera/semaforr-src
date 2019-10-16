@@ -302,7 +302,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
   }
-  else if(beliefs->getAgentState()->getRobotConfined(20, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 15)){
+  else if(beliefs->getAgentState()->getRobotConfined(20, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 20)){
     vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
     int size = actions.size();
@@ -345,14 +345,14 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
             if(grid[i][j] >= 1){
               double new_x = (i-25)*cos_curr - (j-25)*sin_curr + x_curr;
               double new_y = (j-25)*cos_curr + (i-25)*sin_curr + y_curr;
-              bool anyVisible = false;
+              int anyVisible = 0;
               for(int k = 0; k < last_endpoints.size(); k++){
-                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 20)){
-                  anyVisible = true;
+                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 10)){
+                  anyVisible++;
                 }
               }
               cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << anyVisible << endl;
-              if(anyVisible){
+              if(anyVisible >= 1){
                 potential_destinations.push_back(CartesianPoint(new_x, new_y));
               }
             }

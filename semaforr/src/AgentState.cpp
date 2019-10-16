@@ -236,7 +236,7 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
     }
   }
   //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
-  if (numFree > 2) {
+  if (numFree > 3) {
     canAccessPoint = true;
   }
   //else, not visible
@@ -634,7 +634,7 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
 
 bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, double coverageLimit){
   ROS_DEBUG("AgentState :: In getRobotConfined");
-  cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << endl;
+  cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << " coverageLimit " << coverageLimit << endl;
   Position current_position = currentPosition;
   vector<Position> *pos_hist = currentTask->getPositionHistory();
   int startPosition = 0;
@@ -656,10 +656,11 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
   cout << "nearby " << nearby << endl;
   vector< vector <CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
   cout << "laser_hist " << laser_hist->size() << endl;
+  int dimension = 200;
   vector< vector<int> > grid_firsthalf;
-  for(int i = 0; i < 250; i++){
+  for(int i = 0; i < dimension; i++){
     vector<int> col;
-    for(int j = 0; j < 250; j++){
+    for(int j = 0; j < dimension; j++){
       col.push_back(0);
     }
     grid_firsthalf.push_back(col);
@@ -671,27 +672,31 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
       double y1 = (*pos_hist)[k].getY();
       double x2 = (*laser_hist)[k][l].get_x();
       double y2 = (*laser_hist)[k][l].get_y();
-      double step_size = 0.1;
+      double step_size = 0.01;
       double tx,ty;
       for(double step = 0; step <= 1; step += step_size){
         tx = (int)(round((x1 * step) + (x2 * (1-step))));
         ty = (int)(round((y1 * step) + (y2 * (1-step))));
-        grid_firsthalf[tx][ty] = 1;
+        if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
+          grid_firsthalf[tx][ty] = 1;
+        }
       }
     }
-    for(int i = 0; i < 250; i++){
-      for(int j = 0; j < 250; j++){
-        initial_coverage.push_back(grid_firsthalf[i][j]);
-      }
+  }
+  for(int i = 0; i < dimension; i++){
+    for(int j = 0; j < dimension; j++){
+      initial_coverage.push_back(grid_firsthalf[i][j]);
+      // cout << grid_firsthalf[i][j] << " ";
     }
+    // cout << endl;
   }
   cout << "initial_coverage " << initial_coverage.size() << endl;
   vector< vector<int> > total_coverages;
   for(int k = middlePosition; k < laser_hist->size()-1; k++){
     vector< vector<int> > grid;
-    for(int i = 0; i < 250; i++){
+    for(int i = 0; i < dimension; i++){
       vector<int> col;
-      for(int j = 0; j < 250; j++){
+      for(int j = 0; j < dimension; j++){
         col.push_back(0);
       }
       grid.push_back(col);
@@ -706,15 +711,20 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
       for(double step = 0; step <= 1; step += step_size){
         tx = (int)(round((x1 * step) + (x2 * (1-step))));
         ty = (int)(round((y1 * step) + (y2 * (1-step))));
-        grid[tx][ty] = 1;
+        if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
+          grid[tx][ty] = 1;
+        }
       }
     }
     vector<int> coverage;
-    for(int i = 0; i < 250; i++){
-      for(int j = 0; j < 250; j++){
+    for(int i = 0; i < dimension; i++){
+      for(int j = 0; j < dimension; j++){
         coverage.push_back(grid[i][j]);
+        // cout << grid[i][j] << " ";
       }
+      // cout << endl;
     }
+    // cout << endl;
     total_coverages.push_back(coverage);
   }
   cout << "total_coverages " << total_coverages.size() << endl;
