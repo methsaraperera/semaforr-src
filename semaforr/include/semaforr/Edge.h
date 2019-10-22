@@ -21,7 +21,8 @@ public:
   bool operator == ( Edge e ) {
     int ef = e.getFrom();
     int et = e.getTo(); 
-    return ( from == ef && to == et );
+    double ecost = e.getDistCost();
+    return ( from == ef && to == et && cost == ecost);
   }
 
   double getDistCost(){

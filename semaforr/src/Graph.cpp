@@ -24,6 +24,28 @@ Graph::Graph(Map * m, int p): map(m) {
   generateNavGraph();
 }
 
+Graph::Graph(int p, int l, int h){
+
+  // convert proximity into cms
+  this->proximity = p;
+  // If p is given, but 0
+  
+  if ( p == 0 )
+    this->proximity = 20;
+  this->length = l;
+  this->height = h;
+  cout << l << " " << h << " " << proximity << endl;
+  // create nodes
+  for( int x = 0; x < l; x++ ){
+    vector<int> column; 
+    for( int y = 0; y < h; y++ ){
+    column.push_back(-1);
+    }
+    nodeIndex.push_back(column);
+  }
+  cout << "Node index columns : " << nodeIndex.size() << endl;
+}
+
 
 Graph::~Graph() {
   /*
@@ -81,11 +103,15 @@ bool Graph::isEdge(Edge e) {
   vector<Edge*> edges = getNode(e.getFrom()).getNodeEdges();
   vector<Edge*>::iterator iter;
   for ( iter = edges.begin() ; iter != edges.end() ; iter++ ) {
-    if ( e == (*(*iter)) )
+    if ( e == (*(*iter)) ){
+      cout << "Not adding: edge matches existing" << endl;
       return true;
+    }
     Edge en((*iter)->getTo(), (*iter)->getFrom(), (*iter)->getCost(true), (*iter)->getCost(false));
-    if ( en == e )
+    if ( en == e ){
+      cout << "Not adding: edge matches reverse edge" << endl;
       return true;
+    }
   }
   return false;
 }
@@ -100,7 +126,7 @@ void Graph::generateNavGraph() {
     for( int y = 0; y < h; y += proximity ){
       bool inBuf = false;
       if ( map->isPointInBuffer(x,y) )
-	inBuf = true;
+        inBuf = true;
       Node * n = new Node(index, x, y, inBuf);
       nodes.push_back(n);
       //cout << x << ":" << y << ":" << index << endl;
@@ -203,6 +229,39 @@ void Graph::generateNavGraph() {
   //cout << "completed generating graph" << endl;
 }
 
+bool Graph::addNode(int x, int y, int ind){
+  bool node_added = false;
+  if(nodeIndex[x][y] == -1){
+    nodeIndex[x][y] = ind;
+    Node * n = new Node(ind, x, y, false);
+    nodes.push_back(n);
+    cout << "Added Node " << ind << " x " << x << " y " << y << endl;
+    node_added = true;
+  }
+  else{
+    cout << "Node already exists" << endl;
+  }
+  return node_added;
+}
+
+void Graph::addEdge(int ind1, int ind2, double distance){
+  nodes[ind1]->addNeighbor(ind2);
+  nodes[ind2]->addNeighbor(ind1);
+  Edge * e = new Edge(ind1, ind2);
+  //cout << "for each edge "<< endl;
+  if ( !isEdge((*e)) ) {
+    int x1,y1,x2,y2;
+    x1 = nodes[ind1]->getX();
+    y1 = nodes[ind1]->getY();
+    x2 = nodes[ind2]->getX();
+    y2 = nodes[ind2]->getY();
+    e->setDistCost(distance);
+    edges.push_back(e);
+    nodes[ind1]->addNodeEdge(e);
+    nodes[ind2]->addNodeEdge(e);
+    cout << "Edge from : " << x1 << " " << y1 << "->" << x2 << " " << y2 << " cost : " << e->getCost(0) << endl;
+  }
+}
 
 /* Used to pick the nodes in a circular area to disable edges */
 vector<Node*> Graph::getNodesInRegion( int x, int y, double dist ) {

@@ -85,7 +85,7 @@ private:
   void tierThreeAdvisorInfluence();
 
   // learns the spatial model and updates the beliefs
-  void learnSpatialModel(AgentState *agentState);
+  void learnSpatialModel(AgentState *agentState, bool taskStatus);
 
   void initialize_advisors(std::string);
   void initialize_tasks(std::string);
@@ -120,7 +120,7 @@ private:
   bool aStarOn;
   bool situationsOn;
   bool firstTaskAssigned;
-  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn;
+  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn, skeleton;
 };
   
 #endif /* CONTROLLER_H */

@@ -18,10 +18,16 @@ void Tier1Advisor::advisorNotOpposite(){
   if(((lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN) and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN){
     ROS_DEBUG("Not opposite active ");
     if((lastlastAction.type == RIGHT_TURN and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or (lastlastAction.type == LEFT_TURN and lastAction.type == LEFT_TURN)){
-      for(int i = 1; i < 6 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+      for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
+      }
     }
     if((lastlastAction.type == LEFT_TURN and lastAction.type == PAUSE) or lastAction.type == LEFT_TURN or (lastlastAction.type == RIGHT_TURN and lastAction.type == RIGHT_TURN)){
-      for(int i = 1; i < 6 ; i++)   (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+      for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, i).type << " " << i);
+      }
     }
   }
   // if(lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN){
@@ -119,11 +125,13 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   bool decisionMade = false;
   CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
   ROS_DEBUG("Check if target can be spotted using laser scan");
+  cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
   bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 10);
   
   if(targetInSight == false){
     ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+    cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
     bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 10);
     if(waypointInSight == false){
       ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
@@ -297,21 +305,22 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
     //   (*decision) = FORRAction(RIGHT_TURN, 2);
     //   decisionMade = true;
     // }
-    if(beliefs->getAgentState()->getRobotConfined(20, 0.2, 5)){
+    if(decisionMade == true and beliefs->getAgentState()->getGetOutTriggered() == true and beliefs->getAgentState()->getRobotConfined(20, 0.2, 10)){
       cout << "stuck in place" << endl;
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
   }
-  else if(beliefs->getAgentState()->getRobotConfined(20, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 20)){
+  else if(beliefs->getAgentState()->getRobotConfined(40, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 20)){
     vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
     int size = actions.size();
     cout << "actions size " << size << " rotation size " << rotation_set->size()/2 << endl;
-    if(size >= 3){
+    if(size >= 4){
       FORRAction lastAction = actions[size - 1];
       FORRAction lastlastAction = actions[size - 2];
-      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << " lastlastAction " <<  lastlastAction.type << " " << lastlastAction.parameter << endl;
-      if((lastlastAction.type == RIGHT_TURN and lastlastAction.parameter == rotation_set->size()/2 and lastAction.type == RIGHT_TURN and lastAction.parameter == rotation_set->size()/2)){
+      FORRAction lastlastlastAction = actions[size - 3];
+      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << " lastlastAction " <<  lastlastAction.type << " " << lastlastAction.parameter << " lastlastlastAction " <<  lastlastlastAction.type << " " << lastlastlastAction.parameter<< endl;
+      if(lastlastAction.type == RIGHT_TURN and lastlastAction.parameter == rotation_set->size()/2 and lastAction.type == RIGHT_TURN and lastAction.parameter == rotation_set->size()/2 and lastlastlastAction.type == RIGHT_TURN and lastlastlastAction.parameter == rotation_set->size()/2){
         cout << "overlay turned poses" << endl;
         vector< sensor_msgs::LaserScan > laser_scan_hist = beliefs->getAgentState()->getAllLaserScanHistory();
         vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
@@ -329,11 +338,11 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           last_lasers.push_back(laser_scan_hist[laser_scan_hist.size()-i]);
           last_endpoints.push_back(beliefs->getAgentState()->transformToEndpoints((*positionHis)[positionHis->size()-i], laser_scan_hist[laser_scan_hist.size()-i]));
         }
-        for(int i = 0; i < last_endpoints.size(); i++){
-          for(int j = 0; j < last_endpoints[i].size(); j++){
-            cout << last_endpoints[i][j].get_x() << " " << last_endpoints[i][j].get_y() << endl;
-          }
-        }
+        // for(int i = 0; i < last_endpoints.size(); i++){
+        //   for(int j = 0; j < last_endpoints[i].size(); j++){
+        //     cout << last_endpoints[i][j].get_x() << " " << last_endpoints[i][j].get_y() << endl;
+        //   }
+        // }
         vector< vector<int> > grid = beliefs->getSpatialModel()->getSituations()->overlaySituations(last_lasers, last_positions);
         double cos_curr = cos((*positionHis)[positionHis->size()-1].getTheta());
         double sin_curr = sin((*positionHis)[positionHis->size()-1].getTheta());
@@ -352,7 +361,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
                 }
               }
               cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << anyVisible << endl;
-              if(anyVisible >= 1){
+              if(anyVisible > 1){
                 potential_destinations.push_back(CartesianPoint(new_x, new_y));
               }
             }
@@ -378,8 +387,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         }
         if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
           cout << "No plan exists, add new farthest_position as waypoint" << endl;
-          beliefs->getAgentState()->getCurrentTask()->getWaypoints().push_back(farthest_position);
-          beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(true);
+          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
         }
       }
       else{

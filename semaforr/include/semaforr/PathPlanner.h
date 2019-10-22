@@ -76,6 +76,8 @@ public:
   */
  PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false){}
 
+ PathPlanner(Graph * g, Node s, Node t, string n): navGraph(g), source(s), target(t), name(n), pathCalculated(false){}
+
   int calcPath(bool cautious = false);
   int calcOrigPath(bool cautious = false);
 
@@ -189,6 +191,12 @@ public:
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
 
   Graph* getGraph(){ return navGraph; }
+  void resetGraph(){
+    int length = navGraph->getLength();
+    int height = navGraph->getHeight();
+    int proximity = navGraph->getProximity();
+    navGraph = new Graph(proximity, length, height);
+  }
   Graph* getOrigGraph(){ return originalNavGraph; }
 
   Map* getMap() { return &map;}

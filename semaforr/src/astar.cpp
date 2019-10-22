@@ -353,6 +353,7 @@ void astar::construct_path(_VNode* g)
 
   tmp = g;
   path.clear();*/
+  path.push_front(tmp->id);
   while(!tmp->prev.empty())
   {
     //cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
@@ -369,6 +370,7 @@ void astar::construct_path(_VNode* g)
       tmp = tmp->prev[0];
     }
   }
+  path.push_front(tmp->id);
   //cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
   //cout << "Number of paths = " << paths.size() << endl;

@@ -249,12 +249,12 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
     }
     angle1 = angle1 + increment1;
   }
-  for(int i = 0; i < grid.size(); i++){
-    for(int j = 0; j < grid[i].size(); j++){
-      cout << grid[i][j] << " ";
-    }
-    cout << endl;
-  }
+  // for(int i = 0; i < grid.size(); i++){
+  //   for(int j = 0; j < grid[i].size(); j++){
+  //     cout << grid[i][j] << " ";
+  //   }
+  //   cout << endl;
+  // }
   double required_rotation = 0 - pose1.getTheta();
   for(int k = 1; k < laserscans.size(); k++){
     sensor_msgs::LaserScan ls2 = laserscans[k];
@@ -271,8 +271,8 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
       // cout << angle2 << " " << laser_ranges2[i] << endl;
       for(double j = 0.0; j <= laser_ranges2[i]; j+=0.1){
         int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
-        int y = (int)(round(j * sin(angle2)))+25;
-        if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        int y = (int)(round(j * sin(angle2) + required_y_shift))+25;
+        if(x >= 0 and x < 51 and y >= 0 and y < 51){
           grid[x][y] += 1;
         }
         // x = (int)(j * cos(angle2) + required_x_shift)+25;

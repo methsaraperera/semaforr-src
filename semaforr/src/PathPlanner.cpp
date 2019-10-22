@@ -74,9 +74,11 @@ int PathPlanner::calcPath(bool cautious){
       t.printNode();
       cout << endl;
     }
+    if(s.getID() == t.getID())
+      return 4;
     //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights
-    if (name != "distance") {
+    if (name != "distance" and name != "skeleton") {
       cout << "Updating nav graph for non-distance planners" << endl;
       updateNavGraph();
     }
@@ -1056,15 +1058,29 @@ Node PathPlanner::getClosestNode(Node n, Node ref){
 
       if(PATH_DEBUG)
         cout << "\tDistance between this node to ref: " << d_t << endl;
-      // d + d_t < dist, was the earlier version, not sure why?
-      if (( d < dist ) && !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) && (*iter)->isAccessible()) {
-        //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
-        dist = d + d_t;
-        temp = (*(*iter));
-        if(PATH_DEBUG) {
-          cout << "\tFound a new candidate!: ";
-          temp.printNode();
-          cout << endl << endl;
+
+      if(name != "skeleton"){
+        if (( d + d_t < dist ) && !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) && (*iter)->isAccessible()) {
+          //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
+          dist = d + d_t;
+          temp = (*(*iter));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl << endl;
+          }
+        }
+      }
+      else{
+        if (( d + d_t < dist ) && (*iter)->isAccessible()) {
+          //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
+          dist = d + d_t;
+          temp = (*(*iter));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl << endl;
+          }
         }
       }
     }

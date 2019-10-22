@@ -103,6 +103,10 @@ class Task {
   vector<CartesianPoint> getWaypoints(){return waypoints;}
   vector<CartesianPoint> getOrigWaypoints(){return origWaypoints;}
 
+  void clearWaypoints(){
+  	waypoints.clear();
+  }
+
   list<int> getWaypointInds(){return waypointInd;}
   vector< list<int> > getPlansInds(){return plansInds;}
 
@@ -188,17 +192,23 @@ class Task {
 	Graph *navGraph = planner->getGraph();
 	list<int>::iterator it;
 	for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+		cout << "node " << (*it) << endl;
 		double x = navGraph->getNode(*it).getX()/100.0;
 		double y = navGraph->getNode(*it).getY()/100.0;
-		//cout << x << " " << y << endl;
+		cout << x << " " << y << endl;
 		CartesianPoint waypoint(x,y);
 		waypoints.push_back(waypoint);
 		//if atleast one point is generated
-		//cout << "Plan active is true" << endl;
+		cout << "Plan active is true" << endl;
 		isPlanActive = true;
 	}
 	pathCostInNavGraph = planner->getPathCost();
-	pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
+	if(planner->getName() != "skeleton"){
+		pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
+	}
+	else{
+		pathCostInNavOrigGraph = 0;
+	}
 	vector<CartesianPoint> skippedwaypoints;
 	for(int i = 0; i < waypoints.size(); i+=1){
 		skippedwaypoints.push_back(waypoints[i]);
@@ -240,6 +250,13 @@ class Task {
 		isPlanActive = false;
 	}
 	cout << "end setup next waypoint" << endl;
+   }
+
+   void createNewWaypoint(CartesianPoint new_point){
+    waypoints.push_back(new_point);
+    isPlanActive = true;
+    wx = new_point.get_x();
+    wy = new_point.get_y();
    }
 
    void setupNearestWaypoint(Position currentPosition){

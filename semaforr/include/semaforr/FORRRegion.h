@@ -60,9 +60,8 @@ class FORRRegion{
 
   bool isExitAlreadyPresent(FORRExit exit){
     for(int i = 0; i < exits.size() ; i++){
-      if(exit.getExitPoint().get_x() == exits[i].getExitPoint().get_x() && exit.getExitPoint().get_y() == exits[i].getExitPoint().get_y() 
-	 && exit.getExitRegion() == exits[i].getExitRegion())
-	return true;
+      if(exit.getExitPoint().get_x() == exits[i].getExitPoint().get_x() && exit.getExitPoint().get_y() == exits[i].getExitPoint().get_y() && exit.getExitRegion() == exits[i].getExitRegion() && exit.getExitDistance() == exits[i].getExitDistance())
+        return true;
     }
     return false;
   }
@@ -93,7 +92,7 @@ class FORRRegion{
   void setExits(vector<FORRExit> exit_points) { exits = exit_points;}
   void addExit(FORRExit exit) {
     exits.push_back(exit);
-    ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getExitRegion()));
+    ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getExitRegionPoint(), exit.getExitRegion(), exit.getExitDistance()));
   }
 
   void setIsLeaf(bool leaf){isLeaf = leaf;}

@@ -16,23 +16,33 @@ private:
   vector< vector <int> > nodeIndex; 
 
   double proximity;           // proximity between 2 nodes ( in cm, 1m = 100cm ) 
+  int length;
+  int height;
 
   Map * map ; 
 
-  void generateNavGraph();    
+  void generateNavGraph();
 
   bool isEdge(Edge e); 
  
 public: 
-  Graph(Map*, int);
+  Graph(Map * m, int p);
+
+  Graph(int p, int l, int h);
 
   ~Graph();
 
   Map* getMap() { return map; }
 
   int getProximity() const { return proximity; }
+  int getLength() const { return length; }
+  int getHeight() const { return height; }
 
   vector<Node*> getNodes() const { return nodes; }
+
+  bool addNode(int x, int y, int ind);
+
+  void addEdge(int ind1, int ind2, double distance);
 
   vector<Edge*> getEdges() const { return edges; }
 
