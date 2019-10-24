@@ -205,7 +205,7 @@ public:
 
   void setSource(Node s){ source = s; } 
 
-  Node getClosestNode(Node n, Node ref);
+  Node getClosestNode(Node n, Node ref, bool findAny);
 
   Node getTarget(){ return target; }
 

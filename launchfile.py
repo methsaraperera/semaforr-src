@@ -192,10 +192,25 @@ explore = "off"
 #     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
-num_runs = 3
-for i in range(2,num_runs):
-    target_file_name = "target40.conf"
-    log_name = map_name + "_skeleton_plan_" + str(i) + ".txt"
+# num_runs = 4
+# for i in range(3,num_runs):
+#     target_file_name = "target40.conf"
+#     log_name = map_name + "_skeleton_plan_" + str(i) + ".txt"
+#     advisors = "/config/advisors1.conf"
+#     params = "/config/params4.conf"
+#     situations = "/config/situations3.conf"
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+
+map_name = "gradcenter-5"
+num_runs = 1
+for i in range(0,num_runs):
+    target_file_name = "targettraintest.conf"
+    log_name = map_name + "_hwskeleton_plan_" + str(i) + ".txt"
     advisors = "/config/advisors1.conf"
     params = "/config/params4.conf"
     situations = "/config/situations3.conf"

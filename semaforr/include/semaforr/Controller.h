@@ -120,7 +120,7 @@ private:
   bool aStarOn;
   bool situationsOn;
   bool firstTaskAssigned;
-  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn, skeleton;
+  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn, skeleton, hallwayskel;
 };
   
 #endif /* CONTROLLER_H */

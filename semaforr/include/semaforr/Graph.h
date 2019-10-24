@@ -64,7 +64,9 @@ public:
   vector<int> getNeighbors(Node n); 
 
   //! populates the graph with nodes and assigns their immediate neighbors
-  void populateNodeNeighbors(); 
+  void populateNodeNeighbors(bool withmap); 
+
+  void populateEdges();
 
   bool isNode(Node n); 
 

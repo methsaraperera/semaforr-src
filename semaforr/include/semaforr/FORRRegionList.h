@@ -189,19 +189,19 @@ class FORRRegionList{
           beginFound = true;
           begin_region_id = region_id;
           begin_position = j;
-          cout << "Starting position : " << begin_position << endl;
+          // cout << "Starting position : " << begin_position << endl;
           continue;
         }
         if(region_id != -1 && region_id != begin_region_id && beginFound == true){
           beginFound = false;
           end_region_id = region_id;
           end_position = j;
-          cout << "Ending Position : " << end_position << endl;
+          // cout << "Ending Position : " << end_position << endl;
           double connectionBetweenRegions = 0;
           for(int m = begin_position; m < end_position; m++){
             connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
           }
-          cout << "Distance of connection : " << connectionBetweenRegions << endl;
+          // cout << "Distance of connection : " << connectionBetweenRegions << endl;
           saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions);
         }
       }

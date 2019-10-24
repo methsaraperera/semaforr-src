@@ -637,16 +637,22 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
   cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << " coverageLimit " << coverageLimit << endl;
   Position current_position = currentPosition;
   vector<Position> *pos_hist = currentTask->getPositionHistory();
-  int startPosition = 0;
-  if(pos_hist->size() > decisionLimit+1){
-    startPosition = pos_hist->size() - decisionLimit - 1;
-  }
-  int middlePosition = startPosition+3*decisionLimit/4;
-  cout << "startPosition " << startPosition << " middlePosition " << middlePosition << " pos_hist " << pos_hist->size() << endl;
   if(pos_hist->size() < decisionLimit){
     robotConfined = false;
     return robotConfined;
   }
+
+  int startPosition = 0;
+  if(pos_hist->size() > decisionLimit+1){
+    startPosition = pos_hist->size() - decisionLimit - 1;
+  }
+
+  int coverageStartPosition = 0;
+  if(pos_hist->size() > 5){
+    coverageStartPosition = pos_hist->size() - 5;
+  }
+  cout << "startPosition " << startPosition << " coverageStartPosition " << coverageStartPosition << " pos_hist " << pos_hist->size() << endl;
+  
   int nearby = 0;
   for(int i = startPosition; i < pos_hist->size()-1; i++){
     if(current_position.getDistance((*pos_hist)[i]) <= distanceLimit){
@@ -654,45 +660,12 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     }
   }
   cout << "nearby " << nearby << endl;
+
   vector< vector <CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
   cout << "laser_hist " << laser_hist->size() << endl;
   int dimension = 200;
-  vector< vector<int> > grid_firsthalf;
-  for(int i = 0; i < dimension; i++){
-    vector<int> col;
-    for(int j = 0; j < dimension; j++){
-      col.push_back(0);
-    }
-    grid_firsthalf.push_back(col);
-  }
-  vector<int> initial_coverage;
-  for(int k = startPosition; k < middlePosition; k++){
-    for(int l = 0; l < (*laser_hist)[k].size(); l++){
-      double x1 = (*pos_hist)[k].getX();
-      double y1 = (*pos_hist)[k].getY();
-      double x2 = (*laser_hist)[k][l].get_x();
-      double y2 = (*laser_hist)[k][l].get_y();
-      double step_size = 0.01;
-      double tx,ty;
-      for(double step = 0; step <= 1; step += step_size){
-        tx = (int)(round((x1 * step) + (x2 * (1-step))));
-        ty = (int)(round((y1 * step) + (y2 * (1-step))));
-        if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
-          grid_firsthalf[tx][ty] = 1;
-        }
-      }
-    }
-  }
-  for(int i = 0; i < dimension; i++){
-    for(int j = 0; j < dimension; j++){
-      initial_coverage.push_back(grid_firsthalf[i][j]);
-      // cout << grid_firsthalf[i][j] << " ";
-    }
-    // cout << endl;
-  }
-  cout << "initial_coverage " << initial_coverage.size() << endl;
   vector< vector<int> > total_coverages;
-  for(int k = middlePosition; k < laser_hist->size()-1; k++){
+  for(int k = coverageStartPosition; k < laser_hist->size(); k++){
     vector< vector<int> > grid;
     for(int i = 0; i < dimension; i++){
       vector<int> col;
@@ -729,10 +702,10 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
   }
   cout << "total_coverages " << total_coverages.size() << endl;
   vector<int> change_in_converages;
-  for(int i = 0; i < total_coverages.size(); i++){
+  for(int i = 1; i < total_coverages.size(); i++){
     int change = 0;
     for(int j = 0; j < total_coverages[i].size(); j++){
-      change += abs(total_coverages[i][j] - initial_coverage[j]);
+      change += abs(total_coverages[i][j] - total_coverages[i-1][j]);
     }
     change_in_converages.push_back(change);
     cout << i << " " << change << endl;
@@ -744,7 +717,7 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     }
   }
   cout << "change_count " << change_count << endl;
-  if(nearby >= decisionLimit or change_count >= change_in_converages.size()){
+  if(nearby >= decisionLimit or change_count >= 4){
     robotConfined = true;
   }
   else{

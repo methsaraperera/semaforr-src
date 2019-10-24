@@ -137,7 +137,7 @@ void Graph::generateNavGraph() {
 
   cout << "Completed creating nodes" << endl;
   // update node neighbors
-  populateNodeNeighbors();
+  populateNodeNeighbors(true);
 
   cout << "Completed populating neighbors" << endl;
   // create edges
@@ -239,14 +239,75 @@ bool Graph::addNode(int x, int y, int ind){
     node_added = true;
   }
   else{
-    cout << "Node already exists" << endl;
+    cout << "Node already exists, try nearby" << endl;
+    if(nodeIndex[x+1][y] == -1){
+      nodeIndex[x+1][y] = ind;
+      Node * n = new Node(ind, x+1, y, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x+1 << " y " << y << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x+1][y+1] == -1){
+      nodeIndex[x+1][y+1] = ind;
+      Node * n = new Node(ind, x+1, y+1, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x+1 << " y " << y+1 << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x][y+1] == -1){
+      nodeIndex[x][y+1] = ind;
+      Node * n = new Node(ind, x, y+1, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x << " y " << y+1 << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x-1][y] == -1){
+      nodeIndex[x-1][y] = ind;
+      Node * n = new Node(ind, x-1, y, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x-1 << " y " << y << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x-1][y-1] == -1){
+      nodeIndex[x-1][y-1] = ind;
+      Node * n = new Node(ind, x-1, y-1, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x-1 << " y " << y-1 << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x][y-1] == -1){
+      nodeIndex[x][y-1] = ind;
+      Node * n = new Node(ind, x, y-1, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x << " y " << y-1 << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x+1][y-1] == -1){
+      nodeIndex[x+1][y-1] = ind;
+      Node * n = new Node(ind, x+1, y-1, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x+1 << " y " << y-1 << endl;
+      node_added = true;
+    }
+    else if(nodeIndex[x-1][y+1] == -1){
+      nodeIndex[x-1][y+1] = ind;
+      Node * n = new Node(ind, x-1, y+1, false);
+      nodes.push_back(n);
+      cout << "Added Node " << ind << " x " << x-1 << " y " << y+1 << endl;
+      node_added = true;
+    }
+    else{
+      cout << "No suitable nearby node" << endl;
+    }
   }
   return node_added;
 }
 
 void Graph::addEdge(int ind1, int ind2, double distance){
   nodes[ind1]->addNeighbor(ind2);
+  cout << "Added neighbor to " << ind1 << " from " << ind2 << endl;
   nodes[ind2]->addNeighbor(ind1);
+  cout << "Added neighbor to " << ind2 << " from " << ind1 << endl;
   Edge * e = new Edge(ind1, ind2);
   //cout << "for each edge "<< endl;
   if ( !isEdge((*e)) ) {
@@ -260,6 +321,32 @@ void Graph::addEdge(int ind1, int ind2, double distance){
     nodes[ind1]->addNodeEdge(e);
     nodes[ind2]->addNodeEdge(e);
     cout << "Edge from : " << x1 << " " << y1 << "->" << x2 << " " << y2 << " cost : " << e->getCost(0) << endl;
+  }
+}
+
+void Graph::populateEdges(){
+  vector<Node*>::iterator iter;
+  for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+    vector<int> nbrs = getNeighbors(*(*iter));
+    vector<int>::iterator it;
+    for( it = nbrs.begin(); it != nbrs.end(); it++ ){
+      Edge * e = new Edge( (*iter)->getID(), getNode(*it).getID() );
+      //cout << "for each edge "<< endl;
+      if ( !isEdge((*e)) ) {
+        int x1,y1,x2,y2;
+        x1 = (*iter)->getX();
+        y1 = (*iter)->getY();
+        x2 = getNode(*it).getX();
+        y2 = getNode(*it).getY();
+        double distCost = Map::distance(x1,y1,x2,y2);
+        e->setDistCost(distCost);
+        edges.push_back(e);
+        (*iter)->addNodeEdge(e);
+        nodes.at(*it)->addNodeEdge(e);
+        cout << "Edge from :" << (*iter)->getX() << " " << (*iter)->getY() << "->" << getNode(*it).getX() << " " << getNode(*it).getY() << " cost : " << e->getCost(0) << endl; 
+      }
+    }
+    //cout << " Neighbor edges size: " << (*iter)->getNodeEdges().size() << endl;
   }
 }
 
@@ -307,21 +394,33 @@ vector<int> Graph::getNeighbors(Node n){
 }
 
 
-void Graph::populateNodeNeighbors(){
-  vector<Node*>::iterator iter; 
-  for ( iter = nodes.begin(); iter != nodes.end(); iter++ ) {
-	//cout << "Given node : " << (*iter)->getX() << " " << (*iter)->getY() << endl;  
-  	for( int x = (*iter)->getX()-proximity; x <= (*iter)->getX()+proximity; x += proximity ){
-      		for( int y = (*iter)->getY()-proximity; y <= (*iter)->getY()+proximity; y += proximity ){ 
-			//cout << "--nearby nodes : " << x << " " << y << endl;
-			if( ! ( x == (*iter)->getX() && y == (*iter)->getY() ) ){
-				//cout << "--not given node" << endl;
-	  			if ( map->isWithinBorders(x, y) &&  !map->isPathObstructed((*iter)->getX(), (*iter)->getY(), x, y)){
-	    				(*iter)->addNeighbor(getNodeID(x,y));
-	  			}
-			}
-      		}
-  	}
+void Graph::populateNodeNeighbors(bool withmap){
+  vector<Node*>::iterator iter;
+  if(withmap){
+    for ( iter = nodes.begin(); iter != nodes.end(); iter++ ) {
+      //cout << "Given node : " << (*iter)->getX() << " " << (*iter)->getY() << endl;  
+      for( int x = (*iter)->getX()-proximity; x <= (*iter)->getX()+proximity; x += proximity ){
+        for( int y = (*iter)->getY()-proximity; y <= (*iter)->getY()+proximity; y += proximity ){ 
+          //cout << "--nearby nodes : " << x << " " << y << endl;
+          if( ! ( x == (*iter)->getX() && y == (*iter)->getY() ) ){
+            //cout << "--not given node" << endl;
+            if ( map->isWithinBorders(x, y) &&  !map->isPathObstructed((*iter)->getX(), (*iter)->getY(), x, y)){
+              (*iter)->addNeighbor(getNodeID(x,y));
+            }
+          }
+        }
+      }
+    }
+  }
+  else{
+    for(iter = nodes.begin(); iter != nodes.end(); iter++){
+      vector<Node*> nearby_nodes = getNodesInRegion((*iter)->getX(), (*iter)->getY(), proximity);
+      vector<Node*>::iterator iternn;
+      for(iternn = nearby_nodes.begin(); iternn != nearby_nodes.end(); iternn++) {
+        cout << "Adding neighbor to " << (*iter)->getX() << " " << (*iter)->getY() << " from " << (*iternn)->getX() << " " << (*iternn)->getY() << endl;
+        (*iter)->addNeighbor((*iternn)->getID());
+      }
+    }
   }
 }
 

@@ -13,10 +13,10 @@ void FORRHallways::CreateSegments(vector<Segment> &segments, const vector<Cartes
   for (int i = 0; i < trails.size()-1; i++){
     double diff_x = trails[i].get_x() - trails[i+1].get_x();
     double diff_y = trails[i].get_y() - trails[i+1].get_y();
-    if(diff_x > 0.1 and (diff_y > 0.1 or diff_y < -0.1)){
+    if(diff_x > 0.25 and (diff_y > 0.25 or diff_y < -0.25)){
       segments.push_back(Segment(trails[i+1], trails[i], laser_history[i+1], laser_history[i], step));
     }
-    else if(diff_x < -0.1 and (diff_y > 0.1 or diff_y < -0.1)){
+    else if(diff_x < -0.25 and (diff_y > 0.25 or diff_y < -0.25)){
       segments.push_back(Segment(trails[i], trails[i+1], laser_history[i], laser_history[i+1], step));
     }
     // //if(agent_state->canAccessPoint(laser_history[i], trails[i], trails[i+1]) or agent_state->canAccessPoint(laser_history[i+1], trails[i+1], trails[i])){

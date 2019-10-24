@@ -395,6 +395,14 @@ void Controller::initialize_params(string filename){
       skeleton = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("skeleton " << skeleton);
     }
+    else if (fileLine.find("hallwayskel") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      hallwayskel = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("hallwayskel " << hallwayskel);
+    }
   }
 }
 
@@ -565,12 +573,20 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     ROS_DEBUG_STREAM("Created planner: turn");
   }
   if(skeleton == 1){
-    Graph *navGraphSkeleton = new Graph(p*500, l*100, h*100);
+    Graph *navGraphSkeleton = new Graph((int)(p*1000.0*2), l*100, h*100);
     cout << "initialized nav graph" << endl;
     PathPlanner *sk_planner = new PathPlanner(navGraphSkeleton, n,n, "skeleton");
     tier2Planners.push_back(sk_planner);
-    planner->setOriginalNavGraph(origNavGraph);
+    sk_planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: skeleton");
+  }
+  if(hallwayskel == 1){
+    Graph *navGraphHallwaySkeleton = new Graph((int)(p*100.0*4), l*100, h*100);
+    cout << "initialized nav graph" << endl;
+    PathPlanner *hwsk_planner = new PathPlanner(navGraphHallwaySkeleton, n,n, "hallwayskel");
+    tier2Planners.push_back(hwsk_planner);
+    hwsk_planner->setOriginalNavGraph(origNavGraph);
+    ROS_DEBUG_STREAM("Created planner: hallwayskel");
   }
   cout << "initialized planners" << endl;
 }
@@ -735,10 +751,10 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
     //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
   }
-  else if(isPlanActive == false and aStarOn){
-    ROS_DEBUG("No active plan, setting up new plan!!");
-    tierTwoDecision(current);
-  }
+  // else if(isPlanActive == false and aStarOn){
+  //   ROS_DEBUG("No active plan, setting up new plan!!");
+  //   tierTwoDecision(current);
+  // }
   else if(waypointReached == true){
     ROS_DEBUG("Temporary Waypoint reached!!");
     beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(false);
@@ -885,24 +901,20 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         index_val++;
       }
       double angle = 0;
-      for(int k = 0; k < 8; k++){
+      for(int k = 0; k < 24; k++){
         int ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius() * cos(angle))*100);
         int ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius() * sin(angle))*100);
         cout << "Points on Region " << ax << " " << ay << endl;
         success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
         added_nodes.push_back(success);
         index_val++;
-        angle = angle + 0.7853981634;
-      }
-      angle = 0;
-      for(int k = 0; k < 8; k++){
-        int ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()/2 * cos(angle))*100);
-        int ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()/2 * sin(angle))*100);
+        ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()/2 * cos(angle))*100);
+        ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()/2 * sin(angle))*100);
         cout << "Half Points on Region " << ax << " " << ay << endl;
         success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
         added_nodes.push_back(success);
         index_val++;
-        angle = angle + 0.7853981634;
+        angle = angle + 0.2617993878;
       }
     }
     index_val = 0;
@@ -923,21 +935,49 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         // cout << "Edge from " << i << " to " << exits[j].getExitRegion() << " Distance " << exits[j].getExitDistance()*100 << endl;
         // skeleton_planner->getGraph()->addEdge(i, exits[j].getExitRegion(), exits[j].getExitDistance()*100);
       }
-      for(int k = 0; k < 8; k++){
-        if(added_nodes[index_val]){
-          cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
-          skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+      for(int k = 0; k < 24; k++){
+        if(added_nodes[index_val] and added_nodes[index_val+1]){
+          cout << "Edge from " << index_val << " to " << index_val+1 << " Distance " << regions[i].getRadius()*100 << endl;
+          skeleton_planner->getGraph()->addEdge(index_val, index_val+1, regions[i].getRadius()*100);
+          cout << "Edge from " << region_id << " to " << index_val+1 << " Distance " << regions[i].getRadius()/2*100 << endl;
+          skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
         }
+        // if(added_nodes[index_val]){
+        //   cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+        //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+        // }
         index_val++;
-      }
-      for(int k = 0; k < 8; k++){
-        if(added_nodes[index_val]){
-          cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()/2*100 << endl;
-          skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
-        }
+        // if(added_nodes[index_val]){
+        //   cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()/2*100 << endl;
+        //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
+        // }
         index_val++;
       }
     }
+  }
+  if(hallwayskel){
+    PathPlanner *hwskeleton_planner;
+    for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+      if((*it)->getName() == "hallwayskel"){
+        hwskeleton_planner = *it;
+      }
+    }
+    hwskeleton_planner->resetGraph();
+    int index_val = 0;
+    vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+    for(int i = 0; i < hallways.size(); i++){
+      vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
+      cout << "Hallway " << i << " contains " << points_in_hallway.size() << " points" << endl;
+      for(int j = 0; j < points_in_hallway.size(); j++){
+        int x = (int)(points_in_hallway[j].get_x()*100);
+        int y = (int)(points_in_hallway[j].get_y()*100);
+        cout << "Hallway point " << points_in_hallway[j].get_x() << " " << points_in_hallway[j].get_y() << " " << x << " " << y << endl;
+        bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+        index_val++;
+      }
+    }
+    hwskeleton_planner->getGraph()->populateNodeNeighbors(false);
+    hwskeleton_planner->getGraph()->populateEdges();
   }
 }
 
@@ -1215,6 +1255,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
       //cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
       weight = advisor->get_weight();
       //cout << "Weight for this advisor : " << weight << endl;
+      if(advisor->get_name() == "Explorer" or advisor->get_name() == "ExplorerRotation" or advisor->get_name() == "LearnSpatialModel" or advisor->get_name() == "LearnSpatialModelRotation" or advisor->get_name() == "Curiosity" or advisor->get_name() == "CuriosityRotation"){
+        weight = beliefs->getAgentState()->getAgenda().size()/4;
+      }
 
       advisorCommentsList << advisor->get_name() << " " << iterator->first.type << " " << iterator->first.parameter << " " << iterator->second << ";";
 
