@@ -126,13 +126,12 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
   ROS_DEBUG("Check if target can be spotted using laser scan");
   cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
-  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 10);
-  
+  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 20);
   if(targetInSight == false){
     ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
     cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
-    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 10);
+    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
     if(waypointInSight == false){
       ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
     }
@@ -143,6 +142,8 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
         ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
         decisionMade = true;
+        Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+        beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
         beliefs->getAgentState()->setGetOutTriggered(false);
       }
     }
@@ -154,6 +155,8 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
     if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
       ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
       decisionMade = true;
+      Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+      beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
     /*vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
@@ -193,6 +196,31 @@ bool Tier1Advisor::advisorAvoidWalls(){
 		vetoedActions->insert(a);
 	}				
   } 
+  return false; 
+}
+
+bool Tier1Advisor::advisorDontGoBack(){
+  ROS_DEBUG("In advisor don't go back");
+  set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+  set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
+  set<FORRAction>::iterator actionIter;
+  for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+    FORRAction forrAction = *actionIter;
+    if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+      continue;
+    }
+    else if(forrAction.type == PAUSE){
+      continue;
+    }
+    else{
+      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+      if(beliefs->getAgentState()->getCurrentTask()->getPlanPositionValue(expectedPosition.getX(), expectedPosition.getY())){
+        FORRAction a(forrAction.type,forrAction.parameter);
+        ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+        vetoedActions->insert(a);
+      }
+    }
+  }
   return false; 
 }
 
@@ -305,7 +333,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
     //   (*decision) = FORRAction(RIGHT_TURN, 2);
     //   decisionMade = true;
     // }
-    if(decisionMade == true and beliefs->getAgentState()->getGetOutTriggered() == true and beliefs->getAgentState()->getRobotConfined(20, 0.2, 10)){
+    if(decisionMade == true and beliefs->getAgentState()->getGetOutTriggered() == true and beliefs->getAgentState()->getRobotConfined(50, 0.2, 10)){
       cout << "stuck in place" << endl;
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
@@ -378,16 +406,20 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           }
         }
         cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
-        beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
         (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
         FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-        if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+        set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+        if(std::find(vetoedActions->begin(), vetoedActions->end(), (*decision)) != vetoedActions->end()){
+          decisionMade = false;
+        }        
+        else if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
           ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
+          beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
           decisionMade = true;
-        }
-        if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
-          cout << "No plan exists, add new farthest_position as waypoint" << endl;
-          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
+          if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
+            cout << "No plan exists, add new farthest_position as waypoint" << endl;
+            beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
+          }
         }
       }
       else{

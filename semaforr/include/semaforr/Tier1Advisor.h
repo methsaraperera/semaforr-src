@@ -22,6 +22,8 @@ public:
 	//void advisorCircle(Beliefs *beliefs);
 	bool advisorAvoidWalls();
 
+	bool advisorDontGoBack();
+
 	bool advisorSituation();
 
 	bool advisorGetOut(FORRAction *decision);

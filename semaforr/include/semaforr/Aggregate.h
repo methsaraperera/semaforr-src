@@ -92,11 +92,11 @@ public:
     //cout << "Inside isHallwayConnected" << endl;
     for(int i = 0; i < connectedHallways.size(); i++){
       if(connectedHallways[i] == id){
-        //cout << "Hallways are connected" << endl;
+        cout << "Hallways are connected" << endl;
         return true;
       }
     }
-    //cout << "Hallways are NOT connected" << endl;
+    cout << "Hallways are NOT connected" << endl;
     return false;
   }
 
@@ -111,6 +111,31 @@ public:
     }
     //cout << "Distance between = " << dist << endl;
     return dist;
+  }
+
+  vector<double> closestPointsBetweenAggregates(Aggregate hlwy){
+    //cout << "Inside closestPointsBetweenAggregates" << endl;
+    vector<CartesianPoint> other_points_ = hlwy.getPoints();
+    double dist = 1000000.0;
+    CartesianPoint currentHallwayPoint;
+    CartesianPoint otherHallwayPoint;
+    for(int i = 0; i < points_.size(); i++){
+      for(int j = 0; j < other_points_.size(); j++){
+        double tempDist = points_[i].get_distance(other_points_[j]);
+        if(tempDist < dist){
+          dist = tempDist;
+          currentHallwayPoint = points_[i];
+          otherHallwayPoint = other_points_[j];
+        }
+      }
+    }
+    vector<double> values;
+    values.push_back(dist);
+    values.push_back(currentHallwayPoint.get_x());
+    values.push_back(currentHallwayPoint.get_y());
+    values.push_back(otherHallwayPoint.get_x());
+    values.push_back(otherHallwayPoint.get_y());
+    return values;
   }
 
 private:

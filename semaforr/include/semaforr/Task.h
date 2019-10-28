@@ -36,6 +36,14 @@ class Task {
       pos_hist = new vector<Position>();
       laser_hist = new vector< vector<CartesianPoint> >();
       laser_scan_hist = new vector< sensor_msgs::LaserScan >();
+      int dimension = 200;
+      for(int i = 0; i < dimension; i++){
+      	vector<int> col;
+      	for(int j = 0; j < dimension; j++){
+      		col.push_back(0);
+      	}
+      	planPositions.push_back(col);
+      }
     }
 
   double getTaskX(){ return x;}
@@ -325,6 +333,69 @@ class Task {
   double getPathCostInNavOrigGraph(){return pathCostInNavOrigGraph;}
   double getOrigPathCostInOrigNavGraph(){return origPathCostInOrigNavGraph;}
   double getOrigPathCostInNavGraph(){return origPathCostInNavGraph;}
+
+  void updatePlanPositions(double x, double y){
+  	cout << "In updatePlanPositions x " << x << " y " << y << endl;
+  	int floor_x = (int)(floor(x))-1;
+  	int floor_y = (int)(floor(y))-1;
+  	int ceil_x = (int)(ceil(x))+1;
+  	int ceil_y = (int)(ceil(y))+1;
+  	if(floor_x < 0)
+  		floor_x = 0;
+  	if(floor_y < 0)
+  		floor_y = 0;
+  	if(ceil_x >= planPositions[0].size())
+  		ceil_x = planPositions[0].size()-1;
+  	if(ceil_y >= planPositions[0].size())
+  		ceil_y = planPositions[0].size()-1;
+  	cout << "Updating planPositions floor " << floor_x << " " << floor_y << " ceil " << ceil_x << " " << ceil_y << endl;
+  	for(int i = floor_x; i <= ceil_x; i++){
+  		for(int j = floor_y; j <= ceil_y; j++){
+  			planPositions[i][j] = 1;
+  		}
+  	}
+  	// if(floor_x >= 0 and floor_y >= 0 and floor_x < planPositions[0].size() and floor_y < planPositions[0].size()){
+  	// 	planPositions[floor_x][floor_y] = 1;
+  	// }
+  	// if(floor_x >= 0 and ceil_y >= 0 and floor_x < planPositions[0].size() and ceil_y < planPositions[0].size()){
+  	// 	planPositions[floor_x][ceil_y] = 1;
+  	// }
+  	// if(ceil_x >= 0 and floor_y >= 0 and ceil_x < planPositions[0].size() and floor_y < planPositions[0].size()){
+  	// 	planPositions[ceil_x][floor_y] = 1;
+  	// }
+  	// if(ceil_x >= 0 and ceil_y >= 0 and ceil_x < planPositions[0].size() and ceil_y < planPositions[0].size()){
+  	// 	planPositions[ceil_x][ceil_y] = 1;
+  	// }
+  }
+
+  bool getPlanPositionValue(double x, double y){
+  	cout << "In getPlanPositionValue" << endl;
+  	int floor_x = (int)(floor(x));
+  	int floor_y = (int)(floor(y));
+  	int ceil_x = (int)(ceil(x));
+  	int ceil_y = (int)(ceil(y));
+  	if(floor_x >= 0 and floor_y >= 0 and floor_x < planPositions[0].size() and floor_y < planPositions[0].size()){
+  		cout << "planPositions[" << floor_x << "][" << floor_y << "] = " << planPositions[floor_x][floor_y] << endl;
+  		if(planPositions[floor_x][floor_y] == 1)
+  			return true;
+  	}
+  	if(floor_x >= 0 and ceil_y >= 0 and floor_x < planPositions[0].size() and ceil_y < planPositions[0].size()){
+  		cout << "planPositions[" << floor_x << "][" << ceil_y << "] = " << planPositions[floor_x][ceil_y] << endl;
+  		if(planPositions[floor_x][ceil_y] == 1)
+  			return true;
+  	}
+  	if(ceil_x >= 0 and floor_y >= 0 and ceil_x < planPositions[0].size() and floor_y < planPositions[0].size()){
+  		cout << "planPositions[" << ceil_x << "][" << floor_y << "] = " << planPositions[ceil_x][floor_y] << endl;
+  		if(planPositions[ceil_x][floor_y] == 1)
+  			return true;
+  	}
+  	if(ceil_x >= 0 and ceil_y >= 0 and ceil_x < planPositions[0].size() and ceil_y < planPositions[0].size()){
+  		cout << "planPositions[" << ceil_x << "][" << ceil_y << "] = " << planPositions[ceil_x][ceil_y] << endl;
+  		if(planPositions[ceil_x][ceil_y] == 1)
+  			return true;
+  	}
+  	return false;
+  }
    
  private:
   
@@ -370,6 +441,9 @@ class Task {
 
   //<! The point in the map, that the robot needs to go in order to execute this task 
   double x,y,wx,wy;  
+
+  // Plan positions
+  vector< vector<int> > planPositions;
 
 };
 

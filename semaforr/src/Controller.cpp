@@ -581,7 +581,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     ROS_DEBUG_STREAM("Created planner: skeleton");
   }
   if(hallwayskel == 1){
-    Graph *navGraphHallwaySkeleton = new Graph((int)(p*100.0*4), l*100, h*100);
+    Graph *navGraphHallwaySkeleton = new Graph((int)(p*1000.0), l*100, h*100);
     cout << "initialized nav graph" << endl;
     PathPlanner *hwsk_planner = new PathPlanner(navGraphHallwaySkeleton, n,n, "hallwayskel");
     tier2Planners.push_back(hwsk_planner);
@@ -883,22 +883,24 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     }
     skeleton_planner->resetGraph();
     int index_val = 0;
-    vector<bool> added_nodes;
+    // vector<bool> added_nodes;
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
       int y = (int)(regions[i].getCenter().get_y()*100);
       cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
       bool success = skeleton_planner->getGraph()->addNode(x, y, index_val);
-      added_nodes.push_back(success);
-      index_val++;
+      // added_nodes.push_back(success);
+      if(success)
+        index_val++;
       vector<FORRExit> exits = regions[i].getExits();
       for(int j = 0; j < exits.size() ; j++){
         int ex = (int)(exits[j].getExitPoint().get_x()*100);
         int ey = (int)(exits[j].getExitPoint().get_y()*100);
         cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
         success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
-        added_nodes.push_back(success);
-        index_val++;
+        // added_nodes.push_back(success);
+        if(success)
+          index_val++;
       }
       double angle = 0;
       for(int k = 0; k < 24; k++){
@@ -906,54 +908,61 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         int ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius() * sin(angle))*100);
         cout << "Points on Region " << ax << " " << ay << endl;
         success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
-        added_nodes.push_back(success);
-        index_val++;
-        ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()/2 * cos(angle))*100);
-        ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()/2 * sin(angle))*100);
-        cout << "Half Points on Region " << ax << " " << ay << endl;
-        success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
-        added_nodes.push_back(success);
-        index_val++;
+        // added_nodes.push_back(success);
+        if(success)
+          index_val++;
+        // ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()/2 * cos(angle))*100);
+        // ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()/2 * sin(angle))*100);
+        // cout << "Half Points on Region " << ax << " " << ay << endl;
+        // success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
+        // added_nodes.push_back(success);
+        // index_val++;
         angle = angle + 0.2617993878;
       }
     }
-    index_val = 0;
+    // index_val = 0;
     for(int i = 0 ; i < regions.size(); i++){
-      int region_id = index_val;
-      index_val++;
+      int region_id = skeleton_planner->getGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
+      // int region_id = index_val;
+      // index_val++;
       vector<FORRExit> exits = regions[i].getExits();
       for(int j = 0; j < exits.size() ; j++){
-        if(added_nodes[index_val]){
-          cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
-          skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
-          int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
-          int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
-          cout << "Edge from " << index_val<< " to " << skeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
-          skeleton_planner->getGraph()->addEdge(index_val, skeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
-        }
-        index_val++;
+        int index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
+        // if(added_nodes[index_val]){
+        cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+        skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+        int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
+        int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
+        cout << "Edge from " << index_val<< " to " << skeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
+        skeleton_planner->getGraph()->addEdge(index_val, skeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
+        // }
+        // index_val++;
         // cout << "Edge from " << i << " to " << exits[j].getExitRegion() << " Distance " << exits[j].getExitDistance()*100 << endl;
         // skeleton_planner->getGraph()->addEdge(i, exits[j].getExitRegion(), exits[j].getExitDistance()*100);
       }
+      double angle = 0;
       for(int k = 0; k < 24; k++){
-        if(added_nodes[index_val] and added_nodes[index_val+1]){
-          cout << "Edge from " << index_val << " to " << index_val+1 << " Distance " << regions[i].getRadius()*100 << endl;
-          skeleton_planner->getGraph()->addEdge(index_val, index_val+1, regions[i].getRadius()*100);
-          cout << "Edge from " << region_id << " to " << index_val+1 << " Distance " << regions[i].getRadius()/2*100 << endl;
-          skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
-        }
-        // if(added_nodes[index_val]){
-        //   cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
-        //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+        int index_val = skeleton_planner->getGraph()->getNodeID((int)((regions[i].getCenter().get_x() + regions[i].getRadius() * cos(angle))*100), (int)((regions[i].getCenter().get_y() + regions[i].getRadius() * sin(angle))*100));
+        // if(added_nodes[index_val] and added_nodes[index_val+1]){
+        //   cout << "Edge from " << index_val << " to " << index_val+1 << " Distance " << regions[i].getRadius()*100 << endl;
+        //   skeleton_planner->getGraph()->addEdge(index_val, index_val+1, regions[i].getRadius()*100);
+        //   cout << "Edge from " << region_id << " to " << index_val+1 << " Distance " << regions[i].getRadius()/2*100 << endl;
+        //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
         // }
-        index_val++;
+        // if(added_nodes[index_val]){
+        cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+        skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+        // }
+        // index_val++;
         // if(added_nodes[index_val]){
         //   cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()/2*100 << endl;
         //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
         // }
-        index_val++;
+        // index_val++;
+        angle = angle + 0.2617993878;
       }
     }
+    cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }
   if(hallwayskel){
     PathPlanner *hwskeleton_planner;
@@ -978,6 +987,23 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     }
     hwskeleton_planner->getGraph()->populateNodeNeighbors(false);
     hwskeleton_planner->getGraph()->populateEdges();
+    for(int i = 0; i < hallways.size()-1; i++){
+      for(int j = i+1; j < hallways.size(); j++){
+        if(!hallways[i].isHallwayConnected(j)){
+          vector<double> points_between = hallways[i].closestPointsBetweenAggregates(hallways[j]);
+          cout << "Closest Points between hallway " << i << " and " << j << endl;
+          int sx = (int)(points_between[1]*100);
+          int sy = (int)(points_between[2]*100);
+          int ex = (int)(points_between[3]*100);
+          int ey = (int)(points_between[4]*100);
+          int sid = hwskeleton_planner->getGraph()->getNodeID(sx, sy);
+          int eid = hwskeleton_planner->getGraph()->getNodeID(ex, ey);
+          cout << "Start " << points_between[1] << " " << points_between[2] << " End " << points_between[3] << " " << points_between[4] << " Distance " << points_between[0] << endl;
+          cout << "sx " << sx << " sy " << sy << " sid " << sid << " ex " << ex << " ey " << ey << " eid " << eid << endl;
+          hwskeleton_planner->getGraph()->addEdge(sid, eid, points_between[0]*100);
+        }
+      }
+    }
   }
 }
 
@@ -1034,17 +1060,21 @@ bool Controller::tierOneDecision(FORRAction *decision){
     decisionStats->decisionTier = 1;
     decisionMade = true;
   }
-  else if(tier1->advisorGetOut(decision)){
-    ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
-    decisionStats->decisionTier = 1;
-    decisionMade = true;
-  }
   else{
-    // group of vetoing tier1 advisors which adds to the list of vetoed actions
-    ROS_INFO("Advisor avoid wall will veto actions");
-    tier1->advisorAvoidWalls();
-    ROS_INFO("Advisor not opposite will veto actions");
-    tier1->advisorNotOpposite();
+    ROS_INFO("Advisor don't go back will veto actions");
+    tier1->advisorDontGoBack();
+    if(tier1->advisorGetOut(decision)){
+      ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
+      decisionStats->decisionTier = 1;
+      decisionMade = true;
+    }
+    else{
+      // group of vetoing tier1 advisors which adds to the list of vetoed actions
+      ROS_INFO("Advisor avoid wall will veto actions");
+      tier1->advisorAvoidWalls();
+      ROS_INFO("Advisor not opposite will veto actions");
+      tier1->advisorNotOpposite();
+    }
     // if(situationsOn){
     //   ROS_INFO("Advisor situation will veto actions");
     //   tier1->advisorSituation();
@@ -1255,9 +1285,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
       //cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
       weight = advisor->get_weight();
       //cout << "Weight for this advisor : " << weight << endl;
-      if(advisor->get_name() == "Explorer" or advisor->get_name() == "ExplorerRotation" or advisor->get_name() == "LearnSpatialModel" or advisor->get_name() == "LearnSpatialModelRotation" or advisor->get_name() == "Curiosity" or advisor->get_name() == "CuriosityRotation"){
-        weight = beliefs->getAgentState()->getAgenda().size()/4;
-      }
+      // if(advisor->get_name() == "Explorer" or advisor->get_name() == "ExplorerRotation" or advisor->get_name() == "LearnSpatialModel" or advisor->get_name() == "LearnSpatialModelRotation" or advisor->get_name() == "Curiosity" or advisor->get_name() == "CuriosityRotation"){
+      //   weight = beliefs->getAgentState()->getAgenda().size()/5;
+      // }
 
       advisorCommentsList << advisor->get_name() << " " << iterator->first.type << " " << iterator->first.parameter << " " << iterator->second << ";";
 

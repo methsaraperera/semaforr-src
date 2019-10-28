@@ -104,12 +104,12 @@ bool Graph::isEdge(Edge e) {
   vector<Edge*>::iterator iter;
   for ( iter = edges.begin() ; iter != edges.end() ; iter++ ) {
     if ( e == (*(*iter)) ){
-      cout << "Not adding: edge matches existing" << endl;
+      // cout << "Edge matches existing" << endl;
       return true;
     }
     Edge en((*iter)->getTo(), (*iter)->getFrom(), (*iter)->getCost(true), (*iter)->getCost(false));
     if ( en == e ){
-      cout << "Not adding: edge matches reverse edge" << endl;
+      // cout << "Edge matches reverse edge" << endl;
       return true;
     }
   }
@@ -238,79 +238,105 @@ bool Graph::addNode(int x, int y, int ind){
     cout << "Added Node " << ind << " x " << x << " y " << y << endl;
     node_added = true;
   }
-  else{
-    cout << "Node already exists, try nearby" << endl;
-    if(nodeIndex[x+1][y] == -1){
-      nodeIndex[x+1][y] = ind;
-      Node * n = new Node(ind, x+1, y, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x+1 << " y " << y << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x+1][y+1] == -1){
-      nodeIndex[x+1][y+1] = ind;
-      Node * n = new Node(ind, x+1, y+1, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x+1 << " y " << y+1 << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x][y+1] == -1){
-      nodeIndex[x][y+1] = ind;
-      Node * n = new Node(ind, x, y+1, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x << " y " << y+1 << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x-1][y] == -1){
-      nodeIndex[x-1][y] = ind;
-      Node * n = new Node(ind, x-1, y, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x-1 << " y " << y << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x-1][y-1] == -1){
-      nodeIndex[x-1][y-1] = ind;
-      Node * n = new Node(ind, x-1, y-1, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x-1 << " y " << y-1 << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x][y-1] == -1){
-      nodeIndex[x][y-1] = ind;
-      Node * n = new Node(ind, x, y-1, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x << " y " << y-1 << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x+1][y-1] == -1){
-      nodeIndex[x+1][y-1] = ind;
-      Node * n = new Node(ind, x+1, y-1, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x+1 << " y " << y-1 << endl;
-      node_added = true;
-    }
-    else if(nodeIndex[x-1][y+1] == -1){
-      nodeIndex[x-1][y+1] = ind;
-      Node * n = new Node(ind, x-1, y+1, false);
-      nodes.push_back(n);
-      cout << "Added Node " << ind << " x " << x-1 << " y " << y+1 << endl;
-      node_added = true;
-    }
-    else{
-      cout << "No suitable nearby node" << endl;
-    }
-  }
+  // else{
+  //   cout << "Node already exists, try nearby" << endl;
+  //   if(nodeIndex[x+1][y] == -1){
+  //     nodeIndex[x+1][y] = ind;
+  //     Node * n = new Node(ind, x+1, y, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x+1 << " y " << y << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x+1][y+1] == -1){
+  //     nodeIndex[x+1][y+1] = ind;
+  //     Node * n = new Node(ind, x+1, y+1, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x+1 << " y " << y+1 << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x][y+1] == -1){
+  //     nodeIndex[x][y+1] = ind;
+  //     Node * n = new Node(ind, x, y+1, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x << " y " << y+1 << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x-1][y] == -1){
+  //     nodeIndex[x-1][y] = ind;
+  //     Node * n = new Node(ind, x-1, y, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x-1 << " y " << y << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x-1][y-1] == -1){
+  //     nodeIndex[x-1][y-1] = ind;
+  //     Node * n = new Node(ind, x-1, y-1, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x-1 << " y " << y-1 << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x][y-1] == -1){
+  //     nodeIndex[x][y-1] = ind;
+  //     Node * n = new Node(ind, x, y-1, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x << " y " << y-1 << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x+1][y-1] == -1){
+  //     nodeIndex[x+1][y-1] = ind;
+  //     Node * n = new Node(ind, x+1, y-1, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x+1 << " y " << y-1 << endl;
+  //     node_added = true;
+  //   }
+  //   else if(nodeIndex[x-1][y+1] == -1){
+  //     nodeIndex[x-1][y+1] = ind;
+  //     Node * n = new Node(ind, x-1, y+1, false);
+  //     nodes.push_back(n);
+  //     cout << "Added Node " << ind << " x " << x-1 << " y " << y+1 << endl;
+  //     node_added = true;
+  //   }
+  //   else{
+  //     cout << "No suitable nearby node" << endl;
+  //   }
+  // }
   return node_added;
 }
 
 void Graph::addEdge(int ind1, int ind2, double distance){
-  nodes[ind1]->addNeighbor(ind2);
-  cout << "Added neighbor to " << ind1 << " from " << ind2 << endl;
-  nodes[ind2]->addNeighbor(ind1);
-  cout << "Added neighbor to " << ind2 << " from " << ind1 << endl;
   Edge * e = new Edge(ind1, ind2);
   //cout << "for each edge "<< endl;
-  if ( !isEdge((*e)) ) {
+  if(isEdge((*e))){
+    cout << "Existing edge found" << endl;
+    vector<Edge*> edges_from = getNode((*e).getFrom()).getNodeEdges();
+    vector<Edge*>::iterator iter;
+    for ( iter = edges_from.begin() ; iter != edges_from.end() ; iter++ ) {
+      Edge en((*iter)->getTo(), (*iter)->getFrom(), (*iter)->getCost(true), (*iter)->getCost(false));
+      if((*e) == (*(*iter)) or en == (*e)){
+        cout << "Matching edge found for from node " << distance << " " << (*iter)->getDistCost() << endl;
+        if(distance < (*iter)->getDistCost()){
+          (*iter)->setDistCost(distance);
+        }
+        break;
+      }
+    }
+    vector<Edge*> edges_to = getNode((*e).getTo()).getNodeEdges();
+    for ( iter = edges_to.begin() ; iter != edges_to.end() ; iter++ ) {
+      Edge en((*iter)->getTo(), (*iter)->getFrom(), (*iter)->getCost(true), (*iter)->getCost(false));
+      if((*e) == (*(*iter)) or en == (*e)){
+        cout << "Matching edge found for to node " << distance << " " << (*iter)->getDistCost() << endl;
+        if(distance < (*iter)->getDistCost()){
+          (*iter)->setDistCost(distance);
+        }
+        break;
+      }
+    }
+  }
+  else{
+    nodes[ind1]->addNeighbor(ind2);
+    cout << "Added neighbor to " << ind1 << " from " << ind2 << endl;
+    nodes[ind2]->addNeighbor(ind1);
+    cout << "Added neighbor to " << ind2 << " from " << ind1 << endl;
     int x1,y1,x2,y2;
     x1 = nodes[ind1]->getX();
     y1 = nodes[ind1]->getY();
@@ -347,6 +373,36 @@ void Graph::populateEdges(){
       }
     }
     //cout << " Neighbor edges size: " << (*iter)->getNodeEdges().size() << endl;
+  }
+}
+
+bool Graph::isConnected(){
+  set<int> neighbor_nodes;
+  neighbor_nodes.insert(nodes[0]->getID());
+  cout << "Neighbor nodes " << neighbor_nodes.size() << " Graph Nodes " << numNodes() << " Added " << nodes[0]->getID() << endl;
+  vector<int> nbrs = getNeighbors((*nodes[0]));
+  while(nbrs.size()>0){
+    int node_id = nbrs[0];
+    neighbor_nodes.insert(node_id);
+    cout << "Neighbor nodes " << neighbor_nodes.size() << " Added " << node_id << endl;
+    vector<int> new_nbrs = getNeighbors(getNode(node_id));
+    for(int i = 0; i < new_nbrs.size(); i++){
+      if(find(nbrs.begin(), nbrs.end(), new_nbrs[i]) != nbrs.end() or neighbor_nodes.find(new_nbrs[i]) != neighbor_nodes.end()){
+        continue;
+      }
+      else{
+        nbrs.push_back(new_nbrs[i]);
+      }
+    }
+    nbrs.erase(nbrs.begin());
+    cout << "Neighbors to add " << nbrs.size() << endl;
+  }
+  cout << "Neighbor nodes " << neighbor_nodes.size() << " Graph Nodes " << numNodes() << endl;
+  if(numNodes() == neighbor_nodes.size()){
+    return true;
+  }
+  else{
+    return false;
   }
 }
 

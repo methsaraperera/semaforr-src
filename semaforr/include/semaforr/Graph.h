@@ -8,6 +8,7 @@
 #include "Map.h"
 #include <assert.h>
 #include <fstream>
+#include <set>
 
 class Graph {
 private:
@@ -67,6 +68,8 @@ public:
   void populateNodeNeighbors(bool withmap); 
 
   void populateEdges();
+
+  bool isConnected();
 
   bool isNode(Node n); 
 
