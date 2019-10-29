@@ -544,11 +544,10 @@ Tier3StayRotation::Tier3StayRotation(): Tier3Advisor() {};
 // vote to go through an extrance to a region containing the target
 
 double Tier3EnterLinear::actionComment(FORRAction action){
-  //cout << "In enter linear " << endl;
-  double result;
+  cout << "In enter linear " << endl;
+  std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
-  int robotRegion=-1,targetRegion=-1;
-  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  int targetRegion=-1;
   Task *task = beliefs->getAgentState()->getCurrentTask();
   CartesianPoint targetPoint (task->getX() , task->getY());
 
@@ -558,51 +557,59 @@ double Tier3EnterLinear::actionComment(FORRAction action){
     if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
       targetRegion = i;
     }
-    // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY())){
-      robotRegion = i;
-    }
   }
 
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
-  
-  //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << endl;
-    
-  vector<FORRExit> exits = regions[robotRegion].getExits();
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+      
+  vector<FORRExit> exits = regions[targetRegion].getExits();
 
-  vector<FORRRegion> nearRegions;
-  for(int i = 0; i < exits.size() ; i++){
-    FORRRegion test = regions[exits[i].getExitRegion()];
-    std::vector<FORRRegion>::iterator it = std::find(nearRegions.begin(),nearRegions.end(), test);
-    if(nearRegions.empty() or (it == nearRegions.end())){
-      nearRegions.push_back(test);
-      //cout << "Neighbour Region : " << test.getCenter().get_x() << " " << test.getCenter().get_y() << endl;
+  double metric = std::numeric_limits<double>::infinity();
+  for(int i = 0; i < exits.size(); i++){
+    if (expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()) < metric) {
+      metric = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
     }
   }
 
-  //cout << "#Neighbors found :" << nearRegions.size() << endl;
-
-  double metric = 0;
-  for(int i = 0; i < nearRegions.size(); i++){
-    if(nearRegions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
-      //cout << "Enter: Found Target Region !" << endl;
-      metric += abs((expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y())) - nearRegions[i].getRadius());
+  double comment_strength = 0;
+  // check if the expected position is in the target's region
+  if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
+    Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
+    CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
+    double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
+    for(int i = 0; i < doors[targetRegion].size(); i++) {
+      // check if the point that the robot crosses into the region goes through one of the doors
+      double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].startPoint.getExitPoint().get_x(), doors[targetRegion][i].startPoint.getExitPoint().get_y());
+      double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].endPoint.getExitPoint().get_x(), doors[targetRegion][i].endPoint.getExitPoint().get_y());
+      if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle){
+        comment_strength = expPosition.get_distance(targetPoint);
+      }
     }
   }
-  return metric * (-1);
+  cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
+  if(metric < comment_strength){
+    return -1 * metric;
+  }
+  else{
+    return -1 * comment_strength;
+  }
 }
 
 
 void Tier3EnterLinear::set_commenting(){
-
-  //cout << "In enter linear set commenting " << endl;
+  cout << "In enter linear set commenting " << endl;
+  std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
   CartesianPoint targetPoint (task->getX() , task->getY());
   CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
   bool targetInRegion = false;
-  bool currPosInRegionWithExit = false;
+  bool targetInRegionWithExit = false;
+  bool targetInRegionWithDoor = false;
+  bool robotRegTargetRegConnected = false;
   int robotRegion=-1, targetRegion = -1;
   
   // check the preconditions for activating the advisor
@@ -611,15 +618,27 @@ void Tier3EnterLinear::set_commenting(){
     if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
       targetInRegion = true;
       targetRegion = i;
+      if(doors[i].size() >= 1){
+        targetInRegionWithDoor = true;
+      }
+      if((regions[i]).getExits().size() >= 1){
+        targetInRegionWithExit = true;
+      }
     }
     // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
-      currPosInRegionWithExit = true;
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY())){
       robotRegion = i;
     }
   }
-
-  if(targetInRegion == true and currPosInRegionWithExit == true and robotRegion != targetRegion)
+  if(targetInRegionWithExit){
+    for(int i = 0; i < (regions[targetRegion]).getExits().size(); i++){
+      if(regions[targetRegion].getExits()[i].getExitRegion() == robotRegion){
+        robotRegTargetRegConnected = true;
+      }
+    }
+  }
+  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " robotRegTargetRegConnected " << robotRegTargetRegConnected << " targetInRegionWithExit " << targetInRegionWithExit << " targetInRegionWithDoor " << targetInRegionWithDoor << endl;
+  if(targetInRegion == true and robotRegion != targetRegion and robotRegTargetRegConnected == true and (targetInRegionWithExit == true or targetInRegionWithDoor == true))
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -627,63 +646,71 @@ void Tier3EnterLinear::set_commenting(){
 
 
 double Tier3EnterRotation::actionComment(FORRAction action){
-
-  //cout << "In enter rotation " << endl;
-
-  double result;
+  cout << "In enter rotation " << endl;
+  std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
-  int robotRegion = -1,targetRegion = -1;
+  int targetRegion=-1;
   Task *task = beliefs->getAgentState()->getCurrentTask();
   CartesianPoint targetPoint (task->getX() , task->getY());
-  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
-  CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
-  bool targetInRegion = false;
-  bool currPosInRegionWithExit = false;
 
   // check the preconditions for activating the advisor
   for(int i = 0; i < regions.size() ; i++){
-    // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
-      currPosInRegionWithExit = true;
-      robotRegion = i;
+    // check if the target point is in region
+    if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
+      targetRegion = i;
     }
   }
 
- 
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
-  
-  vector<FORRExit> exits = regions[robotRegion].getExits();
-  
-  vector<FORRRegion> nearRegions;
-  for(int i = 0; i < exits.size() ; i++){
-    FORRRegion test = regions[exits[i].getExitRegion()];
-    std::vector<FORRRegion>::iterator it = std::find(nearRegions.begin(),nearRegions.end(), test);
-    if(nearRegions.empty() or (it == nearRegions.end())){
-      nearRegions.push_back(test);
+  Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
+  CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+      
+  vector<FORRExit> exits = regions[targetRegion].getExits();
+
+  double metric = std::numeric_limits<double>::infinity();
+  for(int i = 0; i < exits.size(); i++){
+    if (expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()) < metric) {
+      metric = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
     }
   }
 
-  double metric = 0;
-  for(int i = 0; i < nearRegions.size(); i++){
-    if(nearRegions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
-      //cout << "EnterRotation: Found Target Region !" << endl;
-      metric += abs((expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y())) - nearRegions[i].getRadius());
+  double comment_strength = 0;
+  // check if the expected position is in the target's region
+  if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
+    Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
+    CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
+    double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
+    for(int i = 0; i < doors[targetRegion].size(); i++) {
+      // check if the point that the robot crosses into the region goes through one of the doors
+      double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].startPoint.getExitPoint().get_x(), doors[targetRegion][i].startPoint.getExitPoint().get_y());
+      double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].endPoint.getExitPoint().get_x(), doors[targetRegion][i].endPoint.getExitPoint().get_y());
+      if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle){
+        comment_strength = expPosition.get_distance(targetPoint);
+      }
     }
   }
-
-  return metric * (-1);
+  cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
+  if(metric < comment_strength){
+    return -1 * metric;
+  }
+  else{
+    return -1 * comment_strength;
+  }
 }
 
 void Tier3EnterRotation::set_commenting(){
-
-  //cout << "In enter rotation set commenting " << endl;
+  cout << "In enter rotation set commenting " << endl;
+  std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
   CartesianPoint targetPoint (task->getX() , task->getY());
   CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
   bool targetInRegion = false;
-  bool currPosInRegionWithExit = false;
+  bool targetInRegionWithExit = false;
+  bool targetInRegionWithDoor = false;
+  bool robotRegTargetRegConnected = false;
   int robotRegion=-1, targetRegion = -1;
   
   // check the preconditions for activating the advisor
@@ -692,15 +719,27 @@ void Tier3EnterRotation::set_commenting(){
     if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
       targetInRegion = true;
       targetRegion = i;
+      if(doors[i].size() >= 1){
+        targetInRegionWithDoor = true;
+      }
+      if((regions[i]).getExits().size() >= 1){
+        targetInRegionWithExit = true;
+      }
     }
     // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
-      currPosInRegionWithExit = true;
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY())){
       robotRegion = i;
     }
   }
-
-  if(targetInRegion == true and currPosInRegionWithExit == true and robotRegion != targetRegion)
+  if(targetInRegionWithExit){
+    for(int i = 0; i < (regions[targetRegion]).getExits().size(); i++){
+      if(regions[targetRegion].getExits()[i].getExitRegion() == robotRegion){
+        robotRegTargetRegConnected = true;
+      }
+    }
+  }
+  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " robotRegTargetRegConnected " << robotRegTargetRegConnected << " targetInRegionWithExit " << targetInRegionWithExit << " targetInRegionWithDoor " << targetInRegionWithDoor << endl;
+  if(targetInRegion == true and robotRegion != targetRegion and robotRegTargetRegConnected == true and (targetInRegionWithExit == true or targetInRegionWithDoor == true))
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -1179,6 +1218,7 @@ void Tier3ExitClosestRotation::set_commenting(){
 }
 
 double Tier3RegionLeaverLinear::actionComment(FORRAction action){
+  cout << "In region leaver " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1191,21 +1231,42 @@ double Tier3RegionLeaverLinear::actionComment(FORRAction action){
       robotRegion = i;
     }
   }
+  double robotRegionRadius = regions[robotRegion].getRadius();
 
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
   
-  //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
+  cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
-  if(expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y()) > regions[robotRegion].getRadius()) {
-    return expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y()) - regions[robotRegion].getRadius();
-  } else {
-    return (-1);
+  vector<FORRExit> exits = regions[robotRegion].getExits();
+  double result = - std::numeric_limits<double>::infinity();
+  for(int i = 0 ; i < exits.size(); i++){
+    double expDistToExit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
+    double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
+    double value = expDistToRegion - robotRegionRadius - expDistToExit;
+    cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    if(value > result)
+      result = value;
   }
+
+  vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
+  for(int i = 0; i < doors[robotRegion].size(); i++) {
+    double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
+    double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
+    double value = expDistToRegion - robotRegionRadius - expDistToDoor;
+    cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    if(value > result){
+      result = value;
+    }
+  }
+  cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
+  return result;
 }
 
 
 void Tier3RegionLeaverLinear::set_commenting(){
-
+  cout << "In region leaver set commenting " << endl;
+  vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
@@ -1213,6 +1274,7 @@ void Tier3RegionLeaverLinear::set_commenting(){
   CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
   bool targetInRegion = false;
   bool currPosInRegionWithExit = false;
+  bool currPosInRegionWithDoor = false;
   int robotRegion=-1, targetRegion = -1;
   
   // check the preconditions for activating the advisor
@@ -1223,12 +1285,18 @@ void Tier3RegionLeaverLinear::set_commenting(){
       targetRegion = i;
     }
     // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
-      currPosInRegionWithExit = true;
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY())){
       robotRegion = i;
+      if((regions[i]).getExits().size() >= 1){
+        currPosInRegionWithExit = true;
+      }
+      if(doors[i].size() >= 1){
+        currPosInRegionWithDoor = true;
+      }
     }
   }
-  if(currPosInRegionWithExit == true and robotRegion != targetRegion)
+  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
+  if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion)
     advisor_commenting = true;
   else
     advisor_commenting = false;
@@ -1236,6 +1304,7 @@ void Tier3RegionLeaverLinear::set_commenting(){
 
 
 double Tier3RegionLeaverRotation::actionComment(FORRAction action){
+  cout << "In region leaver rotation " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1248,19 +1317,41 @@ double Tier3RegionLeaverRotation::actionComment(FORRAction action){
       robotRegion = i;
     }
   }
-  
+  double robotRegionRadius = regions[robotRegion].getRadius();
+
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
+  CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  
+  cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
-  //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
-
-  if(expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y()) > regions[robotRegion].getRadius()) {
-    return expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y()) - regions[robotRegion].getRadius();
-  } else {
-    return (-1);
+  vector<FORRExit> exits = regions[robotRegion].getExits();
+  double result = - std::numeric_limits<double>::infinity();
+  for(int i = 0 ; i < exits.size(); i++){
+    double expDistToExit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
+    double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
+    double value = expDistToRegion - robotRegionRadius - expDistToExit;
+    cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    if(value > result)
+      result = value;
   }
+
+  vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
+  for(int i = 0; i < doors[robotRegion].size(); i++) {
+    double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
+    double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
+    double value = expDistToRegion - robotRegionRadius - expDistToDoor;
+    cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    if(value > result){
+      result = value;
+    }
+  }
+  cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
+  return result;
 }
 
 void Tier3RegionLeaverRotation::set_commenting(){
+  cout << "In region leaver rotation set commenting " << endl;
+  vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
@@ -1268,6 +1359,7 @@ void Tier3RegionLeaverRotation::set_commenting(){
   CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
   bool targetInRegion = false;
   bool currPosInRegionWithExit = false;
+  bool currPosInRegionWithDoor = false;
   int robotRegion=-1, targetRegion = -1;
   
   // check the preconditions for activating the advisor
@@ -1278,16 +1370,21 @@ void Tier3RegionLeaverRotation::set_commenting(){
       targetRegion = i;
     }
     // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
-      currPosInRegionWithExit = true;
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY())){
       robotRegion = i;
+      if((regions[i]).getExits().size() >= 1){
+        currPosInRegionWithExit = true;
+      }
+      if(doors[i].size() >= 1){
+        currPosInRegionWithDoor = true;
+      }
     }
   }
-  if(currPosInRegionWithExit == true and robotRegion != targetRegion)
+  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
+  if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion)
     advisor_commenting = true;
   else
     advisor_commenting = false;
-  
 }
 /*
 //CloseIn : When target is nearby, distance is within 80 units, go towards it!

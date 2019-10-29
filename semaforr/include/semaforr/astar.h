@@ -32,7 +32,7 @@ private:
   double euclidian_h(_VNode*, _VNode*);               // Euclidian Hueristic
   double octile_h(_VNode*, _VNode*);                  // Octile Hueristic
   void push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare>&, _VNode*); // Update open list
-  void construct_path(_VNode*); // Constructs a path from arg to start,
+  void construct_path(_VNode*, _VNode*); // Constructs a path from arg to start,
                                 // by tracing backwards until it finds a
                                 // _VNode with a null 'prev' pointer
 

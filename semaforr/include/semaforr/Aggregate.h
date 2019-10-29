@@ -92,11 +92,11 @@ public:
     //cout << "Inside isHallwayConnected" << endl;
     for(int i = 0; i < connectedHallways.size(); i++){
       if(connectedHallways[i] == id){
-        cout << "Hallways are connected" << endl;
+        // cout << "Hallways are connected" << endl;
         return true;
       }
     }
-    cout << "Hallways are NOT connected" << endl;
+    // cout << "Hallways are NOT connected" << endl;
     return false;
   }
 

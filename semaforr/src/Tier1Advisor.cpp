@@ -144,7 +144,8 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
         decisionMade = true;
         Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
         beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-        beliefs->getAgentState()->setGetOutTriggered(false);
+        if(decision->type == FORWARD)
+          beliefs->getAgentState()->setGetOutTriggered(false);
       }
     }
   }
@@ -157,7 +158,8 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       decisionMade = true;
       Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
       beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-      beliefs->getAgentState()->setGetOutTriggered(false);
+      if(decision->type == FORWARD)
+        beliefs->getAgentState()->setGetOutTriggered(false);
     }
     /*vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     if(actions.size() > 1){
@@ -384,12 +386,12 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
               double new_y = (j-25)*cos_curr + (i-25)*sin_curr + y_curr;
               int anyVisible = 0;
               for(int k = 0; k < last_endpoints.size(); k++){
-                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 10)){
+                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 5)){
                   anyVisible++;
                 }
               }
               cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << anyVisible << endl;
-              if(anyVisible > 1){
+              if(anyVisible > 1 and !beliefs->getAgentState()->getCurrentTask()->getPlanPositionValue(new_x, new_y)){
                 potential_destinations.push_back(CartesianPoint(new_x, new_y));
               }
             }
@@ -406,20 +408,16 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           }
         }
         cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
+        beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
         (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
         FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-        set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
-        if(std::find(vetoedActions->begin(), vetoedActions->end(), (*decision)) != vetoedActions->end()){
-          decisionMade = false;
-        }        
-        else if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+        if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
           ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
-          beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
           decisionMade = true;
-          if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
-            cout << "No plan exists, add new farthest_position as waypoint" << endl;
-            beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
-          }
+        }
+        if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
+          cout << "No plan exists, add new farthest_position as waypoint" << endl;
+          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
         }
       }
       else{

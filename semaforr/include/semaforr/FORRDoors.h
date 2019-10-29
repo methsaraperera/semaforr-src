@@ -50,7 +50,7 @@ struct Door {
         double endPointAngle = calculateFixedAngle(regionX, regionY, endPoint.getExitPoint().get_x(), endPoint.getExitPoint().get_y());
         double pointAngle = calculateFixedAngle(regionX, regionY, pointX, pointY);
         if(pointAngle <= endPointAngle and pointAngle >= startPointAngle) {
-            return (point.get_distance(region.getCenter()) - regionR);
+            return abs(point.get_distance(region.getCenter()) - regionR);
         }
         else if (point.get_distance(startPoint.getExitPoint()) <= point.get_distance(endPoint.getExitPoint())) {
             return point.get_distance(startPoint.getExitPoint());

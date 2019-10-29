@@ -757,7 +757,7 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
       for(int k = 0; k < poses_in_hallways[i].size(); k++){
         for(int l = 0; l < initial_hallway_groups[j].size(); l++){
           if(first_sees_second == false){
-            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], 20)){
+            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], 10)){
               temp_segment_fs = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], step);
               if(temp_segment_fs.GetLeftPoint().get_x() > temp_segment_fs.GetRightPoint().get_x()){
                 temp_segment_fs = Segment(initial_hallway_groups[j][l], trails[poses_in_hallways[i][k]], step);
@@ -780,12 +780,15 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
               // }
             }
           }
+          else{
+            break;
+          }
         }
       }
       for(int k = 0; k < poses_in_hallways[j].size(); k++){
         for(int l = 0; l < initial_hallway_groups[i].size(); l++){
           if(second_sees_first == false){
-            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], 20)){
+            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], 10)){
               temp_segment_sf = Segment(trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], step);
               if(temp_segment_sf.GetLeftPoint().get_x() > temp_segment_sf.GetRightPoint().get_x()){
                 temp_segment_sf = Segment(initial_hallway_groups[i][l], trails[poses_in_hallways[j][k]], step);
@@ -808,10 +811,13 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
               // }
             }
           }
+          else{
+            break;
+          }
         }
       }
       if(first_sees_second == true and second_sees_first == true){
-        //cout << "Both see each other : " << i << " " << j << endl;
+        cout << "Both see each other : " << i << " " << j << endl;
         possible_mergers_joins.push_back(temp_segment_fs);
         possible_mergers_joins.push_back(temp_segment_sf);
       }
@@ -819,7 +825,7 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
     Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
     for(int k = 0; k < poses_in_hallways[i].size(); k++){
       for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 20)){
+        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 10)){
           temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
           if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
             temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);
@@ -833,7 +839,7 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
   Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
   for(int k = 0; k < poses_in_hallways[i].size(); k++){
     for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-      if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 20)){
+      if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 10)){
         temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
         if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
           temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);
@@ -842,7 +848,7 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
       }
     }
   }
-  cout << "Possible Merger Joins created" << endl;
+  cout << "Possible Merger Joins created " << possible_mergers_joins.size() << endl;
   if(possible_mergers_joins.size()>0){
     vector<vector<double> > heat_map(width,vector<double>(height, 0));
     for(int i = 0; i < initial_hallway_groups.size(); i++){
