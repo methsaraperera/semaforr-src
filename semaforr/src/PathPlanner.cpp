@@ -45,7 +45,12 @@ int PathPlanner::calcPath(bool cautious){
     else {
       if(PATH_DEBUG)
         cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
-      s = getClosestNode(source, target, false);
+      if(name == "skeleton" or name == "hallwayskel"){
+        s = getClosestNode(source, target, true);
+      }
+      else{
+        s = getClosestNode(source, target, false);
+      }
     }
     //cout << signature << "Checking if source node is invalid" << endl;
     if ( s.getID() == Node::invalid_node_index )

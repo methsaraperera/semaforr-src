@@ -573,7 +573,7 @@ double Tier3EnterLinear::actionComment(FORRAction action){
     }
   }
 
-  double comment_strength = 0;
+  double comment_strength = 1000;
   // check if the expected position is in the target's region
   if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
     Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
@@ -675,7 +675,7 @@ double Tier3EnterRotation::actionComment(FORRAction action){
     }
   }
 
-  double comment_strength = 0;
+  double comment_strength = 1000;
   // check if the expected position is in the target's region
   if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
     Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
@@ -1218,7 +1218,7 @@ void Tier3ExitClosestRotation::set_commenting(){
 }
 
 double Tier3RegionLeaverLinear::actionComment(FORRAction action){
-  cout << "In region leaver " << endl;
+  // cout << "In region leaver " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1236,7 +1236,7 @@ double Tier3RegionLeaverLinear::actionComment(FORRAction action){
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
   
-  cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
+  // cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
   vector<FORRExit> exits = regions[robotRegion].getExits();
   double result = - std::numeric_limits<double>::infinity();
@@ -1244,7 +1244,7 @@ double Tier3RegionLeaverLinear::actionComment(FORRAction action){
     double expDistToExit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
     double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
     double value = expDistToRegion - robotRegionRadius - expDistToExit;
-    cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    // cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
     if(value > result)
       result = value;
   }
@@ -1254,18 +1254,18 @@ double Tier3RegionLeaverLinear::actionComment(FORRAction action){
     double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
     double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
     double value = expDistToRegion - robotRegionRadius - expDistToDoor;
-    cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    // cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
     if(value > result){
       result = value;
     }
   }
-  cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
+  // cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
   return result;
 }
 
 
 void Tier3RegionLeaverLinear::set_commenting(){
-  cout << "In region leaver set commenting " << endl;
+  // cout << "In region leaver set commenting " << endl;
   vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -1295,7 +1295,7 @@ void Tier3RegionLeaverLinear::set_commenting(){
       }
     }
   }
-  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
+  // cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
   if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion)
     advisor_commenting = true;
   else
@@ -1304,7 +1304,7 @@ void Tier3RegionLeaverLinear::set_commenting(){
 
 
 double Tier3RegionLeaverRotation::actionComment(FORRAction action){
-  cout << "In region leaver rotation " << endl;
+  // cout << "In region leaver rotation " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1322,7 +1322,7 @@ double Tier3RegionLeaverRotation::actionComment(FORRAction action){
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
   
-  cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
+  // cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
   vector<FORRExit> exits = regions[robotRegion].getExits();
   double result = - std::numeric_limits<double>::infinity();
@@ -1330,7 +1330,7 @@ double Tier3RegionLeaverRotation::actionComment(FORRAction action){
     double expDistToExit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
     double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
     double value = expDistToRegion - robotRegionRadius - expDistToExit;
-    cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    // cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
     if(value > result)
       result = value;
   }
@@ -1340,17 +1340,17 @@ double Tier3RegionLeaverRotation::actionComment(FORRAction action){
     double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
     double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
     double value = expDistToRegion - robotRegionRadius - expDistToDoor;
-    cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    // cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
     if(value > result){
       result = value;
     }
   }
-  cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
+  // cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
   return result;
 }
 
 void Tier3RegionLeaverRotation::set_commenting(){
-  cout << "In region leaver rotation set commenting " << endl;
+  // cout << "In region leaver rotation set commenting " << endl;
   vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -1380,7 +1380,7 @@ void Tier3RegionLeaverRotation::set_commenting(){
       }
     }
   }
-  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
+  // cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
   if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion)
     advisor_commenting = true;
   else

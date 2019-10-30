@@ -27,7 +27,7 @@ bool astar::search(int source, int target, string name)
     _VNode* current = open.top(); open.pop(); // Get and remove the top of the open list
     if(current->id == goal->id) // Found the path
     {
-      cout << "Source " << source << " Target " << target << " Start " << start->id << " Goal " << goal->id << " Current " << current->id << endl;
+      // cout << "Source " << source << " Target " << target << " Start " << start->id << " Goal " << goal->id << " Current " << current->id << endl;
       construct_path(start, current);
       return true;
     }
@@ -35,7 +35,7 @@ bool astar::search(int source, int target, string name)
 
     // Add successor nodes of current to the open list
     vector<int> neighbors = graph->getNode(current->id).getNeighbors();
-    cout << current->id << " " << current->x << " " << current->y << " " << current->g << " " << current->f << " " << current->prev.size() << " " << neighbors.size() << endl;
+    // cout << current->id << " " << current->x << " " << current->y << " " << current->g << " " << current->f << " " << current->prev.size() << " " << neighbors.size() << endl;
     for (uint i = 0; i < neighbors.size(); i++)
     {
       _VNode* tmp = new _VNode(graph->getNode(neighbors[i]));
@@ -51,7 +51,7 @@ bool astar::search(int source, int target, string name)
         tmp->f = tmp->g + 0;
       }
       tmp->prev.push_back(current);
-      cout << tmp->id << " " << tmp->x << " " << tmp->y << " " << tmp->g << " " << tmp->f << " " << tmp->prev.size() << endl;
+      // cout << tmp->id << " " << tmp->x << " " << tmp->y << " " << tmp->g << " " << tmp->f << " " << tmp->prev.size() << endl;
 
       bool inClosed = false;
       for(uint j = 0; j < closed.size(); j++)
@@ -120,7 +120,7 @@ void astar::push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare> &pq, 
   {
     _VNode* tmp = pq.top();
     pq.pop();
-    cout << tmp->id << " " << n->id << endl;
+    // cout << tmp->id << " " << n->id << endl;
     if(tmp->id == n->id)
     {
       found = true;
@@ -158,7 +158,7 @@ void astar::push_update(priority_queue<_VNode*, vector<_VNode*>, _Compare> &pq, 
     }
     l.push_back(tmp);
   }
-  cout << "pq.size() " << pq.size() << " l.size() " << l.size() << endl;
+  // cout << "pq.size() " << pq.size() << " l.size() " << l.size() << endl;
 
   while(!l.empty())
   {
@@ -357,11 +357,11 @@ void astar::construct_path(_VNode* s, _VNode* g)
   tmp = g;
   path.clear();*/
   path.push_front(tmp->id);
-  cout << "Path size = " << path.size() << endl;
-  cout << "tmp->prev.empty() = " << tmp->prev.empty() << " tmp->id " << tmp->id << " s->id " << s->id << endl;
+  // cout << "Path size = " << path.size() << endl;
+  // cout << "tmp->prev.empty() = " << tmp->prev.empty() << " tmp->id " << tmp->id << " s->id " << s->id << endl;
   while(!tmp->prev.empty())
   {
-    cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
+    // cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
     {
       // srand(time(NULL));
@@ -375,13 +375,12 @@ void astar::construct_path(_VNode* s, _VNode* g)
       path.push_front(tmp->prev[0]->id);
       tmp = tmp->prev[0];
     }
-    cout << "Path size = " << path.size() << " tmp->id " << tmp->id << endl;
+    // cout << "Path size = " << path.size() << " tmp->id " << tmp->id << endl;
     if(tmp->id == s->id){
       break;
     }
   }
-  // path.push_front(tmp->id);
-  cout << "Path size = " << path.size() << endl;
+  // cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
   //cout << "Number of paths = " << paths.size() << endl;
 }

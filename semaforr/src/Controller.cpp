@@ -902,23 +902,25 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         if(success)
           index_val++;
       }
-      double angle = 0;
-      for(int k = 0; k < 24; k++){
-        int ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius() * cos(angle))*100);
-        int ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius() * sin(angle))*100);
-        cout << "Points on Region " << ax << " " << ay << endl;
-        success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
-        // added_nodes.push_back(success);
-        if(success)
-          index_val++;
-        // ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()/2 * cos(angle))*100);
-        // ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()/2 * sin(angle))*100);
-        // cout << "Half Points on Region " << ax << " " << ay << endl;
-        // success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
-        // added_nodes.push_back(success);
-        // index_val++;
-        angle = angle + 0.2617993878;
-      }
+      // if(regions[i].getRadius() >= 0.5){
+      //   double angle = 0;
+      //   for(int k = 0; k < 24; k++){
+      //     int ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()*0.9 * cos(angle))*100);
+      //     int ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()*0.9 * sin(angle))*100);
+      //     cout << "Points on Region " << ax << " " << ay << endl;
+      //     success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
+      //     // added_nodes.push_back(success);
+      //     if(success)
+      //       index_val++;
+      //     // ax = (int)((regions[i].getCenter().get_x() + regions[i].getRadius()/2 * cos(angle))*100);
+      //     // ay = (int)((regions[i].getCenter().get_y() + regions[i].getRadius()/2 * sin(angle))*100);
+      //     // cout << "Half Points on Region " << ax << " " << ay << endl;
+      //     // success = skeleton_planner->getGraph()->addNode(ax, ay, index_val);
+      //     // added_nodes.push_back(success);
+      //     // index_val++;
+      //     angle = angle + 0.2617993878;
+      //   }
+      // }
     }
     // index_val = 0;
     for(int i = 0 ; i < regions.size(); i++){
@@ -940,27 +942,29 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         // cout << "Edge from " << i << " to " << exits[j].getExitRegion() << " Distance " << exits[j].getExitDistance()*100 << endl;
         // skeleton_planner->getGraph()->addEdge(i, exits[j].getExitRegion(), exits[j].getExitDistance()*100);
       }
-      double angle = 0;
-      for(int k = 0; k < 24; k++){
-        int index_val = skeleton_planner->getGraph()->getNodeID((int)((regions[i].getCenter().get_x() + regions[i].getRadius() * cos(angle))*100), (int)((regions[i].getCenter().get_y() + regions[i].getRadius() * sin(angle))*100));
-        // if(added_nodes[index_val] and added_nodes[index_val+1]){
-        //   cout << "Edge from " << index_val << " to " << index_val+1 << " Distance " << regions[i].getRadius()*100 << endl;
-        //   skeleton_planner->getGraph()->addEdge(index_val, index_val+1, regions[i].getRadius()*100);
-        //   cout << "Edge from " << region_id << " to " << index_val+1 << " Distance " << regions[i].getRadius()/2*100 << endl;
-        //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
-        // }
-        // if(added_nodes[index_val]){
-        cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
-        skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
-        // }
-        // index_val++;
-        // if(added_nodes[index_val]){
-        //   cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()/2*100 << endl;
-        //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
-        // }
-        // index_val++;
-        angle = angle + 0.2617993878;
-      }
+      // if(regions[i].getRadius() >= 0.5){
+      //   double angle = 0;
+      //   for(int k = 0; k < 24; k++){
+      //     int index_val = skeleton_planner->getGraph()->getNodeID((int)((regions[i].getCenter().get_x() + regions[i].getRadius()*0.9 * cos(angle))*100), (int)((regions[i].getCenter().get_y() + regions[i].getRadius()*0.9 * sin(angle))*100));
+      //     // if(added_nodes[index_val] and added_nodes[index_val+1]){
+      //     //   cout << "Edge from " << index_val << " to " << index_val+1 << " Distance " << regions[i].getRadius()*100 << endl;
+      //     //   skeleton_planner->getGraph()->addEdge(index_val, index_val+1, regions[i].getRadius()*100);
+      //     //   cout << "Edge from " << region_id << " to " << index_val+1 << " Distance " << regions[i].getRadius()/2*100 << endl;
+      //     //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
+      //     // }
+      //     // if(added_nodes[index_val]){
+      //     cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*0.9*100 << endl;
+      //     skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*0.9*100);
+      //     // }
+      //     // index_val++;
+      //     // if(added_nodes[index_val]){
+      //     //   cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()/2*100 << endl;
+      //     //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()/2*100);
+      //     // }
+      //     // index_val++;
+      //     angle = angle + 0.2617993878;
+      //   }
+      // }
     }
     cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }

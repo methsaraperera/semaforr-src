@@ -375,26 +375,40 @@ class Task {
   	int ceil_x = (int)(ceil(x));
   	int ceil_y = (int)(ceil(y));
   	if(floor_x >= 0 and floor_y >= 0 and floor_x < planPositions[0].size() and floor_y < planPositions[0].size()){
-  		cout << "planPositions[" << floor_x << "][" << floor_y << "] = " << planPositions[floor_x][floor_y] << endl;
+  		// cout << "planPositions[" << floor_x << "][" << floor_y << "] = " << planPositions[floor_x][floor_y] << endl;
   		if(planPositions[floor_x][floor_y] == 1)
   			return true;
   	}
   	if(floor_x >= 0 and ceil_y >= 0 and floor_x < planPositions[0].size() and ceil_y < planPositions[0].size()){
-  		cout << "planPositions[" << floor_x << "][" << ceil_y << "] = " << planPositions[floor_x][ceil_y] << endl;
+  		// cout << "planPositions[" << floor_x << "][" << ceil_y << "] = " << planPositions[floor_x][ceil_y] << endl;
   		if(planPositions[floor_x][ceil_y] == 1)
   			return true;
   	}
   	if(ceil_x >= 0 and floor_y >= 0 and ceil_x < planPositions[0].size() and floor_y < planPositions[0].size()){
-  		cout << "planPositions[" << ceil_x << "][" << floor_y << "] = " << planPositions[ceil_x][floor_y] << endl;
+  		// cout << "planPositions[" << ceil_x << "][" << floor_y << "] = " << planPositions[ceil_x][floor_y] << endl;
   		if(planPositions[ceil_x][floor_y] == 1)
   			return true;
   	}
   	if(ceil_x >= 0 and ceil_y >= 0 and ceil_x < planPositions[0].size() and ceil_y < planPositions[0].size()){
-  		cout << "planPositions[" << ceil_x << "][" << ceil_y << "] = " << planPositions[ceil_x][ceil_y] << endl;
+  		// cout << "planPositions[" << ceil_x << "][" << ceil_y << "] = " << planPositions[ceil_x][ceil_y] << endl;
   		if(planPositions[ceil_x][ceil_y] == 1)
   			return true;
   	}
   	return false;
+  }
+
+  void resetPlanPositions(){
+  	cout << "In resetPlanPositions" << endl;
+  	vector< vector<int> > grid;
+  	int dimension = 200;
+	for(int i = 0; i < dimension; i++){
+		vector<int> col;
+		for(int j = 0; j < dimension; j++){
+			col.push_back(0);
+		}
+		grid.push_back(col);
+	}
+	planPositions = grid;
   }
    
  private:

@@ -734,120 +734,206 @@ void FORRHallways::ConvertPairToCartesianPoint(vector<vector<CartesianPoint> > &
 vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<vector<CartesianPoint> > initial_hallway_groups, const vector<CartesianPoint> &trails, const vector < vector <CartesianPoint> > &laser_history, int hallway_type, double step, int width, int height, double threshold){
   cout << "Inside MergeNearbyHallways" << endl;
   vector<vector<CartesianPoint> > merged_hallways;
-  vector<vector<int> > poses_in_hallways(initial_hallway_groups.size());
+  vector< vector<int> > poses_in_hallways;
   for(int i = 0; i < trails.size(); i++){
     CartesianPoint roundedPoint = CartesianPoint((int)(trails[i].get_x()),(int)(trails[i].get_y()));
+    int trail_point = i;
+    int laser_point = -1;
+    int start_hallway_id = -1;
+    int end_hallway_id = -1;
     for(int j = 0; j < initial_hallway_groups.size(); j++) {
       std::vector<CartesianPoint>::const_iterator it;
       it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedPoint);
-      if(it != initial_hallway_groups[j].end())
-        poses_in_hallways[j].push_back(i);
+      if(it != initial_hallway_groups[j].end()){
+        start_hallway_id = j;
+        break;
+      }
+    }
+    for(int k = 0; k < laser_history[i].size(); k++){
+      CartesianPoint roundedLaserPoint = CartesianPoint((int)(laser_history[i][k].get_x()),(int)(laser_history[i][k].get_y()));
+      if(roundedPoint.get_distance(roundedLaserPoint) > 1 and roundedPoint.get_distance(roundedLaserPoint) <= 10){
+        for(int j = 0; j < initial_hallway_groups.size(); j++) {
+          std::vector<CartesianPoint>::const_iterator it;
+          it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedLaserPoint);
+          if(it != initial_hallway_groups[j].end()){
+            laser_point = k;
+            end_hallway_id = j;
+            break;
+          }
+        }
+      }
+    }
+    if(start_hallway_id != -1 and end_hallway_id != -1){
+      vector<int> values;
+      values.push_back(trail_point);
+      values.push_back(laser_point);
+      values.push_back(start_hallway_id);
+      values.push_back(end_hallway_id);
+      poses_in_hallways.push_back(values);
     }
   }
   cout << "Poses in hallways created" << endl;
-  /*for(int i = 0; i < poses_in_hallways.size(); i++){
-    cout << poses_in_hallways[i].size() << endl;
-  }*/
   vector<Segment> possible_mergers_joins;
-  for(int i = 0; i < initial_hallway_groups.size() - 1; i++) {
-    for(int j = i + 1; j < initial_hallway_groups.size(); j++) {
-      bool first_sees_second, second_sees_first = false;
-      Segment temp_segment_fs = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
-      Segment temp_segment_sf = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
-      for(int k = 0; k < poses_in_hallways[i].size(); k++){
-        for(int l = 0; l < initial_hallway_groups[j].size(); l++){
-          if(first_sees_second == false){
-            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], 10)){
-              temp_segment_fs = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], step);
-              if(temp_segment_fs.GetLeftPoint().get_x() > temp_segment_fs.GetRightPoint().get_x()){
-                temp_segment_fs = Segment(initial_hallway_groups[j][l], trails[poses_in_hallways[i][k]], step);
-              }
-              if(hallway_type == temp_segment_fs.GetSection()){
-                first_sees_second = true;
-              }
-              // double angle = temp_segment_fs.GetAngle() * 180/M_PI;
-              // if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
-              //   first_sees_second = true;
-              // }
-              // else if(hallway_type == 1 and angle <= 45+step and angle >= 45-step){
-              //   first_sees_second = true;
-              // }
-              // else if(hallway_type == 2 and angle <= 90+step and angle >= 90-step){
-              //   first_sees_second = true;
-              // }
-              // else if(hallway_type == 3 and angle <= 135+step and angle >= 135-step){
-              //   first_sees_second = true;
-              // }
-            }
-          }
-          else{
-            break;
-          }
-        }
+  for(int i = 0; i < poses_in_hallways.size(); i++){
+    if(poses_in_hallways[i][2] == poses_in_hallways[i][3]){
+      Segment temp_segment = Segment(trails[poses_in_hallways[i][0]], laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], step);
+      if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
+        temp_segment = Segment(laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], trails[poses_in_hallways[i][0]], step);
       }
-      for(int k = 0; k < poses_in_hallways[j].size(); k++){
-        for(int l = 0; l < initial_hallway_groups[i].size(); l++){
-          if(second_sees_first == false){
-            if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], 10)){
-              temp_segment_sf = Segment(trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], step);
-              if(temp_segment_sf.GetLeftPoint().get_x() > temp_segment_sf.GetRightPoint().get_x()){
-                temp_segment_sf = Segment(initial_hallway_groups[i][l], trails[poses_in_hallways[j][k]], step);
-              }
-              if(hallway_type == temp_segment_sf.GetSection()){
-                second_sees_first = true;
-              }
-              // double angle = temp_segment_sf.GetAngle() * 180/M_PI;
-              // if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
-              //   second_sees_first = true;
-              // }
-              // else if(hallway_type == 1 and angle <= 45+step and angle >= 45-step){
-              //   second_sees_first = true;
-              // }
-              // else if(hallway_type == 2 and angle <= 90+step and angle >= 90-step){
-              //   second_sees_first = true;
-              // }
-              // else if(hallway_type == 3 and angle <= 135+step and angle >= 135-step){
-              //   second_sees_first = true;
-              // }
-            }
-          }
-          else{
-            break;
-          }
-        }
-      }
-      if(first_sees_second == true and second_sees_first == true){
-        cout << "Both see each other : " << i << " " << j << endl;
-        possible_mergers_joins.push_back(temp_segment_fs);
-        possible_mergers_joins.push_back(temp_segment_sf);
-      }
+      possible_mergers_joins.push_back(temp_segment);
     }
-    Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
-    for(int k = 0; k < poses_in_hallways[i].size(); k++){
-      for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 10)){
-          temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
+  }
+  
+  for(int k = 0; k < initial_hallway_groups.size() - 1; k++){
+    for(int j = k + 1; j < initial_hallway_groups.size(); j++) {
+      vector<Segment> first_group;
+      vector<Segment> second_group;
+      for(int i = 0; i < poses_in_hallways.size(); i++){
+        if(poses_in_hallways[i][2] == k and poses_in_hallways[i][3] == j){
+          Segment temp_segment = Segment(trails[poses_in_hallways[i][0]], laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], step);
           if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
-            temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);
+            temp_segment = Segment(laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], trails[poses_in_hallways[i][0]], step);
           }
-          possible_mergers_joins.push_back(temp_segment);
+          if(hallway_type == temp_segment.GetSection()){
+            first_group.push_back(temp_segment);
+          }
+        }
+        else if(poses_in_hallways[i][2] == j and poses_in_hallways[i][3] == k){
+          Segment temp_segment = Segment(trails[poses_in_hallways[i][0]], laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], step);
+          if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
+            temp_segment = Segment(laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], trails[poses_in_hallways[i][0]], step);
+          }
+          if(hallway_type == temp_segment.GetSection()){
+            second_group.push_back(temp_segment);
+          }
+        }
+      }
+      if(first_group.size() > 0 and second_group.size() > 0){
+        cout << "Both see each other : " << k << " with " << first_group.size() << " and " << j << " with " << second_group.size() << endl;
+        for(int i = 0; i < first_group.size(); i++){
+          possible_mergers_joins.push_back(first_group[i]);
+        }
+        for(int i = 0; i < second_group.size(); i++){
+          possible_mergers_joins.push_back(second_group[i]);
         }
       }
     }
   }
-  int i = initial_hallway_groups.size() - 1;
-  Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
-  for(int k = 0; k < poses_in_hallways[i].size(); k++){
-    for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-      if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 10)){
-        temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
-        if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
-          temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);
-        }
-        possible_mergers_joins.push_back(temp_segment);
-      }
-    }
-  }
+
+  // vector<vector<int> > poses_in_hallways(initial_hallway_groups.size());
+  // for(int i = 0; i < trails.size(); i++){
+  //   CartesianPoint roundedPoint = CartesianPoint((int)(trails[i].get_x()),(int)(trails[i].get_y()));
+  //   for(int j = 0; j < initial_hallway_groups.size(); j++) {
+  //     std::vector<CartesianPoint>::const_iterator it;
+  //     it = find(initial_hallway_groups[j].begin(), initial_hallway_groups[j].end(), roundedPoint);
+  //     if(it != initial_hallway_groups[j].end())
+  //       poses_in_hallways[j].push_back(i);
+  //   }
+  // }
+  // cout << "Poses in hallways created" << endl;
+  // /*for(int i = 0; i < poses_in_hallways.size(); i++){
+  //   cout << poses_in_hallways[i].size() << endl;
+  // }*/
+  // vector<Segment> possible_mergers_joins;
+  // for(int i = 0; i < initial_hallway_groups.size() - 1; i++) {
+  //   for(int j = i + 1; j < initial_hallway_groups.size(); j++) {
+  //     bool first_sees_second, second_sees_first = false;
+  //     Segment temp_segment_fs = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
+  //     Segment temp_segment_sf = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
+  //     for(int k = 0; k < poses_in_hallways[i].size(); k++){
+  //       for(int l = 0; l < initial_hallway_groups[j].size(); l++){
+  //         if(first_sees_second == false){
+  //           if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], 10)){
+  //             temp_segment_fs = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[j][l], step);
+  //             if(temp_segment_fs.GetLeftPoint().get_x() > temp_segment_fs.GetRightPoint().get_x()){
+  //               temp_segment_fs = Segment(initial_hallway_groups[j][l], trails[poses_in_hallways[i][k]], step);
+  //             }
+  //             if(hallway_type == temp_segment_fs.GetSection()){
+  //               first_sees_second = true;
+  //             }
+  //             // double angle = temp_segment_fs.GetAngle() * 180/M_PI;
+  //             // if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
+  //             //   first_sees_second = true;
+  //             // }
+  //             // else if(hallway_type == 1 and angle <= 45+step and angle >= 45-step){
+  //             //   first_sees_second = true;
+  //             // }
+  //             // else if(hallway_type == 2 and angle <= 90+step and angle >= 90-step){
+  //             //   first_sees_second = true;
+  //             // }
+  //             // else if(hallway_type == 3 and angle <= 135+step and angle >= 135-step){
+  //             //   first_sees_second = true;
+  //             // }
+  //           }
+  //         }
+  //         else{
+  //           break;
+  //         }
+  //       }
+  //     }
+  //     for(int k = 0; k < poses_in_hallways[j].size(); k++){
+  //       for(int l = 0; l < initial_hallway_groups[i].size(); l++){
+  //         if(second_sees_first == false){
+  //           if(agent_state->canAccessPoint(laser_history[poses_in_hallways[j][k]], trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], 10)){
+  //             temp_segment_sf = Segment(trails[poses_in_hallways[j][k]], initial_hallway_groups[i][l], step);
+  //             if(temp_segment_sf.GetLeftPoint().get_x() > temp_segment_sf.GetRightPoint().get_x()){
+  //               temp_segment_sf = Segment(initial_hallway_groups[i][l], trails[poses_in_hallways[j][k]], step);
+  //             }
+  //             if(hallway_type == temp_segment_sf.GetSection()){
+  //               second_sees_first = true;
+  //             }
+  //             // double angle = temp_segment_sf.GetAngle() * 180/M_PI;
+  //             // if(hallway_type == 0 and ((angle <= step and angle >= 0) or (angle <= 180 and angle >= 180-step))){
+  //             //   second_sees_first = true;
+  //             // }
+  //             // else if(hallway_type == 1 and angle <= 45+step and angle >= 45-step){
+  //             //   second_sees_first = true;
+  //             // }
+  //             // else if(hallway_type == 2 and angle <= 90+step and angle >= 90-step){
+  //             //   second_sees_first = true;
+  //             // }
+  //             // else if(hallway_type == 3 and angle <= 135+step and angle >= 135-step){
+  //             //   second_sees_first = true;
+  //             // }
+  //           }
+  //         }
+  //         else{
+  //           break;
+  //         }
+  //       }
+  //     }
+  //     if(first_sees_second == true and second_sees_first == true){
+  //       cout << "Both see each other : " << i << " " << j << endl;
+  //       possible_mergers_joins.push_back(temp_segment_fs);
+  //       possible_mergers_joins.push_back(temp_segment_sf);
+  //     }
+  //   }
+  //   Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
+  //   for(int k = 0; k < poses_in_hallways[i].size(); k++){
+  //     for(int j = 0; j < initial_hallway_groups[i].size(); j++){
+  //       if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 10)){
+  //         temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
+  //         if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
+  //           temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);
+  //         }
+  //         possible_mergers_joins.push_back(temp_segment);
+  //       }
+  //     }
+  //   }
+  // }
+  // int i = initial_hallway_groups.size() - 1;
+  // Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
+  // for(int k = 0; k < poses_in_hallways[i].size(); k++){
+  //   for(int j = 0; j < initial_hallway_groups[i].size(); j++){
+  //     if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 10)){
+  //       temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
+  //       if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
+  //         temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);
+  //       }
+  //       possible_mergers_joins.push_back(temp_segment);
+  //     }
+  //   }
+  // }
   cout << "Possible Merger Joins created " << possible_mergers_joins.size() << endl;
   if(possible_mergers_joins.size()>0){
     vector<vector<double> > heat_map(width,vector<double>(height, 0));

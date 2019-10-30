@@ -371,47 +371,61 @@ double AgentState::getDistanceToObstacle(double rotation_angle){
 	//cout << index << " " << currentLaserScan.ranges.size() << endl;
 	if(currentLaserScan.ranges.size() == 0) { return maxLaserRange; }
 	//cout << currentLaserScan.ranges[index] << endl;
+
+  double min_distance = 25;
+  int start_index = index - 2;
+  if(start_index < 0)
+    start_index = 0;
+  int end_index = index + 2;
+  if(end_index > 659)
+    end_index = 659;
+
+  for(int i = start_index; i <= end_index; i++){
+    if(currentLaserScan.ranges[i] < min_distance){
+      min_distance = currentLaserScan.ranges[i];
+    }
+  }
+  return min_distance;
+	// double r_x = currentPosition.getX();
+	// double r_y = currentPosition.getY();
+	// double r_ang = currentPosition.getTheta();
+	// CartesianPoint current_point(r_x,r_y);
+	// double r = robotFootPrint+robotFootPrintBuffer; // fetch robot's footprint plus 0.1 meter buffer
 	
-	double r_x = currentPosition.getX();
-	double r_y = currentPosition.getY();
-	double r_ang = currentPosition.getTheta();
-	CartesianPoint current_point(r_x,r_y);
-	double r = robotFootPrint+robotFootPrintBuffer; // fetch robot's footprint plus 0.1 meter buffer
+	// Vector v1 = Vector(current_point, r_ang+(M_PI/2), r);
+	// Vector v2 = Vector(current_point, r_ang-(M_PI/2), r);
 	
-	Vector v1 = Vector(current_point, r_ang+(M_PI/2), r);
-	Vector v2 = Vector(current_point, r_ang-(M_PI/2), r);
+	// Vector parallel1 = Vector(v1.get_endpoint(), r_ang, maxLaserRange);
+	// Vector parallel2 = Vector(v2.get_endpoint(), r_ang, maxLaserRange);
 	
-	Vector parallel1 = Vector(v1.get_endpoint(), r_ang, maxLaserRange);
-	Vector parallel2 = Vector(v2.get_endpoint(), r_ang, maxLaserRange);
+	// Vector laserVector = Vector(current_point, r_ang+rotation_angle, maxLaserRange);
 	
-	Vector laserVector = Vector(current_point, r_ang+rotation_angle, maxLaserRange);
+	// CartesianPoint intersectionPoint = CartesianPoint();
 	
-	CartesianPoint intersectionPoint = CartesianPoint();
-	
-	if(do_intersect(parallel1, laserVector, intersectionPoint)){
-		if(intersectionPoint.get_distance(current_point) < currentLaserScan.ranges[index]){
-			//cout << "25" << endl;
-			return maxLaserRange;
-		}
-		else {
-			//cout << currentLaserScan.ranges[index] << endl;
-			return currentLaserScan.ranges[index];
-		}
-	}
-	else if(do_intersect(parallel2, laserVector, intersectionPoint)){
-		if(intersectionPoint.get_distance(current_point) < currentLaserScan.ranges[index]){
-			//cout << "25" << endl;
-			return maxLaserRange;
-		}
-		else {
-			//cout << currentLaserScan.ranges[index] << endl;
-			return currentLaserScan.ranges[index];
-		}
-	}
-	else {
-		//cout << currentLaserScan.ranges[index] << endl;
-		return currentLaserScan.ranges[index];
-	}
+	// if(do_intersect(parallel1, laserVector, intersectionPoint)){
+	// 	if(intersectionPoint.get_distance(current_point) < currentLaserScan.ranges[index]){
+	// 		//cout << "25" << endl;
+	// 		return maxLaserRange;
+	// 	}
+	// 	else {
+	// 		//cout << currentLaserScan.ranges[index] << endl;
+	// 		return currentLaserScan.ranges[index];
+	// 	}
+	// }
+	// else if(do_intersect(parallel2, laserVector, intersectionPoint)){
+	// 	if(intersectionPoint.get_distance(current_point) < currentLaserScan.ranges[index]){
+	// 		//cout << "25" << endl;
+	// 		return maxLaserRange;
+	// 	}
+	// 	else {
+	// 		//cout << currentLaserScan.ranges[index] << endl;
+	// 		return currentLaserScan.ranges[index];
+	// 	}
+	// }
+	// else {
+	// 	//cout << currentLaserScan.ranges[index] << endl;
+	// 	return currentLaserScan.ranges[index];
+	// }
 }
 
 
@@ -430,48 +444,64 @@ double AgentState::getDistanceToObstacle(Position initialPosition, vector<Cartes
   //cout << index << " " << currentLaserScan.ranges.size() << endl;
   if(initialLaser.size() == 0) { return maxLaserRange; }
   //cout << currentLaserScan.ranges[index] << endl;
-  
-  double r_x = initialPosition.getX();
-  double r_y = initialPosition.getY();
-  double r_ang = initialPosition.getTheta();
-  CartesianPoint current_point(r_x,r_y);
-  double r = robotFootPrint+robotFootPrintBuffer; // fetch robot's footprint plus 0.1 meter buffer
-  
-  Vector v1 = Vector(current_point, r_ang+(M_PI/2), r);
-  Vector v2 = Vector(current_point, r_ang-(M_PI/2), r);
-  
-  Vector parallel1 = Vector(v1.get_endpoint(), r_ang, maxLaserRange);
-  Vector parallel2 = Vector(v2.get_endpoint(), r_ang, maxLaserRange);
-  
-  Vector laserVector = Vector(current_point, r_ang+rotation_angle, maxLaserRange);
-  
-  CartesianPoint intersectionPoint = CartesianPoint();
-  double distance_to_laser = initialPosition.getDistance(initialLaser[index].get_x(), initialLaser[index].get_y());
-  
-  if(do_intersect(parallel1, laserVector, intersectionPoint)){
-    if(intersectionPoint.get_distance(current_point) < distance_to_laser){
-      //cout << "25" << endl;
-      return maxLaserRange;
-    }
-    else {
-      //cout << currentLaserScan.ranges[index] << endl;
-      return distance_to_laser;
+
+  double min_distance = 25;
+  int start_index = index - 2;
+  if(start_index < 0)
+    start_index = 0;
+  int end_index = index + 2;
+  if(end_index > 659)
+    end_index = 659;
+
+  for(int i = start_index; i <= end_index; i++){
+    double distance_to_laser = initialPosition.getDistance(initialLaser[i].get_x(), initialLaser[i].get_y());
+    if(distance_to_laser < min_distance){
+      min_distance = currentLaserScan.ranges[i];
     }
   }
-  else if(do_intersect(parallel2, laserVector, intersectionPoint)){
-    if(intersectionPoint.get_distance(current_point) < distance_to_laser){
-      //cout << "25" << endl;
-      return maxLaserRange;
-    }
-    else {
-      //cout << currentLaserScan.ranges[index] << endl;
-      return distance_to_laser;
-    }
-  }
-  else {
-    //cout << currentLaserScan.ranges[index] << endl;
-    return distance_to_laser;
-  }
+  return min_distance;
+  
+  // double r_x = initialPosition.getX();
+  // double r_y = initialPosition.getY();
+  // double r_ang = initialPosition.getTheta();
+  // CartesianPoint current_point(r_x,r_y);
+  // double r = robotFootPrint+robotFootPrintBuffer; // fetch robot's footprint plus 0.1 meter buffer
+  
+  // Vector v1 = Vector(current_point, r_ang+(M_PI/2), r);
+  // Vector v2 = Vector(current_point, r_ang-(M_PI/2), r);
+  
+  // Vector parallel1 = Vector(v1.get_endpoint(), r_ang, maxLaserRange);
+  // Vector parallel2 = Vector(v2.get_endpoint(), r_ang, maxLaserRange);
+  
+  // Vector laserVector = Vector(current_point, r_ang+rotation_angle, maxLaserRange);
+  
+  // CartesianPoint intersectionPoint = CartesianPoint();
+  // double distance_to_laser = initialPosition.getDistance(initialLaser[index].get_x(), initialLaser[index].get_y());
+  
+  // if(do_intersect(parallel1, laserVector, intersectionPoint)){
+  //   if(intersectionPoint.get_distance(current_point) < distance_to_laser){
+  //     //cout << "25" << endl;
+  //     return maxLaserRange;
+  //   }
+  //   else {
+  //     //cout << currentLaserScan.ranges[index] << endl;
+  //     return distance_to_laser;
+  //   }
+  // }
+  // else if(do_intersect(parallel2, laserVector, intersectionPoint)){
+  //   if(intersectionPoint.get_distance(current_point) < distance_to_laser){
+  //     //cout << "25" << endl;
+  //     return maxLaserRange;
+  //   }
+  //   else {
+  //     //cout << currentLaserScan.ranges[index] << endl;
+  //     return distance_to_laser;
+  //   }
+  // }
+  // else {
+  //   //cout << currentLaserScan.ranges[index] << endl;
+  //   return distance_to_laser;
+  // }
 }
 
 

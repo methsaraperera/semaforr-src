@@ -319,23 +319,23 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
     }
     // else if(beliefs->getAgentState()->canSeePoint(beliefs->getAgentState()->getFarthestPoint(), 30)){
     else{
-      cout << "farthest_position visible" << endl;
+      cout << "farthest_position not achieved" << endl;
       (*decision) = beliefs->getAgentState()->moveTowards(beliefs->getAgentState()->getFarthestPoint());
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
       if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
         ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
         decisionMade = true;
       }
-      else{
-        beliefs->getAgentState()->setGetOutTriggered(false);
-      }
+      // else{
+      //   beliefs->getAgentState()->setGetOutTriggered(false);
+      // }
     }
     // else{
     //   cout << "else make small turn" << endl;
     //   (*decision) = FORRAction(RIGHT_TURN, 2);
     //   decisionMade = true;
     // }
-    if(decisionMade == true and beliefs->getAgentState()->getGetOutTriggered() == true and beliefs->getAgentState()->getRobotConfined(50, 0.2, 10)){
+    if(decisionMade == false and beliefs->getAgentState()->getGetOutTriggered() == true){
       cout << "stuck in place" << endl;
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
@@ -386,7 +386,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
               double new_y = (j-25)*cos_curr + (i-25)*sin_curr + y_curr;
               int anyVisible = 0;
               for(int k = 0; k < last_endpoints.size(); k++){
-                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 5)){
+                if(beliefs->getAgentState()->canSeePoint(last_endpoints[k], CartesianPoint(last_positions[k].getX(), last_positions[k].getY()), CartesianPoint(new_x, new_y), 10)){
                   anyVisible++;
                 }
               }
@@ -401,24 +401,35 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         CartesianPoint farthest_position;
         double max_distance = 0;
         for(int i = 0; i < potential_destinations.size(); i++){
-          double dist_to_potential = potential_destinations[i].get_distance(current_position);
+          double dist_to_potential = 0;
+          for(int j = 0; j < last_positions.size(); j++){
+            dist_to_potential += potential_destinations[i].get_distance(CartesianPoint(last_positions[j].getX(), last_positions[j].getY()));
+          }
+          dist_to_potential = dist_to_potential / last_positions.size();
           if(dist_to_potential > max_distance and dist_to_potential < 10){
             max_distance = dist_to_potential;
             farthest_position = potential_destinations[i];
           }
         }
-        cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
-        beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
-        (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
-        FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-        if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
-          ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
-          decisionMade = true;
+        if(max_distance > 0){
+          cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
+          beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
+          (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
+          FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+          if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+            ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
+            decisionMade = true;
+          }
         }
-        if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
-          cout << "No plan exists, add new farthest_position as waypoint" << endl;
-          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
+        else{
+          cout << "No available farthest_position" << endl;
+          beliefs->getAgentState()->setGetOutTriggered(false);
+          beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
         }
+        // if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
+        //   cout << "No plan exists, add new farthest_position as waypoint" << endl;
+        //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
+        // }
       }
       else{
         cout << "else make turn" << endl;

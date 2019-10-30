@@ -224,16 +224,32 @@ public:
   double getDistanceToObstacle(double rotation_angle);
   double getDistanceToObstacle(Position initialPosition, vector<CartesianPoint> initialLaser, double rotation_angle);
   double getDistanceToForwardObstacle(){
-	//ROS_DEBUG("in getDistance to forward obstacle");
-	if(currentLaserScan.ranges.size() == 0)
-		return 25;
-	return currentLaserScan.ranges[currentLaserScan.ranges.size()/2];
+    //ROS_DEBUG("in getDistance to forward obstacle");
+    if(currentLaserScan.ranges.size() == 0)
+      return 25;
+    double min_distance = 25;
+    int mid_index = currentLaserScan.ranges.size()/2;
+    for(int i = mid_index-2; i < mid_index+3; i++){
+      if(currentLaserScan.ranges[i] < min_distance){
+        min_distance = currentLaserScan.ranges[i];
+      }
+    }
+    // return currentLaserScan.ranges[currentLaserScan.ranges.size()/2];
+    return min_distance;
   }
   double getDistanceToForwardObstacle(Position initialPosition, vector<CartesianPoint> initialLaser){
     //ROS_DEBUG("in getDistance to forward obstacle");
     if(initialLaser.size() == 0)
       return 25;
-    return initialPosition.getDistance(initialLaser[initialLaser.size()/2].get_x(), initialLaser[initialLaser.size()/2].get_y());
+    double min_distance = 25;
+    int mid_index = initialLaser.size()/2;
+    for(int i = mid_index-2; i < mid_index+3; i++){
+      if(initialPosition.getDistance(initialLaser[i].get_x(), initialLaser[i].get_y()) < min_distance){
+        min_distance = initialPosition.getDistance(initialLaser[i].get_x(), initialLaser[i].get_y());
+      }
+    }
+    // return initialPosition.getDistance(initialLaser[initialLaser.size()/2].get_x(), initialLaser[initialLaser.size()/2].get_y());
+    return min_distance;
   }
 
   FORRAction maxForwardAction();
