@@ -74,7 +74,7 @@ class FORRRegionList{
       for(int i = 0; i< laserEndpoints.size(); i++){
 	//cout << "wall distance " << wallDistanceVector[i] << endl;
 	double range = laserEndpoints[i].get_distance(CartesianPoint(current_position.getX(),current_position.getY()));
-	if (range < radius){
+	if (range < radius and range >= 0.1){
 	  radius = range;
 	  direction = i;
 	}
@@ -100,7 +100,7 @@ class FORRRegionList{
 	  double x = nextLaserEndpoints[next_direction].get_x();
 	  double y = nextLaserEndpoints[next_direction].get_y();
 	  double dist = current_region.getCenter().get_distance(CartesianPoint(x , y));
-	  if(dist < current_region.getRadius())
+	  if(dist < current_region.getRadius() and dist >= 0.1)
 	    current_region.setRadius(dist);	       
 	} 
       }

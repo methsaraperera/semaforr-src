@@ -139,7 +139,8 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       ROS_DEBUG("Waypoint in sight , victory advisor active");
       (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-      if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+      if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
         ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
         decisionMade = true;
         Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
@@ -153,7 +154,8 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
     ROS_DEBUG("Target in sight , victory advisor active");
     (*decision) = beliefs->getAgentState()->moveTowards(task);
     FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-    if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+    Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+    if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
       ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
       decisionMade = true;
       Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
@@ -211,7 +213,7 @@ bool Tier1Advisor::advisorDontGoBack(){
     if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
       continue;
     }
-    else if(forrAction.type == PAUSE){
+    else if(forrAction.type == PAUSE or forrAction.type == FORWARD){
       continue;
     }
     else{
@@ -223,6 +225,10 @@ bool Tier1Advisor::advisorDontGoBack(){
       }
     }
   }
+  cout << "Don't go back number of vetoes" << vetoedActions->size() << " " << action_set->size() << endl;
+  // if(vetoedActions->size()+1 == action_set->size()){
+  //   beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
+  // }
   return false; 
 }
 
@@ -322,7 +328,8 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
       cout << "farthest_position not achieved" << endl;
       (*decision) = beliefs->getAgentState()->moveTowards(beliefs->getAgentState()->getFarthestPoint());
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-      if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+      if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.25){
         ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
         decisionMade = true;
       }
@@ -340,7 +347,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
   }
-  else if(beliefs->getAgentState()->getRobotConfined(40, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 20)){
+  else if(beliefs->getAgentState()->getRobotConfined(50, max(beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()), 1.0 + beliefs->getAgentState()->getCurrentTask()->getDecisionCount()/250.0), 20)){
     vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
     int size = actions.size();
@@ -416,7 +423,8 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
           (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
           FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-          if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0){
+          Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+          if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.25){
             ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
             decisionMade = true;
           }
@@ -426,10 +434,10 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           beliefs->getAgentState()->setGetOutTriggered(false);
           beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
         }
-        // if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
-        //   cout << "No plan exists, add new farthest_position as waypoint" << endl;
-        //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
-        // }
+        if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
+          cout << "No plan exists, add new farthest_position as waypoint" << endl;
+          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
+        }
       }
       else{
         cout << "else make turn" << endl;

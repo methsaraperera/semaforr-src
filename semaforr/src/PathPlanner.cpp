@@ -35,6 +35,9 @@ int PathPlanner::calcPath(bool cautious){
       target.printNode();
       cout << endl;
     }
+    if(!navGraph->isConnected()){
+      return 5;
+    }
 
     Node s, t;
     if ( navGraph->isNode(source) ) {

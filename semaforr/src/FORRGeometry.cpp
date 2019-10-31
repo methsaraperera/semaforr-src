@@ -251,14 +251,18 @@ CartesianPoint intersection_point(Circle circle, LineSegment line_segment){
   double secondy = m*secondx + b;
   //cout << firstx << " " << firsty << " " << secondx << " " << secondy << endl;
   pair<CartesianPoint, CartesianPoint> endpoints = line_segment.get_endpoints();
-  if(endpoints.first.get_x() < endpoints.second.get_x() && firstx > endpoints.first.get_x() && firstx < endpoints.second.get_x()) {
+  if(endpoints.first.get_x() <= endpoints.second.get_x() && firstx >= endpoints.first.get_x() && firstx <= endpoints.second.get_x()) {
     return CartesianPoint(firstx, firsty);
-  } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx > endpoints.second.get_x() && firstx < endpoints.first.get_x()) {
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx >= endpoints.second.get_x() && firstx <= endpoints.first.get_x()) {
     return CartesianPoint(firstx, firsty);
-  } else if(endpoints.first.get_x() < endpoints.second.get_x() && secondx > endpoints.first.get_x() && secondx < endpoints.second.get_x()) {
+  } else if(endpoints.first.get_x() <= endpoints.second.get_x() && secondx >= endpoints.first.get_x() && secondx <= endpoints.second.get_x()) {
     return CartesianPoint(secondx, secondy);
-  } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx > endpoints.second.get_x() && secondx < endpoints.first.get_x()) {
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx >= endpoints.second.get_x() && secondx <= endpoints.first.get_x()) {
     return CartesianPoint(secondx, secondy);
+  }
+  else{
+    double angle = atan2(endpoints.first.get_y() - cy, endpoints.first.get_x() - cx); 
+    return CartesianPoint (cx + (r * cos(angle)), cy + (r * sin(angle))); 
   }
 }
 

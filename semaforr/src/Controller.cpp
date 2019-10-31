@@ -986,28 +986,101 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         int y = (int)(points_in_hallway[j].get_y()*100);
         cout << "Hallway point " << points_in_hallway[j].get_x() << " " << points_in_hallway[j].get_y() << " " << x << " " << y << endl;
         bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
-        index_val++;
+        if(success)
+          index_val++;
       }
     }
-    hwskeleton_planner->getGraph()->populateNodeNeighbors(false);
-    hwskeleton_planner->getGraph()->populateEdges();
-    for(int i = 0; i < hallways.size()-1; i++){
-      for(int j = i+1; j < hallways.size(); j++){
-        if(!hallways[i].isHallwayConnected(j)){
-          vector<double> points_between = hallways[i].closestPointsBetweenAggregates(hallways[j]);
-          cout << "Closest Points between hallway " << i << " and " << j << endl;
-          int sx = (int)(points_between[1]*100);
-          int sy = (int)(points_between[2]*100);
-          int ex = (int)(points_between[3]*100);
-          int ey = (int)(points_between[4]*100);
-          int sid = hwskeleton_planner->getGraph()->getNodeID(sx, sy);
-          int eid = hwskeleton_planner->getGraph()->getNodeID(ex, ey);
-          cout << "Start " << points_between[1] << " " << points_between[2] << " End " << points_between[3] << " " << points_between[4] << " Distance " << points_between[0] << endl;
-          cout << "sx " << sx << " sy " << sy << " sid " << sid << " ex " << ex << " ey " << ey << " eid " << eid << endl;
-          hwskeleton_planner->getGraph()->addEdge(sid, eid, points_between[0]*100);
+    for(int i = 0; i < hallways.size(); i++){
+      vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
+      for(int j = 0; j < points_in_hallway.size()-1; j++){
+        for(int k = j+1; k < points_in_hallway.size(); k++){
+          double distance_jk = points_in_hallway[j].get_distance(points_in_hallway[k]);
+          if(distance_jk <= 3){
+            int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[j].get_x()*100), (int)(points_in_hallway[j].get_y()*100));
+            int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[k].get_x()*100), (int)(points_in_hallway[k].get_y()*100));
+            cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+            hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
+          }
         }
       }
     }
+    // hwskeleton_planner->getGraph()->populateNodeNeighbors(false);
+    // hwskeleton_planner->getGraph()->populateEdges();
+    // for(int i = 0; i < hallways.size()-1; i++){
+    //   for(int j = i+1; j < hallways.size(); j++){
+    //     if(!hallways[i].isHallwayConnected(j)){
+    //       vector<double> points_between = hallways[i].closestPointsBetweenAggregates(hallways[j]);
+    //       cout << "Closest Points between hallway " << i << " and " << j << endl;
+    //       int sx = (int)(points_between[1]*100);
+    //       int sy = (int)(points_between[2]*100);
+    //       int ex = (int)(points_between[3]*100);
+    //       int ey = (int)(points_between[4]*100);
+    //       int sid = hwskeleton_planner->getGraph()->getNodeID(sx, sy);
+    //       int eid = hwskeleton_planner->getGraph()->getNodeID(ex, ey);
+    //       cout << "Start " << points_between[1] << " " << points_between[2] << " End " << points_between[3] << " " << points_between[4] << " Distance " << points_between[0] << endl;
+    //       cout << "sx " << sx << " sy " << sy << " sid " << sid << " ex " << ex << " ey " << ey << " eid " << eid << endl;
+    //       hwskeleton_planner->getGraph()->addEdge(sid, eid, points_between[0]*100);
+    //     }
+    //   }
+    // }
+    for(int i = 0; i < trails_trace.size(); i++){
+      cout << "Trail " << i << " contains " << trails_trace[i].size() << " points" << endl;
+      for(int j = 0; j < trails_trace[i].size(); j++){
+        int x = (int)(trails_trace[i][j].get_x()*100);
+        int y = (int)(trails_trace[i][j].get_y()*100);
+        cout << "Trail point " << j << " " << trails_trace[i][j].get_x() << " " << trails_trace[i][j].get_y() << " " << x << " " << y << endl;
+        bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+        // cout << success << endl;
+        if(success)
+          index_val++;
+        // cout << "Finished adding node" << endl;
+      }
+      // cout << "Finished trail " << i << endl;
+    }
+    for(int i = 0; i < trails_trace.size(); i++){
+      for(int j = 0; j < trails_trace[i].size()-1; j++){
+        double distance_jk = trails_trace[i][j].get_distance(trails_trace[i][j+1]);
+        int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)(trails_trace[i][j].get_x()*100), (int)(trails_trace[i][j].get_y()*100));
+        int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)(trails_trace[i][j+1].get_x()*100), (int)(trails_trace[i][j+1].get_y()*100));
+        cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+        hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
+      }
+    }
+
+    for(int i = 0 ; i < regions.size(); i++){
+      int x = (int)(regions[i].getCenter().get_x()*100);
+      int y = (int)(regions[i].getCenter().get_y()*100);
+      cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+      bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+      if(success)
+        index_val++;
+      vector<FORRExit> exits = regions[i].getExits();
+      for(int j = 0; j < exits.size() ; j++){
+        int ex = (int)(exits[j].getExitPoint().get_x()*100);
+        int ey = (int)(exits[j].getExitPoint().get_y()*100);
+        cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+        success = hwskeleton_planner->getGraph()->addNode(ex, ey, index_val);
+        if(success)
+          index_val++;
+      }
+    }
+    for(int i = 0 ; i < regions.size(); i++){
+      int region_id = hwskeleton_planner->getGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
+      vector<FORRExit> exits = regions[i].getExits();
+      for(int j = 0; j < exits.size() ; j++){
+        int index_val = hwskeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
+        cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+        hwskeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+        int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
+        int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
+        cout << "Edge from " << index_val<< " to " << hwskeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
+        hwskeleton_planner->getGraph()->addEdge(index_val, hwskeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
+      }
+    }
+
+
+
+    cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
   }
 }
 
@@ -1065,8 +1138,6 @@ bool Controller::tierOneDecision(FORRAction *decision){
     decisionMade = true;
   }
   else{
-    ROS_INFO("Advisor don't go back will veto actions");
-    tier1->advisorDontGoBack();
     if(tier1->advisorGetOut(decision)){
       ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
       decisionStats->decisionTier = 1;
@@ -1074,6 +1145,8 @@ bool Controller::tierOneDecision(FORRAction *decision){
     }
     else{
       // group of vetoing tier1 advisors which adds to the list of vetoed actions
+      ROS_INFO("Advisor don't go back will veto actions");
+      tier1->advisorDontGoBack();
       ROS_INFO("Advisor avoid wall will veto actions");
       tier1->advisorAvoidWalls();
       ROS_INFO("Advisor not opposite will veto actions");

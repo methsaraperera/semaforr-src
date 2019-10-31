@@ -54,14 +54,15 @@ Position AgentState::afterAngularMove(Position initialPosition, double angle){
   double new_angle = (angle + initialPosition.getTheta());
   
   double distance = getDistanceToObstacle(new_angle);
-  //max is the maximum look ahead in meters 
-  double max = move[numMoves-1];
+  // max is the maximum look ahead in meters 
+  double max = move[numMoves-2];
   if(distance > max) distance = max;
 
   double new_x = initialPosition.getX() + (distance * cos(new_angle));
   double new_y = initialPosition.getY() + (distance * sin(new_angle));
   
   return Position(new_x, new_y, new_angle);
+  // return Position(initialPosition.getX(), initialPosition.getY(), new_angle);
 }
 
 
@@ -104,14 +105,15 @@ Position AgentState::afterAngularMove(Position initialPosition, vector<Cartesian
   double new_angle = (angle + initialPosition.getTheta());
   
   double distance = getDistanceToObstacle(initialPosition, initialLaser, new_angle);
-  //max is the maximum look ahead in meters 
-  double max = move[numMoves-1];
+  // max is the maximum look ahead in meters 
+  double max = move[numMoves-2];
   if(distance > max) distance = max;
 
   double new_x = initialPosition.getX() + (distance * cos(new_angle));
   double new_y = initialPosition.getY() + (distance * sin(new_angle));
   
   return Position(new_x, new_y, new_angle);
+  // return Position(initialPosition.getX(), initialPosition.getY(), new_angle);
 }
 
 
@@ -678,8 +680,8 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
   }
 
   int coverageStartPosition = 0;
-  if(pos_hist->size() > 5){
-    coverageStartPosition = pos_hist->size() - 5;
+  if(pos_hist->size() > 10){
+    coverageStartPosition = pos_hist->size() - 10;
   }
   cout << "startPosition " << startPosition << " coverageStartPosition " << coverageStartPosition << " pos_hist " << pos_hist->size() << endl;
   
@@ -747,7 +749,7 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     }
   }
   cout << "change_count " << change_count << endl;
-  if(nearby >= decisionLimit or change_count >= 4){
+  if(nearby >= decisionLimit or change_count >= 9){
     robotConfined = true;
   }
   else{
