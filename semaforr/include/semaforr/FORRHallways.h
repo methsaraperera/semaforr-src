@@ -205,11 +205,11 @@ public:
             vector<vector<double> > segments_similarities;
             ListSimilarities(segments_similarities, segments_data);
             //ListSimilarities(segments_similarities, segments_normalized);
-            //cout << "num of segments similarities " << segments_similarities.size() << endl;
+            cout << "num of segments similarities " << segments_similarities.size() << endl;
 
             vector<vector<double> > most_similar_segments;
             FindMostSimilarSegments(most_similar_segments, segments_similarities);
-            //cout << "num of most similar segments " << most_similar_segments.size() << endl;
+            cout << "num of most similar segments " << most_similar_segments.size() << endl;
 
             vector<Segment> mean_segments;
             CreateMeanSegments(mean_segments, most_similar_segments, hallway_sections[i], step);

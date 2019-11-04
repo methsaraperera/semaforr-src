@@ -780,10 +780,12 @@ vector<vector<CartesianPoint> > FORRHallways::MergeNearbyHallways(const vector<v
       if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
         temp_segment = Segment(laser_history[poses_in_hallways[i][0]][poses_in_hallways[i][1]], trails[poses_in_hallways[i][0]], step);
       }
-      possible_mergers_joins.push_back(temp_segment);
+      if(hallway_type == temp_segment.GetSection()){
+        possible_mergers_joins.push_back(temp_segment);
+      }
     }
   }
-  
+  cout << "Fill hallways created " << possible_mergers_joins.size() << endl;
   for(int k = 0; k < initial_hallway_groups.size() - 1; k++){
     for(int j = k + 1; j < initial_hallway_groups.size(); j++) {
       vector<Segment> first_group;
