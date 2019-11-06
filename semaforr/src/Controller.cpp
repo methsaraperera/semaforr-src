@@ -690,7 +690,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   // Initialize situations
   initialize_situations(situation_config);
 
-  highwayExploration = new HighwayExplorer(20.0);
+  highwayExploration = new HighwayExplorer(l, h, 15.0);
 }
 
 
@@ -711,77 +711,79 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       firstTaskAssigned = true;
   }
-  //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
-  bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
-  bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
-  bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
-  //if task is complete
-  if(taskCompleted == true){
-    ROS_DEBUG("Target Achieved, moving on to next target!!");
-    //Learn spatial model only on tasks completed successfully
-    if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
-      learnSpatialModel(beliefs->getAgentState(), true);
-      ROS_DEBUG("Finished Learning Spatial Model!!");
-      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
-      ROS_DEBUG("Finished Learning Situations!!");
-    }
-    //Clear existing task and associated plans
-    beliefs->getAgentState()->finishTask();
-    //ROS_DEBUG("Task Cleared!!");
-    //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
-    if(beliefs->getAgentState()->getAgenda().size() > 0){
-      //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
-      ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
-      if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
-        aStarOn = false;
+  if(highwayExploration->getHighwaysComplete()){
+    //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
+    bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
+    bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
+    bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
+    //if task is complete
+    if(taskCompleted == true){
+      ROS_DEBUG("Target Achieved, moving on to next target!!");
+      //Learn spatial model only on tasks completed successfully
+      if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
+        learnSpatialModel(beliefs->getAgentState(), true);
+        ROS_DEBUG("Finished Learning Spatial Model!!");
+        beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
+        ROS_DEBUG("Finished Learning Situations!!");
       }
-      ROS_DEBUG("Selecting Next Task");
-      if(aStarOn){
-        tierTwoDecision(current);
-        ROS_DEBUG("Next Plan Generated!!");
-      }
-      else{
-        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
-        ROS_DEBUG("Next Task Selected!!");
-      }
-    }
-  }
-  // else if subtask is complete
-  else if(waypointReached == true and aStarOn){
-    ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
-    //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
-    beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
-    //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
-  }
-  // else if(isPlanActive == false and aStarOn){
-  //   ROS_DEBUG("No active plan, setting up new plan!!");
-  //   tierTwoDecision(current);
-  // }
-  else if(waypointReached == true){
-    ROS_DEBUG("Temporary Waypoint reached!!");
-    beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(false);
-    beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
-  }
-  // otherwise if task Decision limit reached, skip task 
-  if(beliefs->getAgentState()->getCurrentTask() != NULL){
-    if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
-      ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
-      learnSpatialModel(beliefs->getAgentState(), false);
-      ROS_DEBUG("Finished Learning Spatial Model!!");
-      beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
-      ROS_DEBUG("Finished Learning Situations!!");
-      //beliefs->getAgentState()->skipTask();
+      //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
+      //ROS_DEBUG("Task Cleared!!");
+      //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
       if(beliefs->getAgentState()->getAgenda().size() > 0){
+        //Tasks the next task , current position and a planner and generates a sequence of waypoints if astaron is true
         ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
         if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
           aStarOn = false;
         }
+        ROS_DEBUG("Selecting Next Task");
         if(aStarOn){
           tierTwoDecision(current);
+          ROS_DEBUG("Next Plan Generated!!");
         }
         else{
           beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+          ROS_DEBUG("Next Task Selected!!");
+        }
+      }
+    }
+    // else if subtask is complete
+    else if(waypointReached == true and aStarOn){
+      ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
+      //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
+      beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
+      //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
+    }
+    // else if(isPlanActive == false and aStarOn){
+    //   ROS_DEBUG("No active plan, setting up new plan!!");
+    //   tierTwoDecision(current);
+    // }
+    else if(waypointReached == true){
+      ROS_DEBUG("Temporary Waypoint reached!!");
+      beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(false);
+      beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
+    }
+    // otherwise if task Decision limit reached, skip task 
+    if(beliefs->getAgentState()->getCurrentTask() != NULL){
+      if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
+        ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
+        learnSpatialModel(beliefs->getAgentState(), false);
+        ROS_DEBUG("Finished Learning Spatial Model!!");
+        beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
+        ROS_DEBUG("Finished Learning Situations!!");
+        //beliefs->getAgentState()->skipTask();
+        beliefs->getAgentState()->finishTask();
+        if(beliefs->getAgentState()->getAgenda().size() > 0){
+          ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
+          if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
+            aStarOn = false;
+          }
+          if(aStarOn){
+            tierTwoDecision(current);
+          }
+          else{
+            beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+          }
         }
       }
     }
