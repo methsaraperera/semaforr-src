@@ -18,6 +18,7 @@
 #include "Tier3Advisor.h"
 #include "FORRActionStats.h"
 #include "PathPlanner.h"
+#include "HighwayExplore.h"
 
 #include <fstream>
 #include <ros/ros.h>
@@ -95,6 +96,8 @@ private:
   
   // Knowledge component of robot
   Beliefs *beliefs;
+
+  HighwayExplorer *highwayExploration;
 
   // An ordered list of advisors that are consulted by Controller::FORRDecision
   Tier1Advisor *tier1;

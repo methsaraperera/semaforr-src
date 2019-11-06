@@ -689,6 +689,8 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 
   // Initialize situations
   initialize_situations(situation_config);
+
+  highwayExploration = new HighwayExplorer(20.0);
 }
 
 
@@ -801,7 +803,8 @@ bool Controller::isMissionComplete(){
 //
 FORRAction Controller::decide() {
   ROS_DEBUG("Entering decision loop");
-  return FORRDecision(); 
+  return highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+  // return FORRDecision(); 
 }
 
 
