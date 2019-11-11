@@ -324,6 +324,7 @@ void AgentState::transformToEndpoints(){
     double start_angle = currentLaserScan.angle_min;
     double increment = currentLaserScan.angle_increment;
     laserEndpoints.clear();
+    // cout << "start_angle " << start_angle << " increment " << increment << endl;
 
     double r_x = currentPosition.getX();
     double r_y = currentPosition.getY();

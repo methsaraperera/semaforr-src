@@ -147,7 +147,7 @@ public:
 
 		ros::Rate rate(30.0);
 		double epsilon_move = 0.2; //Meters
-		double epsilon_turn = 0.1; //Radians
+		double epsilon_turn = 0.05; //Radians
 		bool action_complete = true;
 		bool mission_complete = false;
 		FORRAction semaforr_action;

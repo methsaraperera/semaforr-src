@@ -690,7 +690,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   // Initialize situations
   initialize_situations(situation_config);
 
-  highwayExploration = new HighwayExplorer(l, h, 15.0);
+  highwayExploration = new HighwayExplorer(l, h, 15.0, arrMove, arrRotate, moveArrMax, rotateArrMax);
 }
 
 
