@@ -194,6 +194,7 @@ public:
 	FORRAction exploreDecision(Position current_point, sensor_msgs::LaserScan current_laser){
 		DecisionPoint current_position = DecisionPoint(current_point, current_laser);
 		cout << "current_position " << current_position.point.getX() << " " << current_position.point.getY() << " " << current_position.point.getTheta() << " mid avg " << current_position.middle_distance << " mid min " << current_position.middle_distance_min << " mid max " << current_position.farthest_distance_middle << " left avg " << current_position.left_distance << " left max " << current_position.farthest_distance_left << " right avg " << current_position.right_distance << " right max " << current_position.farthest_distance_right << endl;
+		cout << "middle_point " << current_position.middle_point.getX() << " " << current_position.middle_point.getY() << " left_point " << current_position.left_point.getX() << " " << current_position.left_point.getY() << " right_point " << current_position.right_point.getX() << " " << current_position.right_point.getY() << endl;
 		if(highways.size() == 0){
 			Highway initial_highway = Highway(current_position);
 			highways.push_back(initial_highway);
@@ -204,7 +205,46 @@ public:
 		}
 		cout << "last_position " << last_position.point.getX() << " " << last_position.point.getY() << " " << last_position.point.getTheta() << " " << last_highway << endl;
 
-		if(current_target.getDistance(current_position.point) >= 0.25 and go_to_top_point == false){
+		if(too_close == true){
+			cout << "Too close triggered" << endl;
+			//Realign to center
+			cout << "Distance to middle_of_hallway " << current_position.point.getDistance(middle_of_hallway) << endl;
+			if(current_position.point.getDistance(middle_of_hallway) > 0.2){
+				return goTowardsPoint(current_position, middle_of_hallway);
+			}
+			//Turn towards proper end
+			double current_direction = current_position.point.getTheta();
+			double target_direction = middle_of_hallway.getTheta();
+			double required_rotation = target_direction - current_direction;
+			if(required_rotation > M_PI)
+				required_rotation = required_rotation - (2*M_PI);
+			if(required_rotation < -M_PI)
+				required_rotation = required_rotation + (2*M_PI);
+			cout << "current_direction " << current_direction << " target_direction " << target_direction << " required_rotation " << required_rotation << endl;
+			if(fabs(required_rotation) >= 0.2){
+				FORRAction decision;
+				int rotIntensity=0;
+				while(fabs(required_rotation) > rotate[rotIntensity] and rotIntensity < numRotates) {
+					rotIntensity++;
+				}
+				cout << "Rotation Intensity : " << rotIntensity << endl;
+				if (required_rotation < 0){
+					decision = FORRAction(RIGHT_TURN, rotIntensity-1);
+				}
+				else {
+					decision = FORRAction(LEFT_TURN, rotIntensity-1);
+				}
+				return decision;
+			}
+			else{
+				//Compute new current_target
+				too_close = false;
+				current_target = current_position.middle_point;
+				cout << "Going to new current_target " << current_target.getX() << " " << current_target.getY() << endl;
+				return goTowardsPoint(current_position, current_target);
+			}
+		}
+		else if(current_target.getDistance(current_position.point) >= 0.5 and go_to_top_point == false){
 			cout << "Going to current_target " << current_target.getX() << " " << current_target.getY() << endl;
 			highways[last_highway].addPointToHighway(current_position);
 			// if(current_position.middle_distance > current_position.point.getDistance(current_target) and current_position.middle_point.getDistance(current_target) > 1){
@@ -268,6 +308,46 @@ public:
 					}
 				}
 				cout << endl;
+			}
+			if(current_position.left_distance + current_position.right_distance <= 4 and fabs(current_position.left_distance - current_position.right_distance) > (current_position.left_distance + current_position.right_distance)/3){
+				cout << "Not centered in hallway" << endl;
+				too_close = true;
+				double slope_of_bisector = -1 / ((current_position.left_point.getY() - current_position.right_point.getY())/(current_position.left_point.getX() - current_position.right_point.getX()));
+				double angle_of_bisector = atan(slope_of_bisector);
+				double opp_angle_of_bisector = angle_of_bisector + M_PI;
+				double angle_of_current_target = atan2(current_target.getY() - current_position.point.getY(), current_target.getX() - current_position.point.getX());
+				if(angle_of_bisector > M_PI)
+					angle_of_bisector = angle_of_bisector - (2*M_PI);
+				if(angle_of_bisector < -M_PI)
+					angle_of_bisector = angle_of_bisector + (2*M_PI);
+				if(opp_angle_of_bisector > M_PI)
+					opp_angle_of_bisector = opp_angle_of_bisector - (2*M_PI);
+				if(opp_angle_of_bisector < -M_PI)
+					opp_angle_of_bisector = opp_angle_of_bisector + (2*M_PI);
+				if(angle_of_current_target > M_PI)
+					angle_of_current_target = angle_of_current_target - (2*M_PI);
+				if(angle_of_current_target < -M_PI)
+					angle_of_current_target = angle_of_current_target + (2*M_PI);
+				double angle_diff = angle_of_bisector - angle_of_current_target;
+				double opp_angle_diff = opp_angle_of_bisector - angle_of_current_target;
+				if(angle_diff > M_PI)
+					angle_diff = angle_diff - (2*M_PI);
+				if(angle_diff < -M_PI)
+					angle_diff = angle_diff + (2*M_PI);
+				if(opp_angle_diff > M_PI)
+					opp_angle_diff = opp_angle_diff - (2*M_PI);
+				if(opp_angle_diff < -M_PI)
+					opp_angle_diff = opp_angle_diff + (2*M_PI);
+				cout << "left_point " << current_position.left_point.getX() << " " << current_position.left_point.getY() << " right_point " << current_position.right_point.getX() << " " << current_position.right_point.getY() << " slope_of_bisector " << slope_of_bisector << " angle_of_bisector " << angle_of_bisector << " opp_angle_of_bisector " << opp_angle_of_bisector << " angle_of_current_target " << angle_of_current_target << endl;
+				cout << "angle_diff " << angle_diff << " opp_angle_diff " << opp_angle_diff << endl;
+				if(abs(angle_diff) < abs(opp_angle_diff)){
+					middle_of_hallway = Position((current_position.left_point.getX() + current_position.right_point.getX())/2.0, (current_position.left_point.getY() + current_position.right_point.getY())/2.0, angle_of_bisector);
+					cout << "middle_of_hallway " << middle_of_hallway.getX() << " " << middle_of_hallway.getY() << " " << middle_of_hallway.getTheta() << endl;
+				}
+				else{
+					middle_of_hallway = Position((current_position.left_point.getX() + current_position.right_point.getX())/2.0, (current_position.left_point.getY() + current_position.right_point.getY())/2.0, opp_angle_of_bisector);
+					cout << "middle_of_hallway " << middle_of_hallway.getX() << " " << middle_of_hallway.getY() << " " << middle_of_hallway.getTheta() << endl;
+				}
 			}
 			return goTowardsPoint(current_position, current_target);
 		}
@@ -333,6 +413,47 @@ public:
 				cout << endl;
 			}
 			current_target = current_position.middle_point;
+			cout << "New current_target " << current_target.getX() << " " << current_target.getY() << endl;
+			if(current_position.left_distance + current_position.right_distance <= 4 and fabs(current_position.left_distance - current_position.right_distance) > (current_position.left_distance + current_position.right_distance)/3){
+				cout << "Not centered in hallway" << endl;
+				too_close = true;
+				double slope_of_bisector = -1 / ((current_position.left_point.getY() - current_position.right_point.getY())/(current_position.left_point.getX() - current_position.right_point.getX()));
+				double angle_of_bisector = atan(slope_of_bisector);
+				double opp_angle_of_bisector = angle_of_bisector + M_PI;
+				double angle_of_current_target = atan2(current_target.getY() - current_position.point.getY(), current_target.getX() - current_position.point.getX());
+				if(angle_of_bisector > M_PI)
+					angle_of_bisector = angle_of_bisector - (2*M_PI);
+				if(angle_of_bisector < -M_PI)
+					angle_of_bisector = angle_of_bisector + (2*M_PI);
+				if(opp_angle_of_bisector > M_PI)
+					opp_angle_of_bisector = opp_angle_of_bisector - (2*M_PI);
+				if(opp_angle_of_bisector < -M_PI)
+					opp_angle_of_bisector = opp_angle_of_bisector + (2*M_PI);
+				if(angle_of_current_target > M_PI)
+					angle_of_current_target = angle_of_current_target - (2*M_PI);
+				if(angle_of_current_target < -M_PI)
+					angle_of_current_target = angle_of_current_target + (2*M_PI);
+				double angle_diff = angle_of_bisector - angle_of_current_target;
+				double opp_angle_diff = opp_angle_of_bisector - angle_of_current_target;
+				if(angle_diff > M_PI)
+					angle_diff = angle_diff - (2*M_PI);
+				if(angle_diff < -M_PI)
+					angle_diff = angle_diff + (2*M_PI);
+				if(opp_angle_diff > M_PI)
+					opp_angle_diff = opp_angle_diff - (2*M_PI);
+				if(opp_angle_diff < -M_PI)
+					opp_angle_diff = opp_angle_diff + (2*M_PI);
+				cout << "left_point " << current_position.left_point.getX() << " " << current_position.left_point.getY() << " right_point " << current_position.right_point.getX() << " " << current_position.right_point.getY() << " slope_of_bisector " << slope_of_bisector << " angle_of_bisector " << angle_of_bisector << " opp_angle_of_bisector " << opp_angle_of_bisector << " angle_of_current_target " << angle_of_current_target << endl;
+				cout << "angle_diff " << angle_diff << " opp_angle_diff " << opp_angle_diff << endl;
+				if(abs(angle_diff) < abs(opp_angle_diff)){
+					middle_of_hallway = Position((current_position.left_point.getX() + current_position.right_point.getX())/2.0, (current_position.left_point.getY() + current_position.right_point.getY())/2.0, angle_of_bisector);
+					cout << "middle_of_hallway " << middle_of_hallway.getX() << " " << middle_of_hallway.getY() << " " << middle_of_hallway.getTheta() << endl;
+				}
+				else{
+					middle_of_hallway = Position((current_position.left_point.getX() + current_position.right_point.getX())/2.0, (current_position.left_point.getY() + current_position.right_point.getY())/2.0, opp_angle_of_bisector);
+					cout << "middle_of_hallway " << middle_of_hallway.getX() << " " << middle_of_hallway.getY() << " " << middle_of_hallway.getTheta() << endl;
+				}
+			}
 			return goTowardsPoint(current_position, current_target);
 		}
 		else if(highway_stack.size() > 0 and go_to_top_point == false){
@@ -1029,47 +1150,47 @@ public:
 			cout << "Move Intensity : " << intensity << endl;
 			// decision = FORRAction(FORWARD, intensity);
 		}
-		double rotation_from_last = current_position.point.getTheta() - last_position.point.getTheta();
-		if(rotation_from_last > M_PI)
-			rotation_from_last = rotation_from_last - (2*M_PI);
-		if(rotation_from_last < -M_PI)
-			rotation_from_last = rotation_from_last + (2*M_PI);
-		double distance_from_last = current_position.point.getDistance(last_position.point);
-		cout << "distance_from_last " << distance_from_last << " rotation_from_last " << fabs(rotation_from_last) << endl;
-		if(too_close == true){
-			cout << "Very close to last point, and last point was close on left, right, or front" << endl;
-			decision = FORRAction(FORWARD, 3);
-			too_close = false;
-		}
-		// else if(current_position.left_distance < 0.5){
-		// 	cout << "Too close on left, turn right" << endl;
-		// 	decision = FORRAction(RIGHT_TURN, 3);
+		// FORRAction close_decision;
+		// double rotation_from_last = current_position.point.getTheta() - last_position.point.getTheta();
+		// if(rotation_from_last > M_PI)
+		// 	rotation_from_last = rotation_from_last - (2*M_PI);
+		// if(rotation_from_last < -M_PI)
+		// 	rotation_from_last = rotation_from_last + (2*M_PI);
+		// double distance_from_last = current_position.point.getDistance(last_position.point);
+		// cout << "distance_from_last " << distance_from_last << " rotation_from_last " << fabs(rotation_from_last) << endl;
+		// if(too_close == true){
+		// 	cout << "Very close to last point, and last point was close on left, right, or front" << endl;
+		// 	close_decision = FORRAction(FORWARD, 3);
+		// 	too_close = false;
+		// }
+		// // else if(current_position.left_distance < 0.5){
+		// // 	cout << "Too close on left, turn right" << endl;
+		// // 	decision = FORRAction(RIGHT_TURN, 3);
+		// // 	too_close = true;
+		// // }
+		// // else if(current_position.right_distance < 0.5){
+		// // 	cout << "Too close on right, turn left" << endl;
+		// // 	decision = FORRAction(LEFT_TURN, 3);
+		// // 	too_close = true;
+		// // }
+		// else if(current_position.left_distance + current_position.right_distance <= 3 and fabs(current_position.left_distance - current_position.right_distance) > (current_position.left_distance + current_position.right_distance)/3){
+		// 	cout << "Not centered in hallway" << endl;
+		// 	if(current_position.left_distance < current_position.right_distance){
+		// 		cout << "Too close to left, turn right" << endl;
+		// 		close_decision = FORRAction(RIGHT_TURN, numRotates-2);
+		// 		too_close = true;
+		// 	}
+		// 	else{
+		// 		cout << "Too close to right, turn left" << endl;
+		// 		close_decision = FORRAction(LEFT_TURN, numRotates-2);
+		// 		too_close = true;
+		// 	}
+		// }
+		// else if(current_position.middle_distance < 0.5){
+		// 	cout << "Too close in front, turn around" << endl;
+		// 	close_decision = FORRAction(RIGHT_TURN, numRotates-1);
 		// 	too_close = true;
 		// }
-		// else if(current_position.right_distance < 0.5){
-		// 	cout << "Too close on right, turn left" << endl;
-		// 	decision = FORRAction(LEFT_TURN, 3);
-		// 	too_close = true;
-		// }
-		else if(current_position.left_distance + current_position.right_distance <= 5 and fabs(current_position.left_distance - current_position.right_distance) > (current_position.left_distance + current_position.right_distance)/5){
-			cout << "Not centered in hallway" << endl;
-			if(current_position.left_distance < current_position.right_distance){
-				cout << "Too close to left, turn right" << endl;
-				decision = FORRAction(RIGHT_TURN, numRotates-2);
-				too_close = true;
-			}
-			else{
-				cout << "Too close to right, turn left" << endl;
-				decision = FORRAction(LEFT_TURN, numRotates-2);
-				too_close = true;
-			}
-		}
-		else if(current_position.middle_distance < 0.5){
-			cout << "Too close in front, turn around" << endl;
-			decision = FORRAction(RIGHT_TURN, numRotates-1);
-			too_close = true;
-		}
-
 		cout << "Action choosen : " << decision.type << "," << decision.parameter << endl;
 		last_position = current_position;
 		return decision;
@@ -1171,6 +1292,7 @@ private:
 	DecisionPoint last_position;
 	int last_highway;
 	Position current_target;
+	Position middle_of_hallway;
 	DecisionPoint top_point;
 	vector< vector<int> > traveled_grid;
 	vector< vector<double> > path_to_top_point;
