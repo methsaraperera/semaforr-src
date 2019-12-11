@@ -689,8 +689,8 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 
   // Initialize situations
   initialize_situations(situation_config);
-
-  highwayExploration = new HighwayExplorer(l, h, 12.5, arrMove, arrRotate, moveArrMax, rotateArrMax);
+  highwayFinished = 0;
+  highwayExploration = new HighwayExplorer(l, h, 7, arrMove, arrRotate, moveArrMax, rotateArrMax);
 }
 
 
@@ -703,7 +703,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
-      if(aStarOn){
+      if(aStarOn and highwayExploration->getHighwaysComplete()){
         tierTwoDecision(current);
       }
       else{
@@ -716,6 +716,20 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
+    if(highwayFinished == 1){
+      learnSpatialModel(beliefs->getAgentState(), true);
+      ROS_DEBUG("Finished Learning Spatial Model!!");
+      beliefs->getAgentState()->finishTask();
+      ROS_DEBUG("Selecting Next Task");
+      if(aStarOn){
+        tierTwoDecision(current);
+        ROS_DEBUG("Next Plan Generated!!");
+      }
+      else{
+        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+        ROS_DEBUG("Next Task Selected!!");
+      }
+    }
     //if task is complete
     if(taskCompleted == true){
       ROS_DEBUG("Target Achieved, moving on to next target!!");
@@ -805,8 +819,13 @@ bool Controller::isMissionComplete(){
 //
 FORRAction Controller::decide() {
   ROS_DEBUG("Entering decision loop");
-  return highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
-  // return FORRDecision(); 
+  if(!highwayExploration->getHighwaysComplete()){
+    return highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+  }
+  else{
+    highwayFinished++;
+    return FORRDecision();
+  }
 }
 
 
