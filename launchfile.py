@@ -207,8 +207,8 @@ explore = "off"
 #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
 
 map_name = "gradcenter-5"
-num_runs = 1
-for i in range(0,num_runs):
+num_runs = 3
+for i in range(2,num_runs):
     target_file_name = "targettraintest.conf"
     log_name = map_name + "_highwayexplore_plan_" + str(i) + ".txt"
     advisors = "/config/advisors1.conf"
