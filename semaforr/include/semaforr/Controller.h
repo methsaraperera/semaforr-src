@@ -66,6 +66,8 @@ public:
     }
   }
 
+  HighwayExplorer *gethighwayExploration() { return highwayExploration; }
+
 private:
 
   //FORR decision loop and tiers

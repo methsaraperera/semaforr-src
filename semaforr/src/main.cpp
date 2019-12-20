@@ -180,6 +180,7 @@ public:
 				}
 				else{
 					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+					controller->gethighwayExploration()->setHighwaysComplete(overallTimeSec);
 				}
 				gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
@@ -196,6 +197,7 @@ public:
 					end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 					computationTimeSec = (end_timecv-start_timecv);
 					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+					controller->gethighwayExploration()->setHighwaysComplete(overallTimeSec);
 					break;
 				}
 				else{
