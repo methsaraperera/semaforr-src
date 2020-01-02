@@ -318,14 +318,14 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
   // if the robot is in a confined space and it sees a way out then take the action that does that.
   bool decisionMade = false;
   if(beliefs->getAgentState()->getGetOutTriggered()){
-    cout << "current_position " << beliefs->getAgentState()->getCurrentPosition().getX() << " " << beliefs->getAgentState()->getCurrentPosition().getY() << " farthest_position " << beliefs->getAgentState()->getFarthestPoint().get_x() << " " << beliefs->getAgentState()->getFarthestPoint().get_y() << endl;
+    // cout << "current_position " << beliefs->getAgentState()->getCurrentPosition().getX() << " " << beliefs->getAgentState()->getCurrentPosition().getY() << " farthest_position " << beliefs->getAgentState()->getFarthestPoint().get_x() << " " << beliefs->getAgentState()->getFarthestPoint().get_y() << endl;
     if(beliefs->getAgentState()->getFarthestPoint().get_distance(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) < 1.0){
-      cout << "farthest_position achieved" << endl;
+      // cout << "farthest_position achieved" << endl;
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
     // else if(beliefs->getAgentState()->canSeePoint(beliefs->getAgentState()->getFarthestPoint(), 30)){
     else{
-      cout << "farthest_position not achieved" << endl;
+      // cout << "farthest_position not achieved" << endl;
       (*decision) = beliefs->getAgentState()->moveTowards(beliefs->getAgentState()->getFarthestPoint());
       FORRAction forward = beliefs->getAgentState()->maxForwardAction();
       Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
@@ -343,7 +343,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
     //   decisionMade = true;
     // }
     if(decisionMade == false and beliefs->getAgentState()->getGetOutTriggered() == true){
-      cout << "stuck in place" << endl;
+      // cout << "stuck in place" << endl;
       beliefs->getAgentState()->setGetOutTriggered(false);
     }
   }
@@ -351,18 +351,18 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
     vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
     int size = actions.size();
-    cout << "actions size " << size << " rotation size " << rotation_set->size()/2 << endl;
+    // cout << "actions size " << size << " rotation size " << rotation_set->size()/2 << endl;
     if(size >= 4){
       FORRAction lastAction = actions[size - 1];
       FORRAction lastlastAction = actions[size - 2];
       FORRAction lastlastlastAction = actions[size - 3];
-      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << " lastlastAction " <<  lastlastAction.type << " " << lastlastAction.parameter << " lastlastlastAction " <<  lastlastlastAction.type << " " << lastlastlastAction.parameter<< endl;
+      // cout << "lastAction " << lastAction.type << " " << lastAction.parameter << " lastlastAction " <<  lastlastAction.type << " " << lastlastAction.parameter << " lastlastlastAction " <<  lastlastlastAction.type << " " << lastlastlastAction.parameter<< endl;
       if(lastlastAction.type == RIGHT_TURN and lastlastAction.parameter == rotation_set->size()/2 and lastAction.type == RIGHT_TURN and lastAction.parameter == rotation_set->size()/2 and lastlastlastAction.type == RIGHT_TURN and lastlastlastAction.parameter == rotation_set->size()/2){
-        cout << "overlay turned poses" << endl;
+        // cout << "overlay turned poses" << endl;
         vector< sensor_msgs::LaserScan > laser_scan_hist = beliefs->getAgentState()->getAllLaserScanHistory();
         vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
         CartesianPoint current_position = CartesianPoint((*positionHis)[positionHis->size()-1].getX(), (*positionHis)[positionHis->size()-1].getY());
-        cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << endl;
+        // cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << endl;
         vector<Position> last_positions;
         vector< sensor_msgs::LaserScan > last_lasers;
         vector< vector<CartesianPoint> > last_endpoints;
@@ -397,7 +397,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
                   anyVisible++;
                 }
               }
-              cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << anyVisible << endl;
+              // cout << i << " " << j << " " << i-25 << " " << j-25 << " " << new_x << " " << new_y << " " << anyVisible << endl;
               if(anyVisible > 1 and !beliefs->getAgentState()->getCurrentTask()->getPlanPositionValue(new_x, new_y)){
                 potential_destinations.push_back(CartesianPoint(new_x, new_y));
               }
@@ -419,7 +419,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           }
         }
         if(max_distance > 0){
-          cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
+          // cout << "Farthest Dist " << max_distance << " farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
           beliefs->getAgentState()->setGetOutTriggered(true, farthest_position);
           (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
           FORRAction forward = beliefs->getAgentState()->maxForwardAction();
@@ -430,17 +430,17 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
           }
         }
         else{
-          cout << "No available farthest_position" << endl;
+          // cout << "No available farthest_position" << endl;
           beliefs->getAgentState()->setGetOutTriggered(false);
           beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
         }
         if(beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 0){
-          cout << "No plan exists, add new farthest_position as waypoint" << endl;
+          // cout << "No plan exists, add new farthest_position as waypoint" << endl;
           beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(farthest_position);
         }
       }
       else{
-        cout << "else make turn" << endl;
+        // cout << "else make turn" << endl;
         beliefs->getAgentState()->setGetOutTriggered(false);
         (*decision) = FORRAction(RIGHT_TURN, rotation_set->size()/2);
         decisionMade = true;

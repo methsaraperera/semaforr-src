@@ -197,7 +197,7 @@ public:
 		numRotates = rotateArrMax;
 		for(int i = 0 ; i < numMoves ; i++) move[i] = arrMove[i];
 		for(int i = 0 ; i < numRotates ; i++) rotate[i] = arrRotate[i];
-		cout << "Highway length " << length << " height " << height << endl;
+		// cout << "Highway length " << length << " height " << height << endl;
 		for(int i = 0; i < l; i++){
 			vector<int> col;
 			for(int j = 0; j < h; j ++){
@@ -239,12 +239,12 @@ public:
 	FORRAction exploreDecision(Position current_point, sensor_msgs::LaserScan current_laser){
 		DecisionPoint current_position = DecisionPoint(current_point, current_laser);
 		cout << "current_position " << current_position.point.getX() << " " << current_position.point.getY() << " " << current_position.point.getTheta() << " mid avg " << current_position.middle_distance << " mid min " << current_position.middle_distance_min << " mid max " << current_position.farthest_distance_middle << " left avg " << current_position.left_distance << " left max " << current_position.farthest_distance_left << " right avg " << current_position.right_distance << " right max " << current_position.farthest_distance_right << endl;
-		cout << "middle_point " << current_position.middle_point.getX() << " " << current_position.middle_point.getY() << " left_point " << current_position.left_point.getX() << " " << current_position.left_point.getY() << " right_point " << current_position.right_point.getX() << " " << current_position.right_point.getY() << endl;
+		// cout << "middle_point " << current_position.middle_point.getX() << " " << current_position.middle_point.getY() << " left_point " << current_position.left_point.getX() << " " << current_position.left_point.getY() << " right_point " << current_position.right_point.getX() << " " << current_position.right_point.getY() << endl;
 		if(current_position.right_distance >= distance_threshold){
 			DecisionPoint right_position = current_position;
 			right_position.direction = true;
 			if(pointAlreadyInStack(right_position) == false){
-				cout << "Adding to stack " << highway_stack.size() << " distance " << current_position.right_distance << " view " << current_position.farthest_view_right << endl;
+				// cout << "Adding to stack " << highway_stack.size() << " distance " << current_position.right_distance << " view " << current_position.farthest_view_right << endl;
 				highway_stack.insert(highway_stack.begin(), right_position);
 				// highway_stack.push_back(right_position);
 			}
@@ -253,7 +253,7 @@ public:
 			DecisionPoint left_position = current_position;
 			left_position.direction = false;
 			if(pointAlreadyInStack(left_position) == false){
-				cout << "Adding to stack " << highway_stack.size() << " distance " << current_position.left_distance << " view " << current_position.farthest_view_left << endl;
+				// cout << "Adding to stack " << highway_stack.size() << " distance " << current_position.left_distance << " view " << current_position.farthest_view_left << endl;
 				highway_stack.insert(highway_stack.begin(), left_position);
 				// highway_stack.push_back(left_position);
 			}
@@ -261,13 +261,13 @@ public:
 		// If the beginning then spin 360 degrees to add to stack
 		if(highways.size() == 0){
 			last_position = current_position;
-			cout << "last_position " << last_position.point.getX() << " " << last_position.point.getY() << " " << last_position.point.getTheta() << " " << last_highway << endl;
+			// cout << "last_position " << last_position.point.getX() << " " << last_position.point.getY() << " " << last_position.point.getTheta() << " " << last_highway << endl;
 			if(highway_stack.size() == 0){
 				return FORRAction(RIGHT_TURN, 1);
 			}
 			else{
 				top_point = highway_stack[0];
-				cout << "Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+				// cout << "Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
 				highway_stack.erase(highway_stack.begin());
 				Highway new_highway = Highway(top_point);
 				highways.push_back(new_highway);
@@ -292,7 +292,7 @@ public:
 			}
 		}
 		// Once there are items on the stack, pop the top and start to go towards
-		cout << "last_position " << last_position.point.getX() << " " << last_position.point.getY() << " " << last_position.point.getTheta() << " " << last_highway << endl;
+		// cout << "last_position " << last_position.point.getX() << " " << last_position.point.getY() << " " << last_position.point.getTheta() << " " << last_highway << endl;
 		cout << "current_target " << current_target.getX() << " " << current_target.getY() << endl;
 		cout << "top_point_decisions " << top_point_decisions << endl;
 		cout << "highway_stack.size() " << highway_stack.size() << endl;
@@ -320,20 +320,20 @@ public:
 		if(angle_to_current_target < -M_PI)
 			angle_to_current_target = angle_to_current_target + (2*M_PI);
 		angle_to_current_target = fabs(angle_to_current_target);
-		cout << "dist_travelled_so_far " << dist_travelled_so_far << " avg_left " << avg_left << " avg_right " << avg_right << " avg_count " << avg_count << " width_length_ratio " << width_length_ratio << " dist_to_current_target " << dist_to_current_target << " angle_to_avg_theta " << angle_to_avg_theta << " angle_to_current_target " << angle_to_current_target << endl;
+		// cout << "dist_travelled_so_far " << dist_travelled_so_far << " avg_left " << avg_left << " avg_right " << avg_right << " avg_count " << avg_count << " width_length_ratio " << width_length_ratio << " dist_to_current_target " << dist_to_current_target << " angle_to_avg_theta " << angle_to_avg_theta << " angle_to_current_target " << angle_to_current_target << endl;
 		if((current_position.farthest_distance_middle > last_position.middle_distance or current_position.middle_distance > 0.5) and angle_to_current_target < 0.3490658504){
-			cout << "More space in front from current position" << endl;
+			// cout << "More space in front from current position" << endl;
 			// Update current target
 			current_target = current_position.middle_point;
-			cout << "New current_target " << current_target.getX() << " " << current_target.getY() << endl;
+			// cout << "New current_target " << current_target.getX() << " " << current_target.getY() << endl;
 		}
 
 		if((((width_length_ratio < 1.5 and dist_travelled_so_far > 3) or angle_to_avg_theta > 0.3490658504 or dist_to_current_target <= 0.5 or current_position.middle_distance <= 0.1) and go_to_top_point == false) or top_point_decisions == decision_limit){
-			cout << "Too wide compared to length " << width_length_ratio << endl;
-			cout << "Turn too big " << angle_to_avg_theta << endl;
-			cout << "Decision limit reached " << top_point_decisions << endl;
-			cout << "Reached current target " << dist_to_current_target << endl;
-			cout << "Too close in front " << current_position.middle_distance << endl;
+			// cout << "Too wide compared to length " << width_length_ratio << endl;
+			// cout << "Turn too big " << angle_to_avg_theta << endl;
+			// cout << "Decision limit reached " << top_point_decisions << endl;
+			// cout << "Reached current target " << dist_to_current_target << endl;
+			// cout << "Too close in front " << current_position.middle_distance << endl;
 			// Stop current point and go to next on stack
 			cout << "Highway grid" << endl;
 			for(int i = 0; i < highway_grid[0].size(); i++){
@@ -353,13 +353,13 @@ public:
 			avg_count = 0;
 			// After finishing point on stack, pop next one
 			if(highway_stack.size() > 0){
-				cout << "Going to top point on stack" << endl;
+				// cout << "Going to top point on stack" << endl;
 				int start_highway = 0;
 				int end_highway = 0;
 				int middle_highway = 0;
 				while((start_highway >= 0 and end_highway >= 0) or (start_highway >= 0 and middle_highway >= 0) or (middle_highway >= 0 and end_highway >= 0)){
 					top_point = highway_stack[0];
-					cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+					// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
 					highway_stack.erase(highway_stack.begin());
 					start_highway = highway_grid[(int)(top_point.point.getX())][(int)(top_point.point.getY())];
 					if(top_point.direction == true){
@@ -370,9 +370,9 @@ public:
 						end_highway = highway_grid[(int)(top_point.left_point.getX())][(int)(top_point.left_point.getY())];
 						middle_highway = highway_grid[(int)((top_point.point.getX() + top_point.left_point.getX())/2.0)][(int)((top_point.point.getY() + top_point.left_point.getY())/2.0)];
 					}
-					cout << "start_highway " << start_highway  << " middle_highway " << middle_highway << " end_highway " << end_highway << endl;
+					// cout << "start_highway " << start_highway  << " middle_highway " << middle_highway << " end_highway " << end_highway << endl;
 				}
-				cout << "Final Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+				// cout << "Final Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
 				Highway new_highway = Highway(top_point);
 				highways.push_back(new_highway);
 				last_highway = last_highway + 1;
@@ -381,7 +381,7 @@ public:
 				path_to_top_point.clear();
 			}
 			else{
-				cout << "No more in stack" << endl;
+				// cout << "No more in stack" << endl;
 				if(highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] != -1){
 					highways[highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())]].addPointToHighway(current_position);
 				}
@@ -393,7 +393,7 @@ public:
 		}
 
 		if(current_position.left_distance <= 0.15 or current_position.right_distance <= 0.15){
-			cout << "Too close on sides, turn away" << endl;
+			// cout << "Too close on sides, turn away" << endl;
 			// Move away from sides
 			if(highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] != -1){
 				highways[highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())]].addPointToHighway(current_position);
@@ -412,15 +412,15 @@ public:
 			}
 		}
 		else if(go_to_top_point == true){
-			cout << "Go to top point" << endl;
+			// cout << "Go to top point" << endl;
 			if(highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] != -1){
 				highways[highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())]].addPointToHighway(current_position);
 			}
-			cout << "Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+			// cout << "Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
 			double dist_to_top_point = top_point.point.getDistance(current_position.point);
-			cout << "Distance to top point " << dist_to_top_point << " current theta " << current_position.point.getTheta() << " top point angles " << top_point.farthest_angle_left << " " << top_point.farthest_angle_right << endl;
+			// cout << "Distance to top point " << dist_to_top_point << " current theta " << current_position.point.getTheta() << " top point angles " << top_point.farthest_angle_left << " " << top_point.farthest_angle_right << endl;
 			if(dist_to_top_point <= 0.5){
-				cout << "Top point achieved, turn towards stretch" << endl;
+				// cout << "Top point achieved, turn towards stretch" << endl;
 				dist_travelled_so_far = 0;
 				avg_left = 0;
 				avg_right = 0;
@@ -437,12 +437,12 @@ public:
 				}
 			}
 			else if(dist_to_top_point <= 1){
-				cout << "Top point close, go towards" << endl;
+				// cout << "Top point close, go towards" << endl;
 				top_point_decisions++;
 				return goTowardsPoint(current_position, top_point.point);
 			}
 			else if(path_to_top_point.size() > 0){
-				cout << "Top point not in range, go to top point by following path" << endl;
+				// cout << "Top point not in range, go to top point by following path" << endl;
 				waypointAchieved(current_position);
 				if(path_to_top_point.size() == 0){
 					last_position = current_position;
@@ -450,29 +450,29 @@ public:
 					return FORRAction(FORWARD, 0);
 				}
 				else if(top_point_decisions % 100 == 0 and path_to_top_point.size() >= 2){
-					cout << "Erase current waypoint and assign next one" << endl;
+					// cout << "Erase current waypoint and assign next one" << endl;
 					path_to_top_point.erase(path_to_top_point.begin());
-					cout << "New waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
+					// cout << "New waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 					top_point_decisions++;
 					return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
 				}
 				else{
-					cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
+					// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 					top_point_decisions++;
 					return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
 				}
 			}
 			else{
 				findPathOnGrid(current_position, top_point);
-				cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
+				// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 				top_point_decisions++;
 				return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
 			}
 		}
 		else{
-			cout << "Going to current_target " << current_target.getX() << " " << current_target.getY() << endl;
+			// cout << "Going to current_target " << current_target.getX() << " " << current_target.getY() << endl;
 			highways[last_highway].addPointToHighway(current_position);
-			cout << "Current grid value " << highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] << endl;
+			// cout << "Current grid value " << highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] << endl;
 			if(highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] == -1){
 				highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] = last_highway;
 				if(current_position.left_distance >= 0.1){
@@ -533,8 +533,8 @@ public:
 		int target_x = (int)(target_point.point.getX());
 		int target_y = (int)(target_point.point.getY());
 		path_to_top_point.clear();
-		cout << "Current point coordinates in grid " << current_x << " " << current_y << " target_point " << target_x << " " << target_y << endl;
-		cout << "Current highway " << highway_grid[current_x][current_y] << " Target highway " << highway_grid[target_x][target_y] << endl;
+		// cout << "Current point coordinates in grid " << current_x << " " << current_y << " target_point " << target_x << " " << target_y << endl;
+		// cout << "Current highway " << highway_grid[current_x][current_y] << " Target highway " << highway_grid[target_x][target_y] << endl;
 		if(current_x == target_x and current_y == target_y){
 			vector<double> current;
 			current.push_back(target_point.point.getX());
@@ -560,7 +560,7 @@ public:
 					closest_to_current = close_point;
 				}
 			}
-			cout << "Closest to current " << (int)(closest_to_current.point.getX()) << " " << (int)(closest_to_current.point.getY()) << endl;
+			// cout << "Closest to current " << (int)(closest_to_current.point.getX()) << " " << (int)(closest_to_current.point.getY()) << endl;
 			current_x = (int)(closest_to_current.point.getX());
 			current_y = (int)(closest_to_current.point.getY());
 		}
@@ -574,7 +574,7 @@ public:
 					closest_to_current = close_point;
 				}
 			}
-			cout << "Closest to target " << (int)(closest_to_current.point.getX()) << " " << (int)(closest_to_current.point.getY()) << endl;
+			// cout << "Closest to target " << (int)(closest_to_current.point.getX()) << " " << (int)(closest_to_current.point.getY()) << endl;
 			target_x = (int)(closest_to_current.point.getX());
 			target_y = (int)(closest_to_current.point.getY());
 		}
@@ -593,15 +593,15 @@ public:
 				new_id.push_back(current_x);
 				new_id.push_back(current_y);
 				previous_cell.push_back(new_id);
-				cout << "Neighbor " << c_x << " " << c_y << " Previous " << current_x << " " << current_y << endl;
+				// cout << "Neighbor " << c_x << " " << c_y << " Previous " << current_x << " " << current_y << endl;
 			}
 		}
-		cout << "Added points " << added_points.size() << endl;
+		// cout << "Added points " << added_points.size() << endl;
 		while(added_points.size() > 0){
 			int new_x = added_points[0][0];
 			int new_y = added_points[0][1];
 			if(new_x == target_x and new_y == target_y){
-				cout << "Found target point" << endl;
+				// cout << "Found target point" << endl;
 				break;
 			}
 			added_points.erase(added_points.begin());
@@ -617,57 +617,57 @@ public:
 					new_id.push_back(new_x);
 					new_id.push_back(new_y);
 					previous_cell.push_back(new_id);
-					cout << "Neighbor " << c_x << " " << c_y << " Previous " << new_x << " " << new_y << endl;
+					// cout << "Neighbor " << c_x << " " << c_y << " Previous " << new_x << " " << new_y << endl;
 				}
 			}
-			cout << "Added points " << added_points.size() << endl;
+			// cout << "Added points " << added_points.size() << endl;
 		}
-		cout << "Previous cell " << previous_cell.size() << endl;
+		// cout << "Previous cell " << previous_cell.size() << endl;
 		vector< vector<int> > path;
 		if(traveled_grid[target_x][target_y] == 1){
 			vector<int> target;
 			target.push_back(target_x);
 			target.push_back(target_y);
 			path.insert(path.begin(), target);
-			cout << "Path " << path.size() << " target " << target_x << " " << target_y << endl;
+			// cout << "Path " << path.size() << " target " << target_x << " " << target_y << endl;
 			bool found = true;
 			while(found){
 				int point_x = path[0][0];
 				int point_y = path[0][1];
 				found = false;
-				cout << "Path " << path.size() << " point " << point_x << " " << point_y << endl; 
+				// cout << "Path " << path.size() << " point " << point_x << " " << point_y << endl; 
 				for(int i = 0; i < previous_cell.size(); i++){
 					if(previous_cell[i][0] == point_x and previous_cell[i][1] == point_y){
-						cout << "Match " << previous_cell[i][0] << " " << previous_cell[i][1] << endl;
+						// cout << "Match " << previous_cell[i][0] << " " << previous_cell[i][1] << endl;
 						vector<int> new_target;
 						new_target.push_back(previous_cell[i][2]);
 						new_target.push_back(previous_cell[i][3]);
 						path.insert(path.begin(), new_target);
-						cout << "Previous " << previous_cell[i][2] << " " << previous_cell[i][3] << endl;
+						// cout << "Previous " << previous_cell[i][2] << " " << previous_cell[i][3] << endl;
 						found = true;
 						break;
 					}
 				}
-				cout << path[0][0] << " " << current_x << " " << path[0][1] << " " << current_y << endl;
+				// cout << path[0][0] << " " << current_x << " " << path[0][1] << " " << current_y << endl;
 				if(path[0][0] == current_x and path[0][1] == current_y){
 					break;
 				}
 			}
 			vector< vector<double> > path_from_highway;
-			cout << "Path " << path.size() << endl;
+			// cout << "Path " << path.size() << endl;
 			for(int i = 0; i < path.size(); i++){
-				cout << path[i][0] << " " << path[i][1] << " " << highway_grid[path[i][0]][path[i][1]] << endl;
+				// cout << path[i][0] << " " << path[i][1] << " " << highway_grid[path[i][0]][path[i][1]] << endl;
 				if(highway_grid[path[i][0]][path[i][1]] != -1){
 					if(i > 0){
 						DecisionPoint closest_prev = highways[highway_grid[path[i][0]][path[i][1]]].getClosestPointOnHighway(Position(path[i-1][0], path[i-1][1], 0));
-						cout << closest_prev.point.getX() << " " << closest_prev.point.getY() << endl;
+						// cout << closest_prev.point.getX() << " " << closest_prev.point.getY() << endl;
 						vector<double> closest_point_prev;
 						closest_point_prev.push_back(closest_prev.point.getX());
 						closest_point_prev.push_back(closest_prev.point.getY());
 						path_from_highway.push_back(closest_point_prev);
 					}
 					DecisionPoint closest = highways[highway_grid[path[i][0]][path[i][1]]].getClosestPointOnHighway(Position(path[i][0], path[i][1], 0));
-					cout << closest.point.getX() << " " << closest.point.getY() << endl;
+					// cout << closest.point.getX() << " " << closest.point.getY() << endl;
 					vector<double> closest_point;
 					closest_point.push_back(closest.point.getX());
 					closest_point.push_back(closest.point.getY());
@@ -693,18 +693,18 @@ public:
 	}
 
 	void waypointAchieved(DecisionPoint current_position){
-		cout << "In waypointAchieved" << endl;
+		// cout << "In waypointAchieved" << endl;
 		Position current_waypoint = Position(path_to_top_point[0][0], path_to_top_point[0][1], 0);
 		if(current_position.point.getDistance(current_waypoint) <= 0.5){
-			cout << "Waypoint Achieved, removing waypoint" << endl;
+			// cout << "Waypoint Achieved, removing waypoint" << endl;
 			path_to_top_point.erase(path_to_top_point.begin());
 		}
 	}
 
 	FORRAction goTowardsPoint(DecisionPoint current_position, Position target_position){
-		cout << "In goTowardsPoint" << endl;
+		// cout << "In goTowardsPoint" << endl;
 		double distance_from_target = current_position.point.getDistance(target_position);
-		cout << "Distance from target : " << distance_from_target << endl;
+		// cout << "Distance from target : " << distance_from_target << endl;
 
 		// compute the angular difference between the direction to the target and the current robot direction
 		double robot_direction = current_position.point.getTheta();
@@ -715,7 +715,7 @@ public:
 			required_rotation = required_rotation - (2*M_PI);
 		if(required_rotation < -M_PI)
 			required_rotation = required_rotation + (2*M_PI);
-		cout << "Robot direction : " << robot_direction << ", Goal Direction : " << goal_direction << ", Required rotation : " << required_rotation << endl;
+		// cout << "Robot direction : " << robot_direction << ", Goal Direction : " << goal_direction << ", Required rotation : " << required_rotation << endl;
 		// if the angular difference is greater than smallest turn possible 
 		// pick the right turn to allign itself to the target
 
@@ -724,7 +724,7 @@ public:
 		while(fabs(required_rotation) > rotate[rotIntensity] and rotIntensity < numRotates) {
 			rotIntensity++;
 		}
-		cout << "Rotation Intensity : " << rotIntensity << endl;
+		// cout << "Rotation Intensity : " << rotIntensity << endl;
 		if (rotIntensity > 1) {
 			if (required_rotation < 0){
 				decision = FORRAction(RIGHT_TURN, rotIntensity-1);
@@ -746,16 +746,16 @@ public:
 			while(move[intensity] > current_position.middle_distance_min){
 				intensity--;
 			}
-			cout << "Move Intensity : " << intensity << endl;
+			// cout << "Move Intensity : " << intensity << endl;
 			// decision = FORRAction(FORWARD, intensity);
 		}
-		cout << "Action choosen : " << decision.type << "," << decision.parameter << endl;
+		// cout << "Action choosen : " << decision.type << "," << decision.parameter << endl;
 		last_position = current_position;
 		return decision;
 	}
 
 	bool pointAlreadyInStack(DecisionPoint new_point){
-		cout << "Check if point in stack" << endl;
+		// cout << "Check if point in stack" << endl;
 		int start_highway = highway_grid[(int)(new_point.point.getX())][(int)(new_point.point.getY())];
 		int end_highway = -1;
 		int middle_highway = -1;
@@ -790,7 +790,7 @@ public:
 				close_to_existing = true;
 			}
 		}
-		cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << " close_to_existing " << close_to_existing << endl;
+		// cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << " close_to_existing " << close_to_existing << endl;
 		if(close_to_existing == true){
 			return true;
 		}

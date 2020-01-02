@@ -214,7 +214,7 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
   double angle1 = ls1.angle_min;
   double increment1 = ls1.angle_increment;
   vector<float> laser_ranges1 = ls1.ranges;
-  cout << "angle1 " << angle1 << " increment1 " << increment1 << " laser_ranges1 " << laser_ranges1.size() << endl;
+  // cout << "angle1 " << angle1 << " increment1 " << increment1 << " laser_ranges1 " << laser_ranges1.size() << endl;
   vector< vector<int> > grid;
   for(int i = 0; i < 51; i++){
     vector<int> col;
@@ -259,14 +259,14 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
   for(int k = 1; k < laserscans.size(); k++){
     sensor_msgs::LaserScan ls2 = laserscans[k];
     Position pose2 = poses[k];
-    cout << "pose1 theta " << pose1.getTheta() << " pose2 theta " << pose2.getTheta() << " required_rotation " << required_rotation << endl;
+    // cout << "pose1 theta " << pose1.getTheta() << " pose2 theta " << pose2.getTheta() << " required_rotation " << required_rotation << endl;
     double angle2 = ls2.angle_min + pose2.getTheta() + required_rotation;
     double increment2 = ls2.angle_increment;
     vector<float> laser_ranges2 = ls2.ranges;
-    cout << "angle2 " << angle2 << " increment2 " << increment2 << " laser_ranges2 " << laser_ranges2.size() << endl;
+    // cout << "angle2 " << angle2 << " increment2 " << increment2 << " laser_ranges2 " << laser_ranges2.size() << endl;
     double required_x_shift = pose2.getX() - pose1.getX();
     double required_y_shift = pose2.getY() - pose1.getY();
-    cout << "pose1 " << pose1.getX() << " " << pose1.getY() << " pose2 " << pose2.getX() << " " << pose2.getY() << " required_x_shift " << required_x_shift << " required_y_shift " << required_y_shift << endl;
+    // cout << "pose1 " << pose1.getX() << " " << pose1.getY() << " pose2 " << pose2.getX() << " " << pose2.getY() << " required_x_shift " << required_x_shift << " required_y_shift " << required_y_shift << endl;
     for(int i = 0; i < laser_ranges2.size(); i++){
       // cout << angle2 << " " << laser_ranges2[i] << endl;
       for(double j = 0.0; j <= laser_ranges2[i]; j+=0.1){

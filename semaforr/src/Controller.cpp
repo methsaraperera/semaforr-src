@@ -219,6 +219,14 @@ void Controller::initialize_params(string filename){
       situationsOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("situationsOn " << situationsOn);
     }
+    else if (fileLine.find("highwaysOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      highwaysOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("highwaysOn " << highwaysOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -703,7 +711,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
-      if(aStarOn and highwayExploration->getHighwaysComplete()){
+      if(aStarOn and (!highwaysOn or (highwaysOn and highwayExploration->getHighwaysComplete()))){
         tierTwoDecision(current);
       }
       else{
@@ -711,7 +719,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       firstTaskAssigned = true;
   }
-  if(highwayExploration->getHighwaysComplete()){
+  if(highwayExploration->getHighwaysComplete() or !highwaysOn){
     //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
     bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
@@ -819,7 +827,7 @@ bool Controller::isMissionComplete(){
 //
 FORRAction Controller::decide() {
   ROS_DEBUG("Entering decision loop");
-  if(!highwayExploration->getHighwaysComplete()){
+  if(!highwayExploration->getHighwaysComplete() and highwaysOn){
     return highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
   }
   else{
@@ -911,7 +919,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
       int y = (int)(regions[i].getCenter().get_y()*100);
-      cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+      // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
       bool success = skeleton_planner->getGraph()->addNode(x, y, index_val);
       // added_nodes.push_back(success);
       if(success)
@@ -920,7 +928,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       for(int j = 0; j < exits.size() ; j++){
         int ex = (int)(exits[j].getExitPoint().get_x()*100);
         int ey = (int)(exits[j].getExitPoint().get_y()*100);
-        cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+        // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
         success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
         // added_nodes.push_back(success);
         if(success)
@@ -955,11 +963,11 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       for(int j = 0; j < exits.size() ; j++){
         int index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
         // if(added_nodes[index_val]){
-        cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+        // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
         skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
         int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
         int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
-        cout << "Edge from " << index_val<< " to " << skeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
+        // cout << "Edge from " << index_val<< " to " << skeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
         skeleton_planner->getGraph()->addEdge(index_val, skeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
         // }
         // index_val++;
@@ -990,7 +998,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       //   }
       // }
     }
-    cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
+    // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }
   if(hallwayskel){
     PathPlanner *hwskeleton_planner;
@@ -1004,11 +1012,11 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
     for(int i = 0; i < hallways.size(); i++){
       vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
-      cout << "Hallway " << i << " contains " << points_in_hallway.size() << " points" << endl;
+      // cout << "Hallway " << i << " contains " << points_in_hallway.size() << " points" << endl;
       for(int j = 0; j < points_in_hallway.size(); j++){
         int x = (int)(points_in_hallway[j].get_x()*100);
         int y = (int)(points_in_hallway[j].get_y()*100);
-        cout << "Hallway point " << points_in_hallway[j].get_x() << " " << points_in_hallway[j].get_y() << " " << x << " " << y << endl;
+        // cout << "Hallway point " << points_in_hallway[j].get_x() << " " << points_in_hallway[j].get_y() << " " << x << " " << y << endl;
         bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
         if(success)
           index_val++;
@@ -1022,7 +1030,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
           if(distance_jk <= 3){
             int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[j].get_x()*100), (int)(points_in_hallway[j].get_y()*100));
             int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[k].get_x()*100), (int)(points_in_hallway[k].get_y()*100));
-            cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+            // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
             if(j_ind != k_ind)
               hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
           }
@@ -1049,11 +1057,11 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     //   }
     // }
     for(int i = 0; i < trails_trace.size(); i++){
-      cout << "Trail " << i << " contains " << trails_trace[i].size() << " points" << endl;
+      // cout << "Trail " << i << " contains " << trails_trace[i].size() << " points" << endl;
       for(int j = 0; j < trails_trace[i].size(); j++){
         int x = (int)round(trails_trace[i][j].get_x())*100;
         int y = (int)round(trails_trace[i][j].get_y())*100;
-        cout << "Trail point " << j << " " << trails_trace[i][j].get_x() << " " << trails_trace[i][j].get_y() << " " << x << " " << y << endl;
+        // cout << "Trail point " << j << " " << trails_trace[i][j].get_x() << " " << trails_trace[i][j].get_y() << " " << x << " " << y << endl;
         bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
         // cout << success << endl;
         if(success)
@@ -1067,7 +1075,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         double distance_jk = trails_trace[i][j].get_distance(trails_trace[i][j+1]);
         int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][j].get_x())*100, (int)round(trails_trace[i][j].get_y())*100);
         int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][j+1].get_x())*100, (int)round(trails_trace[i][j+1].get_y())*100);
-        cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+        // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
         if(j_ind != k_ind)
           hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
       }
@@ -1076,7 +1084,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       double distance_jk = trails_trace[i][trails_trace[i].size()-1].get_distance(trails_trace[i+1][0]);
       int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][trails_trace[i].size()-1].get_x())*100, (int)round(trails_trace[i][trails_trace[i].size()-1].get_y())*100);
       int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i+1][0].get_x())*100, (int)round(trails_trace[i+1][0].get_y())*100);
-      cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+      // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
       if(j_ind != k_ind)
         hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
     }
@@ -1084,7 +1092,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)round(regions[i].getCenter().get_x())*100;
       int y = (int)round(regions[i].getCenter().get_y())*100;
-      cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+      // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
       bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
       if(success)
         index_val++;
@@ -1092,7 +1100,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       for(int j = 0; j < exits.size() ; j++){
         int ex = (int)round(exits[j].getExitPoint().get_x())*100;
         int ey = (int)round(exits[j].getExitPoint().get_y())*100;
-        cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+        // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
         success = hwskeleton_planner->getGraph()->addNode(ex, ey, index_val);
         if(success)
           index_val++;
@@ -1103,18 +1111,18 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       vector<FORRExit> exits = regions[i].getExits();
       for(int j = 0; j < exits.size() ; j++){
         int index_val = hwskeleton_planner->getGraph()->getNodeID((int)round(exits[j].getExitPoint().get_x())*100, (int)round(exits[j].getExitPoint().get_y())*100);
-        cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+        // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
         if(region_id != index_val)
           hwskeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
         int tx = (int)round(exits[j].getExitRegionPoint().get_x())*100;
         int ty = (int)round(exits[j].getExitRegionPoint().get_y())*100;
-        cout << "Edge from " << index_val<< " to " << hwskeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
+        // cout << "Edge from " << index_val<< " to " << hwskeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
         if(hwskeleton_planner->getGraph()->getNodeID(tx, ty) != index_val)
           hwskeleton_planner->getGraph()->addEdge(index_val, hwskeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
       }
     }
 
-    cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
+    // cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
   }
 }
 

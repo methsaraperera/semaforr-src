@@ -124,6 +124,7 @@ private:
   bool barrsOn;
   bool aStarOn;
   bool situationsOn;
+  bool highwaysOn;
   bool firstTaskAssigned;
   int highwayFinished;
   bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn, skeleton, hallwayskel;
