@@ -268,6 +268,7 @@ public:
 			else{
 				top_point = highway_stack[0];
 				// cout << "Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+				highway_stack_completed.push_back(top_point);
 				highway_stack.erase(highway_stack.begin());
 				Highway new_highway = Highway(top_point);
 				highways.push_back(new_highway);
@@ -357,7 +358,8 @@ public:
 				int start_highway = 0;
 				int end_highway = 0;
 				int middle_highway = 0;
-				while((start_highway >= 0 and end_highway >= 0) or (start_highway >= 0 and middle_highway >= 0) or (middle_highway >= 0 and end_highway >= 0)){
+				bool already_completed = true;
+				while(((start_highway >= 0 and end_highway >= 0) or (start_highway >= 0 and middle_highway >= 0) or (middle_highway >= 0 and end_highway >= 0)) or already_completed){
 					top_point = highway_stack[0];
 					// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
 					highway_stack.erase(highway_stack.begin());
@@ -370,6 +372,33 @@ public:
 						end_highway = highway_grid[(int)(top_point.left_point.getX())][(int)(top_point.left_point.getY())];
 						middle_highway = highway_grid[(int)((top_point.point.getX() + top_point.left_point.getX())/2.0)][(int)((top_point.point.getY() + top_point.left_point.getY())/2.0)];
 					}
+					for(int i = 0; i < highway_stack_completed.size(); i++){
+						Position new_point_start = top_point.point;
+						Position new_point_end;
+						Position exist_point_start;
+						Position exist_point_end;
+						if(top_point.direction == true){
+							new_point_end = top_point.right_point;
+							exist_point_start = highway_stack_completed[i].point;
+							exist_point_end = highway_stack_completed[i].right_point;
+						}
+						else{
+							new_point_end = top_point.left_point;
+							exist_point_start = highway_stack_completed[i].point;
+							exist_point_end = highway_stack_completed[i].left_point;
+						}
+						double start_to_start_dist = new_point_start.getDistance(exist_point_start);
+						double end_to_end_dist = new_point_end.getDistance(exist_point_end);
+						double start_to_end_dist = new_point_start.getDistance(exist_point_end);
+						double end_to_start_dist = new_point_end.getDistance(exist_point_start);
+						if((start_to_start_dist <= 1 and end_to_end_dist <= 1) or (start_to_end_dist <= 1 and end_to_start_dist <= 1) or (start_to_start_dist <= 1 and start_to_end_dist <= 1) or (end_to_end_dist <= 1 and end_to_start_dist <= 1)){
+							already_completed = true;
+						}
+						else{
+							already_completed = false;
+						}
+					}
+					highway_stack_completed.push_back(top_point);
 					// cout << "start_highway " << start_highway  << " middle_highway " << middle_highway << " end_highway " << end_highway << endl;
 				}
 				// cout << "Final Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
@@ -774,27 +803,196 @@ public:
 			return true;
 		}
 		bool close_to_existing = false;
+		bool close_to_completed = false;
 		for(int i = 0; i < highway_stack.size(); i++){
-			double dist = highway_stack[i].point.getDistance(new_point.point);
-			double end_dist;
-			double diff_view;
+			Position new_point_start = new_point.point;
+			Position new_point_end;
+			Position exist_point_start;
+			Position exist_point_end;
 			if(new_point.direction == true){
-				diff_view = fabs(highway_stack[i].farthest_view_right - new_point.farthest_view_right);
-				end_dist = highway_stack[i].right_point.getDistance(new_point.right_point);
+				new_point_end = new_point.right_point;
+				exist_point_start = highway_stack[i].point;
+				exist_point_end = highway_stack[i].right_point;
 			}
 			else{
-				diff_view = fabs(highway_stack[i].farthest_view_left - new_point.farthest_view_left);
-				end_dist = highway_stack[i].left_point.getDistance(new_point.left_point);
+				new_point_end = new_point.left_point;
+				exist_point_start = highway_stack[i].point;
+				exist_point_end = highway_stack[i].left_point;
 			}
-			if(dist <= 1 and diff_view <= 20 and end_dist <= 1){
+			double new_dist = new_point_start.getDistance(new_point_end);
+			double exist_dist = exist_point_start.getDistance(exist_point_end);
+			double start_to_start_dist = new_point_start.getDistance(exist_point_start);
+			double end_to_end_dist = new_point_end.getDistance(exist_point_end);
+			double start_to_end_dist = new_point_start.getDistance(exist_point_end);
+			double end_to_start_dist = new_point_end.getDistance(exist_point_start);
+			if((start_to_start_dist <= 1 and end_to_end_dist <= 1) or (start_to_end_dist <= 1 and end_to_start_dist <= 1) or (start_to_start_dist <= 1 and start_to_end_dist <= 1) or (end_to_end_dist <= 1 and end_to_start_dist <= 1)){
 				close_to_existing = true;
+				break;
+			}
+			double x = new_point_start.getX();
+			double y = new_point_start.getY();
+			double x1 = exist_point_start.getX();
+			double y1 = exist_point_start.getY();
+			double x2 = exist_point_end.getX();
+			double y2 = exist_point_end.getY();
+			double A = x - x1;
+			double B = y - y1;
+			double C = x2 - x1;
+			double D = y2 - y1;
+			double dot = A * C + B * D;
+			double len_sq = C * C + D * D;
+			double param = -1;
+			if (len_sq != 0) //in case of 0 length line
+				param = dot / len_sq;
+			double xx, yy;
+			if (param < 0) {
+				xx = x1;
+				yy = y1;
+			}
+			else if (param > 1) {
+				xx = x2;
+				yy = y2;
+			}
+			else {
+				xx = x1 + param * C;
+				yy = y1 + param * D;
+			}
+			double dx = x - xx;
+			double dy = y - yy;
+			double start_to_closest_exist = sqrt(dx * dx + dy * dy);
+			Position start_to_closest_on_exist(xx, yy, 0);
+			x = new_point_end.getX();
+			y = new_point_end.getY();
+			x1 = exist_point_start.getX();
+			y1 = exist_point_start.getY();
+			x2 = exist_point_end.getX();
+			y2 = exist_point_end.getY();
+			A = x - x1;
+			B = y - y1;
+			C = x2 - x1;
+			D = y2 - y1;
+			dot = A * C + B * D;
+			len_sq = C * C + D * D;
+			param = -1;
+			if (len_sq != 0) //in case of 0 length line
+				param = dot / len_sq;
+			if (param < 0) {
+				xx = x1;
+				yy = y1;
+			}
+			else if (param > 1) {
+				xx = x2;
+				yy = y2;
+			}
+			else {
+				xx = x1 + param * C;
+				yy = y1 + param * D;
+			}
+			dx = x - xx;
+			dy = y - yy;
+			double end_to_closest_exist = sqrt(dx * dx + dy * dy);
+			Position end_to_closest_on_exist(xx, yy, 0);
+			x = exist_point_start.getX();
+			y = exist_point_start.getY();
+			x1 = new_point_start.getX();
+			y1 = new_point_start.getY();
+			x2 = new_point_end.getX();
+			y2 = new_point_end.getY();
+			A = x - x1;
+			B = y - y1;
+			C = x2 - x1;
+			D = y2 - y1;
+			dot = A * C + B * D;
+			len_sq = C * C + D * D;
+			param = -1;
+			if (len_sq != 0) //in case of 0 length line
+				param = dot / len_sq;
+			if (param < 0) {
+				xx = x1;
+				yy = y1;
+			}
+			else if (param > 1) {
+				xx = x2;
+				yy = y2;
+			}
+			else {
+				xx = x1 + param * C;
+				yy = y1 + param * D;
+			}
+			dx = x - xx;
+			dy = y - yy;
+			double start_to_closest_new = sqrt(dx * dx + dy * dy);
+			Position start_to_closest_on_new(xx, yy, 0);
+			x = exist_point_end.getX();
+			y = exist_point_end.getY();
+			x1 = new_point_start.getX();
+			y1 = new_point_start.getY();
+			x2 = new_point_end.getX();
+			y2 = new_point_end.getY();
+			A = x - x1;
+			B = y - y1;
+			C = x2 - x1;
+			D = y2 - y1;
+			dot = A * C + B * D;
+			len_sq = C * C + D * D;
+			param = -1;
+			if (len_sq != 0) //in case of 0 length line
+				param = dot / len_sq;
+			if (param < 0) {
+				xx = x1;
+				yy = y1;
+			}
+			else if (param > 1) {
+				xx = x2;
+				yy = y2;
+			}
+			else {
+				xx = x1 + param * C;
+				yy = y1 + param * D;
+			}
+			dx = x - xx;
+			dy = y - yy;
+			double end_to_closest_new = sqrt(dx * dx + dy * dy);
+			Position end_to_closest_on_new(xx, yy, 0);
+
+			if((end_to_closest_exist <= 1 and start_to_closest_new <= 1 and end_to_closest_on_exist.getDistance(start_to_closest_on_new) >= ((new_dist + exist_dist)/2.0)/3.0) or (end_to_closest_new <= 1 and start_to_closest_exist <= 1 and end_to_closest_on_new.getDistance(start_to_closest_on_exist) >= ((new_dist + exist_dist)/2.0)/3.0) or (start_to_start_dist <= 1 and end_to_closest_exist <= 1) or (start_to_start_dist <= 1 and end_to_closest_new <= 1) or (start_to_closest_exist <= 1 and end_to_closest_exist <= 1) or (start_to_closest_new <= 1 and end_to_closest_new <= 1) or (end_to_end_dist <= 1 and start_to_closest_exist <= 1) or (end_to_end_dist <= 1 and start_to_closest_new <= 1)){
+				close_to_existing = true;
+				break;
 			}
 		}
-		// cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << " close_to_existing " << close_to_existing << endl;
 		if(close_to_existing == true){
 			return true;
 		}
-		else if(start_highway >= 0 and middle_highway >= 0 and end_highway >= 0){
+		for(int i = 0; i < highway_stack_completed.size(); i++){
+			Position new_point_start = new_point.point;
+			Position new_point_end;
+			Position exist_point_start;
+			Position exist_point_end;
+			if(new_point.direction == true){
+				new_point_end = new_point.right_point;
+				exist_point_start = highway_stack_completed[i].point;
+				exist_point_end = highway_stack_completed[i].right_point;
+			}
+			else{
+				new_point_end = new_point.left_point;
+				exist_point_start = highway_stack_completed[i].point;
+				exist_point_end = highway_stack_completed[i].left_point;
+			}
+			double start_to_start_dist = new_point_start.getDistance(exist_point_start);
+			double end_to_end_dist = new_point_end.getDistance(exist_point_end);
+			double start_to_end_dist = new_point_start.getDistance(exist_point_end);
+			double end_to_start_dist = new_point_end.getDistance(exist_point_start);
+			if((start_to_start_dist <= 1 and end_to_end_dist <= 1) or (start_to_end_dist <= 1 and end_to_start_dist <= 1) or (start_to_start_dist <= 1 and start_to_end_dist <= 1) or (end_to_end_dist <= 1 and end_to_start_dist <= 1)){
+				close_to_completed = true;
+				break;
+			}
+		}
+		// cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << " close_to_existing " << close_to_existing << endl;
+		if(close_to_completed == true){
+			return true;
+		}
+
+		if(start_highway >= 0 and middle_highway >= 0 and end_highway >= 0){
 			return true;
 		}
 		else if(start_highway == -1 and (middle_highway == -1 or end_highway == -1)){
@@ -822,6 +1020,7 @@ private:
 	vector<Highway> highways;
 	// priority_queue<DecisionPoint> highway_queue;
 	vector<DecisionPoint> highway_stack;
+	vector<DecisionPoint> highway_stack_completed;
 	DecisionPoint last_position;
 	int last_highway;
 	Position current_target;

@@ -390,7 +390,8 @@ int FORRSituations::identifySituationAssignment(vector<float> action_grid) {
 
 
 void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailMarker> trail) {
-  Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
+  // Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
+  Position target = agentState->getCurrentTask()->getPositionHistory()->back();
   vector<double> target_distances;
   vector<double> target_angles;
   vector<FORRAction> trail_actions;

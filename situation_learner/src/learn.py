@@ -79,13 +79,13 @@ def publish_situations():
 				clusters_renumbered.append(str(val))
 			else:
 				clusters_renumbered.append(str(clus_values.index(val)))
-		print clusters_renumbered
+		# print clusters_renumbered
 		Mean_Values = []
 		Mean_Counts = []
 		for i in range(0, num_clusters):
-			if len(Actions[np.array(clusters) == i]) > 0:
-				Mean_Values.append(np.mean(Actions[np.array(clusters) == i], axis=0))
-				Mean_Counts.append(len(Actions[np.array(clusters) == i]))
+			if len(Actions[np.array(clusters_renumbered) == str(i)]) > 0:
+				Mean_Values.append(np.mean(Actions[np.array(clusters_renumbered) == str(i)], axis=0))
+				Mean_Counts.append(len(Actions[np.array(clusters_renumbered) == str(i)]))
 		situations = ""
 		for i in range(0, len(Mean_Counts)):
 			values = ""
