@@ -81,8 +81,8 @@ class FORRRegionList{
       }
      
       current_point = CartesianPoint(current_position.getX(), current_position.getY());
-      current_region = FORRRegion(current_point, radius);
-      for(int j = 0 ; j < laserHis.size(); j++){
+      current_region = FORRRegion(current_point, laserEndpoints, radius);
+      for(int j = k+1 ; j < laserHis.size(); j++){
 	vector <CartesianPoint> nextLaserEndpoints = laserHis[j];
 	Position next_position = positionHis[j];
 	// if next position in still inside the current_region update current_region radius
@@ -97,11 +97,12 @@ class FORRRegionList{
 	      next_direction = i;
 	    }
 	  }
+          current_region.addLaser(nextLaserEndpoints);
 	  double x = nextLaserEndpoints[next_direction].get_x();
 	  double y = nextLaserEndpoints[next_direction].get_y();
 	  double dist = current_region.getCenter().get_distance(CartesianPoint(x , y));
 	  if(dist < current_region.getRadius() and dist >= 0.1)
-	    current_region.setRadius(dist);	       
+	    current_region.setRadius(dist);
 	} 
       }
       
@@ -113,6 +114,7 @@ class FORRRegionList{
       }
       // correct previously create region 
       if(robotRegion != -1){
+        regions[robotRegion].addLaser(laserEndpoints);
 	double x = laserEndpoints[direction].get_x();
 	double y = laserEndpoints[direction].get_y();
 	double dist = regions[robotRegion].getCenter().get_distance(CartesianPoint(x,y));
@@ -141,10 +143,11 @@ class FORRRegionList{
 	  //cout << "for region " << i << endl;
 	  if(current_region.doIntersect(regions[i])){
 	    //cout << "Deleting region:"  << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << regions[i].getRadius() << endl;
-	    regions.erase(regions.begin() + i);
+	    current_region.addLasers(regions[i].getLasers());
+            regions.erase(regions.begin() + i);
 	    i--;
 	  }
-	}	
+	}
 	regions.push_back(current_region);
       }
     }

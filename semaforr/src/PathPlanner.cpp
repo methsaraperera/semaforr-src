@@ -1044,19 +1044,59 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     Node temp;
     if(PATH_DEBUG)
       cout << signature << "Searching for any closest node " << endl;
+
+    int nRegion=-1;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0)){
+        nRegion = i;
+      }
+      if(nRegion >= 0){
+        break;
+      }
+    }
+    if(nRegion >= 0){
+      int x = (int)(regions[nRegion].getCenter().get_x()*100);
+      int y = (int)(regions[nRegion].getCenter().get_y()*100);
+      temp = navGraph->getNode(navGraph->getNodeID(x, y));
+      return temp;
+    }
+
+    int vRegion=-1;
+    double vDist=1000000;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20)){
+        double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+        if(dist_to_region < vDist){
+          vRegion = i;
+          vDist = dist_to_region;
+        }
+      }
+    }
+    if(vRegion >= 0){
+      int x = (int)(regions[vRegion].getCenter().get_x()*100);
+      int y = (int)(regions[vRegion].getCenter().get_y()*100);
+      temp = navGraph->getNode(navGraph->getNodeID(x, y));
+      return temp;
+    }
+
     vector<Node*> nodes = navGraph->getNodes();
     vector<Node*>::iterator iter;
-    double min_distance = 100000000.0;
+    // double min_distance = 100000000.0;
+    double max_score = -100000000.0;
     for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
-      double d = Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() );
-      if(d < min_distance){
-        min_distance = d;
+      double d = -5.0 * (Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0);
+      double neighbors = (*iter)->numNeighbors();
+      double score = d + neighbors;
+      // if(d < min_distance){
+        // min_distance = d;
+      if(score > max_score){
+        max_score = score;
         temp = (*(*iter));
         if(PATH_DEBUG) {
           cout << "\tFound a new candidate!: ";
           temp.printNode();
           cout << endl;
-          cout << "\tDistance between the n and this node: " << d << endl;
+          cout << "\tDistance between n and this node: " << d / -5.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
         }
       }
     }

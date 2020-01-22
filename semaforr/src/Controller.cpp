@@ -827,13 +827,16 @@ bool Controller::isMissionComplete(){
 //
 FORRAction Controller::decide() {
   ROS_DEBUG("Entering decision loop");
+  FORRAction decidedAction;
   if(!highwayExploration->getHighwaysComplete() and highwaysOn){
-    return highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+    decidedAction = highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
   }
   else{
     highwayFinished++;
-    return FORRDecision();
+    decidedAction = FORRDecision();
   }
+  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
+  return decidedAction;
 }
 
 
@@ -1159,9 +1162,6 @@ FORRAction Controller::FORRDecision()
   else{
     beliefs->getAgentState()->setRotateMode(false);
   }
-  Position current = beliefs->getAgentState()->getCurrentPosition();
-  sensor_msgs::LaserScan laser_scan = beliefs->getAgentState()->getCurrentLaserScan();
-  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan, current, true, *decision);
   return *decision;
 }
 

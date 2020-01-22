@@ -241,6 +241,9 @@ bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, Cart
   if (numFree > 3) {
     canAccessPoint = true;
   }
+  else{
+    return false;
+  }
   //else, not visible
   //return canAccessPoint;
   double epsilon = canSeePointEpsilon;

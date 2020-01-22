@@ -226,13 +226,13 @@ public:
 		too_close = false;
 		too_close_front = false;
 		top_point_decisions = 0;
-		decision_limit = 1000;
+		decision_limit = 750;
 	};
 	~HighwayExplorer(){};
 
 	bool getHighwaysComplete(){return highways_complete;}
 	void setHighwaysComplete(double time){
-		if(time >= 1200)
+		if(time >= 400)
 			highways_complete = true;
 	}
 
