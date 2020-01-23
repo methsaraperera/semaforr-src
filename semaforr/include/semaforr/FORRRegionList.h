@@ -97,7 +97,8 @@ class FORRRegionList{
 	      next_direction = i;
 	    }
 	  }
-          current_region.addLaser(nextLaserEndpoints);
+          // current_region.addLaser(nextLaserEndpoints);
+          current_region.adjustVisibility(CartesianPoint(next_position.getX(), next_position.getY()), nextLaserEndpoints);
 	  double x = nextLaserEndpoints[next_direction].get_x();
 	  double y = nextLaserEndpoints[next_direction].get_y();
 	  double dist = current_region.getCenter().get_distance(CartesianPoint(x , y));
@@ -114,7 +115,8 @@ class FORRRegionList{
       }
       // correct previously create region 
       if(robotRegion != -1){
-        regions[robotRegion].addLaser(laserEndpoints);
+        // regions[robotRegion].addLaser(laserEndpoints);
+        regions[robotRegion].adjustVisibility(current_point, laserEndpoints);
 	double x = laserEndpoints[direction].get_x();
 	double y = laserEndpoints[direction].get_y();
 	double dist = regions[robotRegion].getCenter().get_distance(CartesianPoint(x,y));
@@ -143,7 +145,8 @@ class FORRRegionList{
 	  //cout << "for region " << i << endl;
 	  if(current_region.doIntersect(regions[i])){
 	    //cout << "Deleting region:"  << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << regions[i].getRadius() << endl;
-	    current_region.addLasers(regions[i].getLasers());
+	    // current_region.addLasers(regions[i].getLasers());
+            current_region.mergeVisibility(regions[i].getVisibility());
             regions.erase(regions.begin() + i);
 	    i--;
 	  }

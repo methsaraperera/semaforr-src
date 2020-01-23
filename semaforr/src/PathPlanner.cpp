@@ -1057,6 +1057,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     if(nRegion >= 0){
       int x = (int)(regions[nRegion].getCenter().get_x()*100);
       int y = (int)(regions[nRegion].getCenter().get_y()*100);
+      cout << "Point in region " << nRegion << " x " << x << " y " << y << endl;
       temp = navGraph->getNode(navGraph->getNodeID(x, y));
       return temp;
     }
@@ -1067,6 +1068,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
       if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20)){
         double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
         if(dist_to_region < vDist){
+          cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
           vRegion = i;
           vDist = dist_to_region;
         }
@@ -1075,10 +1077,11 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     if(vRegion >= 0){
       int x = (int)(regions[vRegion].getCenter().get_x()*100);
       int y = (int)(regions[vRegion].getCenter().get_y()*100);
+      cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
       temp = navGraph->getNode(navGraph->getNodeID(x, y));
       return temp;
     }
-
+    cout << "Not in region or visible to region, searching for close node" << endl;
     vector<Node*> nodes = navGraph->getNodes();
     vector<Node*>::iterator iter;
     // double min_distance = 100000000.0;

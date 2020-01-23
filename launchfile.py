@@ -136,13 +136,13 @@ cusum = "off"
 discount = "off"
 explore = "off"
 
-num_runs = 1
-for i in range(0,num_runs):
+num_runs = 2
+for i in range(1,num_runs):
     target_file_name = "target1.conf"
-    log_name = map_name + "_sit_high1_" + str(i) + ".txt"
+    log_name = map_name + "_sit_highnew1_" + str(i) + ".txt"
     advisors = "/config/advisors1.conf"
     params = "/config/params4.conf"
-    situations = "/config/situations4.conf"
+    situations = "/config/situations5.conf"
     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
