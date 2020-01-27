@@ -232,9 +232,12 @@ public:
 
 	bool getHighwaysComplete(){return highways_complete;}
 	void setHighwaysComplete(double time){
-		if(time >= 1200)
+		if(time >= 1800)
 			highways_complete = true;
 	}
+
+	vector< vector<int> > getHighwayGrid(){return highway_grid;}
+	vector< vector< vector< pair<int, int> > > > getHighwayGridConnections(){return highway_grid_connections;}
 
 	FORRAction exploreDecision(Position current_point, sensor_msgs::LaserScan current_laser){
 		DecisionPoint current_position = DecisionPoint(current_point, current_laser);

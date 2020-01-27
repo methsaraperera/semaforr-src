@@ -202,13 +202,14 @@ class FORRRegionList{
           beginFound = false;
           end_region_id = region_id;
           end_position = j;
+          CartesianPoint midpoint = stepped_history[(int)((begin_position+end_position)/2)];
           // cout << "Ending Position : " << end_position << endl;
           double connectionBetweenRegions = 0;
           for(int m = begin_position; m < end_position; m++){
             connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
           }
           // cout << "Distance of connection : " << connectionBetweenRegions << endl;
-          saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions);
+          saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, midpoint, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions);
         }
       }
     }
@@ -226,7 +227,7 @@ class FORRRegionList{
     }
   }
 
-  void saveExit(CartesianPoint begin1, CartesianPoint begin2, int begin_region, CartesianPoint end1, CartesianPoint end2, int end_region, double connection_length){
+  void saveExit(CartesianPoint begin1, CartesianPoint begin2, int begin_region, CartesianPoint midpoint, CartesianPoint end1, CartesianPoint end2, int end_region, double connection_length){
     //CartesianPoint exit_begin_p = getPointOnRegion(begin2, begin_region);
     //CartesianPoint exit_end_p = getPointOnRegion(end1, end_region);
     
@@ -237,8 +238,8 @@ class FORRRegionList{
     //cout << "End exit begin/end" << endl;
 
     //cout << "In save exit  " << "Start region : " << begin_region << "End region : " << end_region << endl;
-    FORRExit exit_begin ( exit_begin_p , exit_end_p , end_region , connection_length);
-    FORRExit exit_end ( exit_end_p , exit_begin_p , begin_region , connection_length);
+    FORRExit exit_begin (exit_begin_p, midpoint, exit_end_p, end_region, connection_length);
+    FORRExit exit_end (exit_end_p, midpoint, exit_begin_p, begin_region, connection_length);
     if(!regions[begin_region].isExitAlreadyPresent(exit_begin))
        regions[begin_region].addExit(exit_begin);
     if(!regions[end_region].isExitAlreadyPresent(exit_end))

@@ -42,9 +42,9 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
     for(int j = 0; j < grid[i].size(); j++){
       new_situation.push_back(grid[i][j]);
       new_situation_float.push_back((float)(grid[i][j]));
-      // cout << grid[i][j] << " ";
+      cout << grid[i][j] << " ";
     }
-    // cout << endl;
+    cout << endl;
   }
   vector<float> distances;
   for(int i = 0; i < situations.size(); i++){
@@ -61,7 +61,8 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
     // situation_assignments.push_back(min_pos);
     // situation_laserscans.push_back(ls);
     if(add_to_existing){
-      // cout << min_pos << " " << situation_counts[min_pos] << endl;
+      cout << min_pos << " " << situation_counts[min_pos] << endl;
+      printSituation(min_pos);
       vector<float> min_sit = situations[min_pos];
       vector<float> min_sit_counts;
       for(int i = 0; i < min_sit.size(); i++){
@@ -226,16 +227,17 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
   for(int i = 0; i < laser_ranges1.size(); i++){
     // cout << angle1 << " " << laser_ranges1[i] << endl;
     for(double j = 0.0; j <= laser_ranges1[i]; j+=0.1){
-      int x = (int)(round(j * cos(angle1)))+25;
-      int y = (int)(round(j * sin(angle1)))+25;
-      if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-        grid[x][y] += 1;
-      }
-      // x = (int)(j * cos(angle1))+25;
-      // y = (int)(j * sin(angle1))+25;
+      // int x = (int)(round(j * cos(angle1)))+25;
+      // int y = (int)(round(j * sin(angle1)))+25;
       // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
       //   grid[x][y] += 1;
       // }
+      int x = (int)(j * cos(angle1))+25;
+      int y = (int)(j * sin(angle1))+25;
+      if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        grid[x][y] = 1;
+        // cout << x << " " << y << endl;
+      }
       // x = (int)(floor(j * cos(angle1)))+25;
       // y = (int)(floor(j * sin(angle1)))+25;
       // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
@@ -246,6 +248,23 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
       // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
       //   grid[x][y] += 1;
       // }
+    }
+    if(laser_ranges1[i] < 20){
+      int x1 = (int)(ceil(laser_ranges1[i] * cos(angle1)))+25;
+      int y1 = (int)(ceil(laser_ranges1[i] * sin(angle1)))+25;
+      int x2 = (int)(ceil(laser_ranges1[i]+0.1 * cos(angle1)))+25;
+      int y2 = (int)(ceil(laser_ranges1[i]+0.1 * sin(angle1)))+25;
+      // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+      if(x1 >= 0 and x1 <= 51 and y1 >= 0 and y1 <= 51){
+        if(grid[x1][y1] == 0){
+          grid[x1][y1] = -1;
+        }
+        else if(x2 >= 0 and x2 <= 51 and y2 >= 0 and y2 <= 51){
+          if(grid[x2][y2] == 0){
+            grid[x2][y2] = -1;
+          }
+        }
+      }
     }
     angle1 = angle1 + increment1;
   }
@@ -270,16 +289,17 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
     for(int i = 0; i < laser_ranges2.size(); i++){
       // cout << angle2 << " " << laser_ranges2[i] << endl;
       for(double j = 0.0; j <= laser_ranges2[i]; j+=0.1){
-        int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
-        int y = (int)(round(j * sin(angle2) + required_y_shift))+25;
-        if(x >= 0 and x < 51 and y >= 0 and y < 51){
-          grid[x][y] += 1;
-        }
-        // x = (int)(j * cos(angle2) + required_x_shift)+25;
-        // y = (int)(j * sin(angle2) + required_y_shift)+25;
-        // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+        // int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
+        // int y = (int)(round(j * sin(angle2) + required_y_shift))+25;
+        // if(x >= 0 and x < 51 and y >= 0 and y < 51){
         //   grid[x][y] += 1;
         // }
+        int x = (int)(j * cos(angle2) + required_x_shift)+25;
+        int y = (int)(j * sin(angle2) + required_y_shift)+25;
+        if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+          grid[x][y] = 1;
+          // cout << x << " " << y << endl;
+        }
         // x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
         // y = (int)(floor(j * sin(angle2) + required_y_shift))+25;
         // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
@@ -290,6 +310,23 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
         // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
         //   grid[x][y] += 1;
         // }
+      }
+      if(laser_ranges2[i] < 20){
+        int x1 = (int)(ceil(laser_ranges2[i] * cos(angle2) + required_x_shift))+25;
+        int y1 = (int)(ceil(laser_ranges2[i] * sin(angle2) + required_y_shift))+25;
+        int x2 = (int)(ceil(laser_ranges2[i]+0.1 * cos(angle2) + required_x_shift))+25;
+        int y2 = (int)(ceil(laser_ranges2[i]+0.1 * sin(angle2) + required_y_shift))+25;
+        // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+        if(x1 >= 0 and x1 <= 51 and y1 >= 0 and y1 <= 51){
+          if(grid[x1][y1] == 0){
+            grid[x1][y1] = -1;
+          }
+          else if(x2 >= 0 and x2 <= 51 and y2 >= 0 and y2 <= 51){
+            if(grid[x2][y2] == 0){
+              grid[x2][y2] = -1;
+            }
+          }
+        }
       }
       angle2 = angle2 + increment2;
     }
@@ -404,63 +441,206 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
   cout << "Trail start " << trail[0].coordinates.get_x() << " " << trail[0].coordinates.get_y() << " Situation Observations Start " << current_situation_observations[0].pose.getX() << " " << current_situation_observations[0].pose.getY() << endl;
   cout << "Trail end " << trail[trail.size()-1].coordinates.get_x() << " " << trail[trail.size()-1].coordinates.get_y() << " Situation Observations end " << current_situation_observations[current_situation_observations.size()-1].pose.getX() << " " << current_situation_observations[current_situation_observations.size()-1].pose.getY() << endl;
   vector<int> trail_situation_assignments;
-
   set<FORRAction> *action_set = agentState->getActionSet();
   set<FORRAction>::iterator actionIter;
   // for(int i = 0 ; i < pos_hist->size() ; i++){
   for(int i = 0 ; i < current_situation_observations.size() ; i++){
-    for(int j = trail.size()-1; j >= 1; j--){
-      vector<CartesianPoint> current_laser = agentState->transformToEndpoints(current_situation_observations[i].pose, current_situation_observations[i].ls);
-      if(agentState->canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 5)) {
-        cout << "found furthest trail marker" << endl;
-        cout << "pose " << current_situation_observations[i].pose.getX() << " " << current_situation_observations[i].pose.getY() << " trail marker " << trail[j].coordinates.get_x() << " " << trail[j].coordinates.get_y() << endl;
-        std::map <FORRAction, double> result;
-        typedef map<FORRAction, double>::iterator mapIt;
-        for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
-          FORRAction forrAction = *actionIter;
-          if(forrAction.type == PAUSE){
-          // if(forrAction.type == PAUSE or forrAction.type == FORWARD){
-            continue;
-          }
-          else{
-            Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, current_laser, current_situation_observations[i].pose);
-            result[forrAction] = expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y());
-            cout << forrAction.type << " " << forrAction.parameter << " " << expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()) << endl;
-          }
-        }
-        double minDistanceToTrailMarker = 1000000;
-        for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
-          if(iterator->second < minDistanceToTrailMarker){
-            minDistanceToTrailMarker = iterator->second;
-          }
-        }
-        if(minDistanceToTrailMarker > 1){
+    cout << "pose " << current_situation_observations[i].pose.getX() << " " << current_situation_observations[i].pose.getY() << " " << current_situation_observations[i].pose.getTheta() << endl;
+    if(current_situation_observations[i].assignment == -1){
+      continue;
+    }
+    vector<CartesianPoint> current_laser = agentState->transformToEndpoints(current_situation_observations[i].pose, current_situation_observations[i].ls);
+    FORRAction max_forward = agentState->maxForwardAction(current_situation_observations[i].pose, current_laser);
+    ROS_DEBUG_STREAM("Max allowed forward action : " << max_forward.type << " " << max_forward.parameter);
+    int intensity = max_forward.parameter;
+    set<FORRAction> vetoedActions;
+    set<FORRAction> *forward_set = agentState->getForwardActionSet();
+    cout << forward_set->size() << endl;
+    for(int f = forward_set->size()-1 ; f > 0; f--){
+      cout << f << endl;
+      FORRAction a(FORWARD,f);
+      if(f > intensity){
+        ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+        vetoedActions.insert(a);
+      }
+      cout << f << endl;
+    }
+    vector<int> visible_trailmarkers;
+    vector<double> dist_to_trailmarkers;
+    int target_trailmarker = -1;
+    int max_trailmarker = -1;
+    int close_trailmarker = -1;
+    cout << "visible_trailmarkers ";
+    for(int j = 0; j < trail.size(); j++){
+      dist_to_trailmarkers.push_back(current_situation_observations[i].pose.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()));
+      if(agentState->canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 10)) {
+        visible_trailmarkers.push_back(j);
+        cout << j << " ";
+      }
+    }
+    cout << endl;
+    if(visible_trailmarkers.size() > 0){
+      max_trailmarker = visible_trailmarkers[visible_trailmarkers.size()-1];
+      cout << "max_trailmarker " << max_trailmarker << endl;
+    }
+    // if(visible_trailmarkers.size() == 0){
+    //   continue;
+    // }
+    int min_dist_trailmarker;
+    double min_dist = 1000000.0;
+    for(int j = 0; j < dist_to_trailmarkers.size()-1; j++){
+      double combined_dist = dist_to_trailmarkers[j] + dist_to_trailmarkers[j+1];
+      if(combined_dist < min_dist){
+        min_dist = combined_dist;
+        min_dist_trailmarker = j;
+      }
+    }
+    cout << "min_dist_trailmarker " << min_dist_trailmarker << " min_dist combined " << min_dist << " dist_to_trailmarker 1 " << dist_to_trailmarkers[min_dist_trailmarker] << " dist_to_trailmarker 2 " << dist_to_trailmarkers[min_dist_trailmarker+1] << endl;
+    close_trailmarker = min_dist_trailmarker+1;
+    // if(max_trailmarker <= min_dist_trailmarker){
+    //   continue;
+    // }
+    if(max_trailmarker >= close_trailmarker){
+      target_trailmarker = max_trailmarker;
+    }
+    else{
+      target_trailmarker = close_trailmarker;
+    }
+    if(target_trailmarker == -1){
+      continue;
+    }
+    double dist_to_target_trailmarker = dist_to_trailmarkers[target_trailmarker];
+    cout << "target_trailmarker " << target_trailmarker << " dist_to_target_trailmarker " << dist_to_target_trailmarker << endl;
+    cout << "found furthest trail marker " << trail[target_trailmarker].coordinates.get_x() << " " << trail[target_trailmarker].coordinates.get_y() << endl;
+    double angle_to_target = atan2((target.getY() - current_situation_observations[i].pose.getY()), (target.getX() - current_situation_observations[i].pose.getX()));
+    double required_rotation = angle_to_target - current_situation_observations[i].pose.getTheta();
+    if(required_rotation > M_PI){
+      required_rotation = required_rotation - (2 * M_PI);
+    }
+    if(required_rotation < -M_PI){
+      required_rotation = required_rotation + (2 * M_PI);
+    }
+    cout << "Distance to target " << current_situation_observations[i].pose.getDistance(target) << " Rotation to target " << required_rotation << " Situation " << current_situation_observations[i].assignment << endl;
+    printSituation(current_situation_observations[i].assignment);
+    std::map <FORRAction, double> result;
+    typedef map<FORRAction, double>::iterator mapIt;
+    for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+      FORRAction forrAction = *actionIter;
+      // cout << forrAction.type << " " << forrAction.parameter << endl;
+      if(forrAction.type == PAUSE){
+      // if(forrAction.type == PAUSE or forrAction.type == FORWARD){
+        continue;
+      }
+      else if(vetoedActions.size() > 0){
+        if(vetoedActions.find(forrAction) != vetoedActions.end()){
           continue;
         }
-        // cout << minDistanceToTrailMarker << endl;
-        for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
-          if(iterator->second == minDistanceToTrailMarker){
-            cout << iterator->first.type << " " << iterator->first.parameter << endl;
-            trail_actions.push_back(iterator->first);
-            break;
+        else{
+          // cout << forrAction.type << " " << forrAction.parameter << endl;
+          Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, current_laser, current_situation_observations[i].pose);
+          cout << expectedPosition.getX() << " " << expectedPosition.getY() << endl;
+          double dist_to_expected = expectedPosition.getDistance(trail[target_trailmarker].coordinates.get_x(), trail[target_trailmarker].coordinates.get_y());
+          if(dist_to_expected <= dist_to_target_trailmarker){
+            result[forrAction] = dist_to_expected;
+            cout << forrAction.type << " " << forrAction.parameter << " " << dist_to_expected << endl;
           }
         }
+      }
+      else{
+        // cout << forrAction.type << " " << forrAction.parameter << endl;
+        Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, current_laser, current_situation_observations[i].pose);
+        cout << expectedPosition.getX() << " " << expectedPosition.getY() << endl;
+        double dist_to_expected = expectedPosition.getDistance(trail[target_trailmarker].coordinates.get_x(), trail[target_trailmarker].coordinates.get_y());
+        if(dist_to_expected <= dist_to_target_trailmarker){
+          result[forrAction] = dist_to_expected;
+          cout << forrAction.type << " " << forrAction.parameter << " " << dist_to_expected << endl;
+        }
+      }
+    }
+    double minDistanceToTrailMarker = 1000000;
+    for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
+      if(iterator->second < minDistanceToTrailMarker){
+        minDistanceToTrailMarker = iterator->second;
+      }
+    }
+    for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
+       if(iterator->second == minDistanceToTrailMarker){
+        trail_actions.push_back(iterator->first);
         target_distances.push_back(current_situation_observations[i].pose.getDistance(target));
-        double angle_to_target = atan2((target.getY() - current_situation_observations[i].pose.getY()), (target.getX() - current_situation_observations[i].pose.getX()));
-        double required_rotation = angle_to_target - current_situation_observations[i].pose.getTheta();
-        if(required_rotation > M_PI){
-          required_rotation = required_rotation - (2 * M_PI);
-        }
-        if(required_rotation < -M_PI){
-          required_rotation = required_rotation + (2 * M_PI);
-        }
         target_angles.push_back(required_rotation);
         trail_situation_assignments.push_back(current_situation_observations[i].assignment);
         actual_actions.push_back(current_situation_observations[i].actual_action);
-        cout << current_situation_observations[i].pose.getDistance(target) << " " << required_rotation << " " << current_situation_observations[i].assignment << endl;
-        break;
       }
     }
+    // for(int j = trail.size()-1; j >= 1; j--){
+    //   if(agentState->canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 5)) {
+    //     cout << "found furthest trail marker" << endl;
+    //     cout << "pose " << current_situation_observations[i].pose.getX() << " " << current_situation_observations[i].pose.getY() << " trail marker " << trail[j].coordinates.get_x() << " " << trail[j].coordinates.get_y() << endl;
+    //     double angle_to_target = atan2((target.getY() - current_situation_observations[i].pose.getY()), (target.getX() - current_situation_observations[i].pose.getX()));
+    //     double required_rotation = angle_to_target - current_situation_observations[i].pose.getTheta();
+    //     if(required_rotation > M_PI){
+    //       required_rotation = required_rotation - (2 * M_PI);
+    //     }
+    //     if(required_rotation < -M_PI){
+    //       required_rotation = required_rotation + (2 * M_PI);
+    //     }
+    //     cout << current_situation_observations[i].pose.getDistance(target) << " " << required_rotation << " " << current_situation_observations[i].assignment << endl;
+    //     std::map <FORRAction, double> result;
+    //     typedef map<FORRAction, double>::iterator mapIt;
+    //     for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+    //       FORRAction forrAction = *actionIter;
+    //       if(forrAction.type == PAUSE or vetoedActions->find(forrAction) != vetoedActions->end()){
+    //       // if(forrAction.type == PAUSE or forrAction.type == FORWARD){
+    //         continue;
+    //       }
+    //       else{
+    //         Position expectedPosition = agentState->getExpectedPositionAfterAction(forrAction, current_laser, current_situation_observations[i].pose);
+    //         result[forrAction] = expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y());
+    //         cout << forrAction.type << " " << forrAction.parameter << " " << expectedPosition.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()) << endl;
+    //       }
+    //     }
+    //     for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
+    //       if(iterator->second <= 1){
+    //         trail_actions.push_back(iterator->first);
+    //         target_distances.push_back(current_situation_observations[i].pose.getDistance(target));
+    //         target_angles.push_back(required_rotation);
+    //         trail_situation_assignments.push_back(current_situation_observations[i].assignment);
+    //         actual_actions.push_back(current_situation_observations[i].actual_action);
+    //       }
+    //     }
+    //     // double minDistanceToTrailMarker = 1000000;
+    //     // for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
+    //     //   if(iterator->second < minDistanceToTrailMarker){
+    //     //     minDistanceToTrailMarker = iterator->second;
+    //     //   }
+    //     // }
+    //     // if(minDistanceToTrailMarker > 1){
+    //     //   continue;
+    //     // }
+    //     // // cout << minDistanceToTrailMarker << endl;
+    //     // for(mapIt iterator = result.begin(); iterator != result.end(); iterator++){
+    //     //   if(iterator->second == minDistanceToTrailMarker){
+    //     //     cout << iterator->first.type << " " << iterator->first.parameter << endl;
+    //     //     trail_actions.push_back(iterator->first);
+    //     //     break;
+    //     //   }
+    //     // }
+    //     // target_distances.push_back(current_situation_observations[i].pose.getDistance(target));
+    //     // double angle_to_target = atan2((target.getY() - current_situation_observations[i].pose.getY()), (target.getX() - current_situation_observations[i].pose.getX()));
+    //     // double required_rotation = angle_to_target - current_situation_observations[i].pose.getTheta();
+    //     // if(required_rotation > M_PI){
+    //     //   required_rotation = required_rotation - (2 * M_PI);
+    //     // }
+    //     // if(required_rotation < -M_PI){
+    //     //   required_rotation = required_rotation + (2 * M_PI);
+    //     // }
+    //     // target_angles.push_back(required_rotation);
+    //     // trail_situation_assignments.push_back(current_situation_observations[i].assignment);
+    //     // actual_actions.push_back(current_situation_observations[i].actual_action);
+    //     // cout << current_situation_observations[i].pose.getDistance(target) << " " << required_rotation << " " << current_situation_observations[i].assignment << endl;
+    //     break;
+    //   }
+    // }
     // cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << trail_situation_assignments.size() << endl;
   }
   cout << target_distances.size() << " " << target_angles.size() << " " << trail_actions.size() << " " << trail_situation_assignments.size() << endl;
@@ -517,6 +697,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
     else if(target_angles[i] >= -3.0*M_PI/8.0 and target_angles[i] < -M_PI/8.0){
       assignment_values.push_back(8);
     }
+    cout << "Action Assignment " << i << " : " << assignment_values[0] << " " << assignment_values[1] << " " << assignment_values[2] << " " << trail_actions[i].type << " " << trail_actions[i].parameter << endl;
     if(assignment_values.size() == 3){
       if(action_assignments.count(assignment_values) == 0){
         action_assignments.insert(pair< vector<int>, vector<FORRAction> >(assignment_values, vector<FORRAction>()));
@@ -584,7 +765,7 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
 
 
 double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction action){
-  Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
+  Position target(agentState->getCurrentTask()->getX(),agentState->getCurrentTask()->getY(),0);
   Position curr = agentState->getCurrentPosition();
   double target_dist = curr.getDistance(target);
 
@@ -665,7 +846,7 @@ double FORRSituations::getWeightForAction(AgentState *agentState, FORRAction act
 
 
 double FORRSituations::getAccuracyForSituation(AgentState *agentState){
-  Position target(agentState->getCurrentTask()->getTaskX(),agentState->getCurrentTask()->getTaskY(),0);
+  Position target(agentState->getCurrentTask()->getX(),agentState->getCurrentTask()->getY(),0);
   Position curr = agentState->getCurrentPosition();
   double target_dist = curr.getDistance(target);
 

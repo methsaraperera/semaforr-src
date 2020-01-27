@@ -15,8 +15,9 @@ Written by Anoop Aroor, 2014
 class FORRExit{
  public:
   FORRExit(){};
-  FORRExit(CartesianPoint point, CartesianPoint region_point, int region_id, double distance_between){
+  FORRExit(CartesianPoint point, CartesianPoint mid_point, CartesianPoint region_point, int region_id, double distance_between){
     exitPoint = point;
+    middlePoint = mid_point;
     exitRegionPoint = region_point;
     exitRegion = region_id;
     exitDistance = distance_between;
@@ -35,6 +36,9 @@ class FORRExit{
   CartesianPoint getExitPoint(){ return exitPoint;}
   void setExitPoint(CartesianPoint point) { exitPoint = point;}
 
+  CartesianPoint getMidPoint(){ return middlePoint;}
+  void setMidPoint(CartesianPoint point) { middlePoint = point;}
+
   CartesianPoint getExitRegionPoint(){ return exitRegionPoint;}
   void setExitRegionPoint(CartesianPoint point){ exitRegionPoint = point;}
 
@@ -50,6 +54,7 @@ class FORRExit{
 
  private:
   CartesianPoint exitPoint;
+  CartesianPoint middlePoint;
   CartesianPoint exitRegionPoint;
   int exitRegion;
   double exitDistance;

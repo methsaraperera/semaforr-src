@@ -261,7 +261,8 @@ class Task {
    }
 
    void createNewWaypoint(CartesianPoint new_point){
-    waypoints.push_back(new_point);
+   	waypoints.insert(waypoints.begin(), new_point);
+    // waypoints.push_back(new_point);
     isPlanActive = true;
     wx = new_point.get_x();
     wy = new_point.get_y();

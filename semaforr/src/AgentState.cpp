@@ -462,7 +462,7 @@ double AgentState::getDistanceToObstacle(Position initialPosition, vector<Cartes
   for(int i = start_index; i <= end_index; i++){
     double distance_to_laser = initialPosition.getDistance(initialLaser[i].get_x(), initialLaser[i].get_y());
     if(distance_to_laser < min_distance){
-      min_distance = currentLaserScan.ranges[i];
+      min_distance = distance_to_laser;
     }
   }
   return min_distance;
@@ -550,6 +550,44 @@ FORRAction AgentState::maxForwardAction(){
 
 }
 
+FORRAction AgentState::maxForwardAction(Position initialPosition, vector<CartesianPoint> initialLaser){
+  //ROS_DEBUG("In maxforwardaction");
+  double error_margin = maxForwardActionBuffer; // margin from obstacles
+  double view = maxForwardActionSweepAngle; // +view radians to -view radians view
+  //double view = 0.7854;
+  double min_distance = getDistanceToObstacle(initialPosition, initialLaser, view);
+  //cout << min_distance << endl;
+  for(double angle = (-1)*view; angle < view; angle = angle + 0.005){
+    //cout << angle << endl;
+    double distance = getDistanceToObstacle(initialPosition, initialLaser, angle);
+    if(distance < min_distance){
+      min_distance = distance;
+    } 
+  }
+  
+  min_distance = min_distance - error_margin;
+
+  ROS_DEBUG_STREAM("Forward obstacle distance " << min_distance);
+  for (int i = numMoves-1; i > 0; i--) {
+    if(min_distance > move[i]) {
+      return FORRAction(FORWARD,i);
+    }
+  }
+  return FORRAction(FORWARD,0);
+  /*if(min_distance > move[5])
+    return FORRAction(FORWARD,5);
+  else if(min_distance > move[4] && min_distance <= move[5])
+    return FORRAction(FORWARD,4);
+  else if(min_distance > move[3] && min_distance <= move[4])
+    return FORRAction(FORWARD,3);
+  else if(min_distance > move[2] && min_distance <= move[3])
+    return FORRAction(FORWARD,2);
+  else if(min_distance > move[1] && min_distance <= move[2])
+    return FORRAction(FORWARD,1);
+  else
+    return FORRAction(FORWARD,0);*/
+
+}
 
 FORRAction AgentState::get_max_allowed_forward_move(){
   FORRAction max_forward(FORWARD, numMoves-1);
@@ -592,7 +630,8 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
       rotIntensity++;
     }
     ROS_DEBUG_STREAM("Rotation Intensity : " << rotIntensity);
-    if (rotIntensity > 1) {
+    int max_allowed = maxForwardAction().parameter;
+    if (rotIntensity > 1 or max_allowed == 0) {
       if (required_rotation < 0){
         decision = FORRAction(RIGHT_TURN, rotIntensity-1);
       }
@@ -608,7 +647,7 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
       if(intensity > 1)
         intensity--;
       ROS_DEBUG_STREAM("Move Intensity : " << intensity);
-      int max_allowed = maxForwardAction().parameter;
+      // int max_allowed = maxForwardAction().parameter;
       if(intensity > max_allowed){
           intensity = max_allowed;
       }
@@ -673,7 +712,7 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
   cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << " coverageLimit " << coverageLimit << endl;
   Position current_position = currentPosition;
   vector<Position> *pos_hist = currentTask->getPositionHistory();
-  if(pos_hist->size() < decisionLimit){
+  if(pos_hist->size() <= decisionLimit){
     robotConfined = false;
     return robotConfined;
   }
@@ -683,10 +722,10 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     startPosition = pos_hist->size() - decisionLimit - 1;
   }
 
-  int coverageStartPosition = 0;
-  if(pos_hist->size() > 10){
-    coverageStartPosition = pos_hist->size() - 10;
-  }
+  int coverageStartPosition = startPosition;
+  // if(pos_hist->size() > 10){
+  //   coverageStartPosition = pos_hist->size() - 10;
+  // }
   cout << "startPosition " << startPosition << " coverageStartPosition " << coverageStartPosition << " pos_hist " << pos_hist->size() << endl;
   
   int nearby = 0;
@@ -718,8 +757,8 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
       double step_size = 0.1;
       double tx,ty;
       for(double step = 0; step <= 1; step += step_size){
-        tx = (int)(round((x1 * step) + (x2 * (1-step))));
-        ty = (int)(round((y1 * step) + (y2 * (1-step))));
+        tx = (int)((x1 * step) + (x2 * (1-step)));
+        ty = (int)((y1 * step) + (y2 * (1-step)));
         if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
           grid[tx][ty] = 1;
         }
@@ -753,7 +792,7 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     }
   }
   cout << "change_count " << change_count << endl;
-  if(nearby >= decisionLimit or change_count >= 9){
+  if(change_count >= decisionLimit-5){
     robotConfined = true;
   }
   else{

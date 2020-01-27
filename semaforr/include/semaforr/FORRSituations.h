@@ -136,6 +136,40 @@ public:
         }
     }
 
+    //Print a situation
+    void printSituation(int k){
+        vector<float> values = situations[k];
+        vector< vector<float> > grid;
+        for(int i = 0; i < 51; i++){
+            vector<float> col;
+            for(int j = 0; j < 51; j++){
+                col.push_back(0);
+            }
+            grid.push_back(col);
+        }
+        for (int i = 0; i < values.size(); i++){
+            int row = i / 51 + 16;
+            int col = i %51;
+            grid[row][col] = values[i];
+        }
+        cout << situation_counts[k] << " ";
+        for(int i = 16; i < grid.size(); i++){
+            for(int j = 0; j < grid[i].size(); j++){
+                if(grid[i][j] == 0){
+                    cout << "0.0 ";
+                }
+                else if(grid[i][j] == 1){
+                    cout << "1.0 ";
+                }
+                else{
+                    cout << round(10 * grid[i][j])/10 << " ";
+                }
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+
     // Modify situations from new observations
     void addObservationToSituations(sensor_msgs::LaserScan ls, Position pose, bool add_to_existing, FORRAction actual_action);
 

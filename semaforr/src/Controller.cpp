@@ -589,7 +589,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     ROS_DEBUG_STREAM("Created planner: skeleton");
   }
   if(hallwayskel == 1){
-    Graph *navGraphHallwaySkeleton = new Graph((int)(p*1000.0), l*100, h*100);
+    Graph *navGraphHallwaySkeleton = new Graph((int)(p*1000.0*2), l*100, h*100);
     cout << "initialized nav graph" << endl;
     PathPlanner *hwsk_planner = new PathPlanner(navGraphHallwaySkeleton, n,n, "hallwayskel");
     tier2Planners.push_back(hwsk_planner);
@@ -745,8 +745,10 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
         learnSpatialModel(beliefs->getAgentState(), true);
         ROS_DEBUG("Finished Learning Spatial Model!!");
-        beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
-        ROS_DEBUG("Finished Learning Situations!!");
+        if(situationsOn){
+          beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
+          ROS_DEBUG("Finished Learning Situations!!");
+        }
       }
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
@@ -791,8 +793,10 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         learnSpatialModel(beliefs->getAgentState(), false);
         ROS_DEBUG("Finished Learning Spatial Model!!");
-        beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
-        ROS_DEBUG("Finished Learning Situations!!");
+        if(situationsOn){
+          beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
+          ROS_DEBUG("Finished Learning Situations!!");
+        }
         //beliefs->getAgentState()->skipTask();
         beliefs->getAgentState()->finishTask();
         if(beliefs->getAgentState()->getAgenda().size() > 0){
@@ -835,7 +839,9 @@ FORRAction Controller::decide() {
     highwayFinished++;
     decidedAction = FORRDecision();
   }
-  beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
+  if(situationsOn){
+    beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
+  }
   return decidedAction;
 }
 
@@ -883,7 +889,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     ROS_DEBUG("Regions Learned");
     beliefs->getSpatialModel()->getRegionList()->clearAllExits();
     beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
-    beliefs->getSpatialModel()->getRegionList()->learnExits(trails_trace);
+    // beliefs->getSpatialModel()->getRegionList()->learnExits(trails_trace);
     ROS_DEBUG("Exits Learned");
   }
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
@@ -903,11 +909,6 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     beliefs->getSpatialModel()->getBarriers()->updateBarriers(laser_hist, all_trace.back());
     ROS_DEBUG("Barriers Learned");
   }
-
-  gettimeofday(&cv,NULL);
-  end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
-  computationTimeSec = (end_timecv-start_timecv);
-  decisionStats->learningComputationTime = computationTimeSec;
 
   if(skeleton){
     PathPlanner *skeleton_planner;
@@ -933,6 +934,13 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         int ey = (int)(exits[j].getExitPoint().get_y()*100);
         // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
         success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
+        // added_nodes.push_back(success);
+        if(success)
+          index_val++;
+        int mx = (int)(exits[j].getMidPoint().get_x()*100);
+        int my = (int)(exits[j].getMidPoint().get_y()*100);
+        // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+        success = skeleton_planner->getGraph()->addNode(mx, my, index_val);
         // added_nodes.push_back(success);
         if(success)
           index_val++;
@@ -968,10 +976,12 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         // if(added_nodes[index_val]){
         // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
         skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+        int mid_index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getMidPoint().get_x()*100), (int)(exits[j].getMidPoint().get_y()*100));
+        skeleton_planner->getGraph()->addEdge(index_val, mid_index_val, regions[i].getRadius()*100);
         int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
         int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
         // cout << "Edge from " << index_val<< " to " << skeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
-        skeleton_planner->getGraph()->addEdge(index_val, skeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
+        skeleton_planner->getGraph()->addEdge(mid_index_val, skeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
         // }
         // index_val++;
         // cout << "Edge from " << i << " to " << exits[j].getExitRegion() << " Distance " << exits[j].getExitDistance()*100 << endl;
@@ -1003,7 +1013,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     }
     // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }
-  if(hallwayskel){
+  if(hallwayskel and highwayFinished == 1){
     PathPlanner *hwskeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       if((*it)->getName() == "hallwayskel"){
@@ -1011,122 +1021,157 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       }
     }
     hwskeleton_planner->resetGraph();
+    vector< vector<int> > highway_grid = highwayExploration->getHighwayGrid();
+    vector< vector< vector< pair<int, int> > > > highway_grid_connections = highwayExploration->getHighwayGridConnections();
     int index_val = 0;
-    vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-    for(int i = 0; i < hallways.size(); i++){
-      vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
-      // cout << "Hallway " << i << " contains " << points_in_hallway.size() << " points" << endl;
-      for(int j = 0; j < points_in_hallway.size(); j++){
-        int x = (int)(points_in_hallway[j].get_x()*100);
-        int y = (int)(points_in_hallway[j].get_y()*100);
-        // cout << "Hallway point " << points_in_hallway[j].get_x() << " " << points_in_hallway[j].get_y() << " " << x << " " << y << endl;
-        bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
-        if(success)
-          index_val++;
+    for(int i = 0; i < highway_grid.size(); i++){
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        if(highway_grid[i][j] >= 0){
+          int x = i*100;
+          int y = j*100;
+          bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+          if(success)
+            index_val++;
+        }
       }
     }
-    for(int i = 0; i < hallways.size(); i++){
-      vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
-      for(int j = 0; j < points_in_hallway.size()-1; j++){
-        for(int k = j+1; k < points_in_hallway.size(); k++){
-          double distance_jk = points_in_hallway[j].get_distance(points_in_hallway[k]);
-          if(distance_jk <= 3){
-            int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[j].get_x()*100), (int)(points_in_hallway[j].get_y()*100));
-            int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[k].get_x()*100), (int)(points_in_hallway[k].get_y()*100));
-            // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
-            if(j_ind != k_ind)
-              hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
+    for(int i = 0; i < highway_grid_connections.size(); i++){
+      for(int j = 0; j < highway_grid_connections[i].size(); j++){
+        if(highway_grid[i][j] >= 0){
+          int x = i*100;
+          int y = j*100;
+          int start_id = hwskeleton_planner->getGraph()->getNodeID(x, y);
+          for(int k = 0; k < highway_grid_connections[i][j].size(); k++){
+            int c_x = highway_grid_connections[i][j][k].first*100;
+            int c_y = highway_grid_connections[i][j][k].second*100;
+            int end_id = hwskeleton_planner->getGraph()->getNodeID(c_x, c_y);
+            double dist = CartesianPoint(x,y).get_distance(CartesianPoint(c_x, c_y));
+            hwskeleton_planner->getGraph()->addEdge(start_id, end_id, dist*100);
           }
         }
       }
     }
-    // hwskeleton_planner->getGraph()->populateNodeNeighbors(false);
-    // hwskeleton_planner->getGraph()->populateEdges();
-    // for(int i = 0; i < hallways.size()-1; i++){
-    //   for(int j = i+1; j < hallways.size(); j++){
-    //     if(!hallways[i].isHallwayConnected(j)){
-    //       vector<double> points_between = hallways[i].closestPointsBetweenAggregates(hallways[j]);
-    //       cout << "Closest Points between hallway " << i << " and " << j << endl;
-    //       int sx = (int)(points_between[1]*100);
-    //       int sy = (int)(points_between[2]*100);
-    //       int ex = (int)(points_between[3]*100);
-    //       int ey = (int)(points_between[4]*100);
-    //       int sid = hwskeleton_planner->getGraph()->getNodeID(sx, sy);
-    //       int eid = hwskeleton_planner->getGraph()->getNodeID(ex, ey);
-    //       cout << "Start " << points_between[1] << " " << points_between[2] << " End " << points_between[3] << " " << points_between[4] << " Distance " << points_between[0] << endl;
-    //       cout << "sx " << sx << " sy " << sy << " sid " << sid << " ex " << ex << " ey " << ey << " eid " << eid << endl;
-    //       hwskeleton_planner->getGraph()->addEdge(sid, eid, points_between[0]*100);
+    // int index_val = 0;
+    // vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
+    // for(int i = 0; i < hallways.size(); i++){
+    //   vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
+    //   // cout << "Hallway " << i << " contains " << points_in_hallway.size() << " points" << endl;
+    //   for(int j = 0; j < points_in_hallway.size(); j++){
+    //     int x = (int)(points_in_hallway[j].get_x()*100);
+    //     int y = (int)(points_in_hallway[j].get_y()*100);
+    //     // cout << "Hallway point " << points_in_hallway[j].get_x() << " " << points_in_hallway[j].get_y() << " " << x << " " << y << endl;
+    //     bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+    //     if(success)
+    //       index_val++;
+    //   }
+    // }
+    // for(int i = 0; i < hallways.size(); i++){
+    //   vector<CartesianPoint> points_in_hallway = hallways[i].getPoints();
+    //   for(int j = 0; j < points_in_hallway.size()-1; j++){
+    //     for(int k = j+1; k < points_in_hallway.size(); k++){
+    //       double distance_jk = points_in_hallway[j].get_distance(points_in_hallway[k]);
+    //       if(distance_jk <= 3){
+    //         int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[j].get_x()*100), (int)(points_in_hallway[j].get_y()*100));
+    //         int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)(points_in_hallway[k].get_x()*100), (int)(points_in_hallway[k].get_y()*100));
+    //         // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+    //         if(j_ind != k_ind)
+    //           hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
+    //       }
     //     }
     //   }
     // }
-    for(int i = 0; i < trails_trace.size(); i++){
-      // cout << "Trail " << i << " contains " << trails_trace[i].size() << " points" << endl;
-      for(int j = 0; j < trails_trace[i].size(); j++){
-        int x = (int)round(trails_trace[i][j].get_x())*100;
-        int y = (int)round(trails_trace[i][j].get_y())*100;
-        // cout << "Trail point " << j << " " << trails_trace[i][j].get_x() << " " << trails_trace[i][j].get_y() << " " << x << " " << y << endl;
-        bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
-        // cout << success << endl;
-        if(success)
-          index_val++;
-        // cout << "Finished adding node" << endl;
-      }
-      // cout << "Finished trail " << i << endl;
-    }
-    for(int i = 0; i < trails_trace.size(); i++){
-      for(int j = 0; j < trails_trace[i].size()-1; j++){
-        double distance_jk = trails_trace[i][j].get_distance(trails_trace[i][j+1]);
-        int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][j].get_x())*100, (int)round(trails_trace[i][j].get_y())*100);
-        int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][j+1].get_x())*100, (int)round(trails_trace[i][j+1].get_y())*100);
-        // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
-        if(j_ind != k_ind)
-          hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
-      }
-    }
-    for(int i = 0; i < trails_trace.size()-1; i++){
-      double distance_jk = trails_trace[i][trails_trace[i].size()-1].get_distance(trails_trace[i+1][0]);
-      int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][trails_trace[i].size()-1].get_x())*100, (int)round(trails_trace[i][trails_trace[i].size()-1].get_y())*100);
-      int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i+1][0].get_x())*100, (int)round(trails_trace[i+1][0].get_y())*100);
-      // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
-      if(j_ind != k_ind)
-        hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
-    }
+    // // hwskeleton_planner->getGraph()->populateNodeNeighbors(false);
+    // // hwskeleton_planner->getGraph()->populateEdges();
+    // // for(int i = 0; i < hallways.size()-1; i++){
+    // //   for(int j = i+1; j < hallways.size(); j++){
+    // //     if(!hallways[i].isHallwayConnected(j)){
+    // //       vector<double> points_between = hallways[i].closestPointsBetweenAggregates(hallways[j]);
+    // //       cout << "Closest Points between hallway " << i << " and " << j << endl;
+    // //       int sx = (int)(points_between[1]*100);
+    // //       int sy = (int)(points_between[2]*100);
+    // //       int ex = (int)(points_between[3]*100);
+    // //       int ey = (int)(points_between[4]*100);
+    // //       int sid = hwskeleton_planner->getGraph()->getNodeID(sx, sy);
+    // //       int eid = hwskeleton_planner->getGraph()->getNodeID(ex, ey);
+    // //       cout << "Start " << points_between[1] << " " << points_between[2] << " End " << points_between[3] << " " << points_between[4] << " Distance " << points_between[0] << endl;
+    // //       cout << "sx " << sx << " sy " << sy << " sid " << sid << " ex " << ex << " ey " << ey << " eid " << eid << endl;
+    // //       hwskeleton_planner->getGraph()->addEdge(sid, eid, points_between[0]*100);
+    // //     }
+    // //   }
+    // // }
+    // for(int i = 0; i < trails_trace.size(); i++){
+    //   // cout << "Trail " << i << " contains " << trails_trace[i].size() << " points" << endl;
+    //   for(int j = 0; j < trails_trace[i].size(); j++){
+    //     int x = (int)round(trails_trace[i][j].get_x())*100;
+    //     int y = (int)round(trails_trace[i][j].get_y())*100;
+    //     // cout << "Trail point " << j << " " << trails_trace[i][j].get_x() << " " << trails_trace[i][j].get_y() << " " << x << " " << y << endl;
+    //     bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+    //     // cout << success << endl;
+    //     if(success)
+    //       index_val++;
+    //     // cout << "Finished adding node" << endl;
+    //   }
+    //   // cout << "Finished trail " << i << endl;
+    // }
+    // for(int i = 0; i < trails_trace.size(); i++){
+    //   for(int j = 0; j < trails_trace[i].size()-1; j++){
+    //     double distance_jk = trails_trace[i][j].get_distance(trails_trace[i][j+1]);
+    //     int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][j].get_x())*100, (int)round(trails_trace[i][j].get_y())*100);
+    //     int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][j+1].get_x())*100, (int)round(trails_trace[i][j+1].get_y())*100);
+    //     // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+    //     if(j_ind != k_ind)
+    //       hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
+    //   }
+    // }
+    // for(int i = 0; i < trails_trace.size()-1; i++){
+    //   double distance_jk = trails_trace[i][trails_trace[i].size()-1].get_distance(trails_trace[i+1][0]);
+    //   int j_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i][trails_trace[i].size()-1].get_x())*100, (int)round(trails_trace[i][trails_trace[i].size()-1].get_y())*100);
+    //   int k_ind = hwskeleton_planner->getGraph()->getNodeID((int)round(trails_trace[i+1][0].get_x())*100, (int)round(trails_trace[i+1][0].get_y())*100);
+    //   // cout << "Edge from " << j_ind << " to " << k_ind << " Distance " << distance_jk*100 << endl;
+    //   if(j_ind != k_ind)
+    //     hwskeleton_planner->getGraph()->addEdge(j_ind, k_ind, distance_jk*100);
+    // }
 
-    for(int i = 0 ; i < regions.size(); i++){
-      int x = (int)round(regions[i].getCenter().get_x())*100;
-      int y = (int)round(regions[i].getCenter().get_y())*100;
-      // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
-      bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
-      if(success)
-        index_val++;
-      vector<FORRExit> exits = regions[i].getExits();
-      for(int j = 0; j < exits.size() ; j++){
-        int ex = (int)round(exits[j].getExitPoint().get_x())*100;
-        int ey = (int)round(exits[j].getExitPoint().get_y())*100;
-        // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
-        success = hwskeleton_planner->getGraph()->addNode(ex, ey, index_val);
-        if(success)
-          index_val++;
-      }
-    }
-    for(int i = 0 ; i < regions.size(); i++){
-      int region_id = hwskeleton_planner->getGraph()->getNodeID((int)round(regions[i].getCenter().get_x())*100, (int)round(regions[i].getCenter().get_y())*100);
-      vector<FORRExit> exits = regions[i].getExits();
-      for(int j = 0; j < exits.size() ; j++){
-        int index_val = hwskeleton_planner->getGraph()->getNodeID((int)round(exits[j].getExitPoint().get_x())*100, (int)round(exits[j].getExitPoint().get_y())*100);
-        // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
-        if(region_id != index_val)
-          hwskeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
-        int tx = (int)round(exits[j].getExitRegionPoint().get_x())*100;
-        int ty = (int)round(exits[j].getExitRegionPoint().get_y())*100;
-        // cout << "Edge from " << index_val<< " to " << hwskeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
-        if(hwskeleton_planner->getGraph()->getNodeID(tx, ty) != index_val)
-          hwskeleton_planner->getGraph()->addEdge(index_val, hwskeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
-      }
-    }
+    // for(int i = 0 ; i < regions.size(); i++){
+    //   int x = (int)round(regions[i].getCenter().get_x())*100;
+    //   int y = (int)round(regions[i].getCenter().get_y())*100;
+    //   // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+    //   bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
+    //   if(success)
+    //     index_val++;
+    //   vector<FORRExit> exits = regions[i].getExits();
+    //   for(int j = 0; j < exits.size() ; j++){
+    //     int ex = (int)round(exits[j].getExitPoint().get_x())*100;
+    //     int ey = (int)round(exits[j].getExitPoint().get_y())*100;
+    //     // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+    //     success = hwskeleton_planner->getGraph()->addNode(ex, ey, index_val);
+    //     if(success)
+    //       index_val++;
+    //   }
+    // }
+    // for(int i = 0 ; i < regions.size(); i++){
+    //   int region_id = hwskeleton_planner->getGraph()->getNodeID((int)round(regions[i].getCenter().get_x())*100, (int)round(regions[i].getCenter().get_y())*100);
+    //   vector<FORRExit> exits = regions[i].getExits();
+    //   for(int j = 0; j < exits.size() ; j++){
+    //     int index_val = hwskeleton_planner->getGraph()->getNodeID((int)round(exits[j].getExitPoint().get_x())*100, (int)round(exits[j].getExitPoint().get_y())*100);
+    //     // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+    //     if(region_id != index_val)
+    //       hwskeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
+    //     int tx = (int)round(exits[j].getExitRegionPoint().get_x())*100;
+    //     int ty = (int)round(exits[j].getExitRegionPoint().get_y())*100;
+    //     // cout << "Edge from " << index_val<< " to " << hwskeleton_planner->getGraph()->getNodeID(tx, ty) << " Distance " << exits[j].getExitDistance()*100 << endl;
+    //     if(hwskeleton_planner->getGraph()->getNodeID(tx, ty) != index_val)
+    //       hwskeleton_planner->getGraph()->addEdge(index_val, hwskeleton_planner->getGraph()->getNodeID(tx, ty), exits[j].getExitDistance()*100);
+    //   }
+    // }
 
     // cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
   }
+
+  gettimeofday(&cv,NULL);
+  end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+  computationTimeSec = (end_timecv-start_timecv);
+  decisionStats->learningComputationTime = computationTimeSec;
 }
 
 

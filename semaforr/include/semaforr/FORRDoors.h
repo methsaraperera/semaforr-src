@@ -148,7 +148,7 @@ public:
                 std::cout << epsilon << std::endl;
                 
                 vector< std::pair<double, FORRExit> >::iterator idx = exitAngles.begin();
-                Door *doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), 0);
+                Door *doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), 0);
                 doorToPush->startPoint = idx->second;    //Put the first exit point in a door object.
                 ++doorToPush->str;                       //Door now has strength 1
                 double doorToPushStartAngle = idx->first;
@@ -172,7 +172,7 @@ public:
                             //std::cout << "regionDoors.size() = " << regionDoors.size() << std::endl;
                         }
 
-                        doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), 0); //prepare a new door
+                        doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0), 0); //prepare a new door
                         doorToPush->startPoint = (idx+1)->second;    //set the start position to the new further out point.
                         ++doorToPush->str;
                         doorToPushStartAngle = idx->first;
