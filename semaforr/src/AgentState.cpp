@@ -707,12 +707,12 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
     maxForwardActionSweepAngle = val7;
   }
 
-bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, double coverageLimit){
+bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit){
   ROS_DEBUG("AgentState :: In getRobotConfined");
-  cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << " coverageLimit " << coverageLimit << endl;
+  cout << "decisionLimit " << decisionLimit << " distanceLimit " << distanceLimit << endl;
   Position current_position = currentPosition;
   vector<Position> *pos_hist = currentTask->getPositionHistory();
-  if(pos_hist->size() <= decisionLimit){
+  if(pos_hist->size() < decisionLimit){
     robotConfined = false;
     return robotConfined;
   }
@@ -722,25 +722,11 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     startPosition = pos_hist->size() - decisionLimit - 1;
   }
 
-  int coverageStartPosition = startPosition;
-  // if(pos_hist->size() > 10){
-  //   coverageStartPosition = pos_hist->size() - 10;
-  // }
-  cout << "startPosition " << startPosition << " coverageStartPosition " << coverageStartPosition << " pos_hist " << pos_hist->size() << endl;
-  
-  int nearby = 0;
-  for(int i = startPosition; i < pos_hist->size()-1; i++){
-    if(current_position.getDistance((*pos_hist)[i]) <= distanceLimit){
-      nearby++;
-    }
-  }
-  cout << "nearby " << nearby << endl;
-
   vector< vector <CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
   cout << "laser_hist " << laser_hist->size() << endl;
   int dimension = 200;
   vector< vector<int> > total_coverages;
-  for(int k = coverageStartPosition; k < laser_hist->size(); k++){
+  for(int k = startPosition; k < laser_hist->size(); k++){
     vector< vector<int> > grid;
     for(int i = 0; i < dimension; i++){
       vector<int> col;
@@ -776,23 +762,36 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit, doubl
     total_coverages.push_back(coverage);
   }
   cout << "total_coverages " << total_coverages.size() << endl;
-  vector<int> change_in_converages;
-  for(int i = 1; i < total_coverages.size(); i++){
-    int change = 0;
-    for(int j = 0; j < total_coverages[i].size(); j++){
-      change += abs(total_coverages[i][j] - total_coverages[i-1][j]);
+  vector<int> total_coverage_previous;
+  for(int i = 0; i < total_coverages[0].size(); i++){
+    int total_cell = 0;
+    for(int j = 0; j < total_coverages.size()-1; j++){
+      total_cell += total_coverages[j][i];
     }
-    change_in_converages.push_back(change);
-    cout << i << " " << change << endl;
+    total_coverage_previous.push_back(total_cell);
+    // cout << total_cell << " ";
   }
-  int change_count = 0;
-  for(int i = 0; i < change_in_converages.size(); i++){
-    if(change_in_converages[i] <= coverageLimit){
-      change_count++;
+  // cout << endl;
+  double filled_cells = 0;
+  double filled_cells_alot = 0;
+  for(int i = 0; i < total_coverage_previous.size(); i++){
+    if(total_coverage_previous[i] > 0){
+      filled_cells++;
+      if(total_coverage_previous[i] > 3){
+        filled_cells_alot++;
+      }
     }
   }
-  cout << "change_count " << change_count << endl;
-  if(change_count >= decisionLimit-5){
+  double percent_alot = filled_cells_alot / filled_cells;
+  cout << "filled_cells " << filled_cells << " filled_cells_alot " << filled_cells_alot << " percent_alot " << percent_alot << endl;
+  double num_new = 0;
+  for(int i = 0; i < total_coverage_previous.size(); i++){
+    if(total_coverages[total_coverages.size()-1][i] > 0 and total_coverage_previous[i] == 0){
+      num_new++;
+    }
+  }
+  cout << "num_new " << num_new << endl;
+  if(percent_alot >= 0.75 and num_new <= 1){
     robotConfined = true;
   }
   else{

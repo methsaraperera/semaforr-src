@@ -157,8 +157,8 @@ public:
 	marker.color.a = 0.5;
 	marker.lifetime = ros::Duration();
 
-	vector<Edge*> edges = con->getPlanners()[1]->getGraph()->getEdges();
-	vector<Node*> nodes = con->getPlanners()[1]->getGraph()->getNodes();
+	vector<Edge*> edges = con->getPlanners()[0]->getGraph()->getEdges();
+	vector<Node*> nodes = con->getPlanners()[0]->getGraph()->getNodes();
 
 	for( int i = 0; i < nodes.size(); i++ ){
 		if(nodes[i]->getInBuffer()){
@@ -198,8 +198,8 @@ public:
 	marker.color.a = 0.5;
 	marker.lifetime = ros::Duration();
 
-	vector<Edge*> edges = con->getPlanners()[1]->getGraph()->getEdges();
-	vector<Node*> nodes = con->getPlanners()[1]->getGraph()->getNodes();
+	vector<Edge*> edges = con->getPlanners()[0]->getGraph()->getEdges();
+	vector<Node*> nodes = con->getPlanners()[0]->getGraph()->getNodes();
 
 	for( int i = 0; i < nodes.size(); i++ ){
 		if(!nodes[i]->getInBuffer()){
@@ -218,7 +218,7 @@ public:
   void publish_edges_cost(){
 	visualization_msgs::MarkerArray markerArrayCost;
 
-	Graph *graph = con->getPlanners()[1]->getGraph();
+	Graph *graph = con->getPlanners()[0]->getGraph();
 	vector<Edge*> edges = graph->getEdges();
 	vector<Node*> nodes = graph->getNodes();
 
@@ -271,7 +271,7 @@ public:
   void publish_edges(){
 	visualization_msgs::MarkerArray markerArray;
 
-	Graph *graph = con->getPlanners()[1]->getGraph();
+	Graph *graph = con->getPlanners()[0]->getGraph();
 	vector<Edge*> edges = graph->getEdges();
 	vector<Node*> nodes = graph->getNodes();
 

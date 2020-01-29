@@ -61,8 +61,8 @@ void FORRSituations::addObservationToSituations(sensor_msgs::LaserScan ls, Posit
     // situation_assignments.push_back(min_pos);
     // situation_laserscans.push_back(ls);
     if(add_to_existing){
-      cout << min_pos << " " << situation_counts[min_pos] << endl;
-      printSituation(min_pos);
+      // cout << min_pos << " " << situation_counts[min_pos] << endl;
+      // printSituation(min_pos);
       vector<float> min_sit = situations[min_pos];
       vector<float> min_sit_counts;
       for(int i = 0; i < min_sit.size(); i++){
@@ -274,8 +274,17 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
   //   }
   //   cout << endl;
   // }
+  vector < vector< vector<int> > > new_grids;
   double required_rotation = 0 - pose1.getTheta();
   for(int k = 1; k < laserscans.size(); k++){
+    vector< vector<int> > n_grid;
+    for(int i = 0; i < 51; i++){
+      vector<int> col;
+      for(int j = 0; j < 51; j++){
+        col.push_back(0);
+      }
+      n_grid.push_back(col);
+    }
     sensor_msgs::LaserScan ls2 = laserscans[k];
     Position pose2 = poses[k];
     // cout << "pose1 theta " << pose1.getTheta() << " pose2 theta " << pose2.getTheta() << " required_rotation " << required_rotation << endl;
@@ -297,7 +306,7 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
         int x = (int)(j * cos(angle2) + required_x_shift)+25;
         int y = (int)(j * sin(angle2) + required_y_shift)+25;
         if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-          grid[x][y] = 1;
+          n_grid[x][y] = 1;
           // cout << x << " " << y << endl;
         }
         // x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
@@ -318,17 +327,46 @@ vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::Lase
         int y2 = (int)(ceil(laser_ranges2[i]+0.1 * sin(angle2) + required_y_shift))+25;
         // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
         if(x1 >= 0 and x1 <= 51 and y1 >= 0 and y1 <= 51){
-          if(grid[x1][y1] == 0){
-            grid[x1][y1] = -1;
+          if(n_grid[x1][y1] == 0){
+            n_grid[x1][y1] = -1;
           }
           else if(x2 >= 0 and x2 <= 51 and y2 >= 0 and y2 <= 51){
-            if(grid[x2][y2] == 0){
-              grid[x2][y2] = -1;
+            if(n_grid[x2][y2] == 0){
+              n_grid[x2][y2] = -1;
             }
           }
         }
       }
       angle2 = angle2 + increment2;
+    }
+    new_grids.push_back(n_grid);
+  }
+  for(int i = 0; i < new_grids.size(); i++){
+    for(int j = 0; j < new_grids[i].size(); j++){
+      for(int k = 0; k < new_grids[i][k].size(); k++){
+        if(new_grids[i][j][k] == 1 and grid[j][k] >= 0){
+          grid[j][k]++;
+        }
+        else if(new_grids[i][j][k] == 1 and grid[j][k] == -1){
+          grid[j][k] = 1;
+        }
+        else if(new_grids[i][j][k] == -1 and grid[j][k] == 0){
+          grid[j][k] = -1;
+        }
+      }
+    }
+  }
+  for(int i = 0; i < grid.size(); i++){
+    for(int j = 0; j < grid[i].size(); j++){
+      cout << grid[i][j] << " ";
+    }
+    cout << endl;
+  }
+  for(int i = 0; i < grid.size(); i++){
+    for(int j = 0; j < grid[i].size(); j++){
+      if(grid[i][j] > 1){
+        grid[i][j] = 1;
+      }
     }
   }
   for(int i = 0; i < grid.size(); i++){

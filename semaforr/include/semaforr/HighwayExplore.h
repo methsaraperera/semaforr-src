@@ -226,14 +226,26 @@ public:
 		too_close = false;
 		too_close_front = false;
 		top_point_decisions = 0;
-		decision_limit = 1000;
+		dist_travelled_so_far = 0;
+		avg_left = 0;
+		avg_right = 0;
+		avg_count = 0;
+		decision_limit = 750;
 	};
 	~HighwayExplorer(){};
 
 	bool getHighwaysComplete(){return highways_complete;}
 	void setHighwaysComplete(double time){
-		if(time >= 1800)
+		if(time >= 200 and time <= 210){
 			highways_complete = true;
+			cout << "Highway grid" << endl;
+			for(int i = 0; i < highway_grid[0].size(); i++){
+				for(int j = 0; j < highway_grid.size(); j++){
+					cout << highway_grid[j][i] << " ";
+				}
+				cout << endl;
+			}
+		}
 	}
 
 	vector< vector<int> > getHighwayGrid(){return highway_grid;}
