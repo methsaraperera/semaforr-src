@@ -68,6 +68,7 @@ public:
     for(int i = 0 ; i < numRotates ; i++) rotate[i] = arrRotate[i];
     all_position_trace = new vector<Position>();
     all_laser_history = new vector< vector<CartesianPoint> >();
+    all_laserscan_history = new vector< sensor_msgs::LaserScan >();
   }
   
   // Best possible move towards the target
@@ -105,7 +106,7 @@ public:
      	transformToEndpoints();
 	if(currentTask != NULL){
 		//save the current position and laser endpoints 
-    all_laserscan_history.push_back(scan);
+    all_laserscan_history->push_back(scan);
 		currentTask->saveSensor(p,laserEndpoints, scan);
 	}
   }
@@ -188,7 +189,7 @@ public:
   vector< vector<CartesianPoint> > getAllTrace(){return all_trace;}
   vector< Position > *getAllPositionTrace(){return all_position_trace;}
   vector< vector<CartesianPoint> > *getAllLaserHistory(){return all_laser_history;}
-  vector< sensor_msgs::LaserScan > getAllLaserScanHistory(){return all_laserscan_history;}
+  vector< sensor_msgs::LaserScan > *getAllLaserScanHistory(){return all_laserscan_history;}
 
   vector<int> getTaskDecisionCount(){return task_decision_count;}
 
@@ -262,18 +263,21 @@ public:
     return getOutTriggered;
   }
   void setGetOutTriggered(bool status){
+    cout << "setGetOutTriggered " << status << endl;
     getOutTriggered = status;
-  }
-  void setGetOutTriggered(bool status, CartesianPoint farthest_point){
-    getOutTriggered = status;
-    farthestPoint = farthest_point;
+    if(status == false){
+      farthestPoint = CartesianPoint(0.0,0.0);
+      intermediatePoint = CartesianPoint(0.0,0.0);
+    }
   }
 
   void setFarthestPoint(CartesianPoint farthest_point){
+    cout << "setFarthestPoint " << farthest_point.get_x() << " " << farthest_point.get_y() << endl;
     farthestPoint = farthest_point;
   }
 
   void setIntermediatePoint(CartesianPoint intermediate_point){
+    cout << "setIntermediatePoint " << intermediate_point.get_x() << " " << intermediate_point.get_y() << endl;
     intermediatePoint = intermediate_point;
   }
   CartesianPoint getFarthestPoint(){return farthestPoint;}
@@ -341,7 +345,7 @@ public:
 
   // All laser history of all targets
   vector< vector<CartesianPoint> > *all_laser_history;
-  vector< sensor_msgs::LaserScan > all_laserscan_history;
+  vector< sensor_msgs::LaserScan > *all_laserscan_history;
 
   // Decision count by task
   vector<int> task_decision_count;

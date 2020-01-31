@@ -750,6 +750,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
           ROS_DEBUG("Finished Learning Situations!!");
         }
       }
+      beliefs->getAgentState()->setGetOutTriggered(false);
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
       //ROS_DEBUG("Task Cleared!!");
@@ -791,6 +792,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(beliefs->getAgentState()->getCurrentTask() != NULL){
       if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
+        beliefs->getAgentState()->setGetOutTriggered(false);
         learnSpatialModel(beliefs->getAgentState(), false);
         ROS_DEBUG("Finished Learning Spatial Model!!");
         if(situationsOn){

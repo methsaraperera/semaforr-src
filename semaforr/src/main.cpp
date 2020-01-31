@@ -267,7 +267,7 @@ public:
 			//if(action.type == RIGHT_TURN) 
 			//	turn_expected = (-1)*turn_expected;
 			//if((abs(turn_completed - turn_expected) < epsilon_rotate)){
-			if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)-0.078) or (abs(turn_completed - turn_expected) < epsilon_rotate)){
+			if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (abs(turn_completed - turn_expected) < epsilon_rotate)){
 				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(turn_completed - turn_expected));
 				actionComplete = true;
 			}

@@ -631,12 +631,20 @@ FORRAction AgentState::moveTowards(CartesianPoint target){
     }
     ROS_DEBUG_STREAM("Rotation Intensity : " << rotIntensity);
     int max_allowed = maxForwardAction().parameter;
-    if (rotIntensity > 1 or max_allowed == 0) {
+    if (rotIntensity > 1) {
       if (required_rotation < 0){
         decision = FORRAction(RIGHT_TURN, rotIntensity-1);
       }
       else {
         decision = FORRAction(LEFT_TURN, rotIntensity-1);
+      }
+    }
+    else if(max_allowed == 0) {
+      if (required_rotation < 0){
+        decision = FORRAction(RIGHT_TURN, 1);
+      }
+      else {
+        decision = FORRAction(LEFT_TURN, 1);
       }
     }
     else {
@@ -743,8 +751,8 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit){
       double step_size = 0.1;
       double tx,ty;
       for(double step = 0; step <= 1; step += step_size){
-        tx = (int)((x1 * step) + (x2 * (1-step)));
-        ty = (int)((y1 * step) + (y2 * (1-step)));
+        tx = (int)((x2 * step) + (x1 * (1-step)));
+        ty = (int)((y2 * step) + (y1 * (1-step)));
         if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
           grid[tx][ty] = 1;
         }

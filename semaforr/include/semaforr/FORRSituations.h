@@ -180,7 +180,7 @@ public:
     vector<int> identifySituation(sensor_msgs::LaserScan ls);
 
     // Overlay two situations given their positions
-    vector< vector<int> > overlaySituations(vector<sensor_msgs::LaserScan> laserscans, vector<Position> poses);
+    vector< vector<int> > overlaySituations(vector< vector<CartesianPoint> > laserendpoints, vector<Position> poses);
 
     // Get situation assignment for current laserscan
     int identifySituationAssignment(sensor_msgs::LaserScan ls);

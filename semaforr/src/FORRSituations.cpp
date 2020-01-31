@@ -208,175 +208,255 @@ vector<int> FORRSituations::identifySituation(sensor_msgs::LaserScan ls) {
 //----------------------//------------------------//
 
 
-vector< vector<int> > FORRSituations::overlaySituations(vector<sensor_msgs::LaserScan> laserscans, vector<Position> poses){
-  sensor_msgs::LaserScan ls1 = laserscans[0];
-  Position pose1 = poses[0];
-
-  double angle1 = ls1.angle_min;
-  double increment1 = ls1.angle_increment;
-  vector<float> laser_ranges1 = ls1.ranges;
-  // cout << "angle1 " << angle1 << " increment1 " << increment1 << " laser_ranges1 " << laser_ranges1.size() << endl;
-  vector< vector<int> > grid;
-  for(int i = 0; i < 51; i++){
+vector< vector<int> > FORRSituations::overlaySituations(vector< vector<CartesianPoint> > laserendpoints, vector<Position> poses){
+  cout << "overlaySituations laserendpoints " << laserendpoints.size() << " poses " << poses.size() << endl;
+  int dimension = 200;
+  vector< vector <vector<int> > > total_coverages;
+  for(int k = 0; k < laserendpoints.size(); k++){
+    vector< vector<int> > grid;
+    for(int i = 0; i < dimension; i++){
+      vector<int> col;
+      for(int j = 0; j < dimension; j++){
+        col.push_back(0);
+      }
+      grid.push_back(col);
+    }
+    for(int l = 0; l < laserendpoints[k].size(); l++){
+      double x1 = poses[k].getX();
+      double y1 = poses[k].getY();
+      double x2 = laserendpoints[k][l].get_x();
+      double y2 = laserendpoints[k][l].get_y();
+      double step_size = 0.01;
+      double tx,ty;
+      for(double step = 0; step <= 1; step += step_size){
+        tx = (int)((x2 * step) + (x1 * (1-step)));
+        ty = (int)((y2 * step) + (y1 * (1-step)));
+        if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
+          grid[tx][ty] += 1;
+        }
+      }
+    }
+    for(int i = 0; i < dimension; i++){
+      for(int j = 0; j < dimension; j++){
+        cout << grid[i][j] << " ";
+      }
+      cout << endl;
+    }
+    cout << endl;
+    total_coverages.push_back(grid);
+  }
+  cout << "total_coverages " << total_coverages.size() << endl;
+  vector < vector<int> > total_coverage_added;
+  for(int i = 0; i < dimension; i++){
     vector<int> col;
-    for(int j = 0; j < 51; j++){
+    for(int j = 0; j < dimension; j++){
       col.push_back(0);
     }
-    grid.push_back(col);
+    total_coverage_added.push_back(col);
   }
-  for(int i = 0; i < laser_ranges1.size(); i++){
-    // cout << angle1 << " " << laser_ranges1[i] << endl;
-    for(double j = 0.0; j <= laser_ranges1[i]; j+=0.1){
-      // int x = (int)(round(j * cos(angle1)))+25;
-      // int y = (int)(round(j * sin(angle1)))+25;
-      // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-      //   grid[x][y] += 1;
-      // }
-      int x = (int)(j * cos(angle1))+25;
-      int y = (int)(j * sin(angle1))+25;
-      if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-        grid[x][y] = 1;
-        // cout << x << " " << y << endl;
-      }
-      // x = (int)(floor(j * cos(angle1)))+25;
-      // y = (int)(floor(j * sin(angle1)))+25;
-      // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-      //   grid[x][y] += 1;
-      // }
-      // x = (int)(ceil(j * cos(angle1)))+25;
-      // y = (int)(ceil(j * sin(angle1)))+25;
-      // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-      //   grid[x][y] += 1;
-      // }
-    }
-    if(laser_ranges1[i] < 20){
-      int x1 = (int)(ceil(laser_ranges1[i] * cos(angle1)))+25;
-      int y1 = (int)(ceil(laser_ranges1[i] * sin(angle1)))+25;
-      int x2 = (int)(ceil(laser_ranges1[i]+0.1 * cos(angle1)))+25;
-      int y2 = (int)(ceil(laser_ranges1[i]+0.1 * sin(angle1)))+25;
-      // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
-      if(x1 >= 0 and x1 <= 51 and y1 >= 0 and y1 <= 51){
-        if(grid[x1][y1] == 0){
-          grid[x1][y1] = -1;
-        }
-        else if(x2 >= 0 and x2 <= 51 and y2 >= 0 and y2 <= 51){
-          if(grid[x2][y2] == 0){
-            grid[x2][y2] = -1;
-          }
-        }
+  for(int i = 0; i < total_coverages.size(); i++){
+    for(int j = 0; j < total_coverages[i].size(); j++){
+      for(int k = 0; k < total_coverages[i][j].size(); k++){
+        total_coverage_added[j][k] += total_coverages[i][j][k];
       }
     }
-    angle1 = angle1 + increment1;
   }
-  // for(int i = 0; i < grid.size(); i++){
+  for(int i = 0; i < total_coverage_added.size(); i++){
+    for(int j = 0; j < total_coverage_added[i].size(); j++){
+      cout << total_coverage_added[i][j] << " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  for(int i = 0; i < total_coverage_added.size(); i++){
+    for(int j = 0; j < total_coverage_added[i].size(); j++){
+      if(total_coverage_added[i][j] <= 5){
+        total_coverage_added[i][j] = 0;
+      }
+      cout << total_coverage_added[i][j] << " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  return total_coverage_added;
+}
+  // sensor_msgs::LaserScan ls1 = laserscans[0];
+  // Position pose1 = poses[0];
+
+  // double angle1 = ls1.angle_min;
+  // double increment1 = ls1.angle_increment;
+  // vector<float> laser_ranges1 = ls1.ranges;
+  // // cout << "angle1 " << angle1 << " increment1 " << increment1 << " laser_ranges1 " << laser_ranges1.size() << endl;
+  // vector< vector<int> > grid;
+  // for(int i = 0; i < 51; i++){
+  //   vector<int> col;
+  //   for(int j = 0; j < 51; j++){
+  //     col.push_back(0);
+  //   }
+  //   grid.push_back(col);
+  // }
+  // for(int i = 0; i < laser_ranges1.size(); i++){
+  //   // cout << angle1 << " " << laser_ranges1[i] << endl;
+  //   for(double j = 0.0; j <= laser_ranges1[i]; j+=0.01){
+  //     // int x = (int)(round(j * cos(angle1)))+25;
+  //     // int y = (int)(round(j * sin(angle1)))+25;
+  //     // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+  //     //   grid[x][y] += 1;
+  //     // }
+  //     int x = (int)(j * cos(angle1))+25;
+  //     int y = (int)(j * sin(angle1))+25;
+  //     if(x >= 0 and x <= grid[0].size()-1 and y >= 0 and y <= grid[0].size()-1){
+  //       grid[x][y] = 1;
+  //       // cout << x << " " << y << endl;
+  //     }
+  //     // x = (int)(floor(j * cos(angle1)))+25;
+  //     // y = (int)(floor(j * sin(angle1)))+25;
+  //     // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+  //     //   grid[x][y] += 1;
+  //     // }
+  //     // x = (int)(ceil(j * cos(angle1)))+25;
+  //     // y = (int)(ceil(j * sin(angle1)))+25;
+  //     // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+  //     //   grid[x][y] += 1;
+  //     // }
+  //   }
+  //   if(laser_ranges1[i] < 25){
+  //     int x1 = (int)(laser_ranges1[i] * cos(angle1))+25;
+  //     int y1 = (int)(laser_ranges1[i] * sin(angle1))+25;
+  //     int x2 = (int)(laser_ranges1[i]+1 * cos(angle1))+25;
+  //     int y2 = (int)(laser_ranges1[i]+1 * sin(angle1))+25;
+  //     // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+  //     if(x1 >= 0 and x1 <= grid[0].size()-1 and y1 >= 0 and y1 <= grid[0].size()-1){
+  //       if(grid[x1][y1] == 0){
+  //         grid[x1][y1] = -1;
+  //       }
+  //       else if(x2 >= 0 and x2 <= grid[0].size()-1 and y2 >= 0 and y2 <= grid[0].size()-1){
+  //         if(grid[x2][y2] == 0){
+  //           grid[x2][y2] = -1;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   angle1 = angle1 + increment1;
+  // }
+  // for(int i = 16; i < grid.size(); i++){
   //   for(int j = 0; j < grid[i].size(); j++){
   //     cout << grid[i][j] << " ";
   //   }
   //   cout << endl;
   // }
-  vector < vector< vector<int> > > new_grids;
-  double required_rotation = 0 - pose1.getTheta();
-  for(int k = 1; k < laserscans.size(); k++){
-    vector< vector<int> > n_grid;
-    for(int i = 0; i < 51; i++){
-      vector<int> col;
-      for(int j = 0; j < 51; j++){
-        col.push_back(0);
-      }
-      n_grid.push_back(col);
-    }
-    sensor_msgs::LaserScan ls2 = laserscans[k];
-    Position pose2 = poses[k];
-    // cout << "pose1 theta " << pose1.getTheta() << " pose2 theta " << pose2.getTheta() << " required_rotation " << required_rotation << endl;
-    double angle2 = ls2.angle_min + pose2.getTheta() + required_rotation;
-    double increment2 = ls2.angle_increment;
-    vector<float> laser_ranges2 = ls2.ranges;
-    // cout << "angle2 " << angle2 << " increment2 " << increment2 << " laser_ranges2 " << laser_ranges2.size() << endl;
-    double required_x_shift = pose2.getX() - pose1.getX();
-    double required_y_shift = pose2.getY() - pose1.getY();
-    // cout << "pose1 " << pose1.getX() << " " << pose1.getY() << " pose2 " << pose2.getX() << " " << pose2.getY() << " required_x_shift " << required_x_shift << " required_y_shift " << required_y_shift << endl;
-    for(int i = 0; i < laser_ranges2.size(); i++){
-      // cout << angle2 << " " << laser_ranges2[i] << endl;
-      for(double j = 0.0; j <= laser_ranges2[i]; j+=0.1){
-        // int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
-        // int y = (int)(round(j * sin(angle2) + required_y_shift))+25;
-        // if(x >= 0 and x < 51 and y >= 0 and y < 51){
-        //   grid[x][y] += 1;
-        // }
-        int x = (int)(j * cos(angle2) + required_x_shift)+25;
-        int y = (int)(j * sin(angle2) + required_y_shift)+25;
-        if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-          n_grid[x][y] = 1;
-          // cout << x << " " << y << endl;
-        }
-        // x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
-        // y = (int)(floor(j * sin(angle2) + required_y_shift))+25;
-        // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-        //   grid[x][y] += 1;
-        // }
-        // x = (int)(ceil(j * cos(angle2) + required_x_shift))+25;
-        // y = (int)(ceil(j * sin(angle2) + required_y_shift))+25;
-        // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
-        //   grid[x][y] += 1;
-        // }
-      }
-      if(laser_ranges2[i] < 20){
-        int x1 = (int)(ceil(laser_ranges2[i] * cos(angle2) + required_x_shift))+25;
-        int y1 = (int)(ceil(laser_ranges2[i] * sin(angle2) + required_y_shift))+25;
-        int x2 = (int)(ceil(laser_ranges2[i]+0.1 * cos(angle2) + required_x_shift))+25;
-        int y2 = (int)(ceil(laser_ranges2[i]+0.1 * sin(angle2) + required_y_shift))+25;
-        // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
-        if(x1 >= 0 and x1 <= 51 and y1 >= 0 and y1 <= 51){
-          if(n_grid[x1][y1] == 0){
-            n_grid[x1][y1] = -1;
-          }
-          else if(x2 >= 0 and x2 <= 51 and y2 >= 0 and y2 <= 51){
-            if(n_grid[x2][y2] == 0){
-              n_grid[x2][y2] = -1;
-            }
-          }
-        }
-      }
-      angle2 = angle2 + increment2;
-    }
-    new_grids.push_back(n_grid);
-  }
-  for(int i = 0; i < new_grids.size(); i++){
-    for(int j = 0; j < new_grids[i].size(); j++){
-      for(int k = 0; k < new_grids[i][k].size(); k++){
-        if(new_grids[i][j][k] == 1 and grid[j][k] >= 0){
-          grid[j][k]++;
-        }
-        else if(new_grids[i][j][k] == 1 and grid[j][k] == -1){
-          grid[j][k] = 1;
-        }
-        else if(new_grids[i][j][k] == -1 and grid[j][k] == 0){
-          grid[j][k] = -1;
-        }
-      }
-    }
-  }
-  for(int i = 0; i < grid.size(); i++){
-    for(int j = 0; j < grid[i].size(); j++){
-      cout << grid[i][j] << " ";
-    }
-    cout << endl;
-  }
-  for(int i = 0; i < grid.size(); i++){
-    for(int j = 0; j < grid[i].size(); j++){
-      if(grid[i][j] > 1){
-        grid[i][j] = 1;
-      }
-    }
-  }
-  for(int i = 0; i < grid.size(); i++){
-    for(int j = 0; j < grid[i].size(); j++){
-      cout << grid[i][j] << " ";
-    }
-    cout << endl;
-  }
-  return grid;
-}
+  // cout << endl;
+  // vector < vector< vector<int> > > new_grids;
+  // double required_rotation = 0 - pose1.getTheta();
+  // for(int k = 1; k < laserscans.size(); k++){
+  //   vector< vector<int> > n_grid;
+  //   for(int i = 0; i < 51; i++){
+  //     vector<int> col;
+  //     for(int j = 0; j < 51; j++){
+  //       col.push_back(0);
+  //     }
+  //     n_grid.push_back(col);
+  //   }
+  //   sensor_msgs::LaserScan ls2 = laserscans[k];
+  //   Position pose2 = poses[k];
+  //   // cout << "pose1 theta " << pose1.getTheta() << " pose2 theta " << pose2.getTheta() << " required_rotation " << required_rotation << endl;
+  //   double angle2 = ls2.angle_min + pose2.getTheta() + required_rotation;
+  //   double increment2 = ls2.angle_increment;
+  //   vector<float> laser_ranges2 = ls2.ranges;
+  //   // cout << "angle2 " << angle2 << " increment2 " << increment2 << " laser_ranges2 " << laser_ranges2.size() << endl;
+  //   double required_x_shift = pose2.getX() - pose1.getX();
+  //   double required_y_shift = pose2.getY() - pose1.getY();
+  //   // cout << "pose1 " << pose1.getX() << " " << pose1.getY() << " pose2 " << pose2.getX() << " " << pose2.getY() << " required_x_shift " << required_x_shift << " required_y_shift " << required_y_shift << endl;
+  //   for(int i = 0; i < laser_ranges2.size(); i++){
+  //     // cout << angle2 << " " << laser_ranges2[i] << endl;
+  //     for(double j = 0.0; j <= laser_ranges2[i]; j+=0.01){
+  //       // int x = (int)(round(j * cos(angle2) + required_x_shift))+25;
+  //       // int y = (int)(round(j * sin(angle2) + required_y_shift))+25;
+  //       // if(x >= 0 and x < 51 and y >= 0 and y < 51){
+  //       //   grid[x][y] += 1;
+  //       // }
+  //       int x = (int)(j * cos(angle2) + required_x_shift)+25;
+  //       int y = (int)(j * sin(angle2) + required_y_shift)+25;
+  //       if(x >= 0 and x <= grid[0].size()-1 and y >= 0 and y <= grid[0].size()-1){
+  //         n_grid[x][y] = 1;
+  //         // cout << x << " " << y << endl;
+  //       }
+  //       // x = (int)(floor(j * cos(angle2) + required_x_shift))+25;
+  //       // y = (int)(floor(j * sin(angle2) + required_y_shift))+25;
+  //       // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+  //       //   grid[x][y] += 1;
+  //       // }
+  //       // x = (int)(ceil(j * cos(angle2) + required_x_shift))+25;
+  //       // y = (int)(ceil(j * sin(angle2) + required_y_shift))+25;
+  //       // if(x >= 0 and x <= 51 and y >= 0 and y <= 51){
+  //       //   grid[x][y] += 1;
+  //       // }
+  //     }
+  //     if(laser_ranges2[i] < 25){
+  //       int x1 = (int)(laser_ranges2[i] * cos(angle2) + required_x_shift)+25;
+  //       int y1 = (int)(laser_ranges2[i] * sin(angle2) + required_y_shift)+25;
+  //       int x2 = (int)(laser_ranges2[i]+1 * cos(angle2) + required_x_shift)+25;
+  //       int y2 = (int)(laser_ranges2[i]+1 * sin(angle2) + required_y_shift)+25;
+  //       // cout << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+  //       if(x1 >= 0 and x1 <= grid[0].size()-1 and y1 >= 0 and y1 <= grid[0].size()-1){
+  //         if(n_grid[x1][y1] == 0){
+  //           n_grid[x1][y1] = -1;
+  //         }
+  //         else if(x2 >= 0 and x2 <= grid[0].size()-1 and y2 >= 0 and y2 <= grid[0].size()-1){
+  //           if(n_grid[x2][y2] == 0){
+  //             n_grid[x2][y2] = -1;
+  //           }
+  //         }
+  //       }
+  //     }
+  //     angle2 = angle2 + increment2;
+  //   }
+  //   for(int i = 16; i < n_grid.size(); i++){
+  //     for(int j = 0; j < n_grid[i].size(); j++){
+  //       cout << n_grid[i][j] << " ";
+  //     }
+  //     cout << endl;
+  //   }
+  //   cout << endl;
+  //   new_grids.push_back(n_grid);
+  // }
+  // for(int i = 0; i < new_grids.size(); i++){
+  //   for(int j = 0; j < new_grids[i].size(); j++){
+  //     for(int k = 0; k < new_grids[i][k].size(); k++){
+  //       if(new_grids[i][j][k] == 1 and grid[j][k] >= 0){
+  //         grid[j][k] = grid[j][k] + 1;
+  //       }
+  //       else if(new_grids[i][j][k] == 1 and grid[j][k] == -1){
+  //         grid[j][k] = 1;
+  //       }
+  //       else if(new_grids[i][j][k] == -1 and grid[j][k] == 0){
+  //         grid[j][k] = -1;
+  //       }
+  //     }
+  //   }
+  // }
+  // for(int i = 16; i < grid.size(); i++){
+  //   for(int j = 0; j < grid[i].size(); j++){
+  //     cout << grid[i][j] << " ";
+  //   }
+  //   cout << endl;
+  // }
+  // cout << endl;
+  // for(int i = 0; i < grid.size(); i++){
+  //   for(int j = 0; j < grid[i].size(); j++){
+  //     if(grid[i][j] > 1){
+  //       grid[i][j] = 1;
+  //     }
+  //   }
+  // }
+  // for(int i = 16; i < grid.size(); i++){
+  //   for(int j = 0; j < grid[i].size(); j++){
+  //     cout << grid[i][j] << " ";
+  //   }
+  //   cout << endl;
+  // }
+  // return grid;
+// }
 
 
 //----------------------//------------------------//
