@@ -268,6 +268,7 @@ public:
     if(status == false){
       farthestPoint = CartesianPoint(0.0,0.0);
       intermediatePoint = CartesianPoint(0.0,0.0);
+      getOutGrid.clear(); 
     }
   }
 
@@ -283,6 +284,15 @@ public:
   CartesianPoint getFarthestPoint(){return farthestPoint;}
   CartesianPoint getIntermediatePoint(){return intermediatePoint;}
   
+  void setGetOutGrid(vector< vector<int> > grid){
+    cout << "setGetOutGrid" << endl;
+    getOutGrid = grid;
+  }
+
+  vector< vector<int> > getGetOutGrid(){
+    cout << "getGetOutGrid" << endl;
+    return getOutGrid;
+  }
 
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
@@ -413,6 +423,7 @@ public:
   bool getOutTriggered;
   CartesianPoint farthestPoint;
   CartesianPoint intermediatePoint;
+  vector< vector<int> > getOutGrid;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);

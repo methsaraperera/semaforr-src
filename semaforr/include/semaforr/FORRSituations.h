@@ -179,7 +179,7 @@ public:
     // Fit laserscan to a situation
     vector<int> identifySituation(sensor_msgs::LaserScan ls);
 
-    // Overlay two situations given their positions
+    // Overlay situations given their positions
     vector< vector<int> > overlaySituations(vector< vector<CartesianPoint> > laserendpoints, vector<Position> poses);
 
     // Get situation assignment for current laserscan
@@ -196,6 +196,9 @@ public:
 
     // Returns accuracy for situation
     double getAccuracyForSituation(AgentState *agentState);
+
+    // Compute overlap between two situations
+    double overlapBetweenSituations(vector<CartesianPoint> laser, Position pose, vector< vector<int> > comp_grid);
 
 private:
     // Learned views

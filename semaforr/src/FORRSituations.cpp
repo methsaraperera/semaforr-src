@@ -1042,3 +1042,59 @@ double FORRSituations::getAccuracyForSituation(AgentState *agentState){
   }
   return 0.0;
 }
+
+
+//----------------------//------------------------//
+
+
+double FORRSituations::overlapBetweenSituations(vector<CartesianPoint> laser, Position pose, vector< vector<int> > comp_grid){
+  cout << "overlapBetweenSituations" << endl;
+  int dimension = 200;
+  vector< vector<int> > grid;
+  for(int i = 0; i < dimension; i++){
+    vector<int> col;
+    for(int j = 0; j < dimension; j++){
+      col.push_back(0);
+    }
+    grid.push_back(col);
+  }
+  for(int l = 0; l < laser.size(); l++){
+    double x1 = pose.getX();
+    double y1 = pose.getY();
+    double x2 = laser[l].get_x();
+    double y2 = laser[l].get_y();
+    double step_size = 0.01;
+    double tx,ty;
+    for(double step = 0; step <= 1; step += step_size){
+      tx = (int)((x2 * step) + (x1 * (1-step)));
+      ty = (int)((y2 * step) + (y1 * (1-step)));
+      if(tx >= 0 and tx < dimension and ty >= 0 and ty < dimension){
+        grid[tx][ty] += 1;
+      }
+    }
+  }
+  for(int i = 0; i < dimension; i++){
+    for(int j = 0; j < dimension; j++){
+      cout << grid[i][j] << " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  double comp_grid_count = 0;
+  double overlap_count = 0;
+  for(int i = 0; i < comp_grid.size(); i++){
+    for(int j = 0; j < comp_grid[i].size(); j++){
+      cout << comp_grid[i][j] << " ";
+      if(comp_grid[i][j] > 0){
+        comp_grid_count += 1;
+        if(grid[i][j] > 0){
+          overlap_count += 1;
+        }
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
+  cout << "comp_grid_count " << comp_grid_count << " overlap_count " << overlap_count << " overlap_percent " << overlap_count / comp_grid_count << endl;
+  return overlap_count / comp_grid_count;
+}
