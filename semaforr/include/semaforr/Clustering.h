@@ -50,7 +50,7 @@ public:
         mydatafile.close();
         // cout << "data written" << endl;
         const char* filename = "/home/rajkochhar/catkin_ws1/src/situation_learner/src/learn.py";
-        PyObject* PyFileObject = PyFile_FromString(const_cast<char*>(filename), "r");
+        PyObject* PyFileObject = PyFile_FromString(const_cast<char*>(filename), (char*)"r");
         // cout << "file opened" << endl;
         PyRun_SimpleFile(PyFile_AsFile(PyFileObject), filename);
         // cout << "python script finished" << endl;

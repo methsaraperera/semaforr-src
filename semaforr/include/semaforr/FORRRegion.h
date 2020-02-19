@@ -71,6 +71,28 @@ class FORRRegion{
     return false;
   }
 
+  void addMinDistanceExit(FORRExit exit){
+    cout << "Inside addMinDistanceExit " << min_exits.size() << endl;
+    bool foundAny = false;
+    for(int i = 0; i < min_exits.size() ; i++){
+      cout << "Exit region " << exit.getExitRegion() << " min_exit region " << min_exits[i].getExitRegion() << endl;
+      if(exit.getExitRegion() == min_exits[i].getExitRegion()){
+        foundAny = true;
+        cout << "Exit distance " << exit.getExitDistance() << " min_exit distance " << min_exits[i].getExitDistance() << endl;
+        if(exit.getExitDistance() < min_exits[i].getExitDistance()){
+          min_exits.erase(min_exits.begin()+i);
+          min_exits.push_back(exit);
+        }
+        break;
+      }
+    }
+    if(foundAny == false){
+      cout << "Exit not found, add new" << endl;
+      min_exits.push_back(exit);
+    }
+    cout << "End addMinDistanceExit " << min_exits.size() << endl;
+  }
+
   bool inRegion(double x, double y){ return (distance(CartesianPoint(x,y),center) < this->getRadius());}
 
   bool inRegion(CartesianPoint p){ return (distance(p,center) < this->getRadius());}
@@ -233,10 +255,14 @@ class FORRRegion{
   vector<FORRExit> getExtExits() { return ext_exits; }
 
   vector<FORRExit> getExits() { return exits;}
+
+  vector<FORRExit> getMinExits() { return min_exits;}
+
   void setExits(vector<FORRExit> exit_points) { exits = exit_points;}
   void addExit(FORRExit exit) {
     exits.push_back(exit);
     ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getMidPoint(), exit.getExitRegionPoint(), exit.getExitRegion(), exit.getExitDistance()));
+    this->addMinDistanceExit(exit);
   }
 
   void setIsLeaf(bool leaf){isLeaf = leaf;}
@@ -251,6 +277,7 @@ class FORRRegion{
   // each value in the list denotes a possible exit from the region
   vector<FORRExit> exits;
   vector<FORRExit> ext_exits;
+  vector<FORRExit> min_exits;
 };
 
 

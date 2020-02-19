@@ -249,7 +249,7 @@ public:
 		too_close = false;
 		too_close_front = false;
 		top_point_decisions = 0;
-		decision_limit = 500;
+		decision_limit = 750;
 	};
 	~HighwayExplorer(){};
 

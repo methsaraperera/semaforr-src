@@ -101,14 +101,16 @@ public:
   vector<CartesianPoint> getCurrentLaserEndpoints() { return laserEndpoints; }
 
   void setCurrentSensor(Position p, sensor_msgs::LaserScan scan) { 
-	currentPosition = p;
-     	currentLaserScan = scan;
-     	transformToEndpoints();
-	if(currentTask != NULL){
-		//save the current position and laser endpoints 
-    all_laserscan_history->push_back(scan);
-		currentTask->saveSensor(p,laserEndpoints, scan);
-	}
+    currentPosition = p;
+    currentLaserScan = scan;
+    transformToEndpoints();
+    if(currentTask != NULL){
+      //save the current position and laser endpoints 
+      all_laserscan_history->push_back(scan);
+      all_position_trace->push_back(p);
+      all_laser_history->push_back(laserEndpoints);
+      currentTask->saveSensor(p, laserEndpoints, scan);
+    }
   }
   
   Task *getCurrentTask() { return currentTask; }
@@ -172,13 +174,13 @@ public:
       vector<Position> *pos_hist = currentTask->getPositionHistory();
       for(int i = 0 ; i < pos_hist->size() ; i++){
         trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
-        all_position_trace->push_back((*pos_hist)[i]);
+        // all_position_trace->push_back((*pos_hist)[i]);
       }
       all_trace.push_back(trace);
-      vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
-      for(int i = 0 ; i < laser_hist->size() ; i++){
-        all_laser_history->push_back((*laser_hist)[i]);
-      }
+      // vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
+      // for(int i = 0 ; i < laser_hist->size() ; i++){
+      //   all_laser_history->push_back((*laser_hist)[i]);
+      // }
       task_decision_count.push_back(currentTask->getDecisionCount());
       agenda.remove(currentTask);
     }

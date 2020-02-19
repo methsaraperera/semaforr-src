@@ -203,7 +203,7 @@ class FORRRegionList{
           end_region_id = region_id;
           end_position = j;
           CartesianPoint midpoint = stepped_history[(int)((begin_position+end_position)/2)];
-          // cout << "Ending Position : " << end_position << endl;
+          cout << "Starting position : " << begin_position << " Middle Position : " << (int)((begin_position+end_position)/2) << " Ending Position : " << end_position << endl;
           double connectionBetweenRegions = 0;
           for(int m = begin_position; m < end_position; m++){
             connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
@@ -233,8 +233,9 @@ class FORRRegionList{
     
     CartesianPoint exit_begin_p = getCrossingPointOnRegion(begin1, begin2, begin_region);
     CartesianPoint exit_end_p = getCrossingPointOnRegion(end1, end2, end_region);
-    //cout << begin1.get_x() << " " << begin1.get_y() << " " << begin2.get_x() << " " << begin2.get_y() << " " << regions[begin_region].getCenter().get_x() << " " << regions[begin_region].getCenter().get_y() << " " << regions[begin_region].getRadius() << " " << exit_begin_p.get_x() << " " << exit_begin_p.get_y() << " " << exit_begin_pc.get_x() << " " << exit_begin_pc.get_y() << endl;
-    //cout << end1.get_x() << " " << end1.get_y() << " " << end2.get_x() << " " << end2.get_y() << " " << regions[end_region].getCenter().get_x() << " " << regions[end_region].getCenter().get_y() << " " << regions[end_region].getRadius() << " " << exit_end_p.get_x() << " " << exit_end_p.get_y() << " " << exit_end_pc.get_x() << " " << exit_end_pc.get_y() << endl;
+    cout << begin1.get_x() << " " << begin1.get_y() << " " << begin2.get_x() << " " << begin2.get_y() << " " << regions[begin_region].getCenter().get_x() << " " << regions[begin_region].getCenter().get_y() << " " << regions[begin_region].getRadius() << " " << exit_begin_p.get_x() << " " << exit_begin_p.get_y() << endl;
+    cout << end1.get_x() << " " << end1.get_y() << " " << end2.get_x() << " " << end2.get_y() << " " << regions[end_region].getCenter().get_x() << " " << regions[end_region].getCenter().get_y() << " " << regions[end_region].getRadius() << " " << exit_end_p.get_x() << " " << exit_end_p.get_y() << endl;
+    cout << midpoint.get_x() << " " << midpoint.get_y() << endl;
     //cout << "End exit begin/end" << endl;
 
     //cout << "In save exit  " << "Start region : " << begin_region << "End region : " << end_region << endl;
