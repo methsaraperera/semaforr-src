@@ -1048,6 +1048,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     int nRegion=-1;
     for(int i = 0; i < regions.size() ; i++){
       if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0)){
+      // if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0) and regions[i].getMinExits().size() > 0){
         nRegion = i;
       }
       if(nRegion >= 0){
@@ -1066,6 +1067,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     double vDist=1000000;
     for(int i = 0; i < regions.size() ; i++){
       if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20)){
+      // if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
         double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
         if(dist_to_region < vDist){
           cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;

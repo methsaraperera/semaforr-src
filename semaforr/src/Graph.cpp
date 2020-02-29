@@ -16,7 +16,7 @@ Graph::Graph(Map * m, int p): map(m) {
   for( int x = 0; x < l; x++ ){
     vector<int> column; 
     for( int y = 0; y < h; y++ ){
-  	column.push_back(-1);
+      column.push_back(-1);
     }
     nodeIndex.push_back(column);
   }
@@ -39,13 +39,23 @@ Graph::Graph(int p, int l, int h){
   for( int x = 0; x < l; x++ ){
     vector<int> column; 
     for( int y = 0; y < h; y++ ){
-    column.push_back(-1);
+      column.push_back(-1);
     }
     nodeIndex.push_back(column);
   }
   cout << "Node index columns : " << nodeIndex.size() << endl;
 }
 
+// void Graph::resetGraph(){
+//   nodes.clear();
+//   edges.clear();
+//   for(int x = 0; x < nodeIndex.size(); x++){
+//     for(int y = 0; y < nodeIndex[x].size(); y++){
+//       nodeIndex[x][y] = -1;
+//     }
+//   }
+//   cout << "Graph reset complete" << endl;
+// }
 
 Graph::~Graph() {
   /*

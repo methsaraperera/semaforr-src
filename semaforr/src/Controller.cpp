@@ -800,6 +800,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
           ROS_DEBUG("Finished Learning Situations!!");
         }
         //beliefs->getAgentState()->skipTask();
+        if(beliefs->getAgentState()->getAllAgenda().size() < planLimit -1){
+          beliefs->getAgentState()->addTask(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
+        }
         beliefs->getAgentState()->finishTask();
         if(beliefs->getAgentState()->getAgenda().size() > 0){
           ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
@@ -912,6 +915,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     ROS_DEBUG("Barriers Learned");
   }
 
+  // if(skeleton and aStarOn){
   if(skeleton){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
@@ -921,15 +925,15 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
       }
     }
     skeleton_planner->resetGraph();
-    cout << "Planner reset" << endl;
+    // cout << "Planner reset" << endl;
     int index_val = 0;
     // vector<bool> added_nodes;
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
       int y = (int)(regions[i].getCenter().get_y()*100);
-      cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+      // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
       vector<FORRExit> exits = regions[i].getMinExits();
-      cout << "Exits " << exits.size() << endl;
+      // cout << "Exits " << exits.size() << endl;
       if(exits.size() > 0){
         bool success = skeleton_planner->getGraph()->addNode(x, y, index_val);
         // added_nodes.push_back(success);
@@ -939,7 +943,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         for(int j = 0; j < exits.size() ; j++){
           int ex = (int)(exits[j].getExitPoint().get_x()*100);
           int ey = (int)(exits[j].getExitPoint().get_y()*100);
-          cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+          // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
           success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
           // added_nodes.push_back(success);
           if(success){
@@ -947,7 +951,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
           }
           int mx = (int)(exits[j].getMidPoint().get_x()*100);
           int my = (int)(exits[j].getMidPoint().get_y()*100);
-          cout << "Midpoint " << exits[j].getMidPoint().get_x() << " " << exits[j].getMidPoint().get_y() << " " << mx << " " << my << endl;
+          // cout << "Midpoint " << exits[j].getMidPoint().get_x() << " " << exits[j].getMidPoint().get_y() << " " << mx << " " << my << endl;
           success = skeleton_planner->getGraph()->addNode(mx, my, index_val);
           // added_nodes.push_back(success);
           if(success){
@@ -985,17 +989,17 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         for(int j = 0; j < exits.size() ; j++){
           int index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
           if(index_val != -1){
-            cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
+            // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
             skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
             int mid_index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getMidPoint().get_x()*100), (int)(exits[j].getMidPoint().get_y()*100));
             if(mid_index_val != -1){
-              cout << "Edge from " << index_val << " to " << mid_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
+              // cout << "Edge from " << index_val << " to " << mid_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
               skeleton_planner->getGraph()->addEdge(index_val, mid_index_val, (exits[j].getExitDistance()*100)/2.0);
               int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
               int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
               int end_index_val = skeleton_planner->getGraph()->getNodeID(tx, ty);
               if(end_index_val != -1){
-                cout << "Edge from " << mid_index_val << " to " << end_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
+                // cout << "Edge from " << mid_index_val << " to " << end_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
                 skeleton_planner->getGraph()->addEdge(mid_index_val, end_index_val, (exits[j].getExitDistance()*100)/2.0);
               }
             }

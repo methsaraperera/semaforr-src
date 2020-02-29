@@ -192,6 +192,7 @@ public:
 
   Graph* getGraph(){ return navGraph; }
   void resetGraph(){
+    // navGraph->resetGraph();
     int length = navGraph->getLength();
     int height = navGraph->getHeight();
     int proximity = navGraph->getProximity();
