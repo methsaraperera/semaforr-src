@@ -783,7 +783,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     //   ROS_DEBUG("No active plan, setting up new plan!!");
     //   tierTwoDecision(current);
     // }
-    else if(waypointReached == true){
+    else if(waypointReached == true and beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() == 1){
       ROS_DEBUG("Temporary Waypoint reached!!");
       beliefs->getAgentState()->getCurrentTask()->setIsPlanActive(false);
       beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
@@ -800,9 +800,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
           ROS_DEBUG("Finished Learning Situations!!");
         }
         //beliefs->getAgentState()->skipTask();
-        if(beliefs->getAgentState()->getAllAgenda().size() < planLimit -1){
-          beliefs->getAgentState()->addTask(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
-        }
+        // if(beliefs->getAgentState()->getAllAgenda().size() < planLimit +1){
+        //   beliefs->getAgentState()->addTask(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
+        // }
         beliefs->getAgentState()->finishTask();
         if(beliefs->getAgentState()->getAgenda().size() > 0){
           ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
@@ -915,8 +915,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     ROS_DEBUG("Barriers Learned");
   }
 
-  // if(skeleton and aStarOn){
-  if(skeleton){
+  if(skeleton and aStarOn){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){

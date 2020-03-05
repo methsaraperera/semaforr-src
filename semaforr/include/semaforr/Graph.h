@@ -41,7 +41,7 @@ public:
 
   vector<Node*> getNodes() const { return nodes; }
 
-  // void resetGraph();
+  void resetGraph();
 
   bool addNode(int x, int y, int ind);
 

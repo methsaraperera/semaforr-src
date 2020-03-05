@@ -46,16 +46,16 @@ Graph::Graph(int p, int l, int h){
   cout << "Node index columns : " << nodeIndex.size() << endl;
 }
 
-// void Graph::resetGraph(){
-//   nodes.clear();
-//   edges.clear();
-//   for(int x = 0; x < nodeIndex.size(); x++){
-//     for(int y = 0; y < nodeIndex[x].size(); y++){
-//       nodeIndex[x][y] = -1;
-//     }
-//   }
-//   cout << "Graph reset complete" << endl;
-// }
+void Graph::resetGraph(){
+  nodes.clear();
+  edges.clear();
+  for(int x = 0; x < nodeIndex.size(); x++){
+    for(int y = 0; y < nodeIndex[x].size(); y++){
+      nodeIndex[x][y] = -1;
+    }
+  }
+  cout << "Graph reset complete" << endl;
+}
 
 Graph::~Graph() {
   /*

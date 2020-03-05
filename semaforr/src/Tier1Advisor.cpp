@@ -384,7 +384,9 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         if(end_waypoint > positionHis->size()){
           end_waypoint = positionHis->size();
         }
+        cout << "end_waypoint " << end_waypoint << endl;;
         for(int i = 1; i < end_waypoint+1; i++){
+          cout << i << endl;
           beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()));
         }
         // vector< vector<int> > grid = beliefs->getSpatialModel()->getSituations()->overlaySituations(last_endpoints, last_positions);
