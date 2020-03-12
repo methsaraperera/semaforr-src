@@ -29,6 +29,8 @@ public:
 	bool advisorGetOut(FORRAction *decision);
 
 	bool advisorVictory(FORRAction *decision);
+
+	bool advisorCircumnavigate(FORRAction *decision);
 	
 private:
 	Beliefs *beliefs;

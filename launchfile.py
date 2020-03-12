@@ -136,8 +136,8 @@ cusum = "off"
 discount = "off"
 explore = "off"
 
-num_runs = 1
-for i in range(0,num_runs):
+num_runs = 2
+for i in range(1,num_runs):
     # target_file_name = "target1.conf"
     target_file_name = "targetrooms.conf"
     log_name = map_name + "_regiontest_" + str(i) + ".txt"

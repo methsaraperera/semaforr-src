@@ -272,6 +272,20 @@ public:
 
 	vector< vector< vector< pair<int, int> > > > getHighwayGridConnections(){return highway_grid_connections;}
 
+	vector< vector<double> > getHighwayPath(){return path_to_top_point;}
+
+	Position getHighwayTarget(){
+		if(go_to_top_point == true){
+			return top_point.point;
+		}
+		else{
+			return current_target;
+		}
+	}
+
+	int getLength(){return length;}
+	int getHeight(){return height;}
+
 	FORRAction exploreDecision(Position current_point, sensor_msgs::LaserScan current_laser){
 		DecisionPoint current_position = DecisionPoint(current_point, current_laser);
 		cout << "current_position " << current_position.point.getX() << " " << current_position.point.getY() << " " << current_position.point.getTheta() << " mid avg " << current_position.middle_distance << " mid min " << current_position.middle_distance_min << " mid max " << current_position.farthest_distance_middle << " left avg " << current_position.left_distance << " left max " << current_position.farthest_distance_left << " right avg " << current_position.right_distance << " right max " << current_position.farthest_distance_right << endl;

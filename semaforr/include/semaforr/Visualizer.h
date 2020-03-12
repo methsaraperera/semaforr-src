@@ -55,6 +55,9 @@ private:
   ros::Publisher walls_pub_;
   ros::Publisher pose_pub_;
   ros::Publisher laser_pub_;
+  ros::Publisher highway_pub_;
+  ros::Publisher highway_plan_pub_;
+  ros::Publisher highway_target_pub_;
   Controller *con;
   Beliefs *beliefs;
   ros::NodeHandle *nh_;
@@ -94,6 +97,9 @@ public:
     walls_pub_ = nh_->advertise<visualization_msgs::Marker>("walls", 1);
     pose_pub_ = nh_->advertise<geometry_msgs::PoseStamped>("decision_pose", 1);
     laser_pub_ = nh_->advertise<sensor_msgs::LaserScan>("decision_laser", 1);
+    highway_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("highway", 1);
+    highway_plan_pub_ = nh_->advertise<nav_msgs::Path>("highway_plan", 1);
+    highway_target_pub_ = nh_->advertise<geometry_msgs::PointStamped>("highway_target_point", 1);
     //declare and create a controller with task, action and advisor configuration
     con = c;
     beliefs = con->getBeliefs();
@@ -108,9 +114,9 @@ public:
 		publish_all_targets();
 		publish_remaining_targets();
 	}
-	publish_nodes();
-	publish_reachable_nodes();
-	publish_edges();
+	// publish_nodes();
+	// publish_reachable_nodes();
+	// publish_edges();
         /*if(visualized < 5){
 		publish_nodes();
 		publish_reachable_nodes();
@@ -131,6 +137,9 @@ public:
 	publish_barriers();
 	publish_walls();
 	//publish_occupancy();
+	publish_highway();
+	publish_highway_plan();
+	publish_highway_target();
   }
 
 
@@ -332,6 +341,17 @@ public:
 	target_pub_.publish(target);
   }
 
+  void publish_highway_target(){
+	ROS_DEBUG("Inside visualization tool!!");
+	geometry_msgs::PointStamped target;
+	target.header.frame_id = "map";
+	target.header.stamp = ros::Time::now();
+	target.point.x = con->gethighwayExploration()->getHighwayTarget().getX();
+	target.point.y = con->gethighwayExploration()->getHighwayTarget().getY();
+	target.point.z = 0;
+	highway_target_pub_.publish(target);
+  }
+
   void publish_next_waypoint(){
 	ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped waypoint;
@@ -366,6 +386,25 @@ public:
 		path.poses.push_back(poseStamped);
 	}
 	plan_pub_.publish(path);
+ }
+
+ void publish_highway_plan(){
+	ROS_DEBUG("Inside publish highway plan!!");
+	nav_msgs::Path path;
+	path.header.frame_id = "map";
+	path.header.stamp = ros::Time::now();
+	
+	vector< vector<double> > waypoints = con->gethighwayExploration()->getHighwayPath();
+
+	for(int i = 0; i < waypoints.size(); i++){
+		geometry_msgs::PoseStamped poseStamped;
+		poseStamped.header.frame_id = "map";
+		poseStamped.header.stamp = path.header.stamp;
+		poseStamped.pose.position.x = waypoints[i][0];
+		poseStamped.pose.position.y = waypoints[i][1];
+		path.poses.push_back(poseStamped);
+	}
+	highway_plan_pub_.publish(path);
  }
 
  void publish_original_plan(){
@@ -925,6 +964,27 @@ public:
 		targets.poses.push_back(pose);
 	}
 	remaining_targets_pub_.publish(targets);
+  }
+
+  void publish_highway(){
+	ROS_DEBUG("Inside publish highway");
+	nav_msgs::OccupancyGrid grid;
+
+	grid.header.frame_id = "map";
+	grid.header.stamp = ros::Time::now();
+	grid.info.map_load_time = ros::Time::now();
+
+	grid.info.origin.orientation.w = 0;
+	grid.info.resolution = 1;
+	grid.info.width = con->gethighwayExploration()->getLength();
+	grid.info.height = con->gethighwayExploration()->getHeight();
+	vector< vector<int> > highways = con->gethighwayExploration()->getHighwayGrid();
+	for(int j = 0; j < grid.info.height; j++){
+		for(int i = 0; i < grid.info.width; i++){
+			grid.data.push_back(highways[i][j]);
+		}
+	}
+	highway_pub_.publish(grid);
   }
 
   void publish_log(FORRAction decision, double overallTimeSec, double computationTimeSec){
