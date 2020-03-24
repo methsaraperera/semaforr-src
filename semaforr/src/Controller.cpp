@@ -699,6 +699,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   initialize_situations(situation_config);
   highwayFinished = 0;
   highwayExploration = new HighwayExplorer(l, h, 7, arrMove, arrRotate, moveArrMax, rotateArrMax);
+  circumnavigator = new Circumnavigate(l, h, beliefs);
 }
 
 
@@ -726,6 +727,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
     if(highwayFinished == 1){
       learnSpatialModel(beliefs->getAgentState(), true);
+      updateSkeletonGraph(beliefs->getAgentState());
       ROS_DEBUG("Finished Learning Spatial Model!!");
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -737,6 +739,8 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
         ROS_DEBUG("Next Task Selected!!");
       }
+      beliefs->getAgentState()->setGetOutTriggered(false);
+      beliefs->getAgentState()->resetDirections();
     }
     //if task is complete
     if(taskCompleted == true){
@@ -744,6 +748,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //Learn spatial model only on tasks completed successfully
       if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
         learnSpatialModel(beliefs->getAgentState(), true);
+        updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Learning Spatial Model!!");
         if(situationsOn){
           beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
@@ -751,6 +756,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         }
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
+      beliefs->getAgentState()->resetDirections();
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
       //ROS_DEBUG("Task Cleared!!");
@@ -773,7 +779,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
     }
     // else if subtask is complete
-    else if(waypointReached == true){
+    else if(waypointReached == true and beliefs->getAgentState()->getCurrentTask()->getWaypoints().size() > 0){
       ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
       //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
       beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
@@ -793,7 +799,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
+        beliefs->getAgentState()->resetDirections();
         learnSpatialModel(beliefs->getAgentState(), false);
+        updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Learning Spatial Model!!");
         if(situationsOn){
           beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
@@ -914,6 +922,19 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     beliefs->getSpatialModel()->getBarriers()->updateBarriers(laser_hist, all_trace.back());
     ROS_DEBUG("Barriers Learned");
   }
+  gettimeofday(&cv,NULL);
+  end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
+  computationTimeSec = (end_timecv-start_timecv);
+  decisionStats->learningComputationTime = computationTimeSec;
+}
+
+void Controller::updateSkeletonGraph(AgentState* agentState){
+  double computationTimeSec=0.0;
+  timeval cv;
+  double start_timecv;
+  double end_timecv;
+  gettimeofday(&cv,NULL);
+  start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 
   if(skeleton and aStarOn){
     cout << "Updating skeleton planner" << endl;
@@ -925,6 +946,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     }
     skeleton_planner->resetGraph();
     // cout << "Planner reset" << endl;
+    vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
     int index_val = 0;
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
@@ -980,7 +1002,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
         }
       }
     }
-    cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
+    // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }
   if(hallwayskel and highwayFinished == 1){
     PathPlanner *hwskeleton_planner;
@@ -1140,7 +1162,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
   gettimeofday(&cv,NULL);
   end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
   computationTimeSec = (end_timecv-start_timecv);
-  decisionStats->learningComputationTime = computationTimeSec;
+  // decisionStats->learningComputationTime = computationTimeSec;
 }
 
 
@@ -1188,13 +1210,16 @@ FORRAction Controller::FORRDecision()
 bool Controller::tierOneDecision(FORRAction *decision){
   //decision making tier1 advisor
   bool decisionMade = false;
+  ROS_INFO("Advisor circumnavigate will create subplan");
+  // tier1->advisorCircumnavigate(decision);
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor victory has made a decision " << decision->type << " " << decision->parameter);
+    circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
     decisionStats->decisionTier = 1;
     decisionMade = true;
   }
   else{
-    if(tier1->advisorCircumnavigate(decision)){
+    if(circumnavigator->advisorCircumnavigate(decision)){
       ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
       decisionStats->decisionTier = 2.5;
       decisionMade = true;

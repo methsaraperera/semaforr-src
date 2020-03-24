@@ -30,7 +30,7 @@ public:
 
 	bool advisorVictory(FORRAction *decision);
 
-	bool advisorCircumnavigate(FORRAction *decision);
+	// bool advisorCircumnavigate(FORRAction *decision);
 	
 private:
 	Beliefs *beliefs;

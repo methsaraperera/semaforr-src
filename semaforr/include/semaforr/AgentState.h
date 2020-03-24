@@ -48,6 +48,9 @@ public:
     getOutTriggered = false;
     farthestPoint = CartesianPoint(0.0,0.0);
     intermediatePoint = CartesianPoint(0.0,0.0);
+    currentDirection = -1;
+    desiredDirection = -1;
+    directionEnd = false;
 
     for(int i = 1; i < numRotates; i++){
       action_set->insert(FORRAction(LEFT_TURN, i));
@@ -296,6 +299,36 @@ public:
     return getOutGrid;
   }
 
+  int getCurrentDirection(){
+    return currentDirection;
+  }
+
+  int getDesiredDirection(){
+    return desiredDirection;
+  }
+
+  void setCurrentDirection(int num){
+    currentDirection = num;
+  }
+
+  void setDesiredDirection(int num){
+    desiredDirection = num;
+  }
+
+  void resetDirections(){
+    currentDirection = -1;
+    desiredDirection = -1;
+    directionEnd = false;
+  }
+
+  bool getDirectionEnd(){
+    return directionEnd;
+  }
+
+  void setDirectionEnd(bool status){
+    directionEnd = status;
+  }
+
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
@@ -426,6 +459,11 @@ public:
   CartesianPoint farthestPoint;
   CartesianPoint intermediatePoint;
   vector< vector<int> > getOutGrid;
+
+  // Circumnavigate
+  int currentDirection;
+  int desiredDirection;
+  bool directionEnd;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);

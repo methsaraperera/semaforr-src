@@ -19,6 +19,7 @@
 #include "FORRActionStats.h"
 #include "PathPlanner.h"
 #include "HighwayExplore.h"
+#include "Circumnavigate.h"
 
 #include <fstream>
 #include <ros/ros.h>
@@ -89,6 +90,7 @@ private:
 
   // learns the spatial model and updates the beliefs
   void learnSpatialModel(AgentState *agentState, bool taskStatus);
+  void updateSkeletonGraph(AgentState *agentState);
 
   void initialize_advisors(std::string);
   void initialize_tasks(std::string);
@@ -100,6 +102,7 @@ private:
   Beliefs *beliefs;
 
   HighwayExplorer *highwayExploration;
+  Circumnavigate *circumnavigator;
 
   // An ordered list of advisors that are consulted by Controller::FORRDecision
   Tier1Advisor *tier1;

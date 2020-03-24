@@ -331,7 +331,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
         cout << "end_waypoint " << end_waypoint << endl;;
         for(int i = end_waypoint; i >= 1; i--){
           cout << i << endl;
-          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()));
+          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), true);
         }
       }
       else{
@@ -482,51 +482,281 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
   return decisionMade;
 }
 
-bool Tier1Advisor::advisorCircumnavigate(FORRAction *decision) {
-  ROS_DEBUG("Begin circumnavigate advisor");
-  // if the robot is in a confined space and it sees a way out then take the action that does that.
-  bool decisionMade = false;
-  if(beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() == false){
-    CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
-    cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
-    Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-    cout << "Current Position = " << currentPosition.getX() << " " << currentPosition.getY() << endl;
-    CartesianPoint shifted_point1 = CartesianPoint(currentPosition.getX()+0.5, currentPosition.getY());
-    CartesianPoint shifted_point2 = CartesianPoint(currentPosition.getX()-0.5, currentPosition.getY());
-    CartesianPoint shifted_point3 = CartesianPoint(currentPosition.getX(), currentPosition.getY()+0.5);
-    CartesianPoint shifted_point4 = CartesianPoint(currentPosition.getX(), currentPosition.getY()-0.5);
-    bool can_see_1 = beliefs->getAgentState()->canSeePoint(shifted_point1, 25);
-    bool can_see_2 = beliefs->getAgentState()->canSeePoint(shifted_point2, 25);
-    bool can_see_3 = beliefs->getAgentState()->canSeePoint(shifted_point3, 25);
-    bool can_see_4 = beliefs->getAgentState()->canSeePoint(shifted_point4, 25);
-    cout << "shifted_point1 " << shifted_point1.get_x() << " " << shifted_point1.get_y() << " can_see_1 " << can_see_1 << endl;
-    cout << "shifted_point2 " << shifted_point2.get_x() << " " << shifted_point2.get_y() << " can_see_2 " << can_see_2 << endl;
-    cout << "shifted_point3 " << shifted_point3.get_x() << " " << shifted_point3.get_y() << " can_see_3 " << can_see_3 << endl;
-    cout << "shifted_point4 " << shifted_point4.get_x() << " " << shifted_point4.get_y() << " can_see_4 " << can_see_4 << endl;
-    if(task.get_x() > currentPosition.getX() and can_see_1){
-      (*decision) = beliefs->getAgentState()->moveTowards(shifted_point1);
-      decisionMade = true;
-    }
-    else if(task.get_y() > currentPosition.getY() and can_see_3){
-      (*decision) = beliefs->getAgentState()->moveTowards(shifted_point3);
-      decisionMade = true;
-    }
-    else if(task.get_x() <= currentPosition.getX() and can_see_2){
-      (*decision) = beliefs->getAgentState()->moveTowards(shifted_point2);
-      decisionMade = true;
-    }
-    else if(task.get_y() <= currentPosition.getY() and can_see_4){
-      (*decision) = beliefs->getAgentState()->moveTowards(shifted_point4);
-      decisionMade = true;
-    }
-    // else{
-    //   (*decision) = FORRAction(FORWARD, 2);
-    //   decisionMade = true;
-    // }
-  }
-  cout << "decisionMade " << decisionMade << endl;
-  return decisionMade;
-}
+// bool Tier1Advisor::advisorCircumnavigate(FORRAction *decision) {
+//   ROS_DEBUG("Begin circumnavigate advisor");
+//   // if the robot is in a confined space and it sees a way out then take the action that does that.
+//   bool decisionMade = false;
+//   if(beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() == true){
+//     CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
+//     cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
+//     Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+//     cout << "Current Position = " << currentPosition.getX() << " " << currentPosition.getY() << endl;
+//     double x_diff = task.get_x() - currentPosition.getX();
+//     double y_diff = task.get_y() - currentPosition.getY();
+//     if(abs(x_diff) > abs(y_diff)){
+//       if(x_diff > 0){
+//         beliefs->getAgentState()->setCurrentDirection(1);
+//       }
+//       else{
+//         beliefs->getAgentState()->setCurrentDirection(2);
+//       }
+//       if(y_diff > 0){
+//         beliefs->getAgentState()->setDesiredDirection(3);
+//       }
+//       else{
+//         beliefs->getAgentState()->setDesiredDirection(4);
+//       }
+//     }
+//     else{
+//       if(x_diff > 0){
+//         beliefs->getAgentState()->setDesiredDirection(1);
+//       }
+//       else{
+//         beliefs->getAgentState()->setDesiredDirection(2);
+//       }
+//       if(y_diff > 0){
+//         beliefs->getAgentState()->setCurrentDirection(3);
+//       }
+//       else{
+//         beliefs->getAgentState()->setCurrentDirection(4);
+//       }
+//     }
+//     cout << "Current Direction " << beliefs->getAgentState()->getCurrentDirection() << " Desired Direction " << beliefs->getAgentState()->getDesiredDirection() << endl;
+//     CartesianPoint shifted_point1 = CartesianPoint(currentPosition.getX()+1, currentPosition.getY());
+//     CartesianPoint shifted_point2 = CartesianPoint(currentPosition.getX()-1, currentPosition.getY());
+//     CartesianPoint shifted_point3 = CartesianPoint(currentPosition.getX(), currentPosition.getY()+1);
+//     CartesianPoint shifted_point4 = CartesianPoint(currentPosition.getX(), currentPosition.getY()-1);
+//     vector<CartesianPoint> shifted_points;
+//     shifted_points.push_back(shifted_point1);
+//     shifted_points.push_back(shifted_point2);
+//     shifted_points.push_back(shifted_point3);
+//     shifted_points.push_back(shifted_point4);
+//     bool can_see_1 = beliefs->getAgentState()->canSeePoint(shifted_point1, 25);
+//     bool can_see_2 = beliefs->getAgentState()->canSeePoint(shifted_point2, 25);
+//     bool can_see_3 = beliefs->getAgentState()->canSeePoint(shifted_point3, 25);
+//     bool can_see_4 = beliefs->getAgentState()->canSeePoint(shifted_point4, 25);
+//     vector<bool> can_see_points;
+//     can_see_points.push_back(can_see_1);
+//     can_see_points.push_back(can_see_2);
+//     can_see_points.push_back(can_see_3);
+//     can_see_points.push_back(can_see_4);
+//     double robot_direction = currentPosition.getTheta();
+//     double goal_direction = atan2((shifted_point1.get_y() - currentPosition.getY()), (shifted_point1.get_x() - currentPosition.getX()));
+//     double required_rotation = goal_direction - robot_direction;
+//     if(required_rotation > M_PI)
+//       required_rotation = required_rotation - (2*M_PI);
+//     if(required_rotation < -M_PI)
+//       required_rotation = required_rotation + (2*M_PI);
+//     double dist_to_1 = beliefs->getAgentState()->getDistanceToObstacle(required_rotation);
+//     goal_direction = atan2((shifted_point2.get_y() - currentPosition.getY()), (shifted_point2.get_x() - currentPosition.getX()));
+//     required_rotation = goal_direction - robot_direction;
+//     if(required_rotation > M_PI)
+//       required_rotation = required_rotation - (2*M_PI);
+//     if(required_rotation < -M_PI)
+//       required_rotation = required_rotation + (2*M_PI);
+//     double dist_to_2 = beliefs->getAgentState()->getDistanceToObstacle(required_rotation);
+//     goal_direction = atan2((shifted_point3.get_y() - currentPosition.getY()), (shifted_point3.get_x() - currentPosition.getX()));
+//     required_rotation = goal_direction - robot_direction;
+//     if(required_rotation > M_PI)
+//       required_rotation = required_rotation - (2*M_PI);
+//     if(required_rotation < -M_PI)
+//       required_rotation = required_rotation + (2*M_PI);
+//     double dist_to_3 = beliefs->getAgentState()->getDistanceToObstacle(required_rotation);
+//     goal_direction = atan2((shifted_point4.get_y() - currentPosition.getY()), (shifted_point4.get_x() - currentPosition.getX()));
+//     required_rotation = goal_direction - robot_direction;
+//     if(required_rotation > M_PI)
+//       required_rotation = required_rotation - (2*M_PI);
+//     if(required_rotation < -M_PI)
+//       required_rotation = required_rotation + (2*M_PI);
+//     double dist_to_4 = beliefs->getAgentState()->getDistanceToObstacle(required_rotation);
+//     vector<double> distances;
+//     distances.push_back(dist_to_1);
+//     distances.push_back(dist_to_2);
+//     distances.push_back(dist_to_3);
+//     distances.push_back(dist_to_4);
+//     cout << "shifted_point1 " << shifted_point1.get_x() << " " << shifted_point1.get_y() << " can_see_1 " << can_see_1 << " dist_to_1 " << dist_to_1 << endl;
+//     cout << "shifted_point2 " << shifted_point2.get_x() << " " << shifted_point2.get_y() << " can_see_2 " << can_see_2 << " dist_to_2 " << dist_to_2 << endl;
+//     cout << "shifted_point3 " << shifted_point3.get_x() << " " << shifted_point3.get_y() << " can_see_3 " << can_see_3 << " dist_to_3 " << dist_to_3 << endl;
+//     cout << "shifted_point4 " << shifted_point4.get_x() << " " << shifted_point4.get_y() << " can_see_4 " << can_see_4 << " dist_to_4 " << dist_to_4 << endl;
+//     if(can_see_points[beliefs->getAgentState()->getCurrentDirection()-1] and beliefs->getAgentState()->getDirectionEnd() == false){
+//       cout << "Adding current direction" << endl;
+//       vector<CartesianPoint> new_waypoints;
+//       for(double i = 0.2; i <= distances[beliefs->getAgentState()->getCurrentDirection()-1]; i+=0.2){
+//         if(beliefs->getAgentState()->getCurrentDirection() == 1){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX()+i, currentPosition.getY()));
+//         }
+//         else if(beliefs->getAgentState()->getCurrentDirection() == 2){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX()-i, currentPosition.getY()));
+//         }
+//         else if(beliefs->getAgentState()->getCurrentDirection() == 3){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX(), currentPosition.getY()+i));
+//         }
+//         else if(beliefs->getAgentState()->getCurrentDirection() == 4){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX(), currentPosition.getY()-i));
+//         }
+//       }
+//       for(int i = 0; i < new_waypoints.size(); i++){
+//         beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(new_waypoints[i], false);
+//       }
+//       // (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[beliefs->getAgentState()->getCurrentDirection()-1]);
+//       // decisionMade = true;
+//     }
+//     if(can_see_points[beliefs->getAgentState()->getDesiredDirection()-1] and beliefs->getAgentState()->getDirectionEnd() == false){
+//       cout << "Adding desired direction" << endl;
+//       vector<CartesianPoint> new_waypoints;
+//       for(double i = 0.2; i <= distances[beliefs->getAgentState()->getDesiredDirection()-1]; i+=0.2){
+//         if(beliefs->getAgentState()->getDesiredDirection() == 1){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX()+i, currentPosition.getY()));
+//         }
+//         else if(beliefs->getAgentState()->getDesiredDirection() == 2){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX()-i, currentPosition.getY()));
+//         }
+//         else if(beliefs->getAgentState()->getDesiredDirection() == 3){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX(), currentPosition.getY()+i));
+//         }
+//         else if(beliefs->getAgentState()->getDesiredDirection() == 4){
+//           new_waypoints.insert(new_waypoints.begin(),CartesianPoint(currentPosition.getX(), currentPosition.getY()-i));
+//         }
+//       }
+//       for(int i = 0; i < new_waypoints.size(); i++){
+//         beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(new_waypoints[i], false);
+//       }
+//       // (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[beliefs->getAgentState()->getDesiredDirection()-1]);
+//       // decisionMade = true;
+//     }
+//     // if(can_see_points[beliefs->getAgentState()->getCurrentDirection()-1] and can_see_points[beliefs->getAgentState()->getDesiredDirection()-1]){
+//     //   beliefs->getAgentState()->setDirectionEnd(false);
+//     // }
+//     // if(!can_see_points[beliefs->getAgentState()->getCurrentDirection()-1] and !can_see_points[beliefs->getAgentState()->getDesiredDirection()-1] and beliefs->getAgentState()->getDirectionEnd() == false){
+//     //   vector<Position> *positionHis = beliefs->getAgentState()->getAllPositionTrace();
+//     //   vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
+//     //   CartesianPoint current_position = CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY());
+//     //   cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << endl;
+//     //   vector<Position> last_positions;
+//     //   vector< vector<CartesianPoint> > last_endpoints;
+//     //   int previous_count = 4;
+//     //   for(int i = 1; i < previous_count+1; i++){
+//     //     last_positions.push_back(positionHis->at(positionHis->size()-i));
+//     //     last_endpoints.push_back(laserHis->at(laserHis->size()-i));
+//     //   }
+//     //   // cout << last_positions.size() << " " << last_lasers.size() << " " << last_endpoints.size() << endl;
+//     //   // cout << last_positions.size() << " " << last_endpoints.size() << endl;
+//     //   int last_invisible = 1;
+//     //   int last_visible = 1;
+//     //   for(int i = 2; i < positionHis->size(); i++){
+//     //     bool anyVisible = false;
+//     //     for(int j = 0; j < last_positions.size(); j++){
+//     //       if(beliefs->getAgentState()->canSeePoint(last_endpoints[j], CartesianPoint(last_positions[j].getX(), last_positions[j].getY()), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), 25)){
+//     //         anyVisible = true;
+//     //         break;
+//     //       }
+//     //     }
+//     //     if(anyVisible == false){
+//     //       last_invisible = i;
+//     //       break;
+//     //     }
+//     //     last_visible = i;
+//     //   }
+//     //   int end_waypoint = last_invisible + 5;
+//     //   if(end_waypoint > positionHis->size()){
+//     //     end_waypoint = positionHis->size();
+//     //   }
+//     //   cout << "end_waypoint " << end_waypoint << endl;;
+//     //   for(int i = end_waypoint; i >= 1; i--){
+//     //     cout << i << endl;
+//     //     beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), true);
+//     //   }
+//     //   beliefs->getAgentState()->setDirectionEnd(true);
+//     // }
+//     if(!can_see_points[beliefs->getAgentState()->getCurrentDirection()-1] and !can_see_points[beliefs->getAgentState()->getDesiredDirection()-1]){
+//       Task* completedTask = beliefs->getAgentState()->getCurrentTask();
+//       vector<Position> *pos_hist = completedTask->getPositionHistory();
+//       vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
+//       vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
+//       vector<CartesianPoint> trace;
+//       for(int i = 0 ; i < pos_hist->size() ; i++){
+//         trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+//       }
+//       all_trace.push_back(trace);
+//       beliefs->getSpatialModel()->getRegionList()->learnRegions(pos_hist, laser_hist);
+//       ROS_DEBUG("Regions Learned");
+//       beliefs->getSpatialModel()->getRegionList()->clearAllExits();
+//       beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
+//       ROS_DEBUG("Exits Learned");
+//     }
+//     // if(can_see_points[beliefs->getAgentState()->getDesiredDirection()-1] and distances[beliefs->getAgentState()->getDesiredDirection()-1] > distances[beliefs->getAgentState()->getCurrentDirection()-1]){
+//     //   int dd = beliefs->getAgentState()->getDesiredDirection();
+//     //   double x_diff = task.get_x() - currentPosition.getX();
+//     //   double y_diff = task.get_y() - currentPosition.getY();
+//     //   if(dd == 1 or dd == 2){
+//     //     if(y_diff > 0){
+//     //       beliefs->getAgentState()->setDesiredDirection(3);
+//     //     }
+//     //     else{
+//     //       beliefs->getAgentState()->setDesiredDirection(4);
+//     //     }
+//     //   }
+//     //   else{
+//     //     if(x_diff > 0){
+//     //       beliefs->getAgentState()->setDesiredDirection(1);
+//     //     }
+//     //     else{
+//     //       beliefs->getAgentState()->setDesiredDirection(2);
+//     //     }
+//     //   }
+//     //   beliefs->getAgentState()->setCurrentDirection(dd);
+//     //   (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[dd-1]);
+//     //   decisionMade = true;
+//     // }
+//     // if(decisionMade == false){
+//     //   if(can_see_points[beliefs->getAgentState()->getCurrentDirection()-1]){
+//     //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[beliefs->getAgentState()->getCurrentDirection()-1]);
+//     //     decisionMade = true;
+//     //   }
+//     // }
+//     // if(decisionMade == false){
+//     //   beliefs->getAgentState()->setDirectionEnd(true);
+//     //   if(beliefs->getAgentState()->getDesiredDirection() == 1){
+//     //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[1]);
+//     //     decisionMade = true;
+//     //   }
+//     //   else if(beliefs->getAgentState()->getDesiredDirection() == 2){
+//     //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[0]);
+//     //     decisionMade = true;
+//     //   }
+//     //   else if(beliefs->getAgentState()->getDesiredDirection() == 3){
+//     //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[3]);
+//     //     decisionMade = true;
+//     //   }
+//     //   else if(beliefs->getAgentState()->getDesiredDirection() == 4){
+//     //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[2]);
+//     //     decisionMade = true;
+//     //   }
+//       // if(can_see_1){
+//       //   (*decision) = beliefs->getAgentState()->moveTowards(shifted_point1);
+//       //   decisionMade = true;
+//       // }
+//       // else if(can_see_3){
+//       //   (*decision) = beliefs->getAgentState()->moveTowards(shifted_point3);
+//       //   decisionMade = true;
+//       // }
+//       // else if(can_see_2){
+//       //   (*decision) = beliefs->getAgentState()->moveTowards(shifted_point2);
+//       //   decisionMade = true;
+//       // }
+//       // else if(can_see_4){
+//       //   (*decision) = beliefs->getAgentState()->moveTowards(shifted_point4);
+//       //   decisionMade = true;
+//       // }
+//       // else{
+//       //   (*decision) = FORRAction(FORWARD, 2);
+//       //   decisionMade = true;
+//       // }
+//     // }
+//   }
+//   cout << "decisionMade " << decisionMade << endl;
+//   return decisionMade;
+// }
 
 
 
