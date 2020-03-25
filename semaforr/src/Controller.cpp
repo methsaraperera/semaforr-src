@@ -741,6 +741,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->resetDirections();
+      circumnavigator->resetCircumnavigate();
     }
     //if task is complete
     if(taskCompleted == true){
@@ -757,6 +758,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->resetDirections();
+      circumnavigator->resetCircumnavigate();
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
       //ROS_DEBUG("Task Cleared!!");
@@ -800,6 +802,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
         beliefs->getAgentState()->resetDirections();
+        circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false);
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Learning Spatial Model!!");
