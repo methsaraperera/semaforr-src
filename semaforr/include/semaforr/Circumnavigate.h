@@ -55,6 +55,7 @@ public:
 			visited_grid.push_back(col);
 		}
 		followingCurrentDirection = false;
+		goToStart = false;
 		currentDPoint = DPoint(Position(0,0,0),Position(0,0,0));
 	}
 
@@ -181,6 +182,7 @@ public:
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
 						followingCurrentDirection = true;
+						goToStart = true;
 					}
 				}
 			}
@@ -197,6 +199,7 @@ public:
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
 						followingCurrentDirection = true;
+						goToStart = true;
 					}
 				}
 			}
@@ -213,6 +216,7 @@ public:
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
 						followingCurrentDirection = true;
+						goToStart = true;
 					}
 				}
 			}
@@ -229,6 +233,7 @@ public:
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
 						followingCurrentDirection = true;
+						goToStart = true;
 					}
 				}
 			}
@@ -246,6 +251,7 @@ public:
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
 							followingCurrentDirection = true;
+							goToStart = true;
 						}
 					}
 				}
@@ -262,6 +268,7 @@ public:
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
 							followingCurrentDirection = true;
+							goToStart = true;
 						}
 					}
 				}
@@ -278,6 +285,7 @@ public:
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
 							followingCurrentDirection = true;
+							goToStart = true;
 						}
 					}
 				}
@@ -294,12 +302,75 @@ public:
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
 							followingCurrentDirection = true;
+							goToStart = true;
 						}
 					}
 				}
 			}
 			if(followingCurrentDirection == true){
 				//plan route to current point and then follow it to end or until the other direction is detected (need to switch directions if going in desired directions)
+				if(goToStart == true){
+					if(currentPosition.getDistance(currentDPoint.point) < 0.5){
+						goToStart = false;
+						cout << "Close to start of new circumnavigate point" << endl;
+						CartesianPoint task(currentDPoint.middle_point.getX(),currentDPoint.middle_point.getY());
+						(*decision) = beliefs->getAgentState()->moveTowards(task);
+						FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+						Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+						if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+							cout << "Circumnavigate advisor to take decision" << endl;
+							decisionMade = true;
+						}
+					}
+					else if(beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() == false){
+						Task* completedTask = beliefs->getAgentState()->getCurrentTask();
+						vector<Position> *pos_hist = completedTask->getPositionHistory();
+						vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
+						vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+						vector<CartesianPoint> trace;
+						for(int i = 0 ; i < pos_hist->size() ; i++){
+							trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+						}
+						vector< vector<CartesianPoint> > laser_trace;
+						for(int i = 0 ; i < laser_hist->size() ; i++){
+							laser_trace.push_back((*laser_hist)[i]);
+						}
+						int cutoff = -1;
+						for(int i = trace.size(); i > 0; i--){
+							double radius = 10000;
+							for(int j = 0; j< laser_trace[i].size(); j++){
+								double range = laser_trace[i][j].get_distance(trace[i]);
+								if (range < radius and range >= 0.1){
+									radius = range;
+								}
+							}
+							FORRRegion current_region = FORRRegion(trace[i], laser_trace[i], radius);
+							for(int j = 0; j < regions.size(); j++){
+								if(regions[j].inRegion(trace[i]) or regions[j].doIntersect(current_region)){
+									cutoff = i;
+									break;
+								}
+							}
+							if(cutoff >= 0){
+								break;
+							}
+						}
+						vector< vector<CartesianPoint> > all_trace;
+						vector<CartesianPoint> new_trace;
+						for(int i = cutoff ; i < pos_hist->size() ; i++){
+							trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+						}
+						all_trace.push_back(trace);
+						vector< Position > *position_trace = new vector<Position>();
+						vector< vector<CartesianPoint> > *laser_hist_trace = new vector< vector<CartesianPoint> >();
+
+						beliefs->getSpatialModel()->getRegionList()->learnRegions(pos_hist, laser_hist);
+						cout << "Regions Updated" << endl;
+						beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
+						cout << "Exits Updated" << endl;
+
+					}
+				}
 			}
 		}
 		cout << "decisionMade " << decisionMade << endl;
@@ -317,6 +388,7 @@ private:
 	vector<DPoint> east_stack;
 	DPoint currentDPoint;
 	bool followingCurrentDirection;
+	bool goToStart;
 	bool currentDirectionChanged;
 };
 
