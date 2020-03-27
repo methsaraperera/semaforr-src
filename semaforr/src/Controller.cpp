@@ -699,7 +699,13 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   initialize_situations(situation_config);
   highwayFinished = 0;
   highwayExploration = new HighwayExplorer(l, h, 7, arrMove, arrRotate, moveArrMax, rotateArrMax);
-  circumnavigator = new Circumnavigate(l, h, beliefs);
+  PathPlanner *skeleton_planner;
+  for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+    if((*it)->getName() == "skeleton"){
+      skeleton_planner = *it;
+    }
+  }
+  circumnavigator = new Circumnavigate(l, h, beliefs, skeleton_planner);
 }
 
 
@@ -1213,7 +1219,7 @@ FORRAction Controller::FORRDecision()
 bool Controller::tierOneDecision(FORRAction *decision){
   //decision making tier1 advisor
   bool decisionMade = false;
-  ROS_INFO("Advisor circumnavigate will create subplan");
+  // ROS_INFO("Advisor circumnavigate will create subplan");
   // tier1->advisorCircumnavigate(decision);
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor victory has made a decision " << decision->type << " " << decision->parameter);

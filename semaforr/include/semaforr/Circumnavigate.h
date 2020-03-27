@@ -30,13 +30,14 @@ struct DPoint{
 
 class Circumnavigate{
 public:
-	Circumnavigate(int l, int h, Beliefs *b){
+	Circumnavigate(int l, int h, Beliefs *b, PathPlanner *s){
 		length = l;
 		height = h;
 		beliefs = b;
-		for(int i = 0; i < l; i++){
+		skeleton_planner = s;
+		for(int i = 0; i < length; i++){
 			vector<int> col;
-			for(int j = 0; j < h; j ++){
+			for(int j = 0; j < height; j ++){
 				col.push_back(-1);
 			}
 			visited_grid.push_back(col);
@@ -47,9 +48,9 @@ public:
 
 	void resetCircumnavigate(){
 		visited_grid.clear();
-		for(int i = 0; i < l; i++){
+		for(int i = 0; i < length; i++){
 			vector<int> col;
-			for(int j = 0; j < h; j ++){
+			for(int j = 0; j < height; j ++){
 				col.push_back(-1);
 			}
 			visited_grid.push_back(col);
@@ -181,6 +182,7 @@ public:
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
+						cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 						followingCurrentDirection = true;
 						goToStart = true;
 					}
@@ -198,6 +200,7 @@ public:
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
+						cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 						followingCurrentDirection = true;
 						goToStart = true;
 					}
@@ -215,6 +218,7 @@ public:
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
+						cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 						followingCurrentDirection = true;
 						goToStart = true;
 					}
@@ -232,6 +236,7 @@ public:
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
+						cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 						followingCurrentDirection = true;
 						goToStart = true;
 					}
@@ -250,6 +255,7 @@ public:
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
+							cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 							followingCurrentDirection = true;
 							goToStart = true;
 						}
@@ -267,6 +273,7 @@ public:
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
+							cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 							followingCurrentDirection = true;
 							goToStart = true;
 						}
@@ -284,6 +291,7 @@ public:
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
+							cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 							followingCurrentDirection = true;
 							goToStart = true;
 						}
@@ -301,12 +309,14 @@ public:
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
+							cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 							followingCurrentDirection = true;
 							goToStart = true;
 						}
 					}
 				}
 			}
+			cout << "followingCurrentDirection " << followingCurrentDirection << " goToStart " << goToStart << endl;
 			if(followingCurrentDirection == true){
 				//plan route to current point and then follow it to end or until the other direction is detected (need to switch directions if going in desired directions)
 				if(goToStart == true){
@@ -323,6 +333,7 @@ public:
 						}
 					}
 					else if(beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() == false){
+						cout << "Not close to start of circumnavigate point" << endl;
 						Task* completedTask = beliefs->getAgentState()->getCurrentTask();
 						vector<Position> *pos_hist = completedTask->getPositionHistory();
 						vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
@@ -355,20 +366,117 @@ public:
 								break;
 							}
 						}
+						vector< Position > *position_trace = new vector<Position>();
+						vector< vector<CartesianPoint> > *laser_hist_trace = new vector< vector<CartesianPoint> >();
 						vector< vector<CartesianPoint> > all_trace;
 						vector<CartesianPoint> new_trace;
 						for(int i = cutoff ; i < pos_hist->size() ; i++){
-							trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+							new_trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
+							position_trace->push_back((*pos_hist)[i]);
+							laser_hist_trace->push_back((*laser_hist)[i]);
 						}
-						all_trace.push_back(trace);
-						vector< Position > *position_trace = new vector<Position>();
-						vector< vector<CartesianPoint> > *laser_hist_trace = new vector< vector<CartesianPoint> >();
-
-						beliefs->getSpatialModel()->getRegionList()->learnRegions(pos_hist, laser_hist);
+						all_trace.push_back(new_trace);
+						beliefs->getSpatialModel()->getRegionList()->learnRegions(position_trace, laser_hist_trace);
 						cout << "Regions Updated" << endl;
 						beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
 						cout << "Exits Updated" << endl;
+						regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+						vector<FORRRegion> new_regions;
+						for(int i = 0; i < new_trace.size(); i++){
+							for(int j = 0; j < regions.size(); j++){
+								if(regions[j].inRegion(new_trace[i])){
+									new_regions.push_back(regions[j]);
+								}
+							}
+						}
+						int index_val = skeleton_planner->getGraph()->getMaxInd()+1;
+						for(int i = 0 ; i < new_regions.size(); i++){
+							int x = (int)(new_regions[i].getCenter().get_x()*100);
+							int y = (int)(new_regions[i].getCenter().get_y()*100);
+							// cout << "Region " << new_regions[i].getCenter().get_x() << " " << new_regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+							vector<FORRExit> exits = new_regions[i].getMinExits();
+							// cout << "Exits " << exits.size() << endl;
+							if(exits.size() > 0){
+								bool success = skeleton_planner->getGraph()->addNode(x, y, index_val);
+								if(success){
+									index_val++;
+								}
+								for(int j = 0; j < exits.size() ; j++){
+									int ex = (int)(exits[j].getExitPoint().get_x()*100);
+									int ey = (int)(exits[j].getExitPoint().get_y()*100);
+									// cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+									success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
+									if(success){
+										index_val++;
+									}
+									int mx = (int)(exits[j].getMidPoint().get_x()*100);
+									int my = (int)(exits[j].getMidPoint().get_y()*100);
+									// cout << "Midpoint " << exits[j].getMidPoint().get_x() << " " << exits[j].getMidPoint().get_y() << " " << mx << " " << my << endl;
+									success = skeleton_planner->getGraph()->addNode(mx, my, index_val);
+									if(success){
+										index_val++;
+									}
+								}
+							}
+						}
+						for(int i = 0 ; i < new_regions.size(); i++){
+							int region_id = skeleton_planner->getGraph()->getNodeID((int)(new_regions[i].getCenter().get_x()*100), (int)(new_regions[i].getCenter().get_y()*100));
+							if(region_id != -1){
+								vector<FORRExit> exits = new_regions[i].getMinExits();
+								for(int j = 0; j < exits.size() ; j++){
+									int index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
+									if(index_val != -1){
+										// cout << "Edge from " << region_id << " to " << index_val << " Distance " << new_regions[i].getRadius()*100 << endl;
+										skeleton_planner->getGraph()->addEdge(region_id, index_val, new_regions[i].getRadius()*100);
+										int mid_index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getMidPoint().get_x()*100), (int)(exits[j].getMidPoint().get_y()*100));
+										if(mid_index_val != -1){
+											// cout << "Edge from " << index_val << " to " << mid_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
+											skeleton_planner->getGraph()->addEdge(index_val, mid_index_val, (exits[j].getExitDistance()*100)/2.0);
+											int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
+											int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
+											int end_index_val = skeleton_planner->getGraph()->getNodeID(tx, ty);
+											if(end_index_val != -1){
+												// cout << "Edge from " << mid_index_val << " to " << end_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
+												skeleton_planner->getGraph()->addEdge(mid_index_val, end_index_val, (exits[j].getExitDistance()*100)/2.0);
+											}
+										}
+									}
+								}
+							}
+						}
 
+						Node s(1, currentPosition.getX()*100, currentPosition.getY()*100);
+						skeleton_planner->setSource(s);
+						Node t(1, currentDPoint.middle_point.getX()*100, currentDPoint.middle_point.getY()*100);
+						skeleton_planner->setTarget(t);
+						cout << "plan generation status" << skeleton_planner->calcPath(true) << endl;
+						list<int> waypointInd = skeleton_planner->getPath();
+						skeleton_planner->resetPath();
+						cout << "plan generation complete" << endl;
+						Graph *navGraph = skeleton_planner->getGraph();
+						vector<CartesianPoint> waypoints;
+						list<int>::iterator it;
+						for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+							cout << "node " << (*it) << endl;
+							double x = navGraph->getNode(*it).getX()/100.0;
+							double y = navGraph->getNode(*it).getY()/100.0;
+							cout << x << " " << y << endl;
+							CartesianPoint waypoint(x,y);
+							waypoints.push_back(waypoint);
+						}
+						for(int i = waypoints.size()-1; i > 0; i--){
+							beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], true);
+						}
+					}
+				}
+				else{
+					CartesianPoint task(currentDPoint.middle_point.getX(),currentDPoint.middle_point.getY());
+					(*decision) = beliefs->getAgentState()->moveTowards(task);
+					FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+					Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+					if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+						cout << "Circumnavigate advisor to take decision" << endl;
+						decisionMade = true;
 					}
 				}
 			}
@@ -382,6 +490,8 @@ private:
 	int height;
 	vector< vector<int> > visited_grid;
 	Beliefs *beliefs;
+	PathPlanner *skeleton_planner;
+	// CHANGE TO PRIORITY QUEUES
 	vector<DPoint> north_stack;
 	vector<DPoint> south_stack;
 	vector<DPoint> west_stack;

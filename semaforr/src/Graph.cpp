@@ -21,6 +21,7 @@ Graph::Graph(Map * m, int p): map(m) {
     nodeIndex.push_back(column);
   }
   cout << "Node index columns : " << nodeIndex.size() << endl;
+  maxInd = -1;
   generateNavGraph();
 }
 
@@ -44,6 +45,7 @@ Graph::Graph(int p, int l, int h){
     nodeIndex.push_back(column);
   }
   cout << "Node index columns : " << nodeIndex.size() << endl;
+  maxInd = -1;
 }
 
 void Graph::resetGraph(){
@@ -144,6 +146,7 @@ void Graph::generateNavGraph() {
       index++;
     }
   }
+  maxInd = index-1;
 
   cout << "Completed creating nodes" << endl;
   // update node neighbors
@@ -247,6 +250,9 @@ bool Graph::addNode(int x, int y, int ind){
     nodes.push_back(n);
     // cout << "Added Node " << ind << " x " << x << " y " << y << endl;
     node_added = true;
+    if(ind > maxInd){
+      maxInd = ind;
+    }
   }
   // else{
   //   cout << "Node already exists, try nearby" << endl;

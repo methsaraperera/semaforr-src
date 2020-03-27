@@ -25,6 +25,8 @@ private:
   void generateNavGraph();
 
   bool isEdge(Edge e); 
+
+  int maxInd;
  
 public: 
   Graph(Map * m, int p);
@@ -38,6 +40,7 @@ public:
   int getProximity() const { return proximity; }
   int getLength() const { return length; }
   int getHeight() const { return height; }
+  int getMaxInd() const { return maxInd; }
 
   vector<Node*> getNodes() const { return nodes; }
 
