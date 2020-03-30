@@ -1201,12 +1201,12 @@ FORRAction Controller::FORRDecision()
   //ROS_DEBUG("After saveDecision");
   beliefs->getAgentState()->clearVetoedActions();
   //ROS_DEBUG("After clearVetoedActions");
-  if(decision->type == FORWARD or decision->type == PAUSE){
-    beliefs->getAgentState()->setRotateMode(true);
-  }
-  else{
-    beliefs->getAgentState()->setRotateMode(false);
-  }
+  // if(decision->type == FORWARD or decision->type == PAUSE){
+  //   beliefs->getAgentState()->setRotateMode(true);
+  // }
+  // else{
+  //   beliefs->getAgentState()->setRotateMode(false);
+  // }
   return *decision;
 }
 
@@ -1425,10 +1425,10 @@ void Controller::tierThreeDecision(FORRAction *decision){
        
   std::stringstream advisorsList;
   std::stringstream advisorCommentsList;
-  //cout << "processing advisors::"<< endl;
+  cout << "processing advisors::"<< endl;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     Tier3Advisor *advisor = *it; 
-    //cout << advisor->get_name() << endl;
+    cout << advisor->get_name() << endl;
     // check if advisor should make a decision
     advisor->set_commenting();
     if(advisor->is_active() == false){
@@ -1444,9 +1444,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
 
     advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
 
-    //cout << "Before commenting " << endl;
+    cout << "Before commenting " << endl;
     comments = advisor->allAdvice();
-    //cout << "after commenting " << endl;
+    cout << "after commenting " << endl;
     // aggregate all comments
 
     for(mapIt iterator = comments.begin(); iterator != comments.end(); iterator++){

@@ -43,6 +43,8 @@ public:
 			visited_grid.push_back(col);
 		}
 		followingCurrentDirection = false;
+		goToStart = false;
+		currentDirectionChanged = false;
 	};
 	~Circumnavigate(){};
 
@@ -57,6 +59,7 @@ public:
 		}
 		followingCurrentDirection = false;
 		goToStart = false;
+		currentDirectionChanged = false;
 		currentDPoint = DPoint(Position(0,0,0),Position(0,0,0));
 	}
 
@@ -123,13 +126,13 @@ public:
 			east_stack.insert(east_stack.begin(), DPoint(new_pose, left_point));
 		}
 		visited_grid[(int)(new_pose.getX())][(int)(new_pose.getY())] = 1;
-		cout << "Visited grid" << endl;
-		for(int i = 0; i < visited_grid[0].size(); i++){
-			for(int j = 0; j < visited_grid.size(); j++){
-				cout << visited_grid[j][i] << " ";
-			}
-			cout << endl;
-		}
+		// cout << "Visited grid" << endl;
+		// for(int i = 0; i < visited_grid[0].size(); i++){
+		// 	for(int j = 0; j < visited_grid.size(); j++){
+		// 		cout << visited_grid[j][i] << " ";
+		// 	}
+		// 	cout << endl;
+		// }
 	}
 
 	bool advisorCircumnavigate(FORRAction *decision){
@@ -138,6 +141,7 @@ public:
 		Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
 		cout << "Target = " << task.get_x() << " " << task.get_y() << " Current Position = " << currentPosition.getX() << " " << currentPosition.getY() << " " << currentPosition.getTheta() << endl;
 		addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+		int currdir = beliefs->getAgentState()->getCurrentDirection();
 		double x_diff = task.get_x() - currentPosition.getX();
 		double y_diff = task.get_y() - currentPosition.getY();
 		if(abs(x_diff) > abs(y_diff)){
@@ -169,16 +173,29 @@ public:
 			}
 		}
 		cout << "Current Direction " << beliefs->getAgentState()->getCurrentDirection() << " Desired Direction " << beliefs->getAgentState()->getDesiredDirection() << endl;
+		if(currdir != beliefs->getAgentState()->getCurrentDirection()){
+			currentDirectionChanged = true;
+		}
+		else{
+			currentDirectionChanged = false;
+		}
+		if(currentPosition.getDistance(currentDPoint.middle_point) < 0.5){
+			followingCurrentDirection = false;
+		}
+		cout << "Previous Current Direction " << currdir << " currentDirectionChanged " << currentDirectionChanged << endl;
+		cout << "IsPLanComplete " << beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() << " followingCurrentDirection " << followingCurrentDirection << endl;
 		if(beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() == true and followingCurrentDirection == false){
 			if(beliefs->getAgentState()->getCurrentDirection() == 1){
+				cout << "east_stack " << east_stack.size() << endl;
 				if(east_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
 					while(end_label >= 0){
 						new_current = east_stack[0];
-						// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						east_stack.erase(east_stack.begin());
 						end_label = visited_grid[(int)(new_current.middle_point.getX())][(int)(new_current.middle_point.getY())];
+						cout << "end_label " << end_label << endl;
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
@@ -189,14 +206,16 @@ public:
 				}
 			}
 			else if(beliefs->getAgentState()->getCurrentDirection() == 2){
+				cout << "west_stack " << west_stack.size() << endl;
 				if(west_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
 					while(end_label >= 0){
 						new_current = west_stack[0];
-						// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						west_stack.erase(west_stack.begin());
 						end_label = visited_grid[(int)(new_current.middle_point.getX())][(int)(new_current.middle_point.getY())];
+						cout << "end_label " << end_label << endl;
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
@@ -207,14 +226,16 @@ public:
 				}
 			}
 			else if(beliefs->getAgentState()->getCurrentDirection() == 3){
+				cout << "north_stack " << north_stack.size() << endl;
 				if(north_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
 					while(end_label >= 0){
 						new_current = north_stack[0];
-						// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						north_stack.erase(north_stack.begin());
 						end_label = visited_grid[(int)(new_current.middle_point.getX())][(int)(new_current.middle_point.getY())];
+						cout << "end_label " << end_label << endl;
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
@@ -225,14 +246,16 @@ public:
 				}
 			}
 			else if(beliefs->getAgentState()->getCurrentDirection() == 4){
+				cout << "south_stack " << south_stack.size() << endl;
 				if(south_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
 					while(end_label >= 0){
 						new_current = south_stack[0];
-						// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						south_stack.erase(south_stack.begin());
 						end_label = visited_grid[(int)(currentDPoint.middle_point.getX())][(int)(currentDPoint.middle_point.getY())];
+						cout << "end_label " << end_label << endl;
 					}
 					if(!(new_current == currentDPoint)){
 						currentDPoint = new_current;
@@ -244,14 +267,16 @@ public:
 			}
 			if(followingCurrentDirection == false){
 				if(beliefs->getAgentState()->getDesiredDirection() == 1){
+					cout << "east_stack " << east_stack.size() << endl;
 					if(east_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
 						while(end_label >= 0){
 							new_current = east_stack[0];
-							// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							east_stack.erase(east_stack.begin());
 							end_label = visited_grid[(int)(new_current.middle_point.getX())][(int)(new_current.middle_point.getY())];
+							cout << "end_label " << end_label << endl;
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
@@ -262,14 +287,16 @@ public:
 					}
 				}
 				else if(beliefs->getAgentState()->getDesiredDirection() == 2){
+					cout << "west_stack " << west_stack.size() << endl;
 					if(west_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
 						while(end_label >= 0){
 							new_current = west_stack[0];
-							// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							west_stack.erase(west_stack.begin());
 							end_label = visited_grid[(int)(new_current.middle_point.getX())][(int)(new_current.middle_point.getY())];
+							cout << "end_label " << end_label << endl;
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
@@ -280,14 +307,16 @@ public:
 					}
 				}
 				else if(beliefs->getAgentState()->getDesiredDirection() == 3){
+					cout << "north_stack " << north_stack.size() << endl;
 					if(north_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
 						while(end_label >= 0){
 							new_current = north_stack[0];
-							// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							north_stack.erase(north_stack.begin());
 							end_label = visited_grid[(int)(new_current.middle_point.getX())][(int)(new_current.middle_point.getY())];
+							cout << "end_label " << end_label << endl;
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
@@ -298,14 +327,16 @@ public:
 					}
 				}
 				else if(beliefs->getAgentState()->getDesiredDirection() == 4){
+					cout << "south_stack " << south_stack.size() << endl;
 					if(south_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
 						while(end_label >= 0){
 							new_current = south_stack[0];
-							// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
+							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							south_stack.erase(south_stack.begin());
 							end_label = visited_grid[(int)(currentDPoint.middle_point.getX())][(int)(currentDPoint.middle_point.getY())];
+							cout << "end_label " << end_label << endl;
 						}
 						if(!(new_current == currentDPoint)){
 							currentDPoint = new_current;
@@ -323,6 +354,7 @@ public:
 					if(currentPosition.getDistance(currentDPoint.point) < 0.5){
 						goToStart = false;
 						cout << "Close to start of new circumnavigate point" << endl;
+						cout << "DPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 						CartesianPoint task(currentDPoint.middle_point.getX(),currentDPoint.middle_point.getY());
 						(*decision) = beliefs->getAgentState()->moveTowards(task);
 						FORRAction forward = beliefs->getAgentState()->maxForwardAction();
@@ -338,6 +370,7 @@ public:
 						vector<Position> *pos_hist = completedTask->getPositionHistory();
 						vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
 						vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+						cout << "regions " << regions.size() << endl;
 						vector<CartesianPoint> trace;
 						for(int i = 0 ; i < pos_hist->size() ; i++){
 							trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
@@ -346,8 +379,9 @@ public:
 						for(int i = 0 ; i < laser_hist->size() ; i++){
 							laser_trace.push_back((*laser_hist)[i]);
 						}
+						cout << "trace " << trace.size() << " laser_trace " << laser_trace.size() << endl;
 						int cutoff = -1;
-						for(int i = trace.size(); i > 0; i--){
+						for(int i = trace.size()-1; i > 0; i--){
 							double radius = 10000;
 							for(int j = 0; j< laser_trace[i].size(); j++){
 								double range = laser_trace[i][j].get_distance(trace[i]);
@@ -366,6 +400,7 @@ public:
 								break;
 							}
 						}
+						cout << "cutoff " << cutoff << endl;
 						vector< Position > *position_trace = new vector<Position>();
 						vector< vector<CartesianPoint> > *laser_hist_trace = new vector< vector<CartesianPoint> >();
 						vector< vector<CartesianPoint> > all_trace;
@@ -376,6 +411,7 @@ public:
 							laser_hist_trace->push_back((*laser_hist)[i]);
 						}
 						all_trace.push_back(new_trace);
+						cout << "new_trace " << new_trace.size() << " position_trace " << position_trace->size() << " laser_hist_trace " << laser_hist_trace->size() << endl;
 						beliefs->getSpatialModel()->getRegionList()->learnRegions(position_trace, laser_hist_trace);
 						cout << "Regions Updated" << endl;
 						beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
@@ -389,13 +425,18 @@ public:
 								}
 							}
 						}
+						cout << "new_regions " << new_regions.size() << endl;
+						beliefs->getSpatialModel()->getDoors()->clearAllDoors();
+						beliefs->getSpatialModel()->getDoors()->learnDoors(beliefs->getSpatialModel()->getRegionList()->getRegions());
+						cout << "Doors Learned" << endl;
 						int index_val = skeleton_planner->getGraph()->getMaxInd()+1;
+						cout << "start index " << index_val << endl;
 						for(int i = 0 ; i < new_regions.size(); i++){
 							int x = (int)(new_regions[i].getCenter().get_x()*100);
 							int y = (int)(new_regions[i].getCenter().get_y()*100);
-							// cout << "Region " << new_regions[i].getCenter().get_x() << " " << new_regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+							cout << "Region " << new_regions[i].getCenter().get_x() << " " << new_regions[i].getCenter().get_y() << " " << x << " " << y << endl;
 							vector<FORRExit> exits = new_regions[i].getMinExits();
-							// cout << "Exits " << exits.size() << endl;
+							cout << "Exits " << exits.size() << endl;
 							if(exits.size() > 0){
 								bool success = skeleton_planner->getGraph()->addNode(x, y, index_val);
 								if(success){
@@ -404,14 +445,14 @@ public:
 								for(int j = 0; j < exits.size() ; j++){
 									int ex = (int)(exits[j].getExitPoint().get_x()*100);
 									int ey = (int)(exits[j].getExitPoint().get_y()*100);
-									// cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
+									cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
 									success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
 									if(success){
 										index_val++;
 									}
 									int mx = (int)(exits[j].getMidPoint().get_x()*100);
 									int my = (int)(exits[j].getMidPoint().get_y()*100);
-									// cout << "Midpoint " << exits[j].getMidPoint().get_x() << " " << exits[j].getMidPoint().get_y() << " " << mx << " " << my << endl;
+									cout << "Midpoint " << exits[j].getMidPoint().get_x() << " " << exits[j].getMidPoint().get_y() << " " << mx << " " << my << endl;
 									success = skeleton_planner->getGraph()->addNode(mx, my, index_val);
 									if(success){
 										index_val++;
@@ -426,17 +467,17 @@ public:
 								for(int j = 0; j < exits.size() ; j++){
 									int index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
 									if(index_val != -1){
-										// cout << "Edge from " << region_id << " to " << index_val << " Distance " << new_regions[i].getRadius()*100 << endl;
+										cout << "Edge from " << region_id << " to " << index_val << " Distance " << new_regions[i].getRadius()*100 << endl;
 										skeleton_planner->getGraph()->addEdge(region_id, index_val, new_regions[i].getRadius()*100);
 										int mid_index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getMidPoint().get_x()*100), (int)(exits[j].getMidPoint().get_y()*100));
 										if(mid_index_val != -1){
-											// cout << "Edge from " << index_val << " to " << mid_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
+											cout << "Edge from " << index_val << " to " << mid_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
 											skeleton_planner->getGraph()->addEdge(index_val, mid_index_val, (exits[j].getExitDistance()*100)/2.0);
 											int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
 											int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
 											int end_index_val = skeleton_planner->getGraph()->getNodeID(tx, ty);
 											if(end_index_val != -1){
-												// cout << "Edge from " << mid_index_val << " to " << end_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
+												cout << "Edge from " << mid_index_val << " to " << end_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
 												skeleton_planner->getGraph()->addEdge(mid_index_val, end_index_val, (exits[j].getExitDistance()*100)/2.0);
 											}
 										}
@@ -470,7 +511,9 @@ public:
 					}
 				}
 				else{
+					cout << "Move towards middle_point" << endl;
 					CartesianPoint task(currentDPoint.middle_point.getX(),currentDPoint.middle_point.getY());
+					cout << "DPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 					(*decision) = beliefs->getAgentState()->moveTowards(task);
 					FORRAction forward = beliefs->getAgentState()->maxForwardAction();
 					Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
@@ -479,6 +522,18 @@ public:
 						decisionMade = true;
 					}
 				}
+			}
+		}
+		else if(followingCurrentDirection == true){
+			cout << "Move towards middle_point" << endl;
+			CartesianPoint task(currentDPoint.middle_point.getX(),currentDPoint.middle_point.getY());
+			cout << "DPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
+			(*decision) = beliefs->getAgentState()->moveTowards(task);
+			FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+			Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+			if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+				cout << "Circumnavigate advisor to take decision" << endl;
+				decisionMade = true;
 			}
 		}
 		cout << "decisionMade " << decisionMade << endl;
