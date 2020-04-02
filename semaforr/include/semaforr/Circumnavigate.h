@@ -45,6 +45,10 @@ public:
 		followingCurrentDirection = false;
 		goToStart = false;
 		currentDirectionChanged = false;
+		foundAlignmentPoint = false;
+		currentDPoint = DPoint(Position(0,0,0),Position(0,0,0));
+		alignmentPoint = Position(0,0,0);
+		alignmentDirection = 0;
 	};
 	~Circumnavigate(){};
 
@@ -60,7 +64,10 @@ public:
 		followingCurrentDirection = false;
 		goToStart = false;
 		currentDirectionChanged = false;
+		foundAlignmentPoint = false;
 		currentDPoint = DPoint(Position(0,0,0),Position(0,0,0));
+		alignmentPoint = Position(0,0,0);
+		alignmentDirection = 0;
 	}
 
 	void addToStack(Position new_pose, sensor_msgs::LaserScan new_laser){
@@ -103,29 +110,42 @@ public:
 		Position middle_point = Position(middle_x/ 71.0, middle_y/ 71.0, 0);
 		if(new_pose.getTheta() >= -M_PI/18.0 and new_pose.getTheta() < M_PI/18.0){
 			cout << "Current Position " << r_x << " " << r_y << " " << r_ang << " added to east " << middle_point.getX() << " " << middle_point.getY() << " added to north " << left_point.getX() << " " << left_point.getY() << " added to south " << right_point.getX() << " " << right_point.getY() << endl;
-			east_stack.insert(east_stack.begin(), DPoint(new_pose, middle_point));
-			north_stack.insert(north_stack.begin(), DPoint(new_pose, left_point));
-			south_stack.insert(south_stack.begin(), DPoint(new_pose, right_point));
+			if(visited_grid[(int)(middle_point.getX())][(int)(middle_point.getY())] < 0)
+				east_stack.insert(east_stack.begin(), DPoint(new_pose, middle_point));
+			if(visited_grid[(int)(left_point.getX())][(int)(left_point.getY())] < 0)
+				north_stack.insert(north_stack.begin(), DPoint(new_pose, left_point));
+			if(visited_grid[(int)(right_point.getX())][(int)(right_point.getY())] < 0)
+				south_stack.insert(south_stack.begin(), DPoint(new_pose, right_point));
 		}
 		else if(new_pose.getTheta() >= M_PI/2.0-M_PI/18.0 and new_pose.getTheta() < M_PI/2.0+M_PI/18.0){
 			cout << "Current Position " << r_x << " " << r_y << " " << r_ang << " added to north " << middle_point.getX() << " " << middle_point.getY() << " added to west " << left_point.getX() << " " << left_point.getY() << " added to east " << right_point.getX() << " " << right_point.getY() << endl;
-			north_stack.insert(north_stack.begin(), DPoint(new_pose, middle_point));
-			west_stack.insert(west_stack.begin(), DPoint(new_pose, left_point));
-			east_stack.insert(east_stack.begin(), DPoint(new_pose, right_point));
+			if(visited_grid[(int)(middle_point.getX())][(int)(middle_point.getY())] < 0)
+				north_stack.insert(north_stack.begin(), DPoint(new_pose, middle_point));
+			if(visited_grid[(int)(left_point.getX())][(int)(left_point.getY())] < 0)
+				west_stack.insert(west_stack.begin(), DPoint(new_pose, left_point));
+			if(visited_grid[(int)(right_point.getX())][(int)(right_point.getY())] < 0)
+				east_stack.insert(east_stack.begin(), DPoint(new_pose, right_point));
 		}
 		else if(new_pose.getTheta() >= M_PI-M_PI/18.0 or new_pose.getTheta() < -M_PI+M_PI/18.0){
 			cout << "Current Position " << r_x << " " << r_y << " " << r_ang << " added to west " << middle_point.getX() << " " << middle_point.getY() << " added to south " << left_point.getX() << " " << left_point.getY() << " added to north " << right_point.getX() << " " << right_point.getY() << endl;
-			west_stack.insert(west_stack.begin(), DPoint(new_pose, middle_point));
-			north_stack.insert(north_stack.begin(), DPoint(new_pose, right_point));
-			south_stack.insert(south_stack.begin(), DPoint(new_pose, left_point));
+			if(visited_grid[(int)(middle_point.getX())][(int)(middle_point.getY())] < 0)
+				west_stack.insert(west_stack.begin(), DPoint(new_pose, middle_point));
+			if(visited_grid[(int)(right_point.getX())][(int)(right_point.getY())] < 0)
+				north_stack.insert(north_stack.begin(), DPoint(new_pose, right_point));
+			if(visited_grid[(int)(left_point.getX())][(int)(left_point.getY())] < 0)
+				south_stack.insert(south_stack.begin(), DPoint(new_pose, left_point));
 		}
 		else if(new_pose.getTheta() >= -M_PI/2.0-M_PI/18.0 and new_pose.getTheta() < -M_PI/2.0+M_PI/18.0){
 			cout << "Current Position " << r_x << " " << r_y << " " << r_ang << " added to south " << middle_point.getX() << " " << middle_point.getY() << " added to east " << left_point.getX() << " " << left_point.getY() << " added to west " << right_point.getX() << " " << right_point.getY() << endl;
-			south_stack.insert(south_stack.begin(), DPoint(new_pose, middle_point));
-			west_stack.insert(west_stack.begin(), DPoint(new_pose, right_point));
-			east_stack.insert(east_stack.begin(), DPoint(new_pose, left_point));
+			if(visited_grid[(int)(middle_point.getX())][(int)(middle_point.getY())] < 0)
+				south_stack.insert(south_stack.begin(), DPoint(new_pose, middle_point));
+			if(visited_grid[(int)(right_point.getX())][(int)(right_point.getY())] < 0)
+				west_stack.insert(west_stack.begin(), DPoint(new_pose, right_point));
+			if(visited_grid[(int)(left_point.getX())][(int)(left_point.getY())] < 0)
+				east_stack.insert(east_stack.begin(), DPoint(new_pose, left_point));
 		}
 		visited_grid[(int)(new_pose.getX())][(int)(new_pose.getY())] = 1;
+		cout << "east_stack " << east_stack.size() << " west_stack " << west_stack.size() << " north_stack " << north_stack.size() << " south_stack " << south_stack.size() << endl;
 		// cout << "Visited grid" << endl;
 		// for(int i = 0; i < visited_grid[0].size(); i++){
 		// 	for(int j = 0; j < visited_grid.size(); j++){
@@ -140,57 +160,139 @@ public:
 		CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
 		Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
 		cout << "Target = " << task.get_x() << " " << task.get_y() << " Current Position = " << currentPosition.getX() << " " << currentPosition.getY() << " " << currentPosition.getTheta() << endl;
+		cout << "currentDPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 		addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
 		int currdir = beliefs->getAgentState()->getCurrentDirection();
 		double x_diff = task.get_x() - currentPosition.getX();
 		double y_diff = task.get_y() - currentPosition.getY();
+		cout << "x_diff " << x_diff << " y_diff " << y_diff << endl;
 		if(abs(x_diff) > abs(y_diff)){
-			if(x_diff > 0){
+			if(x_diff > 0.5){
 				beliefs->getAgentState()->setCurrentDirection(1); // east
 			}
-			else{
+			else if(x_diff < 0.5){
 				beliefs->getAgentState()->setCurrentDirection(2); // west
 			}
-			if(y_diff > 0){
+			else{
+				foundAlignmentPoint = true;
+				alignmentPoint = currentPosition;
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setCurrentDirection(1);
+					alignmentDirection = 1;
+				}
+				else{
+					beliefs->getAgentState()->setCurrentDirection(2);
+					alignmentDirection = 2;
+				}
+			}
+			if(y_diff > 0.5){
 				beliefs->getAgentState()->setDesiredDirection(3); // north
 			}
-			else{
+			else if(y_diff < 0.5){
 				beliefs->getAgentState()->setDesiredDirection(4); // south
+			}
+			else{
+				foundAlignmentPoint = true;
+				alignmentPoint = currentPosition;
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setDesiredDirection(3);
+				}
+				else{
+					beliefs->getAgentState()->setDesiredDirection(4);
+				}
+			}
+		}
+		else if(abs(x_diff) < abs(y_diff)){
+			if(x_diff > 0.5){
+				beliefs->getAgentState()->setDesiredDirection(1);
+			}
+			else if(x_diff < 0.5){
+				beliefs->getAgentState()->setDesiredDirection(2);
+			}
+			else{
+				foundAlignmentPoint = true;
+				alignmentPoint = currentPosition;
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setDesiredDirection(1);
+				}
+				else{
+					beliefs->getAgentState()->setDesiredDirection(2);
+				}
+			}
+			if(y_diff > 0.5){
+				beliefs->getAgentState()->setCurrentDirection(3);
+			}
+			else if(y_diff < 0.5){
+				beliefs->getAgentState()->setCurrentDirection(4);
+			}
+			else{
+				foundAlignmentPoint = true;
+				alignmentPoint = currentPosition;
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setCurrentDirection(3);
+					alignmentDirection = 3;
+				}
+				else{
+					beliefs->getAgentState()->setCurrentDirection(4);
+					alignmentDirection = 4;
+				}
 			}
 		}
 		else{
-			if(x_diff > 0){
-				beliefs->getAgentState()->setDesiredDirection(1);
+			if(rand() / double(RAND_MAX) > 0.5){
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setCurrentDirection(1);
+				}
+				else{
+					beliefs->getAgentState()->setCurrentDirection(2);
+				}
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setDesiredDirection(3);
+				}
+				else{
+					beliefs->getAgentState()->setDesiredDirection(4);
+				}
 			}
 			else{
-				beliefs->getAgentState()->setDesiredDirection(2);
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setCurrentDirection(3);
+				}
+				else{
+					beliefs->getAgentState()->setCurrentDirection(4);
+				}
+				if(rand() / double(RAND_MAX) > 0.5){
+					beliefs->getAgentState()->setDesiredDirection(1);
+				}
+				else{
+					beliefs->getAgentState()->setDesiredDirection(2);
+				}
 			}
-			if(y_diff > 0){
-				beliefs->getAgentState()->setCurrentDirection(3);
-			}
-			else{
-				beliefs->getAgentState()->setCurrentDirection(4);
+			if(abs(x_diff) <= 0.5 or abs(y_diff) <= 0.5){
+				foundAlignmentPoint = true;
+				alignmentPoint = currentPosition;
+				alignmentDirection = beliefs->getAgentState()->getCurrentDirection();
 			}
 		}
 		cout << "Current Direction " << beliefs->getAgentState()->getCurrentDirection() << " Desired Direction " << beliefs->getAgentState()->getDesiredDirection() << endl;
+		cout << "foundAlignmentPoint " << foundAlignmentPoint << " alignmentPoint " << alignmentPoint.getX() << " " << alignmentPoint.getY() << endl;
 		if(currdir != beliefs->getAgentState()->getCurrentDirection()){
 			currentDirectionChanged = true;
 		}
 		else{
 			currentDirectionChanged = false;
 		}
-		if(currentPosition.getDistance(currentDPoint.middle_point) < 0.5){
+		if(currentPosition.getDistance(currentDPoint.middle_point) <= 0.75 or beliefs->getAgentState()->maxForwardAction().parameter == 0){
 			followingCurrentDirection = false;
 		}
 		cout << "Previous Current Direction " << currdir << " currentDirectionChanged " << currentDirectionChanged << endl;
 		cout << "IsPLanComplete " << beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() << " followingCurrentDirection " << followingCurrentDirection << endl;
-		if(beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() == true and followingCurrentDirection == false){
+		if(beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() == true and (followingCurrentDirection == false or currentDirectionChanged == true)){
 			if(beliefs->getAgentState()->getCurrentDirection() == 1){
 				cout << "east_stack " << east_stack.size() << endl;
 				if(east_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
-					while(end_label >= 0){
+					while(end_label >= 0 and east_stack.size() > 0){
 						new_current = east_stack[0];
 						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						east_stack.erase(east_stack.begin());
@@ -210,7 +312,7 @@ public:
 				if(west_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
-					while(end_label >= 0){
+					while(end_label >= 0 and west_stack.size() > 0){
 						new_current = west_stack[0];
 						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						west_stack.erase(west_stack.begin());
@@ -230,7 +332,7 @@ public:
 				if(north_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
-					while(end_label >= 0){
+					while(end_label >= 0 and north_stack.size() > 0){
 						new_current = north_stack[0];
 						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						north_stack.erase(north_stack.begin());
@@ -250,7 +352,7 @@ public:
 				if(south_stack.size() > 0){
 					DPoint new_current;
 					int end_label = 0;
-					while(end_label >= 0){
+					while(end_label >= 0 and south_stack.size() > 0){
 						new_current = south_stack[0];
 						cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 						south_stack.erase(south_stack.begin());
@@ -271,7 +373,7 @@ public:
 					if(east_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
-						while(end_label >= 0){
+						while(end_label >= 0 and east_stack.size() > 0){
 							new_current = east_stack[0];
 							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							east_stack.erase(east_stack.begin());
@@ -291,7 +393,7 @@ public:
 					if(west_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
-						while(end_label >= 0){
+						while(end_label >= 0 and west_stack.size() > 0){
 							new_current = west_stack[0];
 							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							west_stack.erase(west_stack.begin());
@@ -311,7 +413,7 @@ public:
 					if(north_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
-						while(end_label >= 0){
+						while(end_label >= 0 and north_stack.size() > 0){
 							new_current = north_stack[0];
 							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							north_stack.erase(north_stack.begin());
@@ -331,7 +433,7 @@ public:
 					if(south_stack.size() > 0){
 						DPoint new_current;
 						int end_label = 0;
-						while(end_label >= 0){
+						while(end_label >= 0 and south_stack.size() > 0){
 							new_current = south_stack[0];
 							cout << "Potential new_current " << new_current.point.getX() << " " << new_current.point.getY() << endl;
 							south_stack.erase(south_stack.begin());
@@ -348,10 +450,16 @@ public:
 				}
 			}
 			cout << "followingCurrentDirection " << followingCurrentDirection << " goToStart " << goToStart << endl;
+			if(followingCurrentDirection == false and foundAlignmentPoint == true){
+				currentDPoint = DPoint(alignmentPoint, alignmentPoint);
+				cout << "DPoint selected " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
+				followingCurrentDirection = true;
+				goToStart = true;
+			}
 			if(followingCurrentDirection == true){
 				//plan route to current point and then follow it to end or until the other direction is detected (need to switch directions if going in desired directions)
 				if(goToStart == true){
-					if(currentPosition.getDistance(currentDPoint.point) < 0.5){
+					if(currentPosition.getDistance(currentDPoint.point) < 0.75){
 						goToStart = false;
 						cout << "Close to start of new circumnavigate point" << endl;
 						cout << "DPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
@@ -552,9 +660,12 @@ private:
 	vector<DPoint> west_stack;
 	vector<DPoint> east_stack;
 	DPoint currentDPoint;
+	Position alignmentPoint;
 	bool followingCurrentDirection;
 	bool goToStart;
 	bool currentDirectionChanged;
+	bool foundAlignmentPoint;
+	int alignmentDirection;
 };
 
 #endif
