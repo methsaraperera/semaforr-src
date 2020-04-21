@@ -196,6 +196,9 @@ public:
   vector< vector<CartesianPoint> > *getAllLaserHistory(){return all_laser_history;}
   vector< sensor_msgs::LaserScan > *getAllLaserScanHistory(){return all_laserscan_history;}
 
+  vector< vector<CartesianPoint> > getInitialExitTraces(){return initial_exit_traces;}
+  void setInitialExitTraces(vector< vector<CartesianPoint> > exit_traces){initial_exit_traces = exit_traces;}
+
   vector<int> getTaskDecisionCount(){return task_decision_count;}
 
   void skipTask() {
@@ -387,6 +390,7 @@ public:
   // All position history of all targets
   vector< vector<CartesianPoint> > all_trace;
   vector< Position > *all_position_trace;
+  vector < vector<CartesianPoint> > initial_exit_traces;
 
   // All laser history of all targets
   vector< vector<CartesianPoint> > *all_laser_history;

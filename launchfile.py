@@ -7,7 +7,7 @@ import rospy
 import time
 import subprocess
 
-def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations):
+def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials):
     project_home = "/home/rajkochhar/catkin_ws1/src"
     menge_path = project_home+"/examples/core"
     semaforr_path = project_home+"/semaforr"
@@ -66,7 +66,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
 
     # start semaforr
-    semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params, situations])
+    semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params, situations, spatials])
     print "waiting,,"
     time.sleep(2)
     
@@ -128,7 +128,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     time.sleep(30)
     print "roscore terminated!"
 
-map_name = "gradcenter-5"
+map_name = "map-c"
 density = "on"
 flow = "on"
 risk = "on"
@@ -136,20 +136,21 @@ cusum = "off"
 discount = "off"
 explore = "off"
 
-num_runs = 2
-for i in range(1,num_runs):
+num_runs = 1
+for i in range(0,num_runs):
     # target_file_name = "target1.conf"
-    target_file_name = "targetrooms.conf"
+    target_file_name = "target.conf"
     log_name = map_name + "_regiontest_" + str(i) + ".txt"
     advisors = "/config/advisors1.conf"
     params = "/config/params4.conf"
     situations = "/config/situations5.conf"
+    spatials = "/config/spatial_model.conf"
     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations)
+    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
 # num_runs = 2
 # for i in range(0,num_runs):

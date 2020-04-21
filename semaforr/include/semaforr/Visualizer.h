@@ -1085,7 +1085,7 @@ public:
 		regionsstream << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << regions[i].getRadius();
 		vector<FORRExit> exits = regions[i].getExits();
 		for(int j = 0; j < exits.size() ; j++){
-			regionsstream << " " << exits[j].getExitPoint().get_x() << " "  << exits[j].getExitPoint().get_y() << " "  << exits[j].getExitRegion();
+			regionsstream << " " << exits[j].getExitPoint().get_x() << " "  << exits[j].getExitPoint().get_y() << " "  << exits[j].getExitRegion() << " "  << exits[j].getMidPoint().get_x() << " "  << exits[j].getMidPoint().get_y() << " "  << exits[j].getExitRegionPoint().get_x() << " "  << exits[j].getExitRegionPoint().get_y() << " "  << exits[j].getExitDistance() << " "  << exits[j].getConnectionPath();
 		}
 		regionsstream << ";";
 	}

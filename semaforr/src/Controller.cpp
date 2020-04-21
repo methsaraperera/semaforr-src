@@ -633,19 +633,19 @@ void Controller::initialize_tasks(string filename){
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Read from the config file and intialize tasks
+// Read from the config file and intialize situations
 //
 //
 void Controller::initialize_situations(string filename){
   string fileLine;
   std::ifstream file(filename.c_str());
   ROS_DEBUG_STREAM("Reading read_situation_file:" << filename);
-  //cout << "Inside file in tasks " << endl;
+  //cout << "Inside file in situations " << endl;
   if(!file.is_open()){
     ROS_DEBUG("Unable to locate or read situation config file!");
   }
   while(getline(file, fileLine)){
-    //cout << "Inside while in tasks" << endl;
+    //cout << "Inside while in situations" << endl;
     if(fileLine[0] == '#')  // skip comment lines
       continue;
     else{
@@ -664,13 +664,136 @@ void Controller::initialize_situations(string filename){
   }
 }
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Read from the config file and intialize spatial model
+//
+//
+void Controller::initialize_spatial_model(string filename){
+  string fileLine;
+  std::ifstream file(filename.c_str());
+  ROS_DEBUG_STREAM("Reading read_spatial_model_file:" << filename);
+  //cout << "Inside file in spatial model " << endl;
+  if(!file.is_open()){
+    ROS_DEBUG("Unable to locate or read spatial model config file!");
+  }
+  while(getline(file, fileLine)){
+    //cout << "Inside while in spatial model" << endl;
+    if(fileLine[0] == '#')  // skip comment lines
+      continue;
+    else if (fileLine.find("regions") != std::string::npos) {
+      const char delim = ';';
+      vector<string> out;
+      stringstream ss(fileLine);
+      string s;
+      while(getline(ss, s, delim)){
+        out.push_back(s);
+        cout << s << endl;
+      }
+      vector<FORRRegion> initial_regions;
+      vector < vector<CartesianPoint> > traces;
+      for(int i = 0; i < out.size(); i++){
+        stringstream sst(out[i]);
+        istream_iterator<string> begin(sst);
+        istream_iterator<string> end;
+        vector<string> vstrings(begin, end);
+        FORRRegion new_region;
+        if(vstrings[0] == "regions"){
+          new_region = FORRRegion(CartesianPoint(atof(vstrings[1].c_str()),atof(vstrings[2].c_str())),atof(vstrings[3].c_str()));
+          for (int j = 4; j < vstrings.size(); j += 9){
+            FORRExit new_exit = FORRExit(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())), CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())), atoi(vstrings[j+2].c_str()), atof(vstrings[j+7].c_str()), atoi(vstrings[j+8].c_str()));
+            new_region.addExit(new_exit);
+          }
+        }
+        else{
+          new_region = FORRRegion(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())),atof(vstrings[2].c_str()));
+          for (int j = 3; j < vstrings.size(); j += 9){
+            FORRExit new_exit = FORRExit(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())), CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())), atoi(vstrings[j+2].c_str()), atof(vstrings[j+7].c_str()), atoi(vstrings[j+8].c_str()));
+            new_region.addExit(new_exit);
+          }
+        }
+        initial_regions.push_back(new_region);
+      }
+      for(int i = 0; i < out.size(); i++){
+        stringstream sst(out[i]);
+        istream_iterator<string> begin(sst);
+        istream_iterator<string> end;
+        vector<string> vstrings(begin, end);
+        if(vstrings[0] == "regions"){
+          for (int j = 4; j < vstrings.size(); j += 9){
+            vector<CartesianPoint> exit_trace;
+            exit_trace.push_back(CartesianPoint(atof(vstrings[1].c_str()),atof(vstrings[2].c_str())));
+            exit_trace.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
+            exit_trace.push_back(CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())));
+            exit_trace.push_back(CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())));
+            exit_trace.push_back(initial_regions[atoi(vstrings[j+2].c_str())].getCenter());
+            traces.push_back(exit_trace);
+          }
+        }
+        else{
+          for (int j = 3; j < vstrings.size(); j += 9){
+            vector<CartesianPoint> exit_trace;
+            exit_trace.push_back(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())));
+            exit_trace.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
+            exit_trace.push_back(CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())));
+            exit_trace.push_back(CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())));
+            exit_trace.push_back(initial_regions[atoi(vstrings[j+2].c_str())].getCenter());
+            traces.push_back(exit_trace);
+          }
+        }
+      }
+      beliefs->getSpatialModel()->getRegionList()->setRegions(initial_regions);
+      beliefs->getAgentState()->setInitialExitTraces(traces);
+      ROS_DEBUG_STREAM("regions " << initial_regions.size());
+      beliefs->getSpatialModel()->getDoors()->learnDoors(initial_regions);
+      updateSkeletonGraph();
+    }
+  //   else if (fileLine.find("doors") != std::string::npos) {
+  //     string str = fileline;
+  //     const char delim = ';';
+  //     vector<string> out;
+  //     stringstream ss(str);
+  //     string s;
+  //     while(getline(ss, s, delim)){
+  //       out.push_back(s);
+  //       cout << s << endl;
+  //     }
+  //     std::vector< std::vector<Door> > initial_doors;
+
+
+  //     for(int i = 0; i < out.size(); i++){
+  //       stringstream sst(out[i]);
+  //       istream_iterator<string> begin(sst);
+  //       istream_iterator<string> end;
+  //       vector<string> vstrings(begin, end);
+  //       FORRRegion new_region;
+  //       if(vstrings[0] == "regions"){
+  //         new_region = FORRRegion(CartesianPoint(atof(vstrings[1].c_str()),atof(vstrings[2].c_str())),atof(vstrings[3].c_str()));
+  //         for (int j = 4; j < vstrings.size(); j += 8){
+  //           FORRExit new_exit = FORRExit(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())), CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())), atoi(vstrings[j+2].c_str()), atof(vstrings[j+7].c_str()));
+  //           new_region.addExit(new_exit);
+  //         }
+  //       }
+  //       else{
+  //         new_region = FORRRegion(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())),atof(vstrings[2].c_str()));
+  //         for (int j = 3; j < vstrings.size(); j += 8){
+  //           FORRExit new_exit = FORRExit(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())), CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())), atoi(vstrings[j+2].c_str()), atof(vstrings[j+7].c_str()));
+  //           new_region.addExit(new_exit);
+  //         }
+  //       }
+  //       initial_regions.push_back(new_region);
+  //     }
+  //     beliefs->getSpatialModel()->getDoors()->setDoors(initial_doors);
+  //     ROS_DEBUG_STREAM("doors " << initial_doors.size());
+  //   }
+  }
+}
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Initialize the controller and setup messaging to ROS
 //
 //
-Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions, string situation_config){
+Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions, string situation_config, string spatial_model_config){
 
   // Initialize robot parameters from a config file
   initialize_params(params_config);
@@ -697,15 +820,22 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 
   // Initialize situations
   initialize_situations(situation_config);
+
+  // Initialize spatial model
+  initialize_spatial_model(spatial_model_config);
+
+  // Initialize highways
   highwayFinished = 0;
   highwayExploration = new HighwayExplorer(l, h, 7, arrMove, arrRotate, moveArrMax, rotateArrMax);
+
+  // Initialize circumnavigator
   PathPlanner *skeleton_planner;
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     if((*it)->getName() == "skeleton"){
       skeleton_planner = *it;
     }
   }
-  circumnavigator = new Circumnavigate(l, h, beliefs, skeleton_planner);
+  circumnavigator = new Circumnavigate(l, h, arrMove, arrRotate, moveArrMax, rotateArrMax, beliefs, skeleton_planner);
 }
 
 
@@ -733,7 +863,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
     if(highwayFinished == 1){
       learnSpatialModel(beliefs->getAgentState(), true);
-      updateSkeletonGraph(beliefs->getAgentState());
+      updateSkeletonGraph();
       ROS_DEBUG("Finished Learning Spatial Model!!");
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -755,7 +885,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //Learn spatial model only on tasks completed successfully
       if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
         learnSpatialModel(beliefs->getAgentState(), true);
-        updateSkeletonGraph(beliefs->getAgentState());
+        updateSkeletonGraph();
         ROS_DEBUG("Finished Learning Spatial Model!!");
         if(situationsOn){
           beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
@@ -810,7 +940,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         beliefs->getAgentState()->resetDirections();
         circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false);
-        updateSkeletonGraph(beliefs->getAgentState());
+        updateSkeletonGraph();
         ROS_DEBUG("Finished Learning Spatial Model!!");
         if(situationsOn){
           beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
@@ -885,12 +1015,16 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
   vector<Position> *pos_hist = completedTask->getPositionHistory();
   vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
+  vector< vector<CartesianPoint> > exit_traces = beliefs->getAgentState()->getInitialExitTraces();
   //vector< vector<CartesianPoint> > all_laser_hist = beliefs->getAgentState()->getAllLaserHistory();
   vector<CartesianPoint> trace;
   for(int i = 0 ; i < pos_hist->size() ; i++){
     trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
   }
   all_trace.push_back(trace);
+  for(int i = 0; i < exit_traces.size(); i++){
+    all_trace.insert(all_trace.begin(), exit_traces[i]);
+  }
   //for(int i = 0 ; i < laser_hist->size() ; i++){
   //  all_laser_hist.push_back((*laser_hist)[i]);
   //}
@@ -907,10 +1041,11 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     ROS_DEBUG("Conveyors Learned");
   }
   if(regionsOn){
-    beliefs->getSpatialModel()->getRegionList()->learnRegions(pos_hist, laser_hist);
+    beliefs->getSpatialModel()->getRegionList()->learnRegionsAndExits(pos_hist, laser_hist, all_trace);
+    // beliefs->getSpatialModel()->getRegionList()->learnRegions(pos_hist, laser_hist);
     ROS_DEBUG("Regions Learned");
-    beliefs->getSpatialModel()->getRegionList()->clearAllExits();
-    beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
+    // beliefs->getSpatialModel()->getRegionList()->clearAllExits();
+    // beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
     // beliefs->getSpatialModel()->getRegionList()->learnExits(trails_trace);
     ROS_DEBUG("Exits Learned");
   }
@@ -937,7 +1072,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
   decisionStats->learningComputationTime = computationTimeSec;
 }
 
-void Controller::updateSkeletonGraph(AgentState* agentState){
+void Controller::updateSkeletonGraph(){
   double computationTimeSec=0.0;
   timeval cv;
   double start_timecv;
@@ -1228,6 +1363,10 @@ bool Controller::tierOneDecision(FORRAction *decision){
     decisionMade = true;
   }
   else{
+    ROS_INFO("Advisor avoid wall will veto actions");
+    tier1->advisorAvoidWalls();
+    ROS_INFO("Advisor not opposite will veto actions");
+    tier1->advisorNotOpposite();
     if(circumnavigator->advisorCircumnavigate(decision)){
       ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
       decisionStats->decisionTier = 2.5;
@@ -1238,15 +1377,11 @@ bool Controller::tierOneDecision(FORRAction *decision){
       decisionStats->decisionTier = 1;
       decisionMade = true;
     }
-    else{
-      // group of vetoing tier1 advisors which adds to the list of vetoed actions
-      ROS_INFO("Advisor don't go back will veto actions");
-      tier1->advisorDontGoBack();
-      ROS_INFO("Advisor avoid wall will veto actions");
-      tier1->advisorAvoidWalls();
-      ROS_INFO("Advisor not opposite will veto actions");
-      tier1->advisorNotOpposite();
-    }
+    // else{
+    //   // group of vetoing tier1 advisors which adds to the list of vetoed actions
+    //   ROS_INFO("Advisor don't go back will veto actions");
+    //   tier1->advisorDontGoBack();
+    // }
     // if(situationsOn){
     //   ROS_INFO("Advisor situation will veto actions");
     //   tier1->advisorSituation();

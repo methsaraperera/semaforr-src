@@ -30,9 +30,13 @@ struct DPoint{
 
 class Circumnavigate{
 public:
-	Circumnavigate(int l, int h, Beliefs *b, PathPlanner *s){
+	Circumnavigate(int l, int h, double arrMove[], double arrRotate[], int moveArrMax, int rotateArrMax, Beliefs *b, PathPlanner *s){
 		length = l;
 		height = h;
+		numMoves = moveArrMax;
+		numRotates = rotateArrMax;
+		for(int i = 0 ; i < numMoves ; i++) move[i] = arrMove[i];
+		for(int i = 0 ; i < numRotates ; i++) rotate[i] = arrRotate[i];
 		beliefs = b;
 		skeleton_planner = s;
 		for(int i = 0; i < length; i++){
@@ -68,6 +72,10 @@ public:
 		currentDPoint = DPoint(Position(0,0,0),Position(0,0,0));
 		alignmentPoint = Position(0,0,0);
 		alignmentDirection = 0;
+		east_stack.clear();
+		west_stack.clear();
+		north_stack.clear();
+		south_stack.clear();
 	}
 
 	void addToStack(Position new_pose, sensor_msgs::LaserScan new_laser){
@@ -76,6 +84,7 @@ public:
 		double r_x = new_pose.getX();
 		double r_y = new_pose.getY();
 		double r_ang = new_pose.getTheta();
+		double min_distance = 1000;
 		double left_x = 0, left_y = 0, right_x = 0, right_y = 0, middle_x = 0, middle_y = 0;
 		for(int i = 0; i < new_laser.ranges.size(); i++){
 			double angle = start_angle + r_ang;
@@ -92,6 +101,9 @@ public:
 				middle_y += r_y + new_laser.ranges[i]*sin(angle);
 			}
 			start_angle = start_angle + increment;
+			if(new_laser.ranges[i] < min_distance){
+				min_distance = new_laser.ranges[i];
+			}
 		}
 		if(left_x < 0)
 			left_x = 0;
@@ -144,15 +156,24 @@ public:
 			if(visited_grid[(int)(left_point.getX())][(int)(left_point.getY())] < 0)
 				east_stack.insert(east_stack.begin(), DPoint(new_pose, left_point));
 		}
+		cout << "min_distance " << min_distance << endl;
 		visited_grid[(int)(new_pose.getX())][(int)(new_pose.getY())] = 1;
+		visited_grid[(int)(new_pose.getX()+min_distance)][(int)(new_pose.getY())] = 1;
+		visited_grid[(int)(new_pose.getX())][(int)(new_pose.getY()+min_distance)] = 1;
+		visited_grid[(int)(new_pose.getX()-min_distance)][(int)(new_pose.getY())] = 1;
+		visited_grid[(int)(new_pose.getX())][(int)(new_pose.getY()-min_distance)] = 1;
+		visited_grid[(int)(new_pose.getX()+min_distance)][(int)(new_pose.getY()+min_distance)] = 1;
+		visited_grid[(int)(new_pose.getX()+min_distance)][(int)(new_pose.getY()-min_distance)] = 1;
+		visited_grid[(int)(new_pose.getX()-min_distance)][(int)(new_pose.getY()+min_distance)] = 1;
+		visited_grid[(int)(new_pose.getX()-min_distance)][(int)(new_pose.getY()-min_distance)] = 1;
 		cout << "east_stack " << east_stack.size() << " west_stack " << west_stack.size() << " north_stack " << north_stack.size() << " south_stack " << south_stack.size() << endl;
-		// cout << "Visited grid" << endl;
-		// for(int i = 0; i < visited_grid[0].size(); i++){
-		// 	for(int j = 0; j < visited_grid.size(); j++){
-		// 		cout << visited_grid[j][i] << " ";
-		// 	}
-		// 	cout << endl;
-		// }
+		cout << "Visited grid" << endl;
+		for(int i = 0; i < visited_grid[0].size(); i++){
+			for(int j = 0; j < visited_grid.size(); j++){
+				cout << visited_grid[j][i] << " ";
+			}
+			cout << endl;
+		}
 	}
 
 	bool advisorCircumnavigate(FORRAction *decision){
@@ -160,82 +181,254 @@ public:
 		CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
 		Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
 		cout << "Target = " << task.get_x() << " " << task.get_y() << " Current Position = " << currentPosition.getX() << " " << currentPosition.getY() << " " << currentPosition.getTheta() << endl;
+		CartesianPoint potentialAlignmentPoint1 = CartesianPoint(task.get_x(), currentPosition.getY());
+		CartesianPoint potentialAlignmentPoint1 = CartesianPoint(currentPosition.getX(), task.get_y());
+		bool can_see_1 = beliefs->getAgentState()->canSeePoint(potentialAlignmentPoint1, 25);
+		bool can_see_2 = beliefs->getAgentState()->canSeePoint(potentialAlignmentPoint1, 25);
+		if(can_see_1){
+			foundAlignmentPoint = true;
+			alignmentPoint = Position(potentialAlignmentPoint1.get_x(), potentialAlignmentPoint1.get_y(), 0);
+		}
+		else if(can_see_2){
+			foundAlignmentPoint = true;
+			alignmentPoint = Position(potentialAlignmentPoint2.get_x(), potentialAlignmentPoint2.get_y(), 0);
+		}
+		if(foundAlignmentPoint){
+			set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+			double robot_direction = currentPosition.getTheta();
+			double goal_direction = atan2((task.get_y() - currentPosition.getY()), (task.get_x() - currentPosition.getX()));
+			double required_rotation = goal_direction - robot_direction;
+			if(required_rotation > M_PI)
+				required_rotation = required_rotation - (2*M_PI);
+			if(required_rotation < -M_PI)
+				required_rotation = required_rotation + (2*M_PI);
+			if(currentPosition.get_distance(alignmentPoint) > 0.5){
+				CartesianPoint align(alignmentPoint.getX(),alignmentPoint.getY());
+				(*decision) = beliefs->getAgentState()->moveTowards(align);
+				FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+				Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+				if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+					if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+						decisionMade = false;
+					}
+					else{
+						cout << "Circumnavigate advisor to take decision" << endl;
+						decisionMade = true;
+					}
+				}
+			}
+			else if(fabs(required_rotation) > 0.174532925){
+				int rotIntensity=0;
+				while(fabs(required_rotation) > rotate[rotIntensity] and rotIntensity < numRotates) {
+					rotIntensity++;
+				}
+				int max_allowed = maxForwardAction().parameter;
+				if (rotIntensity > 1) {
+					if (required_rotation < 0){
+						(*decision) = FORRAction(RIGHT_TURN, rotIntensity-1);
+					}
+					else {
+						(*decision) = FORRAction(LEFT_TURN, rotIntensity-1);
+					}
+					if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+						decisionMade = false;
+					}
+					else{
+						cout << "Circumnavigate advisor to take decision" << endl;
+						decisionMade = true;
+					}
+				}
+			}
+			else{
+				vector<CartesianPoint> currentLaserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+				vector < vector<int> > laserGrid;
+				for(int i = 0; i < length; i++){
+					vector<int> col;
+					for(int j = 0; j < height; j ++){
+						col.push_back(0);
+					}
+					laserGrid.push_back(col);
+				}
+				for(int i = 0; i < currentLaserEndpoints.size(); i++){
+					laserGrid[(int)(currentLaserEndpoints[i].get_x())][(int)(currentLaserEndpoints[i].get_y())] = 1;
+				}
+				if(fabs(robot_direction) > M_PI/4 and fabs(robot_direction) < 3*M_PI/4){
+					int row = (int)(currentLaserEndpoints[currentLaserEndpoints.size()].get_x());
+					int start_col = (int)(currentLaserEndpoints[currentLaserEndpoints.size()].get_y());
+					int end_col_r = start_col;
+					int end_col_l = start_col;
+					int value = laserGrid[row][start_col];
+					while(value > 0){
+						end_col_r = end_col_r + 1;
+						value = laserGrid[row][end_col_r];
+					}
+					end_col_r = end_col_r - 1;
+					value = laserGrid[row][start_col];
+					while(value > 0){
+						end_col_l = end_col_l - 1;
+						value = laserGrid[row][end_col_l];
+					}
+					end_col_l = end_col_l + 1;
+					if(robot_direction > 0){
+						if(laserGrid[row-1][end_col_l] == 1 and laserGrid[row-1][end_col_r] == 1){
+							// closed in
+						}
+					}
+					else{
+						if(laserGrid[row+1][end_col_l] == 1 and laserGrid[row+1][end_col_r] == 1){
+							// closed in
+						}
+					}
+				}
+				else{
+					int start_row = (int)(currentLaserEndpoints[currentLaserEndpoints.size()].get_x());
+					int col = (int)(currentLaserEndpoints[currentLaserEndpoints.size()].get_y());
+					int end_row_r = start_row;
+					int end_row_l = start_row;
+					int value = laserGrid[start_row][col];
+					while(value > 0){
+						end_row_r = end_row_r + 1;
+						value = laserGrid[end_row_r][col];
+					}
+					end_row_r = end_row_r - 1;
+					value = laserGrid[start_row][col];
+					while(value > 0){
+						end_row_l = end_row_l - 1;
+						value = laserGrid[end_row_l][col];
+					}
+					end_row_l = end_row_l + 1;
+					if(robot_direction > 0){
+						if(laserGrid[end_row_l][col-1] == 1 and laserGrid[end_row_r][col-1] == 1){
+							// closed in
+						}
+					}
+					else{
+						if(laserGrid[end_row_l][col+1] == 1 and laserGrid[end_row_r][col+1] == 1){
+							// closed in
+						}
+					}
+				}
+			}
+		}
+
+
+
+
+
+
+
 		cout << "currentDPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
 		addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
 		int currdir = beliefs->getAgentState()->getCurrentDirection();
 		double x_diff = task.get_x() - currentPosition.getX();
 		double y_diff = task.get_y() - currentPosition.getY();
 		cout << "x_diff " << x_diff << " y_diff " << y_diff << endl;
-		if(abs(x_diff) > abs(y_diff)){
+		if(abs(x_diff) >= abs(y_diff) and abs(x_diff) > 0.5 and abs(y_diff) > 0.5){
 			if(x_diff > 0.5){
 				beliefs->getAgentState()->setCurrentDirection(1); // east
 			}
 			else if(x_diff < 0.5){
 				beliefs->getAgentState()->setCurrentDirection(2); // west
 			}
-			else{
-				foundAlignmentPoint = true;
-				alignmentPoint = currentPosition;
-				if(rand() / double(RAND_MAX) > 0.5){
-					beliefs->getAgentState()->setCurrentDirection(1);
-					alignmentDirection = 1;
-				}
-				else{
-					beliefs->getAgentState()->setCurrentDirection(2);
-					alignmentDirection = 2;
-				}
-			}
+			// else{
+			// 	foundAlignmentPoint = true;
+			// 	alignmentPoint = currentPosition;
+			// 	if(rand() / double(RAND_MAX) > 0.5){
+			// 		beliefs->getAgentState()->setCurrentDirection(1);
+			// 		alignmentDirection = 1;
+			// 	}
+			// 	else{
+			// 		beliefs->getAgentState()->setCurrentDirection(2);
+			// 		alignmentDirection = 2;
+			// 	}
+			// }
 			if(y_diff > 0.5){
 				beliefs->getAgentState()->setDesiredDirection(3); // north
 			}
 			else if(y_diff < 0.5){
 				beliefs->getAgentState()->setDesiredDirection(4); // south
 			}
-			else{
-				foundAlignmentPoint = true;
-				alignmentPoint = currentPosition;
-				if(rand() / double(RAND_MAX) > 0.5){
-					beliefs->getAgentState()->setDesiredDirection(3);
-				}
-				else{
-					beliefs->getAgentState()->setDesiredDirection(4);
-				}
-			}
+			// else{
+			// 	foundAlignmentPoint = true;
+			// 	alignmentPoint = currentPosition;
+			// 	if(rand() / double(RAND_MAX) > 0.5){
+			// 		beliefs->getAgentState()->setDesiredDirection(3);
+			// 	}
+			// 	else{
+			// 		beliefs->getAgentState()->setDesiredDirection(4);
+			// 	}
+			// }
 		}
-		else if(abs(x_diff) < abs(y_diff)){
+		else if(abs(x_diff) < abs(y_diff) and abs(x_diff) > 0.5 and abs(y_diff) > 0.5){
 			if(x_diff > 0.5){
 				beliefs->getAgentState()->setDesiredDirection(1);
 			}
 			else if(x_diff < 0.5){
 				beliefs->getAgentState()->setDesiredDirection(2);
 			}
-			else{
-				foundAlignmentPoint = true;
-				alignmentPoint = currentPosition;
-				if(rand() / double(RAND_MAX) > 0.5){
-					beliefs->getAgentState()->setDesiredDirection(1);
-				}
-				else{
-					beliefs->getAgentState()->setDesiredDirection(2);
-				}
-			}
+			// else{
+			// 	foundAlignmentPoint = true;
+			// 	alignmentPoint = currentPosition;
+			// 	if(rand() / double(RAND_MAX) > 0.5){
+			// 		beliefs->getAgentState()->setDesiredDirection(1);
+			// 	}
+			// 	else{
+			// 		beliefs->getAgentState()->setDesiredDirection(2);
+			// 	}
+			// }
 			if(y_diff > 0.5){
 				beliefs->getAgentState()->setCurrentDirection(3);
 			}
 			else if(y_diff < 0.5){
 				beliefs->getAgentState()->setCurrentDirection(4);
 			}
+			// else{
+			// 	foundAlignmentPoint = true;
+			// 	alignmentPoint = currentPosition;
+			// 	if(rand() / double(RAND_MAX) > 0.5){
+			// 		beliefs->getAgentState()->setCurrentDirection(3);
+			// 		alignmentDirection = 3;
+			// 	}
+			// 	else{
+			// 		beliefs->getAgentState()->setCurrentDirection(4);
+			// 		alignmentDirection = 4;
+			// 	}
+			// }
+		}
+		else if(abs(x_diff) > 0.5 and abs(y_diff) <= 0.5){
+			if(x_diff > 0.5){
+				beliefs->getAgentState()->setDesiredDirection(1);
+			}
+			else if(x_diff < 0.5){
+				beliefs->getAgentState()->setDesiredDirection(2);
+			}
+			foundAlignmentPoint = true;
+			alignmentPoint = currentPosition;
+			if(rand() / double(RAND_MAX) > 0.5){
+				beliefs->getAgentState()->setCurrentDirection(3);
+				alignmentDirection = 3;
+			}
 			else{
-				foundAlignmentPoint = true;
-				alignmentPoint = currentPosition;
-				if(rand() / double(RAND_MAX) > 0.5){
-					beliefs->getAgentState()->setCurrentDirection(3);
-					alignmentDirection = 3;
-				}
-				else{
-					beliefs->getAgentState()->setCurrentDirection(4);
-					alignmentDirection = 4;
-				}
+				beliefs->getAgentState()->setCurrentDirection(4);
+				alignmentDirection = 4;
+			}
+		}
+		else if(abs(x_diff) <= 0.5 and abs(y_diff) > 0.5){
+			foundAlignmentPoint = true;
+			alignmentPoint = currentPosition;
+			if(rand() / double(RAND_MAX) > 0.5){
+				beliefs->getAgentState()->setCurrentDirection(1);
+				alignmentDirection = 1;
+			}
+			else{
+				beliefs->getAgentState()->setCurrentDirection(2);
+				alignmentDirection = 2;
+			}
+			if(y_diff > 0.5){
+				beliefs->getAgentState()->setDesiredDirection(3); // north
+			}
+			else if(y_diff < 0.5){
+				beliefs->getAgentState()->setDesiredDirection(4); // south
 			}
 		}
 		else{
@@ -286,6 +479,7 @@ public:
 		}
 		cout << "Previous Current Direction " << currdir << " currentDirectionChanged " << currentDirectionChanged << endl;
 		cout << "IsPLanComplete " << beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() << " followingCurrentDirection " << followingCurrentDirection << endl;
+		set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
 		if(beliefs->getAgentState()->getCurrentTask()->getIsPlanComplete() == true and (followingCurrentDirection == false or currentDirectionChanged == true)){
 			if(beliefs->getAgentState()->getCurrentDirection() == 1){
 				cout << "east_stack " << east_stack.size() << endl;
@@ -459,7 +653,7 @@ public:
 			if(followingCurrentDirection == true){
 				//plan route to current point and then follow it to end or until the other direction is detected (need to switch directions if going in desired directions)
 				if(goToStart == true){
-					if(currentPosition.getDistance(currentDPoint.point) < 0.75){
+					if(currentPosition.getDistance(currentDPoint.point) <= 0.75){
 						goToStart = false;
 						cout << "Close to start of new circumnavigate point" << endl;
 						cout << "DPoint " << currentDPoint.point.getX() << " " << currentDPoint.point.getY() << " " << currentDPoint.middle_point.getX() << " " << currentDPoint.middle_point.getY() << endl;
@@ -468,15 +662,20 @@ public:
 						FORRAction forward = beliefs->getAgentState()->maxForwardAction();
 						Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
 						if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-							cout << "Circumnavigate advisor to take decision" << endl;
-							decisionMade = true;
+							if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+								decisionMade = false;
+							}
+							else{
+								cout << "Circumnavigate advisor to take decision" << endl;
+								decisionMade = true;
+							}
 						}
 					}
 					else if(beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() == false){
 						cout << "Not close to start of circumnavigate point" << endl;
-						Task* completedTask = beliefs->getAgentState()->getCurrentTask();
-						vector<Position> *pos_hist = completedTask->getPositionHistory();
-						vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
+						Task* currentTask = beliefs->getAgentState()->getCurrentTask();
+						vector<Position> *pos_hist = currentTask->getPositionHistory();
+						vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
 						vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 						cout << "regions " << regions.size() << endl;
 						vector<CartesianPoint> trace;
@@ -488,41 +687,48 @@ public:
 							laser_trace.push_back((*laser_hist)[i]);
 						}
 						cout << "trace " << trace.size() << " laser_trace " << laser_trace.size() << endl;
-						int cutoff = -1;
+						int cutoff = 0;
 						for(int i = trace.size()-1; i > 0; i--){
-							double radius = 10000;
-							for(int j = 0; j< laser_trace[i].size(); j++){
-								double range = laser_trace[i][j].get_distance(trace[i]);
-								if (range < radius and range >= 0.1){
-									radius = range;
-								}
-							}
-							FORRRegion current_region = FORRRegion(trace[i], laser_trace[i], radius);
+							// double radius = 10000;
+							// for(int j = 0; j< laser_trace[i].size(); j++){
+							// 	double range = laser_trace[i][j].get_distance(trace[i]);
+							// 	if (range < radius and range >= 0.1){
+							// 		radius = range;
+							// 	}
+							// }
+							// FORRRegion current_region = FORRRegion(trace[i], laser_trace[i], radius);
 							for(int j = 0; j < regions.size(); j++){
-								if(regions[j].inRegion(trace[i]) or regions[j].doIntersect(current_region)){
+								// if(regions[j].inRegion(trace[i]) or regions[j].doIntersect(current_region)){
+								if(regions[j].inRegion(trace[i])){
 									cutoff = i;
 									break;
 								}
 							}
-							if(cutoff >= 0){
+							if(cutoff > 0){
 								break;
 							}
 						}
 						cout << "cutoff " << cutoff << endl;
 						vector< Position > *position_trace = new vector<Position>();
 						vector< vector<CartesianPoint> > *laser_hist_trace = new vector< vector<CartesianPoint> >();
-						vector< vector<CartesianPoint> > all_trace;
+						vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
+						vector< vector<CartesianPoint> > exit_traces = beliefs->getAgentState()->getInitialExitTraces();
+						all_trace.push_back(trace);
+						for(int i = 0; i < exit_traces.size(); i++){
+							all_trace.insert(all_trace.begin(), exit_traces[i]);
+						}
 						vector<CartesianPoint> new_trace;
 						for(int i = cutoff ; i < pos_hist->size() ; i++){
 							new_trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
 							position_trace->push_back((*pos_hist)[i]);
 							laser_hist_trace->push_back((*laser_hist)[i]);
 						}
-						all_trace.push_back(new_trace);
 						cout << "new_trace " << new_trace.size() << " position_trace " << position_trace->size() << " laser_hist_trace " << laser_hist_trace->size() << endl;
-						beliefs->getSpatialModel()->getRegionList()->learnRegions(position_trace, laser_hist_trace);
+						beliefs->getSpatialModel()->getRegionList()->learnRegionsAndExits(position_trace, laser_hist_trace, all_trace);
+						// beliefs->getSpatialModel()->getRegionList()->learnRegions(position_trace, laser_hist_trace);
 						cout << "Regions Updated" << endl;
-						beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
+						// beliefs->getSpatialModel()->getRegionList()->clearAllExits();
+						// beliefs->getSpatialModel()->getRegionList()->learnExits(all_trace);
 						cout << "Exits Updated" << endl;
 						regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 						vector<FORRRegion> new_regions;
@@ -626,8 +832,13 @@ public:
 					FORRAction forward = beliefs->getAgentState()->maxForwardAction();
 					Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
 					if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-						cout << "Circumnavigate advisor to take decision" << endl;
-						decisionMade = true;
+						if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+							decisionMade = false;
+						}
+						else{
+							cout << "Circumnavigate advisor to take decision" << endl;
+							decisionMade = true;
+						}
 					}
 				}
 			}
@@ -640,8 +851,13 @@ public:
 			FORRAction forward = beliefs->getAgentState()->maxForwardAction();
 			Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
 			if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-				cout << "Circumnavigate advisor to take decision" << endl;
-				decisionMade = true;
+				if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+					decisionMade = false;
+				}
+				else{
+					cout << "Circumnavigate advisor to take decision" << endl;
+					decisionMade = true;
+				}
 			}
 		}
 		cout << "decisionMade " << decisionMade << endl;
@@ -651,6 +867,9 @@ public:
 private:
 	int length;
 	int height;
+	double move[300];  
+	double rotate[300];
+	int numMoves, numRotates;
 	vector< vector<int> > visited_grid;
 	Beliefs *beliefs;
 	PathPlanner *skeleton_planner;

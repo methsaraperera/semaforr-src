@@ -144,7 +144,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
         ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
         decisionMade = true;
         Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-        beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+        // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
         // if(decision->type == FORWARD)
         //   beliefs->getAgentState()->setGetOutTriggered(false);
       }

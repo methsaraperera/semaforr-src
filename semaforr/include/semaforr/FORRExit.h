@@ -15,12 +15,13 @@ Written by Anoop Aroor, 2014
 class FORRExit{
  public:
   FORRExit(){};
-  FORRExit(CartesianPoint point, CartesianPoint mid_point, CartesianPoint region_point, int region_id, double distance_between){
+  FORRExit(CartesianPoint point, CartesianPoint mid_point, CartesianPoint region_point, int region_id, double distance_between, int connection_path){
     exitPoint = point;
     middlePoint = mid_point;
     exitRegionPoint = region_point;
     exitRegion = region_id;
     exitDistance = distance_between;
+    connectionPath = connection_path;
   }
 
   void print(){
@@ -48,6 +49,9 @@ class FORRExit{
   void setExitDistance(double dist){ exitDistance = dist;}
   double getExitDistance(){ return exitDistance; }
 
+  void setConnectionPath(int cp){ connectionPath = cp;}
+  int getConnectionPath(){ return connectionPath; }
+
   bool operator < (const FORRExit &exit) const{
     return false;
   }
@@ -58,6 +62,7 @@ class FORRExit{
   CartesianPoint exitRegionPoint;
   int exitRegion;
   double exitDistance;
+  int connectionPath;
 };
 
 

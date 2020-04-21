@@ -27,6 +27,14 @@ class FORRRegion{
     this->adjustVisibility(point, lep);
     this->setRadius(r);
   }
+  FORRRegion(CartesianPoint point, double r){
+    center = point;
+    // lasers.push_back(lep);
+    for(int i = 0; i < 360; i++){
+      visibility.push_back(1.0);
+    }
+    this->setRadius(r);
+  }
 
   bool doIntersect(FORRRegion test){
     int buffer = 0;
@@ -261,8 +269,51 @@ class FORRRegion{
   void setExits(vector<FORRExit> exit_points) { exits = exit_points;}
   void addExit(FORRExit exit) {
     exits.push_back(exit);
-    ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getMidPoint(), exit.getExitRegionPoint(), exit.getExitRegion(), exit.getExitDistance()));
+    ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getMidPoint(), exit.getExitRegionPoint(), exit.getExitRegion(), exit.getExitDistance(), exit.getConnectionPath()));
     this->addMinDistanceExit(exit);
+  }
+
+  void removeExitsToRegion(int ind){
+    cout << "Remove exits to region " << ind << endl;
+    for(int i = 0; i < exits.size(); i++){
+      if(exits[i].getExitRegion() == ind){
+        cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
+        exits.erase(exits.begin() + i);
+        i--;
+      }
+    }
+    for(int i = 0; i < ext_exits.size(); i++){
+      if(ext_exits[i].getExitRegion() == ind){
+        ext_exits.erase(ext_exits.begin() + i);
+        i--;
+      }
+    }
+    for(int i = 0; i < min_exits.size(); i++){
+      if(min_exits[i].getExitRegion() == ind){
+        min_exits.erase(min_exits.begin() + i);
+        i--;
+      }
+    }
+  }
+
+  void fixExitReferences(int ind){
+    cout << "Fixing exit references " << ind << endl;
+    for(int i = 0; i < exits.size(); i++){
+      if(exits[i].getExitRegion() > ind){
+        cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
+        exits[i].setExitRegion(exits[i].getExitRegion() - 1);
+      }
+    }
+    for(int i = 0; i < ext_exits.size(); i++){
+      if(ext_exits[i].getExitRegion() > ind){
+        ext_exits[i].setExitRegion(ext_exits[i].getExitRegion() - 1);
+      }
+    }
+    for(int i = 0; i < min_exits.size(); i++){
+      if(min_exits[i].getExitRegion() > ind){
+        min_exits[i].setExitRegion(min_exits[i].getExitRegion() - 1);
+      }
+    }
   }
 
   void setIsLeaf(bool leaf){isLeaf = leaf;}
