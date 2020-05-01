@@ -544,7 +544,7 @@ Tier3StayRotation::Tier3StayRotation(): Tier3Advisor() {};
 // vote to go through an extrance to a region containing the target
 
 double Tier3EnterLinear::actionComment(FORRAction action){
-  cout << "In enter linear " << endl;
+  // cout << "In enter linear " << endl;
   std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   int targetRegion=-1;
@@ -588,7 +588,7 @@ double Tier3EnterLinear::actionComment(FORRAction action){
       }
     }
   }
-  cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
+  // cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
   if(metric < comment_strength){
     return -1 * metric;
   }
@@ -599,7 +599,7 @@ double Tier3EnterLinear::actionComment(FORRAction action){
 
 
 void Tier3EnterLinear::set_commenting(){
-  cout << "In enter linear set commenting " << endl;
+  // cout << "In enter linear set commenting " << endl;
   std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -637,7 +637,7 @@ void Tier3EnterLinear::set_commenting(){
       }
     }
   }
-  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " robotRegTargetRegConnected " << robotRegTargetRegConnected << " targetInRegionWithExit " << targetInRegionWithExit << " targetInRegionWithDoor " << targetInRegionWithDoor << endl;
+  // cout << "Robot region " << robotRegion << " Target region " << targetRegion << " robotRegTargetRegConnected " << robotRegTargetRegConnected << " targetInRegionWithExit " << targetInRegionWithExit << " targetInRegionWithDoor " << targetInRegionWithDoor << endl;
   if(targetInRegion == true and robotRegion != targetRegion and robotRegTargetRegConnected == true and (targetInRegionWithExit == true or targetInRegionWithDoor == true))
     advisor_commenting = true;
   else
@@ -646,7 +646,7 @@ void Tier3EnterLinear::set_commenting(){
 
 
 double Tier3EnterRotation::actionComment(FORRAction action){
-  cout << "In enter rotation " << endl;
+  // cout << "In enter rotation " << endl;
   std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   int targetRegion=-1;
@@ -690,7 +690,7 @@ double Tier3EnterRotation::actionComment(FORRAction action){
       }
     }
   }
-  cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
+  // cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
   if(metric < comment_strength){
     return -1 * metric;
   }
@@ -700,7 +700,7 @@ double Tier3EnterRotation::actionComment(FORRAction action){
 }
 
 void Tier3EnterRotation::set_commenting(){
-  cout << "In enter rotation set commenting " << endl;
+  // cout << "In enter rotation set commenting " << endl;
   std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -738,7 +738,7 @@ void Tier3EnterRotation::set_commenting(){
       }
     }
   }
-  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " robotRegTargetRegConnected " << robotRegTargetRegConnected << " targetInRegionWithExit " << targetInRegionWithExit << " targetInRegionWithDoor " << targetInRegionWithDoor << endl;
+  // cout << "Robot region " << robotRegion << " Target region " << targetRegion << " robotRegTargetRegConnected " << robotRegTargetRegConnected << " targetInRegionWithExit " << targetInRegionWithExit << " targetInRegionWithDoor " << targetInRegionWithDoor << endl;
   if(targetInRegion == true and robotRegion != targetRegion and robotRegTargetRegConnected == true and (targetInRegionWithExit == true or targetInRegionWithDoor == true))
     advisor_commenting = true;
   else
@@ -1946,16 +1946,17 @@ double Tier3ExplorerEndPoints::actionComment(FORRAction action){
 double Tier3BaseLine::actionComment(FORRAction action){
   //srand (time(NULL));
   //cout << "Baseline :::::::::::::::::::::::::::::::::::::::::::::::::::::::" << rand()%10 - 5 << endl;
+  // cout << "Baseline" << endl;
   return rand()%10 - 5;
 }
 
 void Tier3BaseLine::set_commenting(){
   //srand (time(NULL));
-  if(rand()%2 == 0)
-    advisor_commenting = true;
-  else
-    advisor_commenting = false;
-  //advisor_commenting = true;
+  // if(rand()%2 == 0)
+  //   advisor_commenting = true;
+  // else
+  //   advisor_commenting = false;
+  advisor_commenting = true;
 }
 
 void Tier3ExplorerRotation::set_commenting(){
@@ -2004,16 +2005,17 @@ double Tier3ExplorerEndPointsRotation::actionComment(FORRAction action){
 
 double Tier3BaseLineRotation::actionComment(FORRAction action){
   //srand (time(NULL));
+  // cout << "BaselineRotation" << endl;
   return rand()%10 - 5;
 }
 
 void Tier3BaseLineRotation::set_commenting(){
   //srand (time(NULL));
-  if(rand()%2 == 0)
-    advisor_commenting = true;
-  else
-    advisor_commenting = false;
-  //advisor_commenting = true;
+  // if(rand()%2 == 0)
+  //   advisor_commenting = true;
+  // else
+  //   advisor_commenting = false;
+  advisor_commenting = true;
 }
 
 

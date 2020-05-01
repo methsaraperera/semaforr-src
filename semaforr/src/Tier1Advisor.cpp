@@ -15,20 +15,62 @@ void Tier1Advisor::advisorNotOpposite(){
   FORRAction lastlastAction = actions[size - 2];
   FORRAction lastlastlastAction = actions[size - 3];
   ROS_DEBUG_STREAM("Controller::advisorNotOpposite > " << lastAction.type << " " << lastAction.parameter << ", " << lastlastAction.type << " " << lastlastAction.parameter << ", " << lastlastlastAction.type << " " << lastlastlastAction.parameter); 
-  if(((lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN) and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN){
+  // if(((lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN) and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN){
+  //   ROS_DEBUG("Not opposite active ");
+  //   if((lastlastAction.type == RIGHT_TURN and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or (lastlastAction.type == LEFT_TURN and lastAction.type == LEFT_TURN)){
+  //     for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+  //       (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+  //       ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
+  //     }
+  //   }
+  //   if((lastlastAction.type == LEFT_TURN and lastAction.type == PAUSE) or lastAction.type == LEFT_TURN or (lastlastAction.type == RIGHT_TURN and lastAction.type == RIGHT_TURN)){
+  //     for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+  //       (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+  //       ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, i).type << " " << i);
+  //     }
+  //   }
+  // }
+  if(lastlastAction.type == RIGHT_TURN and lastAction.type == PAUSE){
     ROS_DEBUG("Not opposite active ");
-    if((lastlastAction.type == RIGHT_TURN and lastAction.type == PAUSE) or lastAction.type == RIGHT_TURN or (lastlastAction.type == LEFT_TURN and lastAction.type == LEFT_TURN)){
-      for(int i = 1; i < rotation_set->size()/2+1 ; i++){
-        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
-        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
-      }
-    }
-    if((lastlastAction.type == LEFT_TURN and lastAction.type == PAUSE) or lastAction.type == LEFT_TURN or (lastlastAction.type == RIGHT_TURN and lastAction.type == RIGHT_TURN)){
-      for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+    (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, lastlastAction.parameter)));
+    ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter);
+  }
+  else if(lastlastAction.type == RIGHT_TURN and lastAction.type == RIGHT_TURN){
+    ROS_DEBUG("Not opposite active ");
+    double angle_rotated = beliefs->getAgentState()->getRotation(lastlastAction.parameter) + beliefs->getAgentState()->getRotation(lastAction.parameter);
+    for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+      if(angle_rotated + beliefs->getAgentState()->getRotation(i) - M_PI > 0){
         (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
         ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, i).type << " " << i);
       }
     }
+  }
+  if(lastAction.type == RIGHT_TURN){
+    ROS_DEBUG("Not opposite active ");
+    (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, lastAction.parameter)));
+    ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, lastAction.parameter).type << " " << lastAction.parameter);
+  }
+
+
+  if(lastlastAction.type == LEFT_TURN and lastAction.type == PAUSE){
+    ROS_DEBUG("Not opposite active ");
+    (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, lastlastAction.parameter)));
+    ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter);
+  }
+  else if(lastlastAction.type == LEFT_TURN and lastAction.type == LEFT_TURN){
+    ROS_DEBUG("Not opposite active ");
+    double angle_rotated = beliefs->getAgentState()->getRotation(lastlastAction.parameter) + beliefs->getAgentState()->getRotation(lastAction.parameter);
+    for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+      if(angle_rotated + beliefs->getAgentState()->getRotation(i) - M_PI > 0){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
+      }
+    }
+  }
+  if(lastAction.type == LEFT_TURN){
+    ROS_DEBUG("Not opposite active ");
+    (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, lastAction.parameter)));
+    ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, lastAction.parameter).type << " " << lastAction.parameter);
   }
   // if(lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN){
   //   if(lastAction.type == PAUSE){
@@ -138,30 +180,50 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
     else{
       ROS_DEBUG("Waypoint in sight , victory advisor active");
       (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
-      FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
-      if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-        ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
-        decisionMade = true;
-        Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-        // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-        // if(decision->type == FORWARD)
-        //   beliefs->getAgentState()->setGetOutTriggered(false);
+      if(decision->parameter != 0){
+        Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+        if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+          if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+            ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
+            decisionMade = true;
+          }
+          else{
+            FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+            if(forward.parameter >= decision->parameter){
+              ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
+              decisionMade = true;
+              // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+              // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+              // if(decision->type == FORWARD)
+              //   beliefs->getAgentState()->setGetOutTriggered(false);
+            }
+          }
+        }
       }
     }
   }
   else{
     ROS_DEBUG("Target in sight , victory advisor active");
     (*decision) = beliefs->getAgentState()->moveTowards(task);
-    FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-    Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
-    if(((decision->type == RIGHT_TURN or decision->type == LEFT_TURN) or (forward.parameter >= decision->parameter)) and decision->parameter != 0 and expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-      ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
-      decisionMade = true;
-      // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-      // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-      // if(decision->type == FORWARD)
-      //   beliefs->getAgentState()->setGetOutTriggered(false);
+    if(decision->parameter != 0){
+      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+      if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+        if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+          ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
+          decisionMade = true;
+        }
+        else{
+          FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+          if(forward.parameter >= decision->parameter){
+            ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
+            decisionMade = true;
+            // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+            // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+            // if(decision->type == FORWARD)
+            //   beliefs->getAgentState()->setGetOutTriggered(false);
+          }
+        }
+      }
     }
     /*vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     if(actions.size() > 1){

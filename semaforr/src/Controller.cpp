@@ -829,13 +829,13 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   highwayExploration = new HighwayExplorer(l, h, 7, arrMove, arrRotate, moveArrMax, rotateArrMax);
 
   // Initialize circumnavigator
-  PathPlanner *skeleton_planner;
-  for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
-    if((*it)->getName() == "skeleton"){
-      skeleton_planner = *it;
-    }
-  }
-  circumnavigator = new Circumnavigate(l, h, arrMove, arrRotate, moveArrMax, rotateArrMax, beliefs, skeleton_planner);
+  // PathPlanner *skeleton_planner;
+  // for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
+  //   if((*it)->getName() == "skeleton"){
+  //     skeleton_planner = *it;
+  //   }
+  // }
+  // circumnavigator = new Circumnavigate(l, h, arrMove, arrRotate, moveArrMax, rotateArrMax, beliefs, skeleton_planner);
 }
 
 
@@ -877,7 +877,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->resetDirections();
-      circumnavigator->resetCircumnavigate();
+      // circumnavigator->resetCircumnavigate();
     }
     //if task is complete
     if(taskCompleted == true){
@@ -894,7 +894,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->resetDirections();
-      circumnavigator->resetCircumnavigate();
+      // circumnavigator->resetCircumnavigate();
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
       //ROS_DEBUG("Task Cleared!!");
@@ -938,7 +938,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
         beliefs->getAgentState()->resetDirections();
-        circumnavigator->resetCircumnavigate();
+        // circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false);
         updateSkeletonGraph();
         ROS_DEBUG("Finished Learning Spatial Model!!");
@@ -1358,7 +1358,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
   // tier1->advisorCircumnavigate(decision);
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor victory has made a decision " << decision->type << " " << decision->parameter);
-    circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+    // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
     decisionStats->decisionTier = 1;
     decisionMade = true;
   }
@@ -1367,16 +1367,17 @@ bool Controller::tierOneDecision(FORRAction *decision){
     tier1->advisorAvoidWalls();
     ROS_INFO("Advisor not opposite will veto actions");
     tier1->advisorNotOpposite();
-    if(circumnavigator->advisorCircumnavigate(decision)){
-      ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
-      decisionStats->decisionTier = 2.5;
-      decisionMade = true;
-    }
-    else if(tier1->advisorGetOut(decision)){
-      ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
-      decisionStats->decisionTier = 1;
-      decisionMade = true;
-    }
+    // if(circumnavigator->advisorCircumnavigate(decision)){
+    //   ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
+    //   decisionStats->decisionTier = 2.5;
+    //   decisionMade = true;
+    // }
+    // else
+    // if(tier1->advisorGetOut(decision)){
+    //   ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
+    //   decisionStats->decisionTier = 1;
+    //   decisionMade = true;
+    // }
     // else{
     //   // group of vetoing tier1 advisors which adds to the list of vetoed actions
     //   ROS_INFO("Advisor don't go back will veto actions");
@@ -1563,7 +1564,7 @@ void Controller::tierThreeDecision(FORRAction *decision){
   cout << "processing advisors::"<< endl;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     Tier3Advisor *advisor = *it; 
-    cout << advisor->get_name() << endl;
+    // cout << advisor->get_name() << endl;
     // check if advisor should make a decision
     advisor->set_commenting();
     if(advisor->is_active() == false){
@@ -1579,9 +1580,9 @@ void Controller::tierThreeDecision(FORRAction *decision){
 
     advisorsList << advisor->get_name() << " " << advisor->get_weight() << " " << advisor->is_active() << " " << advisor->is_commenting() << ";";
 
-    cout << "Before commenting " << endl;
+    // cout << "Before commenting " << endl;
     comments = advisor->allAdvice();
-    cout << "after commenting " << endl;
+    // cout << "after commenting " << endl;
     // aggregate all comments
 
     for(mapIt iterator = comments.begin(); iterator != comments.end(); iterator++){
