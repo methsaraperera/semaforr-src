@@ -4,6 +4,7 @@
 #include "Edge.h"
 #include <iostream>
 #include <vector> 
+#include "FORRGeometry.h"
 using namespace std; 
 
 class Node {
@@ -12,6 +13,8 @@ protected:
   int id; 
 
   int x, y; 
+
+  double radius;
   
   bool inBuffer;           // true if within a wall buffer ( too close to a wall ) 
 
@@ -23,8 +26,8 @@ protected:
   
 public:
 
-  Node(int i = invalid_node_index, int xt = 0, int yt = 0, bool ib = false)
-    : id(i), x(xt), y(yt), inBuffer(ib), accessible(true)
+  Node(int i = invalid_node_index, int xt = 0, int yt = 0, double r = 0, bool ib = false)
+    : id(i), x(xt), y(yt), radius(r), inBuffer(ib), accessible(true)
     {} 
 
   bool operator == (const Node& n) const{
@@ -50,6 +53,10 @@ public:
   void setY(int y) { this->y = y; }
 
   int getY() const { return y; }
+
+  void setRadius(double r) { this->radius = r; }
+
+  double getRadius() const { return radius; }
 
   bool getInBuffer() const { return inBuffer; }
 

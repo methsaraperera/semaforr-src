@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <fstream>
 #include <set>
+#include "FORRGeometry.h"
 
 class Graph {
 private:
@@ -46,9 +47,9 @@ public:
 
   void resetGraph();
 
-  bool addNode(int x, int y, int ind);
+  bool addNode(int x, int y, double r, int ind);
 
-  void addEdge(int ind1, int ind2, double distance);
+  void addEdge(int ind1, int ind2, double distance, vector<CartesianPoint> path);
 
   vector<Edge*> getEdges() const { return edges; }
 

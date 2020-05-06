@@ -129,13 +129,13 @@ public:
     ROS_DEBUG_STREAM("Current task set");
   }
 
-  list<int> getWaypoints(Position current, PathPlanner *planner, bool aStarOn){
-    if(aStarOn){
-      ROS_DEBUG_STREAM("Generating waypoints");
-      currentTask->generateWaypoints(current, planner);
-      return currentTask->getWaypointInds();
-    }
-  }
+  // list<int> getWaypoints(Position current, PathPlanner *planner, bool aStarOn){
+  //   if(aStarOn){
+  //     ROS_DEBUG_STREAM("Generating waypoints");
+  //     currentTask->generateWaypoints(current, planner);
+  //     return currentTask->getWaypointInds();
+  //   }
+  // }
 
   vector< list<int> > getPlansWaypoints(Position current, PathPlanner *planner, bool aStarOn){
     if(aStarOn){
@@ -180,10 +180,8 @@ public:
         // all_position_trace->push_back((*pos_hist)[i]);
       }
       all_trace.push_back(trace);
-      // vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
-      // for(int i = 0 ; i < laser_hist->size() ; i++){
-      //   all_laser_history->push_back((*laser_hist)[i]);
-      // }
+      vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
+      all_laser_trace.push_back(*laser_hist);
       task_decision_count.push_back(currentTask->getDecisionCount());
       agenda.remove(currentTask);
     }
@@ -192,6 +190,7 @@ public:
   }
 
   vector< vector<CartesianPoint> > getAllTrace(){return all_trace;}
+  vector< vector < vector<CartesianPoint> > > getAllLaserTrace(){return all_laser_trace;}
   vector< Position > *getAllPositionTrace(){return all_position_trace;}
   vector< vector<CartesianPoint> > *getAllLaserHistory(){return all_laser_history;}
   vector< sensor_msgs::LaserScan > *getAllLaserScanHistory(){return all_laserscan_history;}
@@ -337,7 +336,9 @@ public:
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
   bool canSeePoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
   bool canSeePoint(CartesianPoint point, double distanceLimit);
-  bool canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
+  // bool canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
+  bool canSeeRegion(CartesianPoint center, double radius, double distanceLimit);
+
   std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > > getCleanedTrailMarkers();
 
   double getMovement(int para){return move[para];}
@@ -393,6 +394,7 @@ public:
   vector < vector<CartesianPoint> > initial_exit_traces;
 
   // All laser history of all targets
+  vector< vector < vector<CartesianPoint> > > all_laser_trace;
   vector< vector<CartesianPoint> > *all_laser_history;
   vector< sensor_msgs::LaserScan > *all_laserscan_history;
 

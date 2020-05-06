@@ -162,7 +162,7 @@ bool Tier1Advisor::isFacing(Position robotPos , CartesianPoint point, double rad
 */
 
 bool Tier1Advisor::advisorVictory(FORRAction *decision) {
-  ROS_DEBUG("Begin victory advisor");
+  ROS_DEBUG("Begin Victory advisor");
   // if the robot is oriented towards the goal and the robot actions which are not vetoed allows the robot to reach the goal then take that action.
   bool decisionMade = false;
   CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
@@ -170,52 +170,22 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
   bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 20);
   if(targetInSight == false){
-    ROS_DEBUG("Target not in sight, check if waypoint can be spotted using laser scan");
-    CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
-    cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
-    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
-    if(waypointInSight == false){
-      ROS_DEBUG("Waypoint not in sight, Victory advisor skipped");
-    }
-    else{
-      ROS_DEBUG("Waypoint in sight , victory advisor active");
-      (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
-      if(decision->parameter != 0){
-        Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
-        if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-          if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
-            ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
-            decisionMade = true;
-          }
-          else{
-            FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-            if(forward.parameter >= decision->parameter){
-              ROS_DEBUG("Waypoint in sight and no obstacles, victory advisor to take decision");
-              decisionMade = true;
-              // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-              // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-              // if(decision->type == FORWARD)
-              //   beliefs->getAgentState()->setGetOutTriggered(false);
-            }
-          }
-        }
-      }
-    }
+    ROS_DEBUG("Target not in sight, Victory advisor skipped");
   }
   else{
-    ROS_DEBUG("Target in sight , victory advisor active");
+    ROS_DEBUG("Target in sight , Victory advisor active");
     (*decision) = beliefs->getAgentState()->moveTowards(task);
     if(decision->parameter != 0){
       Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
       if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
         if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
-          ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
+          ROS_DEBUG("Target in sight and no obstacles, Victory advisor to take decision");
           decisionMade = true;
         }
         else{
           FORRAction forward = beliefs->getAgentState()->maxForwardAction();
           if(forward.parameter >= decision->parameter){
-            ROS_DEBUG("Target in sight and no obstacles, victory advisor to take decision");
+            ROS_DEBUG("Target in sight and no obstacles, Victory advisor to take decision");
             decisionMade = true;
             // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
             // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
@@ -243,13 +213,83 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   return decisionMade;
 }
 
+bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
+  ROS_DEBUG("Begin Enforcer advisor");
+  // if the robot is oriented towards the goal and the robot actions which are not vetoed allows the robot to reach the goal then take that action.
+  bool decisionMade = false;
+  ROS_DEBUG("Check if waypoint can be spotted using laser scan");
+  CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+  cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
+  bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
+  // cout << "Waypoint Region = " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter().get_x() << " " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter().get_y() << " " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getRadius() << endl;
+  // bool waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter(), beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getRadius(), 20);
+  // if(waypointInSight == false and waypointRegionInSight == false){
+  //   ROS_DEBUG("Waypoint not in sight, Enforcer advisor skipped");
+  // }
+  // else if(waypointRegionInSight == true){
+  //   ROS_DEBUG("Waypoint Region in sight , Enforcer advisor active");
+  //   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+  //   set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
+  //   set<FORRAction>::iterator actionIter;
+  //   for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+  //     FORRAction forrAction = *actionIter;
+  //     if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+  //       continue;
+  //     }
+  //     else if(forrAction.type == PAUSE){
+  //       continue;
+  //     }
+  //     else{
+  //       Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+  //       if(!beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().inRegion(expectedPosition.getX(), expectedPosition.getY())){
+  //         FORRAction a(forrAction.type,forrAction.parameter);
+  //         ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+  //         vetoedActions->insert(a);
+  //       }
+  //     }
+  //   }
+  // }
+  // else 
+  if(waypointInSight == true){
+    ROS_DEBUG("Waypoint in sight , Enforcer advisor active");
+    (*decision) = beliefs->getAgentState()->moveTowards(waypoint);
+    if(decision->parameter != 0){
+      set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+      if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+        decisionMade = false;
+      }
+      else{
+        Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+        if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+          if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+            ROS_DEBUG("Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
+            decisionMade = true;
+          }
+          else{
+            FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+            if(forward.parameter >= decision->parameter){
+              ROS_DEBUG("Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
+              decisionMade = true;
+              // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+              // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+              // if(decision->type == FORWARD)
+              //   beliefs->getAgentState()->setGetOutTriggered(false);
+            }
+          }
+        }
+      }
+    }
+  }
+  return decisionMade;
+}
+
 
 /*
  * This advisor has to do prevent all the actions that will result in robot hitting the obstacles.
  * Straight forward thing is to check for collsion in the orientation.
  */
-bool Tier1Advisor::advisorAvoidWalls(){
-  ROS_DEBUG("In advisor avoid walls");
+bool Tier1Advisor::advisorAvoidObstacles(){
+  ROS_DEBUG("In advisor avoid obstacles");
   FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
   ROS_DEBUG_STREAM("Max allowed forward action : " << max_forward.type << " " << max_forward.parameter);
   int intensity = max_forward.parameter;

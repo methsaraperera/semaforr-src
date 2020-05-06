@@ -283,6 +283,51 @@ bool do_intersect(Circle circle, Line line){
     return true;
 }
 
+bool do_intersect(Circle circle, LineSegment line_segment){
+  Line line = Line(line_segment.get_endpoints().first, line_segment.get_endpoints().second);
+  double r = circle.get_radius();
+  double p = circle.get_center().get_x();
+  double q = circle.get_center().get_y();
+  double m = line.get_slope();
+  double c = -(line.get_value_c() / line.get_value_a());
+  double A = (m*m) + 1;
+  double B = 2*(m*c - m*q - p);
+  double C = (q*q) - (r*r) + (p*p) - (2*c*q) + (c*c);
+  // solution of the equation of point of intersection of the line and the circle
+  if((B*B - 4*A*C) <= 0){
+    return false;
+  }
+  else{
+    double cx = circle.get_center().get_x();
+    double cy = circle.get_center().get_y();
+    m = line_segment.get_slope();
+    double b = (line_segment.get_value_c() / line_segment.get_value_b());
+    A = (m*m) + 1;
+    B = 2*(m*b - m*cy - cx);
+    C = (cx*cx) + (b*b) + (cy*cy) - (2*b*cy) - (r*r);
+    //cout << r << " " << cx << " " << cy << " " << m << " " << b << " " << A << " " << B << " " << C << endl;
+    // solution of the equation of point of intersection of the line segment and the circle assuming they intersect
+    double firstx = (-B + sqrt( ((B*B) - (4*A*C)) ))/(2*A);
+    double firsty = m*firstx + b;
+    double secondx = (-B - sqrt( ((B*B) - (4*A*C)) ))/(2*A);
+    double secondy = m*secondx + b;
+    //cout << firstx << " " << firsty << " " << secondx << " " << secondy << endl;
+    pair<CartesianPoint, CartesianPoint> endpoints = line_segment.get_endpoints();
+    if(endpoints.first.get_x() <= endpoints.second.get_x() && firstx >= endpoints.first.get_x() && firstx <= endpoints.second.get_x()) {
+      return true;
+    } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx >= endpoints.second.get_x() && firstx <= endpoints.first.get_x()) {
+      return true;
+    } else if(endpoints.first.get_x() <= endpoints.second.get_x() && secondx >= endpoints.first.get_x() && secondx <= endpoints.second.get_x()) {
+      return true;
+    } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx >= endpoints.second.get_x() && secondx <= endpoints.first.get_x()) {
+      return true;
+    }
+    else{
+      return false; 
+    }
+  }
+}
+
 bool do_intersect (Line first, Line second, CartesianPoint& point_of_intersection){
   bool answer;
   double determinant = 1.0 * first.coefficient_a * second.coefficient_b - second.coefficient_a * first.coefficient_b;
@@ -345,3 +390,84 @@ bool do_intersect(Vector vector1, Vector vector2, CartesianPoint& intersection){
 }
 
 
+//returns true if there is a point that is "visible" by the wall distance vectors.  
+//A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
+bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
+  //ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
+  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+  bool canAccessPoint = false;
+  double distLaserPosToPoint = laserPos.get_distance(point);
+  if(distLaserPosToPoint > distanceLimit){
+    return false;
+  }
+  double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
+  int index = 0;
+  double min_angle = 100000;
+
+  for(int i = 0; i < givenLaserEndpoints.size(); i++){
+    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+    double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
+    if(abs(laser_direction - point_direction) < min_angle){
+      //ROS_DEBUG_STREAM("Laser Direction : " << laser_direction << ", Point Direction : " << point_direction);
+      min_angle = abs(laser_direction - point_direction);
+      index = i;
+    }
+  }
+  while (index-2 < 0){
+    index = index + 1;
+  }
+  while (index+2 > givenLaserEndpoints.size()-1){
+    index = index - 1;
+  }
+  //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
+  int numFree = 0;
+  for(int i = -2; i < 3; i++) {
+    double distLaserEndPointToLaserPos = givenLaserEndpoints[index+i].get_distance(laserPos);
+    //ROS_DEBUG_STREAM("Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint);
+    if (distLaserEndPointToLaserPos > distLaserPosToPoint) {
+      numFree++;
+    }
+  }
+  //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
+  if (numFree > 3) {
+    canAccessPoint = true;
+  }
+  else{
+    return false;
+  }
+  //else, not visible
+  //return canAccessPoint;
+  double epsilon = 0.005;
+  bool canSeePoint = false;
+  double ab = laserPos.get_distance(point);
+  for(int i = -2; i < 3; i++) {
+    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+    double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+    double bc = givenLaserEndpoints[i].get_distance(point);
+    if(((ab + bc) - ac) < epsilon){
+      //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+      //cout << "Distance: "<<distance_to_point<<endl;
+      canSeePoint = true;
+      break;
+    }
+  }
+  if(canSeePoint == false){
+    for(int i = 0; i < givenLaserEndpoints.size(); i++){
+      //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+      double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+      double bc = givenLaserEndpoints[i].get_distance(point);
+      if(((ab + bc) - ac) < epsilon){
+        //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+        //cout << "Distance: "<<distance_to_point<<endl;
+        canSeePoint = true;
+        break;
+      }
+    }
+  }
+  if(canSeePoint and canAccessPoint){
+    return true;
+  }
+  else{
+    return false;
+  }
+}

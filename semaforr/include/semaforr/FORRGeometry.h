@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <limits>
 #include <utility>
+#include <vector>
 
 // our computation is involving doubles we have to define error
 // we are comfortable with
@@ -84,6 +85,8 @@ class CartesianPoint{
 
   friend bool do_intersect(Vector vector1, Vector vector2, CartesianPoint& intersection);
 
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
+
   /*******************************************************************
                        data members
   ********************************************************************/
@@ -138,6 +141,8 @@ class Line{
   friend bool do_intersect (Line first, Line second, CartesianPoint& point_of_intersection);
 
   friend bool is_point_on_line (CartesianPoint point, Line line); 
+
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
 
 
   /*******************************************************************
@@ -230,6 +235,8 @@ class Vector{
 
   friend bool do_intersect(Vector vector, LineSegment line_segment, CartesianPoint& intersection);
 
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
+
 
   /********************************************************************
                        data members
@@ -250,6 +257,8 @@ class Circle{
   //verify intersection 
   friend bool do_intersect(Circle circle, Line line);
   friend CartesianPoint intersection_point(Circle circle, LineSegment line_segment);
+  friend bool do_intersect(Circle circle, LineSegment line_segment);
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
  private:
   CartesianPoint center;
   double radius;

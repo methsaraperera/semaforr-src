@@ -199,87 +199,87 @@ bool AgentState::canSeePoint(vector<CartesianPoint> givenLaserEndpoints, Cartesi
   return canAccessPoint(givenLaserEndpoints, laserPos, point, distanceLimit);
 }
 
-//returns true if there is a point that is "visible" by the wall distance vectors.  
-//A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
-bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
-  //ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
-  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
-  bool canAccessPoint = false;
-  double distLaserPosToPoint = laserPos.get_distance(point);
-  if(distLaserPosToPoint > distanceLimit){
-    return false;
-  }
-  double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
-  int index = 0;
-  double min_angle = 100000;
+// //returns true if there is a point that is "visible" by the wall distance vectors.  
+// //A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
+// bool AgentState::canAccessPoint(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
+//   //ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
+//   //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+//   bool canAccessPoint = false;
+//   double distLaserPosToPoint = laserPos.get_distance(point);
+//   if(distLaserPosToPoint > distanceLimit){
+//     return false;
+//   }
+//   double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
+//   int index = 0;
+//   double min_angle = 100000;
 
-  for(int i = 0; i < givenLaserEndpoints.size(); i++){
-    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-    double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
-    if(abs(laser_direction - point_direction) < min_angle){
-      //ROS_DEBUG_STREAM("Laser Direction : " << laser_direction << ", Point Direction : " << point_direction);
-      min_angle = abs(laser_direction - point_direction);
-      index = i;
-    }
-  }
-  while (index-2 < 0){
-    index = index + 1;
-  }
-  while (index+2 > givenLaserEndpoints.size()-1){
-    index = index - 1;
-  }
-  //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
-  int numFree = 0;
-  for(int i = -2; i < 3; i++) {
-    double distLaserEndPointToLaserPos = givenLaserEndpoints[index+i].get_distance(laserPos);
-    //ROS_DEBUG_STREAM("Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint);
-    if (distLaserEndPointToLaserPos > distLaserPosToPoint) {
-      numFree++;
-    }
-  }
-  //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
-  if (numFree > 3) {
-    canAccessPoint = true;
-  }
-  else{
-    return false;
-  }
-  //else, not visible
-  //return canAccessPoint;
-  double epsilon = canSeePointEpsilon;
-  bool canSeePoint = false;
-  double ab = laserPos.get_distance(point);
-  for(int i = -2; i < 3; i++) {
-    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-    double ac = laserPos.get_distance(givenLaserEndpoints[i]);
-    double bc = givenLaserEndpoints[i].get_distance(point);
-    if(((ab + bc) - ac) < epsilon){
-      //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
-      //cout << "Distance: "<<distance_to_point<<endl;
-      canSeePoint = true;
-      break;
-    }
-  }
-  if(canSeePoint == false){
-    for(int i = 0; i < givenLaserEndpoints.size(); i++){
-      //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-      double ac = laserPos.get_distance(givenLaserEndpoints[i]);
-      double bc = givenLaserEndpoints[i].get_distance(point);
-      if(((ab + bc) - ac) < epsilon){
-        //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
-        //cout << "Distance: "<<distance_to_point<<endl;
-        canSeePoint = true;
-        break;
-      }
-    }
-  }
-  if(canSeePoint and canAccessPoint){
-    return true;
-  }
-  else{
-    return false;
-  }
-}
+//   for(int i = 0; i < givenLaserEndpoints.size(); i++){
+//     //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+//     double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
+//     if(abs(laser_direction - point_direction) < min_angle){
+//       //ROS_DEBUG_STREAM("Laser Direction : " << laser_direction << ", Point Direction : " << point_direction);
+//       min_angle = abs(laser_direction - point_direction);
+//       index = i;
+//     }
+//   }
+//   while (index-2 < 0){
+//     index = index + 1;
+//   }
+//   while (index+2 > givenLaserEndpoints.size()-1){
+//     index = index - 1;
+//   }
+//   //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
+//   int numFree = 0;
+//   for(int i = -2; i < 3; i++) {
+//     double distLaserEndPointToLaserPos = givenLaserEndpoints[index+i].get_distance(laserPos);
+//     //ROS_DEBUG_STREAM("Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint);
+//     if (distLaserEndPointToLaserPos > distLaserPosToPoint) {
+//       numFree++;
+//     }
+//   }
+//   //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
+//   if (numFree > 3) {
+//     canAccessPoint = true;
+//   }
+//   else{
+//     return false;
+//   }
+//   //else, not visible
+//   //return canAccessPoint;
+//   double epsilon = canSeePointEpsilon;
+//   bool canSeePoint = false;
+//   double ab = laserPos.get_distance(point);
+//   for(int i = -2; i < 3; i++) {
+//     //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+//     double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+//     double bc = givenLaserEndpoints[i].get_distance(point);
+//     if(((ab + bc) - ac) < epsilon){
+//       //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+//       //cout << "Distance: "<<distance_to_point<<endl;
+//       canSeePoint = true;
+//       break;
+//     }
+//   }
+//   if(canSeePoint == false){
+//     for(int i = 0; i < givenLaserEndpoints.size(); i++){
+//       //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+//       double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+//       double bc = givenLaserEndpoints[i].get_distance(point);
+//       if(((ab + bc) - ac) < epsilon){
+//         //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
+//         //cout << "Distance: "<<distance_to_point<<endl;
+//         canSeePoint = true;
+//         break;
+//       }
+//     }
+//   }
+//   if(canSeePoint and canAccessPoint){
+//     return true;
+//   }
+//   else{
+//     return false;
+//   }
+// }
 
 
 std::pair < std::vector<CartesianPoint>, std::vector< vector<CartesianPoint> > > AgentState::getCleanedTrailMarkers(){
@@ -333,6 +333,23 @@ bool AgentState::canSeePoint(CartesianPoint point, double distanceLimit){
   CartesianPoint curr(currentPosition.getX(),currentPosition.getY());
   //return canSeePoint(laserEndpoints, curr, point);
   return canAccessPoint(laserEndpoints, curr, point, distanceLimit);
+}
+
+bool AgentState::canSeeRegion(CartesianPoint center, double radius, double distanceLimit){
+  CartesianPoint laserPos(currentPosition.getX(),currentPosition.getY());
+  bool canAccessPoint = false;
+  double distLaserPosToPoint = laserPos.get_distance(center);
+  if(distLaserPosToPoint - radius > distanceLimit){
+    return false;
+  }
+  for(int i = 0; i < laserEndpoints.size(); i++){
+    //ROS_DEBUG_STREAM("Laser endpoint : " << laserEndpoints[i].get_x() << "," << laserEndpoints[i].get_y());
+    if(do_intersect(Circle(center, radius), LineSegment(laserPos, laserEndpoints[i]))){
+      canAccessPoint = true;
+      break;
+    }
+  }
+  return canAccessPoint;
 }
 
 void AgentState::transformToEndpoints(){

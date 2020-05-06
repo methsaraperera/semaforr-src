@@ -36,17 +36,17 @@
 
 	<AgentGroup>
         <ProfileSelector type="const" name="group1" />
-		<StateSelector type="const" name="one" />
+		<StateSelector type="const" name="Walk1" />
 		<Generator type="explicit" displace_dist="u" displace_min="0.0" displace_max="0.1" >
 			<Agent p_x="25" p_y="35"/>
 		</Generator>
     	</AgentGroup>
-
+    <!--
 	<AgentGroup>
         <ProfileSelector type="const" name="group2" />
 		<StateSelector type="const" name="start" />
 		<Generator type="explicit" displace_dist="u" displace_min="0.0" displace_max="0.1" >
-			<!--
+			
 			<Agent p_x="-1" p_y="0"/>
 			<Agent p_x="-1" p_y="1"/>
 			<Agent p_x="-1" p_y="2"/>
@@ -101,16 +101,16 @@
 			<Agent p_x="-2" p_y="7"/>
 			<Agent p_x="-2" p_y="8"/>
 			<Agent p_x="-2" p_y="9"/>
-			-->
+			
 		</Generator>
     	</AgentGroup>
-
-
+	-->
+    <!--
 	<AgentGroup>
         <ProfileSelector type="const" name="group3" />
 		<StateSelector type="const" name="start1" />
 		<Generator type="explicit" displace_dist="u" displace_min="0.0" displace_max="0.1" >
-			<!--
+			
 			<Agent p_x="-1" p_y="0"/>
 			<Agent p_x="-1" p_y="1"/>
 			<Agent p_x="-1" p_y="2"/>
@@ -177,9 +177,9 @@
 			<Agent p_x="-2" p_y="7"/>
 			<Agent p_x="-2" p_y="8"/>
 			<Agent p_x="-2" p_y="9"/>
-			-->
+			
 		</Generator>
-    	</AgentGroup>
+    	</AgentGroup>-->
 	
 <ObstacleSet type="explicit" class="1">
 	<Obstacle closed="1">

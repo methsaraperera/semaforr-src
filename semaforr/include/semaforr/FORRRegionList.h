@@ -294,14 +294,16 @@ class FORRRegionList{
   
   
   
-  void learnExits(vector< vector<CartesianPoint> > run_trace, vector <int> trace_inds){
+  void learnExits(vector< vector<CartesianPoint> > run_trace, vector <int> trace_inds, vector< vector < vector<CartesianPoint> > > laser_trace){
     // learning gates between different regions
     //clearAllExits();
     // for every position in the position history vector .. check if a move is from one region to another and save it as gate
     //cout << "In learning exits: size of trace is " << run_trace.size() << endl;
     for(int k = 0; k < run_trace.size() ; k++){
       vector<CartesianPoint> history = run_trace[k];
+      vector < vector<CartesianPoint> > laser_history = laser_trace[k];
       vector<CartesianPoint> stepped_history;
+      vector<int> step_to_trace;
       //cout << "Learning exits between regions" << endl;
       int region_id=-1, previous_position_region_id=-1,  begin_region_id, end_region_id, begin_position , end_position;
       bool beginFound = false;
@@ -312,6 +314,7 @@ class FORRRegionList{
           tx = (history[j].get_x() * (1-step)) + (history[j+1].get_x() * (step));
           ty = (history[j].get_y() * (1-step)) + (history[j+1].get_y() * (step));
           stepped_history.push_back(CartesianPoint(tx,ty));
+          step_to_trace.push_back(j);
         }
       }
       for (int j = 0; j < stepped_history.size(); j++){
@@ -338,12 +341,38 @@ class FORRRegionList{
           end_position = j;
           CartesianPoint midpoint = stepped_history[(int)((begin_position+end_position)/2)];
           // cout << "Starting position : " << begin_position << " Middle Position : " << (int)((begin_position+end_position)/2) << " Ending Position : " << end_position << endl;
+          vector<CartesianPoint> pathBetweenRegions;
+          vector< vector<CartesianPoint> > laserBetweenRegions;
           double connectionBetweenRegions = 0;
           for(int m = begin_position; m < end_position; m++){
             connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
+            pathBetweenRegions.push_back(history[step_to_trace[m]]);
+            laserBetweenRegions.push_back(laser_history[step_to_trace[m]]);
           }
+
+          // Initialize trail vectors
+          std::vector<CartesianPoint> trailPositions;
+          // std::vector< vector<CartesianPoint> > trailLaserEndpoints;
+          // Push first point in path to trail
+          trailPositions.push_back(pathBetweenRegions[0]);
+          // trailLaserEndpoints.push_back(laserBetweenRegions[0]);
+          // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
+          for(int i = 0; i < pathBetweenRegions.size(); i++){
+            for(int j = pathBetweenRegions.size()-1; j > i; j--){
+              if(canAccessPoint(laserBetweenRegions[i], pathBetweenRegions[i], pathBetweenRegions[j], 5)) {
+                trailPositions.push_back(pathBetweenRegions[j]);
+                // trailLaserEndpoints.push_back(laserBetweenRegions[j]);
+                i = j-1;
+              }
+            }
+          }
+          if (pathBetweenRegions[pathBetweenRegions.size()-1].get_x() != trailPositions[trailPositions.size()-1].get_x() or pathBetweenRegions[pathBetweenRegions.size()-1].get_y() != trailPositions[trailPositions.size()-1].get_y()) {
+            trailPositions.push_back(pathBetweenRegions.back());
+            // trailLaserEndpoints.push_back(laserBetweenRegions.back());
+          }
+  
           // cout << "Distance of connection : " << connectionBetweenRegions << endl;
-          saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, midpoint, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions, trace_inds[k]);
+          saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, midpoint, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions, trace_inds[k], trailPositions);
         }
       }
     }
@@ -352,7 +381,7 @@ class FORRRegionList{
     }
   }
 
-  void learnRegionsAndExits(vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector< vector<CartesianPoint> > run_trace){
+  void learnRegionsAndExits(vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist, vector< vector<CartesianPoint> > run_trace, vector< vector < vector<CartesianPoint> > > laser_trace){
     vector<Position> positionHis = *pos_hist;
     vector < vector <CartesianPoint> > laserHis = *laser_hist;
     cout << "In learning regions and exits" << endl;
@@ -491,16 +520,18 @@ class FORRRegionList{
     paths_for_removed.insert(run_trace.size()-1);
     cout << "paths_for_removed " << paths_for_removed.size() << endl;
     vector< vector<CartesianPoint> > selected_traces;
+    vector< vector < vector<CartesianPoint> > > selected_laser_traces;
     vector <int> selected_inds;
     set<int>::iterator it = paths_for_removed.begin();
     while (it != paths_for_removed.end())
     {
       selected_traces.push_back(run_trace[(*it)]);
+      selected_laser_traces.push_back(laser_trace[(*it)]);
       selected_inds.push_back((*it));
       cout << "path " << (*it) << endl;
       it++;
     }
-    learnExits(selected_traces, selected_inds);
+    learnExits(selected_traces, selected_inds, selected_laser_traces);
     cout << "Exit learning regions and exits" << endl;
   }
 
@@ -510,7 +541,7 @@ class FORRRegionList{
     }
   }
 
-  void saveExit(CartesianPoint begin1, CartesianPoint begin2, int begin_region, CartesianPoint midpoint, CartesianPoint end1, CartesianPoint end2, int end_region, double connection_length, int connection_path){
+  void saveExit(CartesianPoint begin1, CartesianPoint begin2, int begin_region, CartesianPoint midpoint, CartesianPoint end1, CartesianPoint end2, int end_region, double connection_length, int connection_path, vector<CartesianPoint> connection_points){
     //CartesianPoint exit_begin_p = getPointOnRegion(begin2, begin_region);
     //CartesianPoint exit_end_p = getPointOnRegion(end1, end_region);
     
@@ -522,8 +553,8 @@ class FORRRegionList{
     //cout << "End exit begin/end" << endl;
 
     //cout << "In save exit  " << "Start region : " << begin_region << "End region : " << end_region << endl;
-    FORRExit exit_begin (exit_begin_p, midpoint, exit_end_p, end_region, connection_length, connection_path);
-    FORRExit exit_end (exit_end_p, midpoint, exit_begin_p, begin_region, connection_length, connection_path);
+    FORRExit exit_begin (exit_begin_p, midpoint, exit_end_p, end_region, connection_length, connection_path, connection_points);
+    FORRExit exit_end (exit_end_p, midpoint, exit_begin_p, begin_region, connection_length, connection_path, connection_points);
     if(!regions[begin_region].isExitAlreadyPresent(exit_begin))
        regions[begin_region].addExit(exit_begin);
     if(!regions[end_region].isExitAlreadyPresent(exit_end))

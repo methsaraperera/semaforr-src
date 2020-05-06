@@ -269,7 +269,7 @@ class FORRRegion{
   void setExits(vector<FORRExit> exit_points) { exits = exit_points;}
   void addExit(FORRExit exit) {
     exits.push_back(exit);
-    ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getMidPoint(), exit.getExitRegionPoint(), exit.getExitRegion(), exit.getExitDistance(), exit.getConnectionPath()));
+    ext_exits.push_back(FORRExit(CartesianPoint(2*(exit.getExitPoint().get_x()) - center.get_x(), 2*(exit.getExitPoint().get_y()) - center.get_y()), exit.getMidPoint(), exit.getExitRegionPoint(), exit.getExitRegion(), exit.getExitDistance(), exit.getConnectionPath(), exit.getConnectionPoints()));
     this->addMinDistanceExit(exit);
   }
 

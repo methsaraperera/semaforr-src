@@ -591,7 +591,8 @@ void FORRSituations::learnSituationActions(AgentState *agentState, vector<TrailM
     cout << "visible_trailmarkers ";
     for(int j = 0; j < trail.size(); j++){
       dist_to_trailmarkers.push_back(current_situation_observations[i].pose.getDistance(trail[j].coordinates.get_x(), trail[j].coordinates.get_y()));
-      if(agentState->canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 10)) {
+      // if(agentState->canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 10)) {
+      if(canAccessPoint(current_laser, CartesianPoint(current_situation_observations[i].pose.getX(), current_situation_observations[i].pose.getY()), trail[j].coordinates, 10)) {
         visible_trailmarkers.push_back(j);
         cout << j << " ";
       }

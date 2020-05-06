@@ -139,7 +139,7 @@ void Graph::generateNavGraph() {
       bool inBuf = false;
       if ( map->isPointInBuffer(x,y) )
         inBuf = true;
-      Node * n = new Node(index, x, y, inBuf);
+      Node * n = new Node(index, x, y, 0, inBuf);
       nodes.push_back(n);
       //cout << x << ":" << y << ":" << index << endl;
       nodeIndex[x][y] = index;
@@ -242,11 +242,11 @@ void Graph::generateNavGraph() {
   //cout << "completed generating graph" << endl;
 }
 
-bool Graph::addNode(int x, int y, int ind){
+bool Graph::addNode(int x, int y, double r, int ind){
   bool node_added = false;
   if(nodeIndex[x][y] == -1){
     nodeIndex[x][y] = ind;
-    Node * n = new Node(ind, x, y, false);
+    Node * n = new Node(ind, x, y, r, false);
     nodes.push_back(n);
     // cout << "Added Node " << ind << " x " << x << " y " << y << endl;
     node_added = true;
@@ -319,7 +319,7 @@ bool Graph::addNode(int x, int y, int ind){
   return node_added;
 }
 
-void Graph::addEdge(int ind1, int ind2, double distance){
+void Graph::addEdge(int ind1, int ind2, double distance, vector<CartesianPoint> path){
   Edge * e = new Edge(ind1, ind2);
   //cout << "for each edge "<< endl;
   if(isEdge((*e))){
@@ -332,6 +332,7 @@ void Graph::addEdge(int ind1, int ind2, double distance){
         // cout << "Matching edge found for from node " << distance << " " << (*iter)->getDistCost() << endl;
         if(distance < (*iter)->getDistCost()){
           (*iter)->setDistCost(distance);
+          (*iter)->setEdgePath(path);
         }
         break;
       }
@@ -343,6 +344,7 @@ void Graph::addEdge(int ind1, int ind2, double distance){
         // cout << "Matching edge found for to node " << distance << " " << (*iter)->getDistCost() << endl;
         if(distance < (*iter)->getDistCost()){
           (*iter)->setDistCost(distance);
+          (*iter)->setEdgePath(path);
         }
         break;
       }
@@ -353,12 +355,13 @@ void Graph::addEdge(int ind1, int ind2, double distance){
     // cout << "Added neighbor to " << ind1 << " from " << ind2 << endl;
     nodes[ind2]->addNeighbor(ind1);
     // cout << "Added neighbor to " << ind2 << " from " << ind1 << endl;
-    int x1,y1,x2,y2;
-    x1 = nodes[ind1]->getX();
-    y1 = nodes[ind1]->getY();
-    x2 = nodes[ind2]->getX();
-    y2 = nodes[ind2]->getY();
+    // int x1,y1,x2,y2;
+    // x1 = nodes[ind1]->getX();
+    // y1 = nodes[ind1]->getY();
+    // x2 = nodes[ind2]->getX();
+    // y2 = nodes[ind2]->getY();
     e->setDistCost(distance);
+    e->setEdgePath(path);
     edges.push_back(e);
     nodes[ind1]->addNodeEdge(e);
     nodes[ind2]->addNodeEdge(e);
@@ -378,7 +381,7 @@ void Graph::populateEdges(){
       x2 = getNode(*it).getX();
       y2 = getNode(*it).getY();
       double distCost = Map::distance(x1,y1,x2,y2);
-      this->addEdge((*iter)->getID(), getNode(*it).getID(), distCost);
+      this->addEdge((*iter)->getID(), getNode(*it).getID(), distCost, vector<CartesianPoint>());
     //   Edge * e = new Edge( (*iter)->getID(), getNode(*it).getID() );
     //   //cout << "for each edge "<< endl;
     //   if ( !isEdge((*e)) ) {

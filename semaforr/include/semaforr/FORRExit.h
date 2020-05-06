@@ -15,13 +15,14 @@ Written by Anoop Aroor, 2014
 class FORRExit{
  public:
   FORRExit(){};
-  FORRExit(CartesianPoint point, CartesianPoint mid_point, CartesianPoint region_point, int region_id, double distance_between, int connection_path){
+  FORRExit(CartesianPoint point, CartesianPoint mid_point, CartesianPoint region_point, int region_id, double distance_between, int connection_path, vector<CartesianPoint> connection_points){
     exitPoint = point;
     middlePoint = mid_point;
     exitRegionPoint = region_point;
     exitRegion = region_id;
     exitDistance = distance_between;
     connectionPath = connection_path;
+    connectionPoints = connection_points;
   }
 
   void print(){
@@ -52,6 +53,9 @@ class FORRExit{
   void setConnectionPath(int cp){ connectionPath = cp;}
   int getConnectionPath(){ return connectionPath; }
 
+  void setConnectionPoints(vector<CartesianPoint> cp){ connectionPoints = cp;}
+  vector<CartesianPoint> getConnectionPoints(){ return connectionPoints; }
+
   bool operator < (const FORRExit &exit) const{
     return false;
   }
@@ -63,6 +67,7 @@ class FORRExit{
   int exitRegion;
   double exitDistance;
   int connectionPath;
+  vector<CartesianPoint> connectionPoints;
 };
 
 

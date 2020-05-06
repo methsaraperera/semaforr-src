@@ -20,7 +20,7 @@ public:
 	}
         void advisorNotOpposite();
 	//void advisorCircle(Beliefs *beliefs);
-	bool advisorAvoidWalls();
+	bool advisorAvoidObstacles();
 
 	bool advisorDontGoBack();
 
@@ -29,6 +29,8 @@ public:
 	bool advisorGetOut(FORRAction *decision);
 
 	bool advisorVictory(FORRAction *decision);
+
+	bool advisorEnforcer(FORRAction *decision);
 
 	// bool advisorCircumnavigate(FORRAction *decision);
 	

@@ -202,6 +202,8 @@ public:
 
   Map* getMap() { return &map;}
 
+  vector<FORRRegion> getRegions() { return regions; }
+
   Node getSource(){ return source; }
 
   void setSource(Node s){ source = s; } 

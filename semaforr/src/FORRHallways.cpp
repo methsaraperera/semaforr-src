@@ -324,7 +324,8 @@ void FORRHallways::CreateMeanSegments(vector<Segment> &averaged_segments, const 
   //   //}
     averaged_segments.push_back(first);
     averaged_segments.push_back(second);
-    if(match == true and agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint(), 20) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint(), 20) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint(), 20) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint(), 20)){
+    // if(match == true and agent_state->canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint(), 20) and agent_state->canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint(), 20) and agent_state->canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint(), 20) and agent_state->canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint(), 20)){
+    if(match == true and canAccessPoint(first.GetLeftLaser(), first.GetLeftPoint(), average.GetLeftPoint(), 20) and canAccessPoint(second.GetLeftLaser(), second.GetLeftPoint(), average.GetLeftPoint(), 20) and canAccessPoint(first.GetRightLaser(), first.GetRightPoint(), average.GetRightPoint(), 20) and canAccessPoint(second.GetRightLaser(), second.GetRightPoint(), average.GetRightPoint(), 20)){
       //cout << average.GetAngle() << endl;
       averaged_segments.push_back(average);
       // averaged_segments.push_back(first);
@@ -998,7 +999,8 @@ vector<vector<CartesianPoint> > FORRHallways::FillHallways(const vector<vector<C
     Segment temp_segment = Segment(CartesianPoint(0,0),CartesianPoint(0,0), step);
     for(int k = 0; k < poses_in_hallways[i].size(); k++){
       for(int j = 0; j < initial_hallway_groups[i].size(); j++){
-        if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 20)){
+        // if(agent_state->canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 20)){
+        if(canAccessPoint(laser_history[poses_in_hallways[i][k]], trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], 20)){
           temp_segment = Segment(trails[poses_in_hallways[i][k]], initial_hallway_groups[i][j], step);
           if(temp_segment.GetLeftPoint().get_x() > temp_segment.GetRightPoint().get_x()){
             temp_segment = Segment(initial_hallway_groups[i][j], trails[poses_in_hallways[i][k]], step);

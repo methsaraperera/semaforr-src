@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <iostream>
-using namespace std; 
+#include "FORRGeometry.h"
 
 using namespace std;
 
@@ -14,6 +14,8 @@ private:
 
 protected:
   double costfromto, costtofrom, cost;
+  vector<CartesianPoint> path;
+  vector<CartesianPoint> reversepath;
 
 public:
   Edge(): from (-1), to(-1), costfromto(0), costtofrom(0) { usable = true; cost = 0; } 
@@ -44,6 +46,20 @@ public:
 	costfromto = c;
 	costtofrom = c;
 	cost = c;
+  }
+
+  void setEdgePath(vector<CartesianPoint> p){
+    path = p;
+    for(int i = p.size()-1; i >= 0; i--){
+      reversepath.push_back(p[i]);
+    }
+  }
+
+  vector<CartesianPoint> getEdgePath(bool direction){
+    if(direction)
+      return path; 
+    else
+      return reversepath;
   }
 
   int getFrom(){ return from; }
