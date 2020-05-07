@@ -91,9 +91,9 @@ Edge* Graph::getEdge(int n1, int n2) {
   if (! (nd1.getID() == Node::invalid_node_index || nd2.getID() == Node::invalid_node_index )){
     for( eiter = edges.begin(); eiter != edges.end(); eiter++ ){
       if ( n1 == (*eiter)->getFrom() && n2 == (*eiter)->getTo() ) 
-	return (*eiter); 
+        return (*eiter); 
       if ( n1 == (*eiter)->getTo() && n2 == (*eiter)->getFrom() ) 
-	return (*eiter);
+        return (*eiter);
     }
   }
   Edge * e0 = new Edge(Node::invalid_node_index, Node::invalid_node_index);

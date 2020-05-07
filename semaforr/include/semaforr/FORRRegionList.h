@@ -345,7 +345,7 @@ class FORRRegionList{
           vector< vector<CartesianPoint> > laserBetweenRegions;
           double connectionBetweenRegions = 0;
           for(int m = begin_position; m < end_position; m++){
-            connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
+            // connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
             pathBetweenRegions.push_back(history[step_to_trace[m]]);
             laserBetweenRegions.push_back(laser_history[step_to_trace[m]]);
           }
@@ -358,17 +358,20 @@ class FORRRegionList{
           // trailLaserEndpoints.push_back(laserBetweenRegions[0]);
           // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
           for(int i = 0; i < pathBetweenRegions.size(); i++){
-            for(int j = pathBetweenRegions.size()-1; j > i; j--){
-              if(canAccessPoint(laserBetweenRegions[i], pathBetweenRegions[i], pathBetweenRegions[j], 5)) {
-                trailPositions.push_back(pathBetweenRegions[j]);
-                // trailLaserEndpoints.push_back(laserBetweenRegions[j]);
-                i = j-1;
+            for(int n = pathBetweenRegions.size()-1; n > i; n--){
+              if(canAccessPoint(laserBetweenRegions[i], pathBetweenRegions[i], pathBetweenRegions[n], 5)) {
+                trailPositions.push_back(pathBetweenRegions[n]);
+                // trailLaserEndpoints.push_back(laserBetweenRegions[n]);
+                i = n-1;
               }
             }
           }
           if (pathBetweenRegions[pathBetweenRegions.size()-1].get_x() != trailPositions[trailPositions.size()-1].get_x() or pathBetweenRegions[pathBetweenRegions.size()-1].get_y() != trailPositions[trailPositions.size()-1].get_y()) {
             trailPositions.push_back(pathBetweenRegions.back());
             // trailLaserEndpoints.push_back(laserBetweenRegions.back());
+          }
+          for(int i = 0; i < trailPositions.size()-1; i++){
+            connectionBetweenRegions += trailPositions[i].get_distance(trailPositions[i+1]);
           }
   
           // cout << "Distance of connection : " << connectionBetweenRegions << endl;

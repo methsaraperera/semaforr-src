@@ -70,7 +70,42 @@ class Task {
 	}
   }
 
-  int getRegionWaypoint(){ return wr; }
+  FORRRegion getRegionWaypoint(){
+  	double x = navGraph->getNode(wr).getX()/100.0;
+	double y = navGraph->getNode(wr).getY()/100.0;
+	double r = navGraph->getNode(wr).getRadius();
+	cout << x << " " << y << " " << r << endl;
+	return FORRRegion(CartesianPoint(x,y), r);
+  }
+
+  FORRRegion getNextRegionWaypoint(){
+  	list<int>::iterator itr1; 
+	itr1 = waypointInd.begin(); 
+	advance(itr1, 1);
+  	double x = navGraph->getNode(*itr1).getX()/100.0;
+	double y = navGraph->getNode(*itr1).getY()/100.0;
+	double r = navGraph->getNode(*itr1).getRadius();
+	cout << x << " " << y << " " << r << endl;
+	return FORRRegion(CartesianPoint(x,y), r);
+  }
+
+  vector<CartesianPoint> getPathToNextRegionWaypoint(){
+  	list<int>::iterator itr1; 
+	itr1 = waypointInd.begin(); 
+	advance(itr1, 1);
+  	if(navGraph->getEdge(wr, *itr1)->getFrom() == wr){
+  		return navGraph->getEdge(wr, *itr1)->getEdgePath(true);
+  	}
+  	else if(navGraph->getEdge(wr, *itr1)->getFrom() == *itr1){
+  		return navGraph->getEdge(wr, *itr1)->getEdgePath(false);
+  	}
+  	else{
+  		vector<CartesianPoint> regionCenterPath;
+  		regionCenterPath.push_back(CartesianPoint(navGraph->getNode(wr).getX()/100.0, navGraph->getNode(wr).getY()/100.0));
+  		regionCenterPath.push_back(CartesianPoint(navGraph->getNode(*itr1).getX()/100.0, navGraph->getNode(*itr1).getY()/100.0));
+  		return regionCenterPath;
+  	}
+  }
 
   bool getIsPlanActive(){return isPlanActive;}
   void setIsPlanActive(bool status){isPlanActive = status;}
@@ -124,6 +159,8 @@ class Task {
   		return waypointInd.size();
   	}
   }
+
+  string getPlannerName(){ return plannerName; }
 
   void clearWaypoints(){
   	waypoints.clear();

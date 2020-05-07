@@ -138,11 +138,12 @@ explore = "off"
 
 # num_runs = 1
 # for i in range(0,num_runs):
+#     map_name = "map-a"
 #     # target_file_name = "target1.conf"
-#     target_file_name = "target.conf"
-#     log_name = map_name + "_regiontest_" + str(i) + ".txt"
-#     advisors = "/config/advisors1.conf"
-#     params = "/config/params4.conf"
+#     target_file_name = "target40test.conf"
+#     log_name = map_name + "_plantest_" + str(i) + ".txt"
+#     advisors = "/config/advisors4.conf"
+#     params = "/config/params5.conf"
 #     situations = "/config/situations5.conf"
 #     spatials = "/config/spatial_model.conf"
 #     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
@@ -152,8 +153,8 @@ explore = "off"
 #     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-num_runs = 3
-for i in range(2,num_runs):
+num_runs = 5
+for i in range(3,num_runs):
     map_name = "map-a"
     target_file_name = "target40test.conf"
     log_name = map_name + "_VAONOCS_" + str(i) + ".txt"
