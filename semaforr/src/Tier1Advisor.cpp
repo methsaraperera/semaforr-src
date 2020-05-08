@@ -256,7 +256,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       ROS_DEBUG("Waypoint not in sight, Enforcer advisor skipped");
     }
   }
-  else{
+  else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 0){
     cout << "Waypoint Region = " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter().get_x() << " " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter().get_y() << " " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getRadius() << endl;
     bool waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter(), beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getRadius(), 20);
     if(waypointRegionInSight == true){
@@ -310,35 +310,41 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     if(decisionMade == false){
       ROS_DEBUG("Waypoint Region not in sight or no action can get there");
       vector<CartesianPoint> pathBetweenWaypoints = beliefs->getAgentState()->getCurrentTask()->getPathToNextRegionWaypoint();
+      cout << "pathBetweenWaypoints " << pathBetweenWaypoints.size() << endl;
       CartesianPoint farthestVisible;
+      int farthest = -1;
       for(int i = pathBetweenWaypoints.size()-1; i >= 0; i--){
         if(beliefs->getAgentState()->canSeePoint(pathBetweenWaypoints[i], 20)){
           farthestVisible = pathBetweenWaypoints[i];
+          cout << "farthestVisible " << i << endl;
+          farthest = i;
           break;
         }
       }
-      (*decision) = beliefs->getAgentState()->moveTowards(farthestVisible);
-      if(decision->parameter != 0){
-        set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
-        if(vetoed_actions->find(*decision) != vetoed_actions->end()){
-          decisionMade = false;
-        }
-        else{
-          Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
-          if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-            if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
-              ROS_DEBUG("Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
-              decisionMade = true;
-            }
-            else{
-              FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-              if(forward.parameter >= decision->parameter){
+      if(farthest >= 0){
+        (*decision) = beliefs->getAgentState()->moveTowards(farthestVisible);
+        if(decision->parameter != 0){
+          set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+          if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+            decisionMade = false;
+          }
+          else{
+            Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+            if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+              if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
                 ROS_DEBUG("Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
                 decisionMade = true;
-                // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-                // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-                // if(decision->type == FORWARD)
-                //   beliefs->getAgentState()->setGetOutTriggered(false);
+              }
+              else{
+                FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+                if(forward.parameter >= decision->parameter){
+                  ROS_DEBUG("Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
+                  decisionMade = true;
+                  // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+                  // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+                  // if(decision->type == FORWARD)
+                  //   beliefs->getAgentState()->setGetOutTriggered(false);
+                }
               }
             }
           }

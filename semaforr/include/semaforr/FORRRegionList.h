@@ -340,12 +340,13 @@ class FORRRegionList{
           end_region_id = region_id;
           end_position = j;
           CartesianPoint midpoint = stepped_history[(int)((begin_position+end_position)/2)];
-          // cout << "Starting position : " << begin_position << " Middle Position : " << (int)((begin_position+end_position)/2) << " Ending Position : " << end_position << endl;
+          cout << "Starting position : " << begin_position << " Middle Position : " << (int)((begin_position+end_position)/2) << " Ending Position : " << end_position << endl;
           vector<CartesianPoint> pathBetweenRegions;
           vector< vector<CartesianPoint> > laserBetweenRegions;
           double connectionBetweenRegions = 0;
           for(int m = begin_position; m < end_position; m++){
             // connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
+            cout << "step " << m << " step_to_trace " << step_to_trace[m] << endl;
             pathBetweenRegions.push_back(history[step_to_trace[m]]);
             laserBetweenRegions.push_back(laser_history[step_to_trace[m]]);
           }
@@ -370,11 +371,13 @@ class FORRRegionList{
             trailPositions.push_back(pathBetweenRegions.back());
             // trailLaserEndpoints.push_back(laserBetweenRegions.back());
           }
+          cout << "Length of trail " << trailPositions.size() << endl;
           for(int i = 0; i < trailPositions.size()-1; i++){
+            cout << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
             connectionBetweenRegions += trailPositions[i].get_distance(trailPositions[i+1]);
           }
-  
-          // cout << "Distance of connection : " << connectionBetweenRegions << endl;
+          cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
+          cout << "Distance of connection : " << connectionBetweenRegions << endl;
           saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, midpoint, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions, trace_inds[k], trailPositions);
         }
       }
