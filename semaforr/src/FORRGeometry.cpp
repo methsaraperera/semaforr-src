@@ -393,23 +393,30 @@ bool do_intersect(Vector vector1, Vector vector2, CartesianPoint& intersection){
 //returns true if there is a point that is "visible" by the wall distance vectors.  
 //A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
 bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
-  //ROS_DEBUG_STREAM("AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y()); 
-  //ROS_DEBUG_STREAM("Number of laser endpoints " << givenLaserEndpoints.size()); 
+  // cout << "AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y() << endl; 
+  // cout << "Number of laser endpoints " << givenLaserEndpoints.size() << endl; 
   bool canAccessPoint = false;
   double distLaserPosToPoint = laserPos.get_distance(point);
   if(distLaserPosToPoint > distanceLimit){
+    // cout << "Cannot access, too far away" << endl;
     return false;
   }
   double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
   int index = 0;
   double min_angle = 100000;
-
   for(int i = 0; i < givenLaserEndpoints.size(); i++){
-    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+    //cout << "Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y() << endl;
     double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
-    if(abs(laser_direction - point_direction) < min_angle){
-      //ROS_DEBUG_STREAM("Laser Direction : " << laser_direction << ", Point Direction : " << point_direction);
-      min_angle = abs(laser_direction - point_direction);
+    double angle_diff = laser_direction - point_direction;
+    if(angle_diff > M_PI)
+      angle_diff = angle_diff - 2*M_PI;
+    if(angle_diff < -M_PI)
+      angle_diff = angle_diff + 2*M_PI;
+    angle_diff = fabs(angle_diff);
+    // cout << "point_direction " << point_direction << " laser_direction " << laser_direction << " angle_diff " << angle_diff << endl;
+    if(angle_diff < min_angle){
+      // cout << "Laser Direction : " << laser_direction << ", Point Direction : " << point_direction << endl;
+      min_angle = angle_diff;
       index = i;
     }
   }
@@ -419,16 +426,16 @@ bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPo
   while (index+2 > givenLaserEndpoints.size()-1){
     index = index - 1;
   }
-  //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
+  // cout << "Min angle : " << min_angle << ", " << index << endl;
   int numFree = 0;
   for(int i = -2; i < 3; i++) {
     double distLaserEndPointToLaserPos = givenLaserEndpoints[index+i].get_distance(laserPos);
-    //ROS_DEBUG_STREAM("Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint);
+    // cout << "Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint << endl;
     if (distLaserEndPointToLaserPos > distLaserPosToPoint) {
       numFree++;
     }
   }
-  //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
+  // cout << "Number farther than point : " << numFree << endl;
   if (numFree > 3) {
     canAccessPoint = true;
   }
@@ -441,24 +448,24 @@ bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPo
   bool canSeePoint = false;
   double ab = laserPos.get_distance(point);
   for(int i = -2; i < 3; i++) {
-    //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-    double ac = laserPos.get_distance(givenLaserEndpoints[i]);
-    double bc = givenLaserEndpoints[i].get_distance(point);
+    //cout << "Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y() << endl;
+    double ac = laserPos.get_distance(givenLaserEndpoints[index+i]);
+    double bc = givenLaserEndpoints[index+i].get_distance(point);
     if(((ab + bc) - ac) < epsilon){
-      //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
-      //cout << "Distance: "<<distance_to_point<<endl;
+      // cout << "Distance vector endpoint visible: ("<<givenLaserEndpoints[index+i].get_x()<<","<< givenLaserEndpoints[index+i].get_y()<<")"<<endl; 
+      // cout << "Distance: "<<distance_to_point<<endl;
       canSeePoint = true;
       break;
     }
   }
   if(canSeePoint == false){
     for(int i = 0; i < givenLaserEndpoints.size(); i++){
-      //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
+      //cout << "Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y() << endl;
       double ac = laserPos.get_distance(givenLaserEndpoints[i]);
       double bc = givenLaserEndpoints[i].get_distance(point);
       if(((ab + bc) - ac) < epsilon){
-        //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
-        //cout << "Distance: "<<distance_to_point<<endl;
+        // cout << "Distance vector endpoint visible: ("<<givenLaserEndpoints[i].get_x()<<","<< givenLaserEndpoints[i].get_y()<<")"<<endl; 
+        // cout << "Distance: "<<distance_to_point<<endl;
         canSeePoint = true;
         break;
       }

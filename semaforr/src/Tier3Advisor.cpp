@@ -83,7 +83,7 @@ std::map <FORRAction, double> Tier3Advisor::allAdvice(){
     if(vetoed_actions->find(forrAction) != vetoed_actions->end())// is this action vetoed
       continue;
     adviceStrength = this->actionComment(forrAction);
-    //std::cout << "Advisor name :"  << this->get_name() << " Strength: " << adviceStrength << " Action Type:" << forrAction.type << " " << "Action intensity " << forrAction.parameter << std::endl;
+    std::cout << "Advisor name :"  << this->get_name() << " Strength: " << adviceStrength << " Action Type:" << forrAction.type << " " << "Action intensity " << forrAction.parameter << std::endl;
     result[forrAction] = adviceStrength;
   } 
   //if(result.size() > 1){
@@ -563,37 +563,63 @@ double Tier3EnterLinear::actionComment(FORRAction action){
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  double dist_to_target = expPosition.get_distance(targetPoint);
       
   vector<FORRExit> exits = regions[targetRegion].getExits();
 
-  double metric = std::numeric_limits<double>::infinity();
+  double metric = 1000;
   for(int i = 0; i < exits.size(); i++){
-    if (expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()) < metric) {
-      metric = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
+    double dist_to_exit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
+    if(regions[targetRegion].inRegion(expPosition) == true){
+      Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
+      CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
+      double arc_length = acos(1 - ((intersectPoint.get_distance(exits[i].getExitPoint()) * intersectPoint.get_distance(exits[i].getExitPoint())) / (2 * regions[targetRegion].getRadius() * regions[targetRegion].getRadius()))) * regions[targetRegion].getRadius();
+      if(arc_length <= 5 * M_PI * regions[targetRegion].getRadius() / 180){
+        metric = dist_to_target;
+        break;
+      }
     }
-  }
-
-  double comment_strength = 1000;
-  // check if the expected position is in the target's region
-  if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
-    Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
-    CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
-    double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
-    for(int i = 0; i < doors[targetRegion].size(); i++) {
-      // check if the point that the robot crosses into the region goes through one of the doors
-      double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].startPoint.getExitPoint().get_x(), doors[targetRegion][i].startPoint.getExitPoint().get_y());
-      double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].endPoint.getExitPoint().get_x(), doors[targetRegion][i].endPoint.getExitPoint().get_y());
-      if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle){
-        comment_strength = expPosition.get_distance(targetPoint);
+    else{
+      if(dist_to_target + dist_to_exit < metric){
+        metric = dist_to_target + dist_to_exit;
       }
     }
   }
-  // cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
-  if(metric < comment_strength){
-    return -1 * metric;
+  if(doors.size() > 0){
+    double comment_strength = 1000;
+    // check if the expected position is in the target's region
+    if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
+      Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
+      CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
+      double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
+      for(int i = 0; i < doors[targetRegion].size(); i++) {
+        // check if the point that the robot crosses into the region goes through one of the doors
+        double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].startPoint.getExitPoint().get_x(), doors[targetRegion][i].startPoint.getExitPoint().get_y());
+        double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].endPoint.getExitPoint().get_x(), doors[targetRegion][i].endPoint.getExitPoint().get_y());
+        if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle){
+          comment_strength = expPosition.get_distance(targetPoint);
+          break;
+        }
+      }
+    }
+    else{
+      for(int i = 0; i < doors[targetRegion].size(); i++) {
+        double dist_to_door = doors[targetRegion][i].distanceToDoor(expPosition, regions[targetRegion]);
+        if(dist_to_target + dist_to_door < comment_strength){
+          comment_strength = dist_to_target + dist_to_door;
+        }
+      }
+    }
+    // cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
+    if(metric < comment_strength){
+      return -1 * metric;
+    }
+    else{
+      return -1 * comment_strength;
+    }
   }
   else{
-    return -1 * comment_strength;
+    return -1 * metric;
   }
 }
 
@@ -618,8 +644,10 @@ void Tier3EnterLinear::set_commenting(){
     if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
       targetInRegion = true;
       targetRegion = i;
-      if(doors[i].size() >= 1){
-        targetInRegionWithDoor = true;
+      if(doors.size() > 0){
+        if(doors[i].size() >= 1){
+          targetInRegionWithDoor = true;
+        }
       }
       if((regions[i]).getExits().size() >= 1){
         targetInRegionWithExit = true;
@@ -665,37 +693,63 @@ double Tier3EnterRotation::actionComment(FORRAction action){
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   CartesianPoint currentPosition (curr_pos.getX(), curr_pos.getY());
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
+  double dist_to_target = expPosition.get_distance(targetPoint);
       
   vector<FORRExit> exits = regions[targetRegion].getExits();
 
-  double metric = std::numeric_limits<double>::infinity();
+  double metric = 1000;
   for(int i = 0; i < exits.size(); i++){
-    if (expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()) < metric) {
-      metric = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
+    double dist_to_exit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
+    if(regions[targetRegion].inRegion(expPosition) == true){
+      Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
+      CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
+      double arc_length = acos(1 - ((intersectPoint.get_distance(exits[i].getExitPoint()) * intersectPoint.get_distance(exits[i].getExitPoint())) / (2 * regions[targetRegion].getRadius() * regions[targetRegion].getRadius()))) * regions[targetRegion].getRadius();
+      if(arc_length <= 5 * M_PI * regions[targetRegion].getRadius() / 180){
+        metric = dist_to_target;
+        break;
+      }
     }
-  }
-
-  double comment_strength = 1000;
-  // check if the expected position is in the target's region
-  if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
-    Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
-    CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
-    double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
-    for(int i = 0; i < doors[targetRegion].size(); i++) {
-      // check if the point that the robot crosses into the region goes through one of the doors
-      double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].startPoint.getExitPoint().get_x(), doors[targetRegion][i].startPoint.getExitPoint().get_y());
-      double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].endPoint.getExitPoint().get_x(), doors[targetRegion][i].endPoint.getExitPoint().get_y());
-      if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle){
-        comment_strength = expPosition.get_distance(targetPoint);
+    else{
+      if(dist_to_target + dist_to_exit < metric){
+        metric = dist_to_target + dist_to_exit;
       }
     }
   }
-  // cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
-  if(metric < comment_strength){
-    return -1 * metric;
+  if(doors.size() > 0){
+    double comment_strength = 1000;
+    // check if the expected position is in the target's region
+    if(regions[targetRegion].inRegion(expPosition) == true and doors[targetRegion].size() > 0){
+      Circle region = Circle(regions[targetRegion].getCenter(), regions[targetRegion].getRadius());
+      CartesianPoint intersectPoint = intersection_point(region, LineSegment(currentPosition, expPosition));
+      double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
+      for(int i = 0; i < doors[targetRegion].size(); i++) {
+        // check if the point that the robot crosses into the region goes through one of the doors
+        double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].startPoint.getExitPoint().get_x(), doors[targetRegion][i].startPoint.getExitPoint().get_y());
+        double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[targetRegion].getCenter().get_x(), regions[targetRegion].getCenter().get_y(), doors[targetRegion][i].endPoint.getExitPoint().get_x(), doors[targetRegion][i].endPoint.getExitPoint().get_y());
+        if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle){
+          comment_strength = expPosition.get_distance(targetPoint);
+          break;
+        }
+      }
+    }
+    else{
+      for(int i = 0; i < doors[targetRegion].size(); i++) {
+        double dist_to_door = doors[targetRegion][i].distanceToDoor(expPosition, regions[targetRegion]);
+        if(dist_to_target + dist_to_door < comment_strength){
+          comment_strength = dist_to_target + dist_to_door;
+        }
+      }
+    }
+    // cout << "Metric " << metric << " Comment strength " << comment_strength << endl;
+    if(metric < comment_strength){
+      return -1 * metric;
+    }
+    else{
+      return -1 * comment_strength;
+    }
   }
   else{
-    return -1 * comment_strength;
+    return -1 * metric;
   }
 }
 
@@ -719,8 +773,10 @@ void Tier3EnterRotation::set_commenting(){
     if(regions[i].inRegion(targetPoint.get_x(), targetPoint.get_y())){
       targetInRegion = true;
       targetRegion = i;
-      if(doors[i].size() >= 1){
-        targetInRegionWithDoor = true;
+      if(doors.size() > 0){
+        if(doors[i].size() >= 1){
+          targetInRegionWithDoor = true;
+        }
       }
       if((regions[i]).getExits().size() >= 1){
         targetInRegionWithExit = true;
@@ -764,7 +820,7 @@ double Tier3EnterExit::actionComment(FORRAction action){
       
   vector<FORRExit> exits = regions[targetRegion].getExits();
 
-  double metric = std::numeric_limits<double>::infinity();
+  double metric = 1000;
   for(int i = 0; i < exits.size(); i++){
     if (expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()) < metric) {
       metric = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
@@ -826,7 +882,7 @@ double Tier3EnterExitRotation::actionComment(FORRAction action){
       
   vector<FORRExit> exits = regions[targetRegion].getExits();
 
-  double metric = std::numeric_limits<double>::infinity();
+  double metric = 1000;
   for(int i = 0; i < exits.size(); i++){
     if (expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()) < metric) {
       metric = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
@@ -1100,7 +1156,7 @@ void Tier3ExitFieldRotation::set_commenting(){
 }
 
 double Tier3ExitClosest::actionComment(FORRAction action){
-  double result=std::numeric_limits<double>::infinity();
+  double result=1000;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1160,7 +1216,7 @@ void Tier3ExitClosest::set_commenting(){
 
 
 double Tier3ExitClosestRotation::actionComment(FORRAction action){
-  double result=std::numeric_limits<double>::infinity();
+  double result=1000;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1239,7 +1295,7 @@ double Tier3RegionLeaverLinear::actionComment(FORRAction action){
   // cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
   vector<FORRExit> exits = regions[robotRegion].getExits();
-  double result = - std::numeric_limits<double>::infinity();
+  double result = - 1000;
   for(int i = 0 ; i < exits.size(); i++){
     double expDistToExit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
     double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
@@ -1250,13 +1306,15 @@ double Tier3RegionLeaverLinear::actionComment(FORRAction action){
   }
 
   vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
-  for(int i = 0; i < doors[robotRegion].size(); i++) {
-    double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
-    double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
-    double value = expDistToRegion - robotRegionRadius - expDistToDoor;
-    // cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
-    if(value > result){
-      result = value;
+  if(doors.size() > 0){
+    for(int i = 0; i < doors[robotRegion].size(); i++) {
+      double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
+      double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
+      double value = expDistToRegion - robotRegionRadius - expDistToDoor;
+      // cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+      if(value > result){
+        result = value;
+      }
     }
   }
   // cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
@@ -1290,21 +1348,25 @@ void Tier3RegionLeaverLinear::set_commenting(){
       if((regions[i]).getExits().size() >= 1){
         currPosInRegionWithExit = true;
       }
-      if(doors[i].size() >= 1){
-        currPosInRegionWithDoor = true;
+      if(doors.size() > 0){
+        if(doors[i].size() >= 1){
+          currPosInRegionWithDoor = true;
+        }
       }
     }
   }
   // cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
-  if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion)
+  if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion){
     advisor_commenting = true;
-  else
+  }
+  else{
     advisor_commenting = false;
+  }
 }
 
 
 double Tier3RegionLeaverRotation::actionComment(FORRAction action){
-  // cout << "In region leaver rotation " << endl;
+  cout << "In region leaver rotation " << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   
   int robotRegion=-1;
@@ -1322,35 +1384,37 @@ double Tier3RegionLeaverRotation::actionComment(FORRAction action){
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
   
-  // cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
+  cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
   vector<FORRExit> exits = regions[robotRegion].getExits();
-  double result = - std::numeric_limits<double>::infinity();
+  double result = - 1000;
   for(int i = 0 ; i < exits.size(); i++){
     double expDistToExit = expectedPosition.getDistance(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y());
     double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
     double value = expDistToRegion - robotRegionRadius - expDistToExit;
-    // cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+    cout << "Exit " << exits[i].getExitPoint().get_x() << " " << exits[i].getExitPoint().get_y() << " expDistToExit " << expDistToExit << " expDistToRegion " << expDistToRegion << " value " << value << endl;
     if(value > result)
       result = value;
   }
 
   vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
-  for(int i = 0; i < doors[robotRegion].size(); i++) {
-    double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
-    double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
-    double value = expDistToRegion - robotRegionRadius - expDistToDoor;
-    // cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
-    if(value > result){
-      result = value;
+  if(doors.size() > 0){
+    for(int i = 0; i < doors[robotRegion].size(); i++) {
+      double expDistToDoor = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
+      double expDistToRegion = expectedPosition.getDistance(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y());
+      double value = expDistToRegion - robotRegionRadius - expDistToDoor;
+      cout << "Door " << i << " expDistToDoor " << expDistToDoor << " expDistToRegion " << expDistToRegion << " value " << value << endl;
+      if(value > result){
+        result = value;
+      }
     }
   }
-  // cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
+  cout << "Action " << action.type << " " << action.parameter << " Result " << result << endl;
   return result;
 }
 
 void Tier3RegionLeaverRotation::set_commenting(){
-  // cout << "In region leaver rotation set commenting " << endl;
+  cout << "In region leaver rotation set commenting " << endl;
   vector< vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
@@ -1375,16 +1439,23 @@ void Tier3RegionLeaverRotation::set_commenting(){
       if((regions[i]).getExits().size() >= 1){
         currPosInRegionWithExit = true;
       }
-      if(doors[i].size() >= 1){
-        currPosInRegionWithDoor = true;
+      if(doors.size() > 0){
+        if(doors[i].size() >= 1){
+          currPosInRegionWithDoor = true;
+        }
       }
     }
   }
-  // cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
-  if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion)
+  cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << " Robot region with door " << currPosInRegionWithDoor << endl;
+  if((currPosInRegionWithExit == true or currPosInRegionWithDoor == true) and robotRegion != targetRegion){
     advisor_commenting = true;
-  else
+    cout << "advisor_commenting " << advisor_commenting << endl;
+  }
+  else{
     advisor_commenting = false;
+    cout << "advisor_commenting " << advisor_commenting << endl;
+  }
+  cout << "done with set_commenting" << endl;
 }
 /*
 //CloseIn : When target is nearby, distance is within 80 units, go towards it!
@@ -1752,16 +1823,18 @@ void Tier3UnlikelyField::set_commenting(){
       targetRegion = i;
     }
     // check if the rob_pos is in a region and the region has atleast one exit
-    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
+    if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and regions[i].getExits().size() >= 1){
       currPosInRegionWithExit = true;
       robotRegion = i;
     }
   }
 
-  if(currPosInRegionWithExit == true and robotRegion != targetRegion)
+  if(currPosInRegionWithExit == true and robotRegion != targetRegion){
     advisor_commenting = true;
-  else
+  }
+  else{
     advisor_commenting = false;
+  }
 }
 
 double Tier3UnlikelyField::actionComment(FORRAction action){
@@ -1789,7 +1862,11 @@ double Tier3UnlikelyField::actionComment(FORRAction action){
   }
   
   vector<FORRExit> exits = regions[robotRegion].getExits();
-  std::vector<Door> robotRegionDoors = doors[robotRegion];
+  int numDoors = 0;
+  if(doors.size() > 0){
+    std::vector<Door> robotRegionDoors = doors[robotRegion];
+    numDoors = robotRegionDoors.size();
+  }
   //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << endl;
 
   vector<FORRRegion> nearRegions;
@@ -1806,7 +1883,7 @@ double Tier3UnlikelyField::actionComment(FORRAction action){
 
   double metric = 0;
   for(int i = 0; i < nearRegions.size(); i++){
-    if(beliefs->getSpatialModel()->getRegionList()->isLeaf(nearRegions[i], robotRegionDoors.size()) and !(nearRegions[i].inRegion(targetPoint.get_x(), targetPoint.get_y()))){
+    if(beliefs->getSpatialModel()->getRegionList()->isLeaf(nearRegions[i], numDoors) and !(nearRegions[i].inRegion(targetPoint.get_x(), targetPoint.get_y()))){
       //cout << "Avoid Leaf: Found deadend !" << endl;
       metric += 1/(abs((expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y())) - nearRegions[i].getRadius()));
     }
@@ -1816,7 +1893,7 @@ double Tier3UnlikelyField::actionComment(FORRAction action){
 }
 
 void Tier3UnlikelyFieldRotation::set_commenting(){
-  //cout << "In region finder rotation set commenting " << endl;
+  cout << "In UnlikelyFieldRotation set commenting " << endl;
    vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
    Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
    Task *task = beliefs->getAgentState()->getCurrentTask();
@@ -1834,20 +1911,25 @@ void Tier3UnlikelyFieldRotation::set_commenting(){
        targetRegion = i;
      }
      // check if the rob_pos is in a region and the region has atleast one exit
-     if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and ((regions[i]).getExits().size() >= 1)){
+     if(regions[i].inRegion(curr_pos.getX(), curr_pos.getY()) and regions[i].getExits().size() >= 1){
        currPosInRegionWithExit = true;
        robotRegion = i;
      }
    }
-   
-   if(currPosInRegionWithExit == true and robotRegion != targetRegion)
+   cout << "Robot region " << robotRegion << " Target region " << targetRegion << " Robot region with exit " << currPosInRegionWithExit << endl;
+   if(currPosInRegionWithExit == true and robotRegion != targetRegion){
      advisor_commenting = true;
-   else
+     cout << "advisor_commenting " << advisor_commenting << endl;
+   }
+   else{
      advisor_commenting = false;
+     cout << "advisor_commenting " << advisor_commenting << endl;
+   }
+   cout << "done with set_commenting" << endl;
 }
 
 double Tier3UnlikelyFieldRotation::actionComment(FORRAction action){
-  //cout << "In Avoid leaf Rotation" << endl;
+  cout << "In UnlikelyFieldRotation" << endl;
   double result;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
   std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
@@ -1871,8 +1953,12 @@ double Tier3UnlikelyFieldRotation::actionComment(FORRAction action){
   }
   
   vector<FORRExit> exits = regions[robotRegion].getExits();
-  std::vector<Door> robotRegionDoors = doors[robotRegion];
-  //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << endl;
+  int numDoors = 0;
+  if(doors.size() > 0){
+    std::vector<Door> robotRegionDoors = doors[robotRegion];
+    numDoors = robotRegionDoors.size();
+  }
+  cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << endl;
 
   vector<FORRRegion> nearRegions;
   for(int i = 0; i < exits.size() ; i++){
@@ -1880,16 +1966,16 @@ double Tier3UnlikelyFieldRotation::actionComment(FORRAction action){
     std::vector<FORRRegion>::iterator it = std::find(nearRegions.begin(),nearRegions.end(), test);
     if(nearRegions.empty() or (it == nearRegions.end())){
       nearRegions.push_back(test);
-      //cout << "Neighbour Region : " << test.getCenter().get_x() << " " << test.getCenter().get_y() << endl;
+      cout << "Neighbour Region : " << test.getCenter().get_x() << " " << test.getCenter().get_y() << endl;
     }
   }
 
-  //cout << "#neighbours found" << nearRegions.size() << endl; 
+  cout << "#neighbours found" << nearRegions.size() << endl; 
 
   double metric = 0;
   for(int i = 0; i < nearRegions.size(); i++){
-    if(beliefs->getSpatialModel()->getRegionList()->isLeaf(nearRegions[i], robotRegionDoors.size()) and !(nearRegions[i].inRegion(targetPoint.get_x(), targetPoint.get_y()))){
-      //cout << "Avoid leaf Rotation: Found deadend !" << endl;
+    if(beliefs->getSpatialModel()->getRegionList()->isLeaf(nearRegions[i], numDoors) and !(nearRegions[i].inRegion(targetPoint.get_x(), targetPoint.get_y()))){
+      cout << "Avoid leaf Rotation: Found deadend !" << endl;
       metric += 1/(abs((expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y())) - nearRegions[i].getRadius()));
     }
   }
@@ -2120,6 +2206,9 @@ void Tier3TrailerRotation::set_commenting(){
 double Tier3GoAroundRotation::actionComment(FORRAction action){
   // break up action into its components
   FORRActionType actionType = action.type;
+  if(actionType == FORWARD){
+    return 0;
+  }
   int intensity = action.parameter;
   double comment_strength;
   double avgRightDistanceVector = 0, avgLeftDistanceVector = 0;
@@ -2314,7 +2403,7 @@ double Tier3ExitDoorLinear::actionComment(FORRAction action){
 
   //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
-  double min_distance = std::numeric_limits<double>::infinity();
+  double min_distance = 1000;
   for(int i = 0; i < doors[robotRegion].size(); i++) {
   	double doorDistance = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
     if (doorDistance < min_distance){
@@ -2391,7 +2480,7 @@ double Tier3ExitDoorRotation::actionComment(FORRAction action){
 
   //cout << "Robot Region : " << regions[robotRegion].getCenter().get_x() << " " << regions[robotRegion].getCenter().get_y() << " " << regions[robotRegion].getRadius() << endl;
 
-  double min_distance = std::numeric_limits<double>::infinity();
+  double min_distance = 1000;
   for(int i = 0; i < doors[robotRegion].size(); i++) {
   	double doorDistance = doors[robotRegion][i].distanceToDoor(expPosition, regions[robotRegion]);
     if (doorDistance < min_distance){
@@ -2455,7 +2544,11 @@ double Tier3AccessLinear::actionComment(FORRAction action){
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
 
   for(int i = 0; i < doors.size() ; i++){
-    result += ((1 / (expPosition.get_distance(regions[i].getCenter()) - regions[i].getRadius()) ) * doors[i].size());
+    double dist = (expPosition.get_distance(regions[i].getCenter()) - regions[i].getRadius());
+    if(dist > 1)
+      result += ((1 / dist ) * doors[i].size());
+    else
+      result += doors[i].size();
   }
 
   return result;
@@ -2467,6 +2560,7 @@ void Tier3AccessLinear::set_commenting(){
   for(int i = 0; i < doors.size(); i++){
     if(doors[i].size() >= 1){
       atLeastOneDoor = true;
+      break;
     }
   }
   if(atLeastOneDoor == true) 
@@ -2483,7 +2577,11 @@ double Tier3AccessRotation::actionComment(FORRAction action){
   CartesianPoint expPosition (expectedPosition.getX(), expectedPosition.getY());
 
   for(int i = 0; i < doors.size() ; i++){
-    result += ((1 / (expPosition.get_distance(regions[i].getCenter()) - regions[i].getRadius()) ) * doors[i].size());
+    double dist = (expPosition.get_distance(regions[i].getCenter()) - regions[i].getRadius());
+    if(dist > 1)
+      result += ((1 / dist ) * doors[i].size());
+    else
+      result += doors[i].size();
   }
 
   return result;
@@ -2495,6 +2593,7 @@ void Tier3AccessRotation::set_commenting(){
   for(int i = 0; i < doors.size(); i++){
     if(doors[i].size() >= 1){
       atLeastOneDoor = true;
+      break;
     }
   }
   if(atLeastOneDoor == true) 
@@ -2803,17 +2902,32 @@ double Tier3Enfilade::actionComment(FORRAction action){
   //cout << "Inside Enfilade" << endl;
   vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
-  double totalForce = 0, distance = 0; 
-  int startPosition = 0;
-  if (positionHis->size() > 10){
-    startPosition = positionHis->size() - 10;
+  double totalForce = 0, distance = 0;
+  int startPosition = positionHis->size()-1;
+  vector<Position> uniquePositions;
+  uniquePositions.push_back((*positionHis)[startPosition]);
+  while(uniquePositions.size() < 10 and startPosition >= 0){
+    if((*positionHis)[startPosition].getDistance(uniquePositions[0]) >= 0.1){
+      uniquePositions.insert(uniquePositions.begin(), (*positionHis)[startPosition]);
+    }
+    startPosition = startPosition - 1;
   }
-  //cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
-  for(int i = startPosition; i < positionHis->size(); i++){
-    distance = expectedPosition.getDistance((*positionHis)[i]);
+  for(int i = 0; i < uniquePositions.size(); i++){
+    distance = expectedPosition.getDistance(uniquePositions[i]);
     //cout << "distance = " << distance << endl;
     totalForce += distance;
   }
+
+  // int startPosition = 0;
+  // if (positionHis->size() > 10){
+  //   startPosition = positionHis->size() - 10;
+  // }
+  // //cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
+  // for(int i = startPosition; i < positionHis->size(); i++){
+  //   distance = expectedPosition.getDistance((*positionHis)[i]);
+  //   //cout << "distance = " << distance << endl;
+  //   totalForce += distance;
+  // }
   //cout << "totalForce = " << totalForce << endl;
   return totalForce * (-1);
 }
@@ -2833,16 +2947,31 @@ double Tier3EnfiladeRotation::actionComment(FORRAction action){
   vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(action);
   double totalForce = 0, distance = 0; 
-  int startPosition = 0;
-  if (positionHis->size() > 10){
-    startPosition = positionHis->size() - 10;
+  int startPosition = positionHis->size()-1;
+  vector<Position> uniquePositions;
+  uniquePositions.push_back((*positionHis)[startPosition]);
+  while(uniquePositions.size() < 10 and startPosition >= 0){
+    if((*positionHis)[startPosition].getDistance(uniquePositions[0]) >= 0.1){
+      uniquePositions.insert(uniquePositions.begin(), (*positionHis)[startPosition]);
+    }
+    startPosition = startPosition - 1;
   }
-  //cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
-  for(int i = startPosition; i < positionHis->size(); i++){
-    distance = expectedPosition.getDistance((*positionHis)[i]);
+  for(int i = 0; i < uniquePositions.size(); i++){
+    distance = expectedPosition.getDistance(uniquePositions[i]);
     //cout << "distance = " << distance << endl;
     totalForce += distance;
   }
+
+  // int startPosition = 0;
+  // if (positionHis->size() > 10){
+  //   startPosition = positionHis->size() - 10;
+  // }
+  // //cout << "startPosition = " << startPosition << " currentPosition = " << positionHis->size() << endl;
+  // for(int i = startPosition; i < positionHis->size(); i++){
+  //   distance = expectedPosition.getDistance((*positionHis)[i]);
+  //   //cout << "distance = " << distance << endl;
+  //   totalForce += distance;
+  // }
   //cout << "totalForce = " << totalForce << endl;
   return totalForce * (-1);
 }
@@ -2951,7 +3080,7 @@ void Tier3LeastAngle::set_commenting(){
 double Tier3LeastAngle::actionComment(FORRAction action){
   //cout << "Inside LeastAngle" << endl;
   vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
-  int robotRegion=-1, desiredRegion=-1;
+  int robotRegion=-1;
   Position curr_pos = beliefs->getAgentState()->getCurrentPosition();
   Task *task = beliefs->getAgentState()->getCurrentTask();
   CartesianPoint targetPoint (task->getX() , task->getY());
@@ -2978,18 +3107,47 @@ double Tier3LeastAngle::actionComment(FORRAction action){
   //cout << "nearRegions.size() = " << nearRegions.size() << endl;
   double target_direction = atan2((curr_pos.getY() - targetPoint.get_y()), (curr_pos.getX() - targetPoint.get_x()));
   //cout << "target_direction = " << target_direction << endl;
-  double minAngleDiff = 20, metric = 0;
+  double minAngleDiff = 0.2618, metric = 1000;
   for(int i = 0; i < nearRegions.size(); i++){
     double region_direction = atan2((curr_pos.getY() - nearRegions[i].getCenter().get_y()), (curr_pos.getX() - nearRegions[i].getCenter().get_x()));
-    double angleDiff = min(abs(target_direction - region_direction),(2*M_PI) - abs(target_direction - region_direction));
-    //cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
-    if(angleDiff < minAngleDiff){
-      minAngleDiff = angleDiff;
-      metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y());
+    double angle_diff = region_direction - target_direction;
+    if(angle_diff > M_PI)
+      angle_diff = angle_diff - 2*M_PI;
+    if(angle_diff < -M_PI)
+      angle_diff = angle_diff + 2*M_PI;
+    angle_diff = fabs(angle_diff);
+
+    //cout << "region_direction = " << region_direction << " angle_diff = " << angle_diff << endl;
+    if(angle_diff < minAngleDiff){
+      minAngleDiff = angle_diff;
+      metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y()) + nearRegions[i].getCenter().get_distance(targetPoint);
       //cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
     }
   }
-  return metric * (-1);
+
+  std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
+  double comment_strength = 1000;
+  if(doors.size() > 0){
+    // check if the expected position is in the target's region
+    Circle region = Circle(regions[robotRegion].getCenter(), regions[robotRegion].getRadius());
+    CartesianPoint intersectPoint = intersection_point(region, LineSegment(CartesianPoint(curr_pos.getX(), curr_pos.getY()), CartesianPoint(expectedPosition.getX(), expectedPosition.getY())));
+    double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
+    double targetPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), targetPoint.get_x(), targetPoint.get_y());
+    for(int i = 0; i < doors[robotRegion].size(); i++) {
+      // check if the point that the robot crosses into the region goes through one of the doors
+      double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), doors[robotRegion][i].startPoint.getExitPoint().get_x(), doors[robotRegion][i].startPoint.getExitPoint().get_y());
+      double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), doors[robotRegion][i].endPoint.getExitPoint().get_x(), doors[robotRegion][i].endPoint.getExitPoint().get_y());
+      if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle and targetPointAngle <= endPointAngle and targetPointAngle >= startPointAngle){
+        comment_strength = expectedPosition.getDistance(Position(targetPoint.get_x(), targetPoint.get_y(), 0));
+      }
+    }
+  }
+  if(metric < comment_strength){
+    return metric * (-1);
+  }
+  else{
+    return comment_strength * (-1);
+  }
 }
 
 void Tier3LeastAngleRotation::set_commenting(){
@@ -3053,18 +3211,47 @@ double Tier3LeastAngleRotation::actionComment(FORRAction action){
   //cout << "nearRegions.size() = " << nearRegions.size() << endl;
   double target_direction = atan2((curr_pos.getY() - targetPoint.get_y()), (curr_pos.getX() - targetPoint.get_x()));
   //cout << "target_direction = " << target_direction << endl;
-  double minAngleDiff = 20, metric = 0;
+  double minAngleDiff = 0.2618, metric = 1000;
   for(int i = 0; i < nearRegions.size(); i++){
     double region_direction = atan2((curr_pos.getY() - nearRegions[i].getCenter().get_y()), (curr_pos.getX() - nearRegions[i].getCenter().get_x()));
-    double angleDiff = min(abs(target_direction - region_direction),(2*M_PI) - abs(target_direction - region_direction));
-    //cout << "region_direction = " << region_direction << " angleDiff = " << angleDiff << endl;
-    if(angleDiff < minAngleDiff){
-      minAngleDiff = angleDiff;
-      metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y());
+    double angle_diff = region_direction - target_direction;
+    if(angle_diff > M_PI)
+      angle_diff = angle_diff - 2*M_PI;
+    if(angle_diff < -M_PI)
+      angle_diff = angle_diff + 2*M_PI;
+    angle_diff = fabs(angle_diff);
+
+    //cout << "region_direction = " << region_direction << " angle_diff = " << angle_diff << endl;
+    if(angle_diff < minAngleDiff){
+      minAngleDiff = angle_diff;
+      metric = expectedPosition.getDistance(nearRegions[i].getCenter().get_x(), nearRegions[i].getCenter().get_y()) + nearRegions[i].getCenter().get_distance(targetPoint);
       //cout << "minAngleDiff = " << minAngleDiff << " metric = " << metric << endl;
     }
   }
-  return metric * (-1);
+
+  std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
+  double comment_strength = 1000;
+  if(doors.size() > 0){
+    // check if the expected position is in the target's region
+    Circle region = Circle(regions[robotRegion].getCenter(), regions[robotRegion].getRadius());
+    CartesianPoint intersectPoint = intersection_point(region, LineSegment(CartesianPoint(curr_pos.getX(), curr_pos.getY()), CartesianPoint(expectedPosition.getX(), expectedPosition.getY())));
+    double intersectPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), intersectPoint.get_x(), intersectPoint.get_y());
+    double targetPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), targetPoint.get_x(), targetPoint.get_y());
+    for(int i = 0; i < doors[robotRegion].size(); i++) {
+      // check if the point that the robot crosses into the region goes through one of the doors
+      double startPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), doors[robotRegion][i].startPoint.getExitPoint().get_x(), doors[robotRegion][i].startPoint.getExitPoint().get_y());
+      double endPointAngle = beliefs->getSpatialModel()->getDoors()->calculateFixedAngle(regions[robotRegion].getCenter().get_x(), regions[robotRegion].getCenter().get_y(), doors[robotRegion][i].endPoint.getExitPoint().get_x(), doors[robotRegion][i].endPoint.getExitPoint().get_y());
+      if(intersectPointAngle <= endPointAngle and intersectPointAngle >= startPointAngle and targetPointAngle <= endPointAngle and targetPointAngle >= startPointAngle){
+        comment_strength = expectedPosition.getDistance(Position(targetPoint.get_x(), targetPoint.get_y(), 0));
+      }
+    }
+  }
+  if(metric < comment_strength){
+    return metric * (-1);
+  }
+  else{
+    return comment_strength * (-1);
+  }
 }
 
 void Tier3Interpersonal::set_commenting(){
@@ -3795,20 +3982,20 @@ double Tier3Follow::actionComment(FORRAction action){
         expPosDist = expPosDistances[expPosClosestHallway[j]];
         //cout << "expCloseToSame = true; targetDist = " << targetDist << "; expPosDist = " << expPosDist << endl;
       }
-      else if(targetClosestHallway[i] != expPosClosestHallway[j]){
-        if(hallways[targetClosestHallway[i]].isHallwayConnected(expPosClosestHallway[j]) == true){
-          diffHallwayConnected = true;
-          targetHallwayConn = targetClosestHallway[i];
-          expPosHallwayConn = expPosClosestHallway[j];
-          //cout << "diffHallwayConnected = true; targetHallwayConn = " << targetHallwayConn << "; expPosHallwayConn = " << expPosHallwayConn << endl;
-        }
-        else{
-          diffHallwayUnconnected = true;
-          targetHallwayNoConn = targetClosestHallway[i];
-          expPosHallwayNoConn = expPosClosestHallway[j];
-          //cout << "diffHallwayUnconnected = true; targetHallwayNoConn = " << targetHallwayNoConn << "; expPosHallwayNoConn = " << expPosHallwayNoConn << endl;
-        }
-      }
+      // else if(targetClosestHallway[i] != expPosClosestHallway[j]){
+      //   if(hallways[targetClosestHallway[i]].isHallwayConnected(expPosClosestHallway[j]) == true){
+      //     diffHallwayConnected = true;
+      //     targetHallwayConn = targetClosestHallway[i];
+      //     expPosHallwayConn = expPosClosestHallway[j];
+      //     //cout << "diffHallwayConnected = true; targetHallwayConn = " << targetHallwayConn << "; expPosHallwayConn = " << expPosHallwayConn << endl;
+      //   }
+      //   else{
+      //     diffHallwayUnconnected = true;
+      //     targetHallwayNoConn = targetClosestHallway[i];
+      //     expPosHallwayNoConn = expPosClosestHallway[j];
+      //     //cout << "diffHallwayUnconnected = true; targetHallwayNoConn = " << targetHallwayNoConn << "; expPosHallwayNoConn = " << expPosHallwayNoConn << endl;
+      //   }
+      // }
     }
   }
 
@@ -3818,12 +4005,12 @@ double Tier3Follow::actionComment(FORRAction action){
   else if(expCloseToSame == true){
     result = (-1) * (expPosition.get_distance(targetPoint) + expPosDist + targetDist); //distance from expected position to target plus distance from expected position to hallway plus distance from target to hallway
   }
-  else if(diffHallwayConnected == true){
-    result = (-1) * (expPosDistances[targetHallwayConn] + targetDistances[expPosHallwayConn]); //distance from expected position to target's hallway plus distance from target to expected position's hallway
-  }
-  else if(diffHallwayUnconnected == true){
-    result = (-1) * (hallways[targetHallwayNoConn].distanceBetweenAggregates(hallways[expPosHallwayNoConn]) + expPosDistances[expPosHallwayNoConn] + targetDistances[targetHallwayNoConn]); //distance between target's hallway and expected position's hallway plus distance from expected position to hallway plus distance from target to hallway
-  }
+  // else if(diffHallwayConnected == true){
+  //   result = (-1) * (expPosDistances[targetHallwayConn] + targetDistances[expPosHallwayConn]); //distance from expected position to target's hallway plus distance from target to expected position's hallway
+  // }
+  // else if(diffHallwayUnconnected == true){
+  //   result = (-1) * (hallways[targetHallwayNoConn].distanceBetweenAggregates(hallways[expPosHallwayNoConn]) + expPosDistances[expPosHallwayNoConn] + targetDistances[targetHallwayNoConn]); //distance between target's hallway and expected position's hallway plus distance from expected position to hallway plus distance from target to hallway
+  // }
   //cout << "result = " << result << endl;
   return result;
 }
@@ -3842,17 +4029,18 @@ void Tier3Follow::set_commenting(){
   }
   else{
     for(int i = 0; i < hallways.size(); i++){
-      if(hallways[i].pointInAggregate(currPosition)){
+      if(hallways[i].pointInAggregate(currPosition) and hallways[i].pointInAggregate(targetPoint)){
         currPosInHallway = true;
-        break;
-      }
-    }
-    for(int i = 0; i < hallways.size(); i++){
-      if(hallways[i].pointInAggregate(targetPoint)){
         targetInHallway = true;
         break;
       }
     }
+    // for(int i = 0; i < hallways.size(); i++){
+    //   if(hallways[i].pointInAggregate(targetPoint)){
+    //     targetInHallway = true;
+    //     break;
+    //   }
+    // }
     if(currPosInHallway == true and targetInHallway == true){
       //cout << "currPosInHallway = true and targetInHallway = true" << endl;
       advisor_commenting = true;
@@ -3922,20 +4110,20 @@ double Tier3FollowRotation::actionComment(FORRAction action){
         expPosDist = expPosDistances[expPosClosestHallway[j]];
         //cout << "expCloseToSame = true; targetDist = " << targetDist << "; expPosDist = " << expPosDist << endl;
       }
-      else if(targetClosestHallway[i] != expPosClosestHallway[j]){
-        if(hallways[targetClosestHallway[i]].isHallwayConnected(expPosClosestHallway[j]) == true){
-          diffHallwayConnected = true;
-          targetHallwayConn = targetClosestHallway[i];
-          expPosHallwayConn = expPosClosestHallway[j];
-          //cout << "diffHallwayConnected = true; targetHallwayConn = " << targetHallwayConn << "; expPosHallwayConn = " << expPosHallwayConn << endl;
-        }
-        else{
-          diffHallwayUnconnected = true;
-          targetHallwayNoConn = targetClosestHallway[i];
-          expPosHallwayNoConn = expPosClosestHallway[j];
-          //cout << "diffHallwayUnconnected = true; targetHallwayNoConn = " << targetHallwayNoConn << "; expPosHallwayNoConn = " << expPosHallwayNoConn << endl;
-        }
-      }
+      // else if(targetClosestHallway[i] != expPosClosestHallway[j]){
+      //   if(hallways[targetClosestHallway[i]].isHallwayConnected(expPosClosestHallway[j]) == true){
+      //     diffHallwayConnected = true;
+      //     targetHallwayConn = targetClosestHallway[i];
+      //     expPosHallwayConn = expPosClosestHallway[j];
+      //     //cout << "diffHallwayConnected = true; targetHallwayConn = " << targetHallwayConn << "; expPosHallwayConn = " << expPosHallwayConn << endl;
+      //   }
+      //   else{
+      //     diffHallwayUnconnected = true;
+      //     targetHallwayNoConn = targetClosestHallway[i];
+      //     expPosHallwayNoConn = expPosClosestHallway[j];
+      //     //cout << "diffHallwayUnconnected = true; targetHallwayNoConn = " << targetHallwayNoConn << "; expPosHallwayNoConn = " << expPosHallwayNoConn << endl;
+      //   }
+      // }
     }
   }
 
@@ -3945,12 +4133,12 @@ double Tier3FollowRotation::actionComment(FORRAction action){
   else if(expCloseToSame == true){
     result = (-1) * (expPosition.get_distance(targetPoint) + expPosDist + targetDist); //distance from expected position to target plus distance from expected position to hallway plus distance from target to hallway
   }
-  else if(diffHallwayConnected == true){
-    result = (-1) * (expPosDistances[targetHallwayConn] + targetDistances[expPosHallwayConn]); //distance from expected position to target's hallway plus distance from target to expected position's hallway
-  }
-  else if(diffHallwayUnconnected == true){
-    result = (-1) * (hallways[targetHallwayNoConn].distanceBetweenAggregates(hallways[expPosHallwayNoConn]) + expPosDistances[expPosHallwayNoConn] + targetDistances[targetHallwayNoConn]); //distance between target's hallway and expected position's hallway plus distance from expected position to hallway plus distance from target to hallway
-  }
+  // else if(diffHallwayConnected == true){
+  //   result = (-1) * (expPosDistances[targetHallwayConn] + targetDistances[expPosHallwayConn]); //distance from expected position to target's hallway plus distance from target to expected position's hallway
+  // }
+  // else if(diffHallwayUnconnected == true){
+  //   result = (-1) * (hallways[targetHallwayNoConn].distanceBetweenAggregates(hallways[expPosHallwayNoConn]) + expPosDistances[expPosHallwayNoConn] + targetDistances[targetHallwayNoConn]); //distance between target's hallway and expected position's hallway plus distance from expected position to hallway plus distance from target to hallway
+  // }
   //cout << "result = " << result << endl;
   return result;
 }
@@ -3969,17 +4157,18 @@ void Tier3FollowRotation::set_commenting(){
   }
   else{
     for(int i = 0; i < hallways.size(); i++){
-      if(hallways[i].pointInAggregate(currPosition)){
+      if(hallways[i].pointInAggregate(currPosition) and hallways[i].pointInAggregate(targetPoint)){
         currPosInHallway = true;
-        break;
-      }
-    }
-    for(int i = 0; i < hallways.size(); i++){
-      if(hallways[i].pointInAggregate(targetPoint)){
         targetInHallway = true;
         break;
       }
     }
+    // for(int i = 0; i < hallways.size(); i++){
+    //   if(hallways[i].pointInAggregate(targetPoint)){
+    //     targetInHallway = true;
+    //     break;
+    //   }
+    // }
     if(currPosInHallway == true and targetInHallway == true){
       //cout << "currPosInHallway = true and targetInHallway = true" << endl;
       advisor_commenting = true;
@@ -4001,11 +4190,11 @@ double Tier3Crossroads::actionComment(FORRAction action){
   for(int i = 0; i < hallways.size() ; i++){
     double tempDist = hallways[i].distanceToAggregate(expPosition);
     //cout << "tempDist = " << tempDist << endl;
-    if(tempDist >= 1){
+    if(tempDist > 1){
       result += ((1 / tempDist) * hallways[i].numConnections());
     }
     else{
-      result += (2 * hallways[i].numConnections());
+      result += (hallways[i].numConnections());
     }
     //cout << "result = " << result << endl;
   }
@@ -4016,10 +4205,22 @@ double Tier3Crossroads::actionComment(FORRAction action){
 void Tier3Crossroads::set_commenting(){
   //cout << "In Crossroads set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-  if(hallways.size() > 0)
-    advisor_commenting = true;
-  else
+  if(hallways.size() > 0){
+    bool atLeastOneConnection = false;
+    for(int i = 0; i < hallways.size() ; i++){
+      if(hallways[i].numConnections() > 0){
+        atLeastOneConnection = true;
+        break;
+      }
+    }
+    if(atLeastOneConnection)
+      advisor_commenting = true;
+    else
+      advisor_commenting = false;
+  }
+  else{
     advisor_commenting = false;
+  }
 }
 
 double Tier3CrossroadsRotation::actionComment(FORRAction action){
@@ -4032,11 +4233,11 @@ double Tier3CrossroadsRotation::actionComment(FORRAction action){
   for(int i = 0; i < hallways.size() ; i++){
     double tempDist = hallways[i].distanceToAggregate(expPosition);
     //cout << "tempDist = " << tempDist << endl;
-    if(tempDist >= 1){
+    if(tempDist > 1){
       result += ((1 / tempDist) * hallways[i].numConnections());
     }
     else{
-      result += (2 * hallways[i].numConnections());
+      result += (hallways[i].numConnections());
     }
     //cout << "result = " << result << endl;
   }
@@ -4047,10 +4248,22 @@ double Tier3CrossroadsRotation::actionComment(FORRAction action){
 void Tier3CrossroadsRotation::set_commenting(){
   //cout << "In CrossroadsRotation set commenting " << endl;
   vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-  if(hallways.size() > 0)
-    advisor_commenting = true;
-  else
+  if(hallways.size() > 0){
+    bool atLeastOneConnection = false;
+    for(int i = 0; i < hallways.size() ; i++){
+      if(hallways[i].numConnections() > 0){
+        atLeastOneConnection = true;
+        break;
+      }
+    }
+    if(atLeastOneConnection)
+      advisor_commenting = true;
+    else
+      advisor_commenting = false;
+  }
+  else{
     advisor_commenting = false;
+  }
 }
 
 double Tier3Stay::actionComment(FORRAction action){
@@ -4065,6 +4278,9 @@ double Tier3Stay::actionComment(FORRAction action){
     //cout << "tempDist = " << tempDist << endl;
     if(tempDist < minDistance){
       minDistance = tempDist;
+    }
+    if(minDistance == 0){
+      break;
     }
   }
   //cout << "minDistance = " << minDistance << endl;
@@ -4111,6 +4327,9 @@ double Tier3StayRotation::actionComment(FORRAction action){
     //cout << "tempDist = " << tempDist << endl;
     if(tempDist < minDistance){
       minDistance = tempDist;
+    }
+    if(minDistance == 0){
+      break;
     }
   }
   //cout << "minDistance = " << minDistance << endl;

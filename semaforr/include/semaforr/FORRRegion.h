@@ -54,6 +54,8 @@ class FORRRegion{
   
   void clearExits(){
     exits.clear();
+    ext_exits.clear();
+    min_exits.clear();
   }
 
   void print(){
@@ -130,7 +132,7 @@ class FORRRegion{
       double dist_to_center = lep[i].get_distance(point);
       if(dist_to_center > 25.0) dist_to_center = 25.0;
       // cout << "laser_direction " << laser_direction << " degrees " << degrees << " distance " << dist_to_center << endl;
-      if(visibility[(int)(degrees)] == -1.0 or visibility[(int)(degrees)] < dist_to_center){
+      if(visibility[(int)(degrees)] == -1.0 or visibility[(int)(degrees)] > dist_to_center){
         visibility[(int)(degrees)] = dist_to_center;
       }
     }
@@ -144,7 +146,7 @@ class FORRRegion{
   void mergeVisibility(vector<double> vis){
     // cout << "Inside Merge Visibility" << endl;
     for(int i = 0; i < vis.size(); i++){
-      if(vis[i] > visibility[i]){
+      if(vis[i] < visibility[i]){
         visibility[i] = vis[i];
       }
     }
@@ -273,46 +275,79 @@ class FORRRegion{
     this->addMinDistanceExit(exit);
   }
 
-  void removeExitsToRegion(int ind){
-    cout << "Remove exits to region " << ind << endl;
+  void removeExitsToRegion(vector <int> inds){
+    cout << "Remove exits to region " << inds.size() << endl;
+    vector<FORRExit> new_exits;
     for(int i = 0; i < exits.size(); i++){
-      if(exits[i].getExitRegion() == ind){
-        cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
-        exits.erase(exits.begin() + i);
-        i--;
+      if(find(inds.begin(), inds.end(), exits[i].getExitRegion()) == inds.end()){
+        new_exits.push_back(exits[i]);
       }
+      // if(exits[i].getExitRegion() == ind){
+      //   cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
+      //   exits.erase(exits.begin() + i);
+      //   i--;
+      // }
     }
+    exits = new_exits;
+    vector<FORRExit> new_ext_exits;
     for(int i = 0; i < ext_exits.size(); i++){
-      if(ext_exits[i].getExitRegion() == ind){
-        ext_exits.erase(ext_exits.begin() + i);
-        i--;
+      if(find(inds.begin(), inds.end(), ext_exits[i].getExitRegion()) == inds.end()){
+        new_ext_exits.push_back(ext_exits[i]);
       }
+      // if(ext_exits[i].getExitRegion() == ind){
+      //   ext_exits.erase(ext_exits.begin() + i);
+      //   i--;
+      // }
     }
+    ext_exits = new_ext_exits;
+    vector<FORRExit> new_min_exits;
     for(int i = 0; i < min_exits.size(); i++){
-      if(min_exits[i].getExitRegion() == ind){
-        min_exits.erase(min_exits.begin() + i);
-        i--;
+      if(find(inds.begin(), inds.end(), min_exits[i].getExitRegion()) == inds.end()){
+        new_min_exits.push_back(min_exits[i]);
       }
+      // if(min_exits[i].getExitRegion() == ind){
+      //   min_exits.erase(min_exits.begin() + i);
+      //   i--;
+      // }
     }
+    min_exits = new_min_exits;
   }
 
-  void fixExitReferences(int ind){
-    cout << "Fixing exit references " << ind << endl;
+  void fixExitReferences(vector <int> inds){
+    cout << "Fixing exit references " << inds.size() << endl;
     for(int i = 0; i < exits.size(); i++){
-      if(exits[i].getExitRegion() > ind){
-        cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
-        exits[i].setExitRegion(exits[i].getExitRegion() - 1);
+      for(int j = 0; j < inds.size(); j++){
+        if(exits[i].getExitRegion() > inds[j]){
+          cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
+          exits[i].setExitRegion(exits[i].getExitRegion() - 1);
+        }
       }
+      // if(exits[i].getExitRegion() > ind){
+      //   cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
+      //   exits[i].setExitRegion(exits[i].getExitRegion() - 1);
+      // }
     }
     for(int i = 0; i < ext_exits.size(); i++){
-      if(ext_exits[i].getExitRegion() > ind){
-        ext_exits[i].setExitRegion(ext_exits[i].getExitRegion() - 1);
+      for(int j = 0; j < inds.size(); j++){
+        if(ext_exits[i].getExitRegion() > inds[j]){
+          // cout << "Found " << i << " " << ext_exits[i].getExitRegion() << endl;
+          ext_exits[i].setExitRegion(ext_exits[i].getExitRegion() - 1);
+        }
       }
+      // if(ext_exits[i].getExitRegion() > ind){
+      //   ext_exits[i].setExitRegion(ext_exits[i].getExitRegion() - 1);
+      // }
     }
     for(int i = 0; i < min_exits.size(); i++){
-      if(min_exits[i].getExitRegion() > ind){
-        min_exits[i].setExitRegion(min_exits[i].getExitRegion() - 1);
+      for(int j = 0; j < inds.size(); j++){
+        if(min_exits[i].getExitRegion() > inds[j]){
+          // cout << "Found " << i << " " << min_exits[i].getExitRegion() << endl;
+          min_exits[i].setExitRegion(min_exits[i].getExitRegion() - 1);
+        }
       }
+      // if(min_exits[i].getExitRegion() > ind){
+      //   min_exits[i].setExitRegion(min_exits[i].getExitRegion() - 1);
+      // }
     }
   }
 

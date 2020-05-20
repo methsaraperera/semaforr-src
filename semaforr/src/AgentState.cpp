@@ -50,14 +50,15 @@ Position AgentState::afterLinearMove(Position initialPosition, double distance){
 
 
 Position AgentState::afterAngularMove(Position initialPosition, double angle){
-
+  // cout << "inside afterAngularMove theta " << initialPosition.getTheta() << " angle " << angle << endl;
   double new_angle = (angle + initialPosition.getTheta());
   
-  double distance = getDistanceToObstacle(new_angle);
+  double distance = getDistanceToObstacle(angle);
+  // cout << "new_angle " << new_angle << " distance " << distance << endl;
   // max is the maximum look ahead in meters 
   double max = move[numMoves-2];
   if(distance > max) distance = max;
-
+  // cout << "max " << max << " distance " << distance << endl;
   double new_x = initialPosition.getX() + (distance * cos(new_angle));
   double new_y = initialPosition.getY() + (distance * sin(new_angle));
   
@@ -104,7 +105,7 @@ Position AgentState::afterAngularMove(Position initialPosition, vector<Cartesian
 
   double new_angle = (angle + initialPosition.getTheta());
   
-  double distance = getDistanceToObstacle(initialPosition, initialLaser, new_angle);
+  double distance = getDistanceToObstacle(initialPosition, initialLaser, angle);
   // max is the maximum look ahead in meters 
   double max = move[numMoves-2];
   if(distance > max) distance = max;
@@ -393,9 +394,10 @@ vector<CartesianPoint> AgentState::transformToEndpoints(Position p, sensor_msgs:
 }
 
 double AgentState::getDistanceToObstacle(double rotation_angle){
-	//ROS_DEBUG("In getDistanceToObstacle");
+	// ROS_DEBUG("In getDistanceToObstacle");
 	// one increment in the laser range scan is 1/3 degrees, i.e 0.005817 in radians  
 	int index = (int)(rotation_angle/(laserScanRadianIncrement));
+  // cout << "index " << index << endl;
 	//ROS_DEBUG("In getDistanceToObstacle after index");
 	//shift the index in the positive
 	index = index + 330;
@@ -404,9 +406,9 @@ double AgentState::getDistanceToObstacle(double rotation_angle){
 	//ROS_DEBUG("In getDistanceToObstacle after first if");
 	if(index > 659) index = 659;
 	//ROS_DEBUG("In getDistanceToObstacle after second if");
-	//cout << index << " " << currentLaserScan.ranges.size() << endl;
+	// cout << index << " " << currentLaserScan.ranges.size() << endl;
 	if(currentLaserScan.ranges.size() == 0) { return maxLaserRange; }
-	//cout << currentLaserScan.ranges[index] << endl;
+	// cout << currentLaserScan.ranges[index] << endl;
 
   double min_distance = 25;
   int start_index = index - 2;

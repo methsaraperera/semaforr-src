@@ -44,6 +44,12 @@ void Tier1Advisor::advisorNotOpposite(){
         ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, i).type << " " << i);
       }
     }
+    (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, lastlastAction.parameter)));
+    ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter);
+    if(beliefs->getAgentState()->getRotation(lastlastAction.parameter) + beliefs->getAgentState()->getRotation(lastAction.parameter) == beliefs->getAgentState()->getRotation(lastlastAction.parameter + lastAction.parameter)){
+      (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, lastlastAction.parameter+lastAction.parameter)));
+      ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter+lastAction.parameter);
+    }
   }
   if(lastAction.type == RIGHT_TURN){
     ROS_DEBUG("Not opposite active ");
@@ -65,6 +71,12 @@ void Tier1Advisor::advisorNotOpposite(){
         (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
         ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
       }
+    }
+    (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, lastlastAction.parameter)));
+    ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter);
+    if(beliefs->getAgentState()->getRotation(lastlastAction.parameter) + beliefs->getAgentState()->getRotation(lastAction.parameter) == beliefs->getAgentState()->getRotation(lastlastAction.parameter + lastAction.parameter)){
+      (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, lastlastAction.parameter+lastAction.parameter)));
+      ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter+lastAction.parameter);
     }
   }
   if(lastAction.type == LEFT_TURN){
@@ -368,12 +380,31 @@ bool Tier1Advisor::advisorAvoidObstacles(){
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   set<FORRAction> *forward_set = beliefs->getAgentState()->getForwardActionSet();
   for(int i = forward_set->size()-1 ; i > 0; i--){
-	FORRAction a(FORWARD,i);
-	if(i > intensity){
-		ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
-		vetoedActions->insert(a);
-	}				
-  } 
+    FORRAction a(FORWARD,i);
+    if(i > intensity){
+      ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
+      vetoedActions->insert(a);
+    }
+    // Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(a);
+    // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << a.type << " " << a.parameter << endl;
+  }
+  // set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
+  // for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+  //   FORRAction forrAction = FORRAction(RIGHT_TURN, i);
+  //   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+  //   // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
+  //   if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) <= 0.2){
+  //     (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
+  //     ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+  //   }
+  //   forrAction = FORRAction(LEFT_TURN, i);
+  //   expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+  //   // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
+  //   if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) <= 0.2){
+  //     (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
+  //     ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+  //   }
+  // }
   return false; 
 }
 

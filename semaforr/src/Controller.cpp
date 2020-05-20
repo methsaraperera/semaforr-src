@@ -827,10 +827,10 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   decisionStats = new FORRActionStats();
 
   // Initialize situations
-  initialize_situations(situation_config);
+  // initialize_situations(situation_config);
 
   // Initialize spatial model
-  initialize_spatial_model(spatial_model_config);
+  // initialize_spatial_model(spatial_model_config);
 
   // Initialize highways
   highwayFinished = 0;
@@ -870,9 +870,11 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
     if(highwayFinished == 1){
-      learnSpatialModel(beliefs->getAgentState(), true);
-      updateSkeletonGraph();
-      ROS_DEBUG("Finished Learning Spatial Model!!");
+      if(highwaysOn){
+        learnSpatialModel(beliefs->getAgentState(), true);
+        updateSkeletonGraph();
+        ROS_DEBUG("Finished Learning Spatial Model!!");
+      }
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
       if(aStarOn){
@@ -1023,7 +1025,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
   vector<Position> *pos_hist = completedTask->getPositionHistory();
   vector< vector<CartesianPoint> > *laser_hist = completedTask->getLaserHistory();
   vector< vector<CartesianPoint> > all_trace = beliefs->getAgentState()->getAllTrace();
-  vector< vector<CartesianPoint> > exit_traces = beliefs->getAgentState()->getInitialExitTraces();
+  // vector< vector<CartesianPoint> > exit_traces = beliefs->getAgentState()->getInitialExitTraces();
   // vector< vector<CartesianPoint> > all_laser_hist = beliefs->getAgentState()->getAllLaserHistory();
   vector< vector < vector<CartesianPoint> > > all_laser_trace = beliefs->getAgentState()->getAllLaserTrace();
   vector<CartesianPoint> trace;
@@ -1031,9 +1033,9 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
     trace.push_back(CartesianPoint((*pos_hist)[i].getX(),(*pos_hist)[i].getY()));
   }
   all_trace.push_back(trace);
-  for(int i = 0; i < exit_traces.size(); i++){
-    all_trace.insert(all_trace.begin(), exit_traces[i]);
-  }
+  // for(int i = 0; i < exit_traces.size(); i++){
+  //   all_trace.insert(all_trace.begin(), exit_traces[i]);
+  // }
   vector < vector<CartesianPoint> > laser_trace;
   for(int i = 0 ; i < laser_hist->size() ; i++){
     laser_trace.push_back((*laser_hist)[i]);
@@ -1106,7 +1108,7 @@ void Controller::updateSkeletonGraph(){
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
       int y = (int)(regions[i].getCenter().get_y()*100);
-      // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+      cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
       vector<FORRExit> exits = regions[i].getMinExits();
       // cout << "Exits " << exits.size() << endl;
       if(exits.size() > 0){
@@ -1620,7 +1622,7 @@ void Controller::tierThreeDecision(FORRAction *decision){
       // If this is first advisor we need to initialize our final map
       float weight;
       //cout << "Agenda size :::::::::::::::::::::::::::::::::: " << beliefs->getAgenda().size() << endl;
-      //cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
+      cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
       weight = advisor->get_weight();
       //cout << "Weight for this advisor : " << weight << endl;
       // if(advisor->get_name() == "Explorer" or advisor->get_name() == "ExplorerRotation" or advisor->get_name() == "LearnSpatialModel" or advisor->get_name() == "LearnSpatialModelRotation" or advisor->get_name() == "Curiosity" or advisor->get_name() == "CuriosityRotation"){
