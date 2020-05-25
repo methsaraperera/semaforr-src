@@ -20,6 +20,22 @@
 #include <fstream>
 #include <sensor_msgs/LaserScan.h>
 
+/*
+ * Struct for skeleton waypoint.
+ */
+struct sk_waypoint {
+	bool isRegion;
+    FORRRegion region;
+    vector<CartesianPoint> path;
+    sk_waypoint(): isRegion(false), region(), path() { }
+    sk_waypoint(bool b, FORRRegion r, vector<CartesianPoint> p): isRegion(b), region(r), path(p) { }
+
+    bool waypointIsRegion() { return isRegion; }
+    FORRRegion getRegion() { return region; }
+    vector<CartesianPoint> getPath() { return path; }
+    CartesianPoint getPathEnd() { return path[path.size()-1]; }
+};
+
 class Task {
   
  public:
@@ -30,7 +46,7 @@ class Task {
       wx = x_in; // current waypoint x
       y = y_in;  
       wy = y_in; // current waypoint y
-      wr = -1;
+      wr = sk_waypoint();
       decision_count = 0;
       isPlanActive = false;
       isPlanComplete = true;
@@ -54,14 +70,19 @@ class Task {
 
   double getX() { 
 	if(isPlanActive == false){
-		return x; 
+		return x;
 	}
 	else{
 		if(plannerName != "skeleton"){
 			return wx;
 		}
 		else{
-			return navGraph->getNode(wr).getX()/100.0;
+			if(wr.waypointIsRegion()){
+				return wr.getRegion().getCenter().get_x();
+			}
+			else{
+				wr.getPathEnd().get_x();
+			}
 		}
 	}
   }
@@ -75,62 +96,22 @@ class Task {
 			return wy;
 		}
 		else{
-			return navGraph->getNode(wr).getY()/100.0;
+			if(wr.waypointIsRegion()){
+				return wr.getRegion().getCenter().get_y();
+			}
+			else{
+				wr.getPathEnd().get_y();
+			}
 		}
 	}
   }
 
-  FORRRegion getRegionWaypoint(){
-	double r_x = navGraph->getNode(wr).getX()/100.0;
-	double r_y = navGraph->getNode(wr).getY()/100.0;
-	double r = navGraph->getNode(wr).getRadius();
-	// cout << r_x << " " << r_y << " " << r << endl;
-	return FORRRegion(CartesianPoint(r_x,r_y), r);
+  sk_waypoint getSkeletonWaypoint(){
+	return wr;
   }
 
-  FORRRegion getNextRegionWaypoint(){
-  	if(waypointInd.size() > 1){
-		list<int>::iterator itr1;
-		itr1 = waypointInd.begin(); 
-		advance(itr1, 1);
-		double r_x = navGraph->getNode(*itr1).getX()/100.0;
-		double r_y = navGraph->getNode(*itr1).getY()/100.0;
-		double r = navGraph->getNode(*itr1).getRadius();
-		// cout << r_x << " " << r_y << " " << r << endl;
-		return FORRRegion(CartesianPoint(r_x,r_y), r);
-	}
-	else{
-		double r_x = navGraph->getNode(wr).getX()/100.0;
-		double r_y = navGraph->getNode(wr).getY()/100.0;
-		double r = navGraph->getNode(wr).getRadius();
-		// cout << r_x << " " << r_y << " " << r << endl;
-		return FORRRegion(CartesianPoint(r_x,r_y), r);
-	}
-  }
-
-  vector<CartesianPoint> getPathToNextRegionWaypoint(){
-	if(waypointInd.size() > 1){
-		list<int>::iterator itr1; 
-		itr1 = waypointInd.begin(); 
-		advance(itr1, 1);
-		if(navGraph->getEdge(wr, *itr1)->getFrom() == wr){
-			return navGraph->getEdge(wr, *itr1)->getEdgePath(true);
-		}
-		else if(navGraph->getEdge(wr, *itr1)->getFrom() == *itr1){
-			return navGraph->getEdge(wr, *itr1)->getEdgePath(false);
-		}
-		else{
-			vector<CartesianPoint> regionCenterPath;
-			regionCenterPath.push_back(CartesianPoint(navGraph->getNode(wr).getX()/100.0, navGraph->getNode(wr).getY()/100.0));
-			regionCenterPath.push_back(CartesianPoint(navGraph->getNode(*itr1).getX()/100.0, navGraph->getNode(*itr1).getY()/100.0));
-			return regionCenterPath;
-		}
-	}
-	else{
-		vector<CartesianPoint> regionCenterPath;
-		regionCenterPath.push_back(CartesianPoint(navGraph->getNode(wr).getX()/100.0, navGraph->getNode(wr).getY()/100.0));
-		return regionCenterPath;
-	}
+  vector<sk_waypoint> getSkeletonWaypoints(){
+  	return skeleton_waypoints;
   }
 
   bool getIsPlanActive(){return isPlanActive;}
@@ -182,52 +163,20 @@ class Task {
   	}
   	else{
   		vector<CartesianPoint> points;
-  		cout << "number of waypoints " << waypointInd.size() << endl;
-  		if(waypointInd.size() > 1){
-  			vector<int> nodes;
-	  		list<int>::iterator it;
-	  		cout << "before loop" << endl;
-			for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
-				cout << "node " << (*it) << endl;
-				nodes.push_back(*it);
-			}
-			for(int i = 0; i < nodes.size()-1; i++){
-				double r_x = navGraph->getNode(nodes[i]).getX()/100.0;
-				double r_y = navGraph->getNode(nodes[i]).getY()/100.0;
-				points.push_back(CartesianPoint(r_x,r_y));
-				if(navGraph->getEdge(nodes[i], nodes[i+1])->getFrom() == nodes[i]){
-					vector<CartesianPoint> path = navGraph->getEdge(nodes[i], nodes[i+1])->getEdgePath(true);
-					for(int i = 0; i < path.size(); i++){
-						points.push_back(path[i]);
-					}
-				}
-				else if(navGraph->getEdge(nodes[i], nodes[i+1])->getFrom() == nodes[i+1]){
-					vector<CartesianPoint> path = navGraph->getEdge(nodes[i], nodes[i+1])->getEdgePath(false);
-					for(int i = 0; i < path.size(); i++){
-						points.push_back(path[i]);
-					}
-				}
-				cout << "points " << points.size() << endl;
-			}
-			cout << "after loop" << endl;
-			double r_x = navGraph->getNode(nodes[nodes.size()-1]).getX()/100.0;
-			double r_y = navGraph->getNode(nodes[nodes.size()-1]).getY()/100.0;
-			points.push_back(CartesianPoint(r_x,r_y));
-			cout << "points " << points.size() << endl;
-	  		return points;
-	  	}
-	  	else if(waypointInd.size() == 1){
-	  		double r_x = navGraph->getNode(wr).getX()/100.0;
-			double r_y = navGraph->getNode(wr).getY()/100.0;
-			points.push_back(CartesianPoint(r_x,r_y));
-			cout << "points " << points.size() << endl;
-			return points;
-	  	}
-	  	else{
-	  		points.push_back(CartesianPoint(x,y));
-	  		cout << "points " << points.size() << endl;
-	  		return points;
-	  	}
+  		cout << "number of skeleton_waypoints " << skeleton_waypoints.size() << endl;
+  		for(int i = 0; i < skeleton_waypoints.size(); i++){
+  			if(skeleton_waypoints[i].waypointIsRegion()){
+  				points.push_back(skeleton_waypoints[i].getRegion().getCenter());
+  			}
+  			else{
+  				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
+  				for(int j = 0; j < pathBetween.size(); j++){
+  					points.push_back(pathBetween[j]);
+  				}
+  			}
+  		}
+  		cout << "number of points " << points.size() << endl;
+  		return points;
   	}
   }
   vector<CartesianPoint> getOrigWaypoints(){return origWaypoints;}
@@ -236,7 +185,7 @@ class Task {
   		return waypoints.size();
   	}
   	else{
-  		return waypointInd.size();
+  		return skeleton_waypoints.size();
   	}
   }
 
@@ -359,32 +308,39 @@ class Task {
 		pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
 	}
 	else{
-		if(waypointInd.size() > 0){
+		int step = -1;
+		int max_step = waypointInd.size()-1;
+		list<int>::iterator it;
+		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+			step = step + 1;
+			cout << "node " << (*it) << " step " << step << endl;
+			double r_x = navGraph->getNode(*it).getX()/100.0;
+			double r_y = navGraph->getNode(*it).getY()/100.0;
+			double r = navGraph->getNode(*it).getRadius();
+			cout << r_x << " " << r_y << " " << r << endl;
+			skeleton_waypoints.push_back(sk_waypoint(true, FORRRegion(CartesianPoint(r_x,r_y), r), vector<CartesianPoint>()));
+			list<int>::iterator itr1; 
+			itr1 = it; 
+			advance(itr1, 1);
+			int forward_step = step + 1;
+			cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+			if(forward_step <= max_step){
+				if(navGraph->getEdge(*it, *itr1)->getFrom() == *it){
+					skeleton_waypoints.push_back(sk_waypoint(false, FORRRegion(), navGraph->getEdge(*it, *itr1)->getEdgePath(true)));
+				}
+				else if(navGraph->getEdge(*it, *itr1)->getFrom() == *itr1){
+					skeleton_waypoints.push_back(sk_waypoint(false, FORRRegion(), navGraph->getEdge(*it, *itr1)->getEdgePath(false)));
+				}
+			}
+			cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+		}
+		if(skeleton_waypoints.size() > 0){
 			cout << "Plan active is true" << endl;
 			isPlanActive = true;
 			isPlanComplete = false;
 		}
 		pathCostInNavGraph = planner->getPathCost();
 		pathCostInNavOrigGraph = 0;
-		// vector<FORRRegion> regions = planner->getRegions();
-		// vector<int> region_ids;
-		// for(int i = 0; i < waypoints.size(); i++){
-		// 	for(int j = 0; j < regions.size(); j++){
-		// 		if(regions[j].inRegion(waypoints[i])){
-		// 			if(!(find(region_ids.begin(), region_ids.end(), j) != region_ids.end())){
-		// 				region_ids.push_back(j);
-		// 			}
-		// 			break;
-		// 		}
-		// 	}
-		// }
-		// for(int i = 0; i < region_ids.size(); i++){
-		// 	cout << "region " << region_ids[i] << " " << regions[region_ids[i]].getCenter().get_x() << " " << regions[region_ids[i]].getCenter().get_y() << " " << regions[region_ids[i]].getRadius() << endl;
-		// 	skeleton_waypoints.push_back(regions[region_ids[i]]);
-		// }
-		// if(skeleton_waypoints.size() > 0){
-		// 	waypoints.clear();
-		// }
 	}
 	//setupNextWaypoint(source);
 	setupNearestWaypoint(source);
@@ -487,59 +443,51 @@ class Task {
 	}
 	else{
 		int farthest = -1;
-		cout << "skeleton_waypoints size: " << waypointInd.size() << endl;
-		int step = 0;
-		list<int>::iterator it;
-		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
-			// cout << "node " << (*it) << endl;
-			double r_x = navGraph->getNode(*it).getX()/100.0;
-			double r_y = navGraph->getNode(*it).getY()/100.0;
-			double r = navGraph->getNode(*it).getRadius();
-			cout << r_x << " " << r_y << " " << r << endl;
-			if(FORRRegion(CartesianPoint(r_x,r_y), r).inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
-				cout << "found skeleton waypoint: " << (*it) << endl;
-				farthest = step;
+		cout << "skeleton_waypoints size: " << skeleton_waypoints.size() << " finished_sk_waypoints size: " << finished_sk_waypoints.size() << endl;
+		for (int i = 0; i < skeleton_waypoints.size(); i++){
+			if(skeleton_waypoints[i].waypointIsRegion()){
+				if(skeleton_waypoints[i].getRegion().inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
+					cout << "found skeleton region waypoint: " << i << endl;
+					farthest = i;
+				}
 			}
-			step = step + 1;
+			else{
+				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
+				double dis;
+				int farthest_path = -1;
+				cout << "pathBetween size: " << pathBetween.size() << endl;
+				for (int j = 0; j < pathBetween.size(); j++){
+					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
+					if(dis < 0.75){
+						cout << "found pathBetween with dist < 0.75: " << j << endl;
+						farthest_path = j;
+					}
+				}
+				if(farthest_path == pathBetween.size()-1){
+					cout << "found skeleton region waypoint: " << i << endl;
+					farthest = i;
+				}
+			}
 		}
 		if(farthest == 0){
-			waypointInd.erase(waypointInd.begin());
+			finished_sk_waypoints.push_back(skeleton_waypoints[0]);
+			skeleton_waypoints.erase(skeleton_waypoints.begin());
 		}
 		else if(farthest > 0){
-			list<int>::iterator itr1, itr2; 
-			itr1 = waypointInd.begin(); 
-			itr2 = waypointInd.begin(); 
-			advance(itr2, farthest);
-			waypointInd.erase(itr1, itr2);
+			for(int i = 0; i <= farthest; i++){
+				finished_sk_waypoints.push_back(skeleton_waypoints[i]);
+			}
+			skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+farthest);
 		}
-		wr = waypointInd.front();
-		//cout << "check plan active: " << waypointInd.size() << endl;
-		if(waypointInd.size() > 0){
+		cout << "skeleton_waypoints size: " << skeleton_waypoints.size() << " finished_sk_waypoints size: " << finished_sk_waypoints.size() << endl;
+		wr = skeleton_waypoints[0];
+		//cout << "check plan active: " << skeleton_waypoints.size() << endl;
+		if(skeleton_waypoints.size() > 0){
 			isPlanActive = true;
 		}
 		else{
 			isPlanActive = false;
 		}
-		// for (int i = 0; i < skeleton_waypoints.size(); i++){
-		// 	if(skeleton_waypoints[i].inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
-		// 		cout << "found skeleton waypoint: " << i << endl;
-		// 		farthest = i;
-		// 	}
-		// }
-		// if(farthest == 0){
-		// 	skeleton_waypoints.erase(skeleton_waypoints.begin());
-		// }
-		// else if(farthest > 0){
-		// 	skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+farthest);
-		// }
-		// wr = skeleton_waypoints[0];
-		// //cout << "check plan active: " << waypoints.size() << endl;
-		// if(skeleton_waypoints.size() > 0){
-		// 	isPlanActive = true;
-		// }
-		// else{
-		// 	isPlanActive = false;
-		// }
 	}
 	//cout << "end setup next waypoint" << endl;
    }
@@ -566,36 +514,42 @@ class Task {
 
    bool isAnyWaypointComplete(Position currentPosition){
 	bool status = false;
-	if(plannerName != "skeleton"){
+	if(isPlanActive && plannerName != "skeleton"){
 		for (int i = 0; i < waypoints.size(); i++){
 			double dis = currentPosition.getDistance(waypoints[i].get_x(), waypoints[i].get_y());
-			if (isPlanActive && (dis < 0.75)){
+			if ((dis < 0.75)){
 				status = true;
 				break;
 			}
 		}
 	}
-	else{
-		list<int>::iterator it;
-		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
-			// cout << "node " << (*it) << endl;
-			double r_x = navGraph->getNode(*it).getX()/100.0;
-			double r_y = navGraph->getNode(*it).getY()/100.0;
-			double r = navGraph->getNode(*it).getRadius();
-			cout << r_x << " " << r_y << " " << r << endl;
-			if(FORRRegion(CartesianPoint(r_x,r_y), r).inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
-				status = true;
-				break;
+	else if(isPlanActive){
+		for (int i = 0; i < skeleton_waypoints.size(); i++){
+			if(skeleton_waypoints[i].waypointIsRegion()){
+				if(skeleton_waypoints[i].getRegion().inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
+					status = true;
+					break;
+				}
+			}
+			else{
+				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
+				double dis;
+				int farthest_path = -1;
+				cout << "pathBetween size: " << pathBetween.size() << endl;
+				for (int j = 0; j < pathBetween.size(); j++){
+					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
+					if(dis < 0.75){
+						cout << "found pathBetween with dist < 0.75: " << j << endl;
+						farthest_path = j;
+					}
+				}
+				if(farthest_path == pathBetween.size()-1){
+					status = true;
+					break;
+				}
 			}
 		}
 	}
-
-	// for (int i = 0; i < skeleton_waypoints.size(); i++){
-	// 	if(isPlanActive && skeleton_waypoints[i].inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
-	// 		status = true;
-	// 		break;
-	// 	}
-	// }
 	return status;
    }
 
@@ -690,7 +644,8 @@ class Task {
   double pathCostInNavGraph, pathCostInNavOrigGraph;
   double origPathCostInOrigNavGraph, origPathCostInNavGraph;
 
-  // vector<FORRRegion> skeleton_waypoints;
+  vector<sk_waypoint> skeleton_waypoints;
+  vector<sk_waypoint> finished_sk_waypoints;
 
   list<int> waypointInd;
   vector< list<int> > plansInds;
@@ -731,7 +686,7 @@ class Task {
 
   //<! The point in the map, that the robot needs to go in order to execute this task 
   double x,y,wx,wy;
-  int wr;
+  sk_waypoint wr;
 
   // Plan positions
   vector< vector<int> > planPositions;

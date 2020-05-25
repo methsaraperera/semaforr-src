@@ -269,8 +269,22 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     }
   }
   else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 0){
-    cout << "Waypoint Region = " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter().get_x() << " " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter().get_y() << " " << beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getRadius() << endl;
-    bool waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getCenter(), beliefs->getAgentState()->getCurrentTask()->getRegionWaypoint().getRadius(), 20);
+    cout << "Waypoint Region = " << beliefs->getAgentState()->getCurrentTask()->getX() << " " << beliefs->getAgentState()->getCurrentTask()->getY() << endl;
+    bool waypointRegionInSight = false;
+    bool waypointPathInSight = false;
+    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
+      waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius(), 20);
+    }
+    else{
+      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 1){
+        if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].waypointIsRegion()){
+          waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius(), 20);
+        }
+      }
+      else{
+        
+      }
+    }
     if(waypointRegionInSight == true){
       ROS_DEBUG("Waypoint Region in sight, Enforcer advisor active");
       set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();

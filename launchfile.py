@@ -153,25 +153,25 @@ explore = "off"
 #     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-# i=1
-# map_name = "map-c"
-# target_file_name = "target40test.conf"
-# log_name = map_name + "_VAONOCSSM_" + str(i) + ".txt"
-# advisors = "/config/advisors4.conf"
-# params = "/config/params1.conf"
-# situations = "/config/situations5.conf"
-# spatials = "/config/spatial_model.conf"
-# why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-# whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-# why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-# whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-# situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-# experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+i=8
+map_name = "map-a"
+target_file_name = "target40test.conf"
+log_name = map_name + "_VAONOCSSM_doors_" + str(i) + ".txt"
+advisors = "/config/advisors2.conf"
+params = "/config/params5.conf"
+situations = "/config/situations5.conf"
+spatials = "/config/spatial_model.conf"
+why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 num_runs = 10
 for i in range(0,num_runs):
     map_name = "map-a"
     target_file_name = "target40test.conf"
-    log_name = map_name + "_VAONOCSSM_doors_" + str(i) + ".txt"
+    log_name = map_name + "_VAONOCSSM_doors_CuSL_" + str(i) + ".txt"
     advisors = "/config/advisors3.conf"
     params = "/config/params4.conf"
     situations = "/config/situations5.conf"
@@ -184,7 +184,7 @@ for i in range(0,num_runs):
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
     map_name = "map-b"
     target_file_name = "target40test.conf"
-    log_name = map_name + "_VAONOCSSM_doors_" + str(i) + ".txt"
+    log_name = map_name + "_VAONOCSSM_doors_CuSL_" + str(i) + ".txt"
     advisors = "/config/advisors3.conf"
     params = "/config/params4.conf"
     situations = "/config/situations5.conf"
@@ -197,7 +197,7 @@ for i in range(0,num_runs):
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
     map_name = "map-c"
     target_file_name = "target40test.conf"
-    log_name = map_name + "_VAONOCSSM_doors_" + str(i) + ".txt"
+    log_name = map_name + "_VAONOCSSM_doors_CuSL_" + str(i) + ".txt"
     advisors = "/config/advisors3.conf"
     params = "/config/params4.conf"
     situations = "/config/situations5.conf"
@@ -223,7 +223,7 @@ for i in range(0,num_runs):
     # experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
     map_name = "map-a"
     target_file_name = "target40test.conf"
-    log_name = map_name + "_VAONOCSSM_doorst3_" + str(i) + ".txt"
+    log_name = map_name + "_VAONOCSSM_doors_FaVS_" + str(i) + ".txt"
     advisors = "/config/advisors4.conf"
     params = "/config/params1.conf"
     situations = "/config/situations5.conf"
@@ -236,7 +236,7 @@ for i in range(0,num_runs):
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
     map_name = "map-b"
     target_file_name = "target40test.conf"
-    log_name = map_name + "_VAONOCSSM_doorst3_" + str(i) + ".txt"
+    log_name = map_name + "_VAONOCSSM_doors_FaVS_" + str(i) + ".txt"
     advisors = "/config/advisors4.conf"
     params = "/config/params1.conf"
     situations = "/config/situations5.conf"
@@ -249,7 +249,7 @@ for i in range(0,num_runs):
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
     map_name = "map-c"
     target_file_name = "target40test.conf"
-    log_name = map_name + "_VAONOCSSM_doorst3_" + str(i) + ".txt"
+    log_name = map_name + "_VAONOCSSM_doors_FaVS_" + str(i) + ".txt"
     advisors = "/config/advisors4.conf"
     params = "/config/params1.conf"
     situations = "/config/situations5.conf"
