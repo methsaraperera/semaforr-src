@@ -166,12 +166,14 @@ class Task {
   		cout << "number of skeleton_waypoints " << skeleton_waypoints.size() << endl;
   		for(int i = 0; i < skeleton_waypoints.size(); i++){
   			if(skeleton_waypoints[i].waypointIsRegion()){
-  				points.push_back(skeleton_waypoints[i].getRegion().getCenter());
+  				// points.push_back(skeleton_waypoints[i].getRegion().getCenter());
+  				cout << "region waypoint " << i << " " << skeleton_waypoints[i].getRegion().getCenter().get_x() << " " << skeleton_waypoints[i].getRegion().getCenter().get_y() << " " << skeleton_waypoints[i].getRegion().getRadius() << endl;
   			}
   			else{
   				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
   				for(int j = 0; j < pathBetween.size(); j++){
   					points.push_back(pathBetween[j]);
+  					cout << "path waypoint " << i << " " << j << " " << pathBetween[j].get_x() << " " << pathBetween[j].get_y() << endl;
   				}
   			}
   		}
@@ -538,8 +540,8 @@ class Task {
 				cout << "pathBetween size: " << pathBetween.size() << endl;
 				for (int j = 0; j < pathBetween.size(); j++){
 					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
-					if(dis < 0.75){
-						cout << "found pathBetween with dist < 0.75: " << j << endl;
+					if(dis < 0.25){
+						cout << "found pathBetween with dist < 0.25: " << j << endl;
 						farthest_path = j;
 					}
 				}

@@ -1163,6 +1163,7 @@ void Controller::updateSkeletonGraph(){
         }
       }
     }
+    skeleton_planner->getGraph()->printGraph();
     // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }
   // if(hallwayskel and highwayFinished == 1){

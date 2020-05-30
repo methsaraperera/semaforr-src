@@ -284,47 +284,33 @@ bool do_intersect(Circle circle, Line line){
 }
 
 bool do_intersect(Circle circle, LineSegment line_segment){
-  Line line = Line(line_segment.get_endpoints().first, line_segment.get_endpoints().second);
   double r = circle.get_radius();
-  double p = circle.get_center().get_x();
-  double q = circle.get_center().get_y();
-  double m = line.get_slope();
-  double c = -(line.get_value_c() / line.get_value_a());
+  double cx = circle.get_center().get_x();
+  double cy = circle.get_center().get_y();
+  double m = line_segment.get_slope();
+  double b = (line_segment.get_value_c() / line_segment.get_value_b());
   double A = (m*m) + 1;
-  double B = 2*(m*c - m*q - p);
-  double C = (q*q) - (r*r) + (p*p) - (2*c*q) + (c*c);
-  // solution of the equation of point of intersection of the line and the circle
-  if((B*B - 4*A*C) <= 0){
-    return false;
+  double B = 2*(m*b - m*cy - cx);
+  double C = (cx*cx) + (b*b) + (cy*cy) - (2*b*cy) - (r*r);
+  //cout << r << " " << cx << " " << cy << " " << m << " " << b << " " << A << " " << B << " " << C << endl;
+  // solution of the equation of point of intersection of the line segment and the circle assuming they intersect
+  double firstx = (-B + sqrt( ((B*B) - (4*A*C)) ))/(2*A);
+  double firsty = m*firstx + b;
+  double secondx = (-B - sqrt( ((B*B) - (4*A*C)) ))/(2*A);
+  double secondy = m*secondx + b;
+  //cout << firstx << " " << firsty << " " << secondx << " " << secondy << endl;
+  pair<CartesianPoint, CartesianPoint> endpoints = line_segment.get_endpoints();
+  if(endpoints.first.get_x() <= endpoints.second.get_x() && firstx >= endpoints.first.get_x() && firstx <= endpoints.second.get_x()) {
+    return true;
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx >= endpoints.second.get_x() && firstx <= endpoints.first.get_x()) {
+    return true;
+  } else if(endpoints.first.get_x() <= endpoints.second.get_x() && secondx >= endpoints.first.get_x() && secondx <= endpoints.second.get_x()) {
+    return true;
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx >= endpoints.second.get_x() && secondx <= endpoints.first.get_x()) {
+    return true;
   }
   else{
-    double cx = circle.get_center().get_x();
-    double cy = circle.get_center().get_y();
-    m = line_segment.get_slope();
-    double b = (line_segment.get_value_c() / line_segment.get_value_b());
-    A = (m*m) + 1;
-    B = 2*(m*b - m*cy - cx);
-    C = (cx*cx) + (b*b) + (cy*cy) - (2*b*cy) - (r*r);
-    //cout << r << " " << cx << " " << cy << " " << m << " " << b << " " << A << " " << B << " " << C << endl;
-    // solution of the equation of point of intersection of the line segment and the circle assuming they intersect
-    double firstx = (-B + sqrt( ((B*B) - (4*A*C)) ))/(2*A);
-    double firsty = m*firstx + b;
-    double secondx = (-B - sqrt( ((B*B) - (4*A*C)) ))/(2*A);
-    double secondy = m*secondx + b;
-    //cout << firstx << " " << firsty << " " << secondx << " " << secondy << endl;
-    pair<CartesianPoint, CartesianPoint> endpoints = line_segment.get_endpoints();
-    if(endpoints.first.get_x() <= endpoints.second.get_x() && firstx >= endpoints.first.get_x() && firstx <= endpoints.second.get_x()) {
-      return true;
-    } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx >= endpoints.second.get_x() && firstx <= endpoints.first.get_x()) {
-      return true;
-    } else if(endpoints.first.get_x() <= endpoints.second.get_x() && secondx >= endpoints.first.get_x() && secondx <= endpoints.second.get_x()) {
-      return true;
-    } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx >= endpoints.second.get_x() && secondx <= endpoints.first.get_x()) {
-      return true;
-    }
-    else{
-      return false; 
-    }
+    return false; 
   }
 }
 

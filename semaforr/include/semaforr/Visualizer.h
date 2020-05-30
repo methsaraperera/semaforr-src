@@ -44,6 +44,7 @@ private:
   ros::Publisher occupancy_pub_;
   ros::Publisher trails_pub_;
   ros::Publisher plan_pub_;
+  ros::Publisher waypoints_pub_;
   ros::Publisher original_plan_pub_;
   ros::Publisher nodes1_pub_;
   ros::Publisher nodes2_pub_;
@@ -75,6 +76,7 @@ public:
     all_targets_pub_ = nh_->advertise<geometry_msgs::PoseArray>("all_targets", 1);
     remaining_targets_pub_ = nh_->advertise<geometry_msgs::PoseArray>("remaining_targets", 1);
     plan_pub_ = nh_->advertise<nav_msgs::Path>("plan", 1);
+    waypoints_pub_ = nh_->advertise<visualization_msgs::Marker>("waypoints", 1);
     original_plan_pub_ = nh_->advertise<nav_msgs::Path>("original_plan", 1);
     conveyor_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("conveyor", 1);
     hallway1_pub_ = nh_->advertise<visualization_msgs::Marker>("hallway1", 1);
@@ -115,8 +117,8 @@ public:
 		publish_remaining_targets();
 	}
 	// publish_nodes();
-	// publish_reachable_nodes();
-	// publish_edges();
+	publish_reachable_nodes();
+	publish_edges();
         /*if(visualized < 5){
 		publish_nodes();
 		publish_reachable_nodes();
@@ -386,6 +388,40 @@ public:
 		path.poses.push_back(poseStamped);
 	}
 	plan_pub_.publish(path);
+
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 0.25;
+	marker.scale.z = 0.25;
+	// Set the color -- be sure to set alpha to something non-zero!
+	marker.color.r = 1.0f;
+	marker.color.g = 0.0f;
+	marker.color.b = 0.0f;
+	marker.color.a = 0.5;
+	marker.lifetime = ros::Duration();
+
+	for(int i = 0; i < waypoints.size(); i++){
+		float x = waypoints[i].get_x();
+		float y = waypoints[i].get_y();
+		geometry_msgs::Point point;
+		point.x = x;
+		point.y = y;
+		point.z = 0;
+		marker.points.push_back(point);
+	}
+
+  	waypoints_pub_.publish(marker);
  }
 
  void publish_highway_plan(){

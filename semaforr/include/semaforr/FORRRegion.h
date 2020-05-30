@@ -82,13 +82,13 @@ class FORRRegion{
   }
 
   void addMinDistanceExit(FORRExit exit){
-    cout << "Inside addMinDistanceExit " << min_exits.size() << endl;
+    // cout << "Inside addMinDistanceExit " << min_exits.size() << endl;
     bool foundAny = false;
     for(int i = 0; i < min_exits.size() ; i++){
-      cout << "Exit region " << exit.getExitRegion() << " min_exit region " << min_exits[i].getExitRegion() << endl;
+      // cout << "Exit region " << exit.getExitRegion() << " min_exit region " << min_exits[i].getExitRegion() << endl;
       if(exit.getExitRegion() == min_exits[i].getExitRegion()){
         foundAny = true;
-        cout << "Exit distance " << exit.getExitDistance() << " min_exit distance " << min_exits[i].getExitDistance() << endl;
+        // cout << "Exit distance " << exit.getExitDistance() << " min_exit distance " << min_exits[i].getExitDistance() << endl;
         if(exit.getExitDistance() < min_exits[i].getExitDistance()){
           min_exits.erase(min_exits.begin()+i);
           min_exits.push_back(exit);
@@ -97,15 +97,15 @@ class FORRRegion{
       }
     }
     if(foundAny == false){
-      cout << "Exit not found, add new" << endl;
+      // cout << "Exit not found, add new" << endl;
       min_exits.push_back(exit);
     }
-    cout << "End addMinDistanceExit " << min_exits.size() << endl;
+    // cout << "End addMinDistanceExit " << min_exits.size() << endl;
   }
 
-  bool inRegion(double x, double y){ return (distance(CartesianPoint(x,y),center) < this->getRadius());}
+  bool inRegion(double x, double y){ return (distance(CartesianPoint(x,y),center) <= this->getRadius());}
 
-  bool inRegion(CartesianPoint p){ return (distance(p,center) < this->getRadius());}
+  bool inRegion(CartesianPoint p){ return (distance(p,center) <= this->getRadius());}
     
   double distance(CartesianPoint point1, CartesianPoint point2){
     double dy = point1.get_y() - point2.get_y();
@@ -129,7 +129,7 @@ class FORRRegion{
       double laser_direction = atan2((lep[i].get_y() - center.get_y()), (lep[i].get_x() - center.get_x()));
       double degrees = laser_direction * (180.0/3.141592653589793238463);
       if(degrees < 0) degrees = degrees + 360;
-      double dist_to_center = lep[i].get_distance(point);
+      double dist_to_center = lep[i].get_distance(center);
       if(dist_to_center > 25.0) dist_to_center = 25.0;
       // cout << "laser_direction " << laser_direction << " degrees " << degrees << " distance " << dist_to_center << endl;
       if(visibility[(int)(degrees)] == -1.0 or visibility[(int)(degrees)] > dist_to_center){
@@ -143,11 +143,26 @@ class FORRRegion{
     // cout << endl;
   }
 
-  void mergeVisibility(vector<double> vis){
+  void mergeVisibility(FORRRegion rg){
     // cout << "Inside Merge Visibility" << endl;
+    vector<double> vis = rg.getVisibility();
     for(int i = 0; i < vis.size(); i++){
-      if(vis[i] < visibility[i]){
-        visibility[i] = vis[i];
+      double dist = vis[i];
+      double angle;
+      if(i <= 180)
+        angle = double(i) / (180.0/3.141592653589793238463);
+      else
+        angle = double(i - 360) / (180.0/3.141592653589793238463);
+      CartesianPoint end_point = CartesianPoint(rg.getCenter().get_x() + dist*cos(angle), rg.getCenter().get_y() + dist*sin(angle));
+
+      double laser_direction = atan2((end_point.get_y() - center.get_y()), (end_point.get_x() - center.get_x()));
+      double degrees = laser_direction * (180.0/3.141592653589793238463);
+      if(degrees < 0) degrees = degrees + 360;
+      double dist_to_center = end_point.get_distance(center);
+      if(dist_to_center > 25.0) dist_to_center = 25.0;
+      // cout << "laser_direction " << laser_direction << " degrees " << degrees << " distance " << dist_to_center << endl;
+      if(visibility[(int)(degrees)] == -1.0 or visibility[(int)(degrees)] > dist_to_center){
+        visibility[(int)(degrees)] = dist_to_center;
       }
     }
     // cout << "Current visibility: ";
@@ -206,60 +221,6 @@ class FORRRegion{
     else{
       return false;
     }
-    // for(int j = 0; j < lasers.size(); j++){
-    //   vector<CartesianPoint> givenLaserEndpoints = lasers[j];
-    //   bool canAccessPoint = false;
-    //   int index = 0;
-    //   double min_angle = 100000;
-    //   for(int i = 0; i < givenLaserEndpoints.size(); i++){
-    //     //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-    //     double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
-    //     if(abs(laser_direction - point_direction) < min_angle){
-    //       //ROS_DEBUG_STREAM("Laser Direction : " << laser_direction << ", Point Direction : " << point_direction);
-    //       min_angle = abs(laser_direction - point_direction);
-    //       index = i;
-    //     }
-    //   }
-    //   while (index-2 < 0){
-    //     index = index + 1;
-    //   }
-    //   while (index+2 > givenLaserEndpoints.size()-1){
-    //     index = index - 1;
-    //   }
-    //   //ROS_DEBUG_STREAM("Min angle : " << min_angle << ", " << index);
-    //   int numFree = 0;
-    //   for(int i = -2; i < 3; i++) {
-    //     double distLaserEndPointToLaserPos = givenLaserEndpoints[index+i].get_distance(laserPos);
-    //     //ROS_DEBUG_STREAM("Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint);
-    //     if (distLaserEndPointToLaserPos > distLaserPosToPoint) {
-    //       numFree++;
-    //     }
-    //   }
-    //   //ROS_DEBUG_STREAM("Number farther than point : " << numFree);
-    //   if (numFree > 3) {
-    //     canAccessPoint = true;
-    //   }
-    //   else{
-    //     continue;
-    //   }
-    //   //else, not visible
-    //   //return canAccessPoint;
-    //   double epsilon = 0.005;
-    //   bool canSeePoint = false;
-    //   double ab = laserPos.get_distance(point);
-    //   for(int i = 0; i < givenLaserEndpoints.size(); i++){
-    //     //ROS_DEBUG_STREAM("Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y());
-    //     double ac = laserPos.get_distance(givenLaserEndpoints[i]);
-    //     double bc = givenLaserEndpoints[i].get_distance(point);
-    //     if(((ab + bc) - ac) < epsilon){
-    //       //cout << "Distance vector endpoint visible: ("<<laserEndpoints[i].get_x()<<","<< laserEndpoints[i].get_y()<<")"<<endl; 
-    //       //cout << "Distance: "<<distance_to_point<<endl;
-    //       canSeePoint = true;
-    //       return true;
-    //     }
-    //   }
-    // }
-    // return false;
   }
 
   vector<FORRExit> getExtExits() { return ext_exits; }

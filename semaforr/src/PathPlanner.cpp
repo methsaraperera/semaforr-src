@@ -1087,7 +1087,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     // double min_distance = 100000000.0;
     double max_score = -100000000.0;
     for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
-      double d = -5.0 * (Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0);
+      double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
       double neighbors = (*iter)->numNeighbors();
       double score = d + neighbors;
       // if(d < min_distance){
@@ -1099,7 +1099,7 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
           cout << "\tFound a new candidate!: ";
           temp.printNode();
           cout << endl;
-          cout << "\tDistance between n and this node: " << d / -5.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+          cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
         }
       }
     }
