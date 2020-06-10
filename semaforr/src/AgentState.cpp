@@ -55,8 +55,14 @@ Position AgentState::afterAngularMove(Position initialPosition, double angle){
   
   double distance = getDistanceToObstacle(angle);
   // cout << "new_angle " << new_angle << " distance " << distance << endl;
-  // max is the maximum look ahead in meters 
-  double max = move[numMoves-2];
+  // max is the maximum look ahead in meters
+  double max;
+  if(numMoves-2 > 0){
+    max = move[numMoves-2];
+  }
+  else{
+    max = move[1];
+  }
   if(distance > max) distance = max;
   // cout << "max " << max << " distance " << distance << endl;
   double new_x = initialPosition.getX() + (distance * cos(new_angle));
@@ -107,7 +113,13 @@ Position AgentState::afterAngularMove(Position initialPosition, vector<Cartesian
   
   double distance = getDistanceToObstacle(initialPosition, initialLaser, angle);
   // max is the maximum look ahead in meters 
-  double max = move[numMoves-2];
+  double max;
+  if(numMoves-2 > 0){
+    max = move[numMoves-2];
+  }
+  else{
+    max = move[1];
+  }
   if(distance > max) distance = max;
 
   double new_x = initialPosition.getX() + (distance * cos(new_angle));
@@ -338,7 +350,7 @@ bool AgentState::canSeePoint(CartesianPoint point, double distanceLimit){
 
 bool AgentState::canSeeRegion(CartesianPoint center, double radius, double distanceLimit){
   CartesianPoint laserPos(currentPosition.getX(),currentPosition.getY());
-  bool canAccessPoint = false;
+  bool canAccessPoint = false, canAccessRegion = false;
   double distLaserPosToPoint = laserPos.get_distance(center);
   if(distLaserPosToPoint - radius > distanceLimit){
     return false;
@@ -346,11 +358,19 @@ bool AgentState::canSeeRegion(CartesianPoint center, double radius, double dista
   for(int i = 0; i < laserEndpoints.size(); i++){
     //ROS_DEBUG_STREAM("Laser endpoint : " << laserEndpoints[i].get_x() << "," << laserEndpoints[i].get_y());
     if(do_intersect(Circle(center, radius), LineSegment(laserPos, laserEndpoints[i]))){
-      canAccessPoint = true;
+      canAccessRegion = true;
       break;
     }
   }
-  return canAccessPoint;
+  if(canSeePoint(center, distanceLimit)){
+    canAccessPoint = true;
+  }
+  if(canAccessRegion == true and canAccessPoint == true){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
 void AgentState::transformToEndpoints(){

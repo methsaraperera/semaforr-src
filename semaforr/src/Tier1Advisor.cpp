@@ -34,6 +34,12 @@ void Tier1Advisor::advisorNotOpposite(){
     ROS_DEBUG("Not opposite active ");
     (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, lastlastAction.parameter)));
     ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter);
+    if(lastlastAction.parameter > 1){
+      for(int i = 1; i < lastlastAction.parameter; i++){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
+      }
+    }
   }
   else if(lastlastAction.type == RIGHT_TURN and lastAction.type == RIGHT_TURN){
     ROS_DEBUG("Not opposite active ");
@@ -55,6 +61,12 @@ void Tier1Advisor::advisorNotOpposite(){
     ROS_DEBUG("Not opposite active ");
     (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, lastAction.parameter)));
     ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, lastAction.parameter).type << " " << lastAction.parameter);
+    if(lastAction.parameter > 1){
+      for(int i = 1; i < lastAction.parameter; i++){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(LEFT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(LEFT_TURN, i).type << " " << i);
+      }
+    }
   }
 
 
@@ -62,6 +74,12 @@ void Tier1Advisor::advisorNotOpposite(){
     ROS_DEBUG("Not opposite active ");
     (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, lastlastAction.parameter)));
     ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, lastlastAction.parameter).type << " " << lastlastAction.parameter);
+    if(lastlastAction.parameter > 1){
+      for(int i = 1; i < lastlastAction.parameter; i++){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, i).type << " " << i);
+      }
+    }
   }
   else if(lastlastAction.type == LEFT_TURN and lastAction.type == LEFT_TURN){
     ROS_DEBUG("Not opposite active ");
@@ -83,6 +101,12 @@ void Tier1Advisor::advisorNotOpposite(){
     ROS_DEBUG("Not opposite active ");
     (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, lastAction.parameter)));
     ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, lastAction.parameter).type << " " << lastAction.parameter);
+    if(lastAction.parameter > 1){
+      for(int i = 1; i < lastAction.parameter; i++){
+        (beliefs->getAgentState()->getVetoedActions()->insert(FORRAction(RIGHT_TURN, i)));
+        ROS_DEBUG_STREAM("Vetoed action : " << FORRAction(RIGHT_TURN, i).type << " " << i);
+      }
+    }
   }
   // if(lastlastAction.type == RIGHT_TURN or lastlastAction.type == LEFT_TURN){
   //   if(lastAction.type == PAUSE){
@@ -272,6 +296,8 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     cout << "Waypoint Region = " << beliefs->getAgentState()->getCurrentTask()->getX() << " " << beliefs->getAgentState()->getCurrentTask()->getY() << endl;
     bool waypointRegionInSight = false;
     int regionID = -1;
+    bool nextWaypointRegionInSight = false;
+    int nextRegionId = -1;
     bool waypointPathInSight = false;
     int pathID = -1;
     if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
@@ -285,6 +311,14 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           regionID = 1;
         }
       }
+    }
+    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion() and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
+      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius(), 20);
+      nextRegionId = 2;
+    }
+    else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4 and !beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
+      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius(), 20);
+      nextRegionId = 3;
     }
     if(!beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
       vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getPath();
@@ -310,15 +344,30 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         }
       }
     }
-    cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << endl;
-    if(waypointRegionInSight == true){
-      ROS_DEBUG("Waypoint Region in sight, Enforcer advisor active");
+    cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " nextWaypointRegionInSight " << nextWaypointRegionInSight << " nextRegionId " << nextRegionId << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << endl;
+    if(nextWaypointRegionInSight == true){
+      ROS_DEBUG("Next Waypoint Region in sight, Enforcer advisor active");
       set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
       set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
       set<FORRAction> possible_set;
       set<FORRAction>::iterator actionIter;
       FORRAction closest_action;
       double dist_to_region = 100000;
+      vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
+      FORRAction lastAction;
+      int size = actions.size();
+      cout << size << " " << (size - 1) << " " << ((size - 1) >= 0) << endl;
+      if(size > 0){
+        cout << "first" << endl;
+        lastAction = actions[size - 1];
+        cout << "after" << endl;
+      }
+      else{
+        cout << "second" << endl;
+        lastAction = FORRAction(PAUSE, 0);
+        cout << "after" << endl;
+      }
+      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << endl;
       for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
         FORRAction forrAction = *actionIter;
         if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
@@ -327,6 +376,129 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         }
         else if(forrAction.type == PAUSE or forrAction.parameter == 0){
           ROS_DEBUG_STREAM("Pause action : " << forrAction.type << " " << forrAction.parameter);
+          continue;
+        }
+        else if((lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN) and (forrAction.type == RIGHT_TURN or forrAction.type == LEFT_TURN)){
+          ROS_DEBUG_STREAM("Skip action : " << forrAction.type << " " << forrAction.parameter);
+          continue;
+        }
+        else{
+          Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+          if(nextRegionId == 2){
+            if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().inRegion(expectedPosition.getX(), expectedPosition.getY())){
+              FORRAction a(forrAction.type,forrAction.parameter);
+              ROS_DEBUG_STREAM("Potential action : " << a.type << " " << a.parameter);
+              possible_set.insert(a);
+            }
+            else{
+              ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
+              double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << dist_from_exp << endl;
+              if(dist_from_exp < dist_to_region){
+                dist_to_region = dist_from_exp;
+                closest_action = forrAction;
+              }
+            }
+          }
+          else if(nextRegionId == 3){
+            if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().inRegion(expectedPosition.getX(), expectedPosition.getY())){
+              FORRAction a(forrAction.type,forrAction.parameter);
+              ROS_DEBUG_STREAM("Potential action : " << a.type << " " << a.parameter);
+              possible_set.insert(a);
+            }
+            else{
+              ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
+              double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << dist_from_exp << endl;
+              if(dist_from_exp < dist_to_region){
+                dist_to_region = dist_from_exp;
+                closest_action = forrAction;
+              }
+            }
+          }
+        }
+      }
+      if(possible_set.size() == 1){
+        actionIter = possible_set.begin();
+        (*decision) = (*actionIter);
+        ROS_DEBUG("Only one action to get to Next Waypoint Region, Enforcer advisor to take decision");
+        decisionMade = true;
+      }
+      else if(possible_set.size() > 1){
+        ROS_DEBUG("More than one action to get to Next Waypoint Region, Enforcer advisor to take decision");
+        if(nextRegionId == 2){
+          double minDistance = 1000000;
+          for(actionIter = possible_set.begin(); actionIter != possible_set.end(); actionIter++){
+            FORRAction forrAction = *actionIter;
+            ROS_DEBUG_STREAM("Potential action : " << forrAction.type << " " << forrAction.parameter);
+            Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+            if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
+              minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << "New minDistance " << minDistance << endl;
+              (*decision) = forrAction;
+              decisionMade = true;
+            }
+          }
+        }
+        else if(nextRegionId == 3){
+          double minDistance = 1000000;
+          for(actionIter = possible_set.begin(); actionIter != possible_set.end(); actionIter++){
+            FORRAction forrAction = *actionIter;
+            ROS_DEBUG_STREAM("Potential action : " << forrAction.type << " " << forrAction.parameter);
+            Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+            if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
+              minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << "New minDistance " << minDistance << endl;
+              (*decision) = forrAction;
+              decisionMade = true;
+            }
+          }
+        }
+      }
+      // else if(dist_to_region < 100000){
+      //   ROS_DEBUG("Action to get closest to visible Next Waypoint Region, Enforcer advisor to take decision");
+      //   (*decision) = closest_action;
+      //   decisionMade = true;
+      // }
+    }
+    else{
+      ROS_DEBUG("Next Waypoint Region not in sight");
+    }
+    if(decisionMade == false and waypointRegionInSight == true){
+      ROS_DEBUG("Waypoint Region in sight, Enforcer advisor active");
+      set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+      set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
+      set<FORRAction> possible_set;
+      set<FORRAction>::iterator actionIter;
+      FORRAction closest_action;
+      double dist_to_region = 100000;
+      vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
+      FORRAction lastAction;
+      int size = actions.size();
+      cout << size << " " << (size - 1) << " " << ((size - 1) >= 0) << endl;
+      if(size > 0){
+        cout << "first" << endl;
+        lastAction = actions[size - 1];
+        cout << "after" << endl;
+      }
+      else{
+        cout << "second" << endl;
+        lastAction = FORRAction(PAUSE, 0);
+        cout << "after" << endl;
+      }
+      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << endl;
+      for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+        FORRAction forrAction = *actionIter;
+        if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+          ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+          continue;
+        }
+        else if(forrAction.type == PAUSE or forrAction.parameter == 0){
+          ROS_DEBUG_STREAM("Pause action : " << forrAction.type << " " << forrAction.parameter);
+          continue;
+        }
+        else if((lastAction.type == RIGHT_TURN or lastAction.type == LEFT_TURN) and (forrAction.type == RIGHT_TURN or forrAction.type == LEFT_TURN)){
+          ROS_DEBUG_STREAM("Skip action : " << forrAction.type << " " << forrAction.parameter);
           continue;
         }
         else{
@@ -338,13 +510,12 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               possible_set.insert(a);
             }
             else{
-              ROS_DEBUG_STREAM("Discarded action : " << forrAction.type << " " << forrAction.parameter);
-              if(forrAction.type == FORWARD){
-                double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) - beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius();
-                if(dist_from_exp < dist_to_region){
-                  dist_to_region = dist_from_exp;
-                  closest_action = forrAction;
-                }
+              ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
+              double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << dist_from_exp << endl;
+              if(dist_from_exp < dist_to_region){
+                dist_to_region = dist_from_exp;
+                closest_action = forrAction;
               }
             }
           }
@@ -355,13 +526,12 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               possible_set.insert(a);
             }
             else{
-              ROS_DEBUG_STREAM("Discarded action : " << forrAction.type << " " << forrAction.parameter);
-              if(forrAction.type == FORWARD){
-                double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) - beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius();
-                if(dist_from_exp < dist_to_region){
-                  dist_to_region = dist_from_exp;
-                  closest_action = forrAction;
-                }
+              ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
+              double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << dist_from_exp << endl;
+              if(dist_from_exp < dist_to_region){
+                dist_to_region = dist_from_exp;
+                closest_action = forrAction;
               }
             }
           }
@@ -375,55 +545,29 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       }
       else if(possible_set.size() > 1){
         ROS_DEBUG("More than one action to get to Waypoint Region, Enforcer advisor to take decision");
-        if(regionID == 0 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
-          Position nextRegionCenter = Position(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_x(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_y(), 0);
-          double nextRegionRadius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius();
+        if(regionID == 0){
           double minDistance = 1000000;
           for(actionIter = possible_set.begin(); actionIter != possible_set.end(); actionIter++){
             FORRAction forrAction = *actionIter;
+            ROS_DEBUG_STREAM("Potential action : " << forrAction.type << " " << forrAction.parameter);
             Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-            if(expectedPosition.getDistance(nextRegionCenter) - nextRegionRadius < minDistance){
-              minDistance = expectedPosition.getDistance(nextRegionCenter) - nextRegionRadius;
+            if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
+              minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
             }
           }
         }
-        else if(regionID == 0 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() < 3){
-          Position task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY(), 0);
+        else if(regionID == 1){
           double minDistance = 1000000;
           for(actionIter = possible_set.begin(); actionIter != possible_set.end(); actionIter++){
             FORRAction forrAction = *actionIter;
+            ROS_DEBUG_STREAM("Potential action : " << forrAction.type << " " << forrAction.parameter);
             Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-            if(expectedPosition.getDistance(task) < minDistance){
-              minDistance = expectedPosition.getDistance(task);
-              (*decision) = forrAction;
-              decisionMade = true;
-            }
-          }
-        }
-        else if(regionID == 1 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4){
-          Position nextRegionCenter = Position(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_x(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_y(), 0);
-          double nextRegionRadius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius();
-          double minDistance = 1000000;
-          for(actionIter = possible_set.begin(); actionIter != possible_set.end(); actionIter++){
-            FORRAction forrAction = *actionIter;
-            Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-            if(expectedPosition.getDistance(nextRegionCenter) - nextRegionRadius < minDistance){
-              minDistance = expectedPosition.getDistance(nextRegionCenter) - nextRegionRadius;
-              (*decision) = forrAction;
-              decisionMade = true;
-            }
-          }
-        }
-        else if(regionID == 1 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() < 4){
-          Position task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY(), 0);
-          double minDistance = 1000000;
-          for(actionIter = possible_set.begin(); actionIter != possible_set.end(); actionIter++){
-            FORRAction forrAction = *actionIter;
-            Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-            if(expectedPosition.getDistance(task) < minDistance){
-              minDistance = expectedPosition.getDistance(task);
+            if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
+              minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+              cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
             }
@@ -431,6 +575,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         }
       }
       else if(dist_to_region < 100000){
+        ROS_DEBUG("Action to get closest to visible Waypoint Region, Enforcer advisor to take decision");
         (*decision) = closest_action;
         decisionMade = true;
       }
@@ -513,23 +658,23 @@ bool Tier1Advisor::advisorAvoidObstacles(){
     // Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(a);
     // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << a.type << " " << a.parameter << endl;
   }
-  // set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
-  // for(int i = 1; i < rotation_set->size()/2+1 ; i++){
-  //   FORRAction forrAction = FORRAction(RIGHT_TURN, i);
-  //   Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-  //   // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
-  //   if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) <= 0.2){
-  //     (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
-  //     ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
-  //   }
-  //   forrAction = FORRAction(LEFT_TURN, i);
-  //   expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
-  //   // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
-  //   if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) <= 0.2){
-  //     (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
-  //     ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
-  //   }
-  // }
+  set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
+  for(int i = 1; i < rotation_set->size()/2+1 ; i++){
+    FORRAction forrAction = FORRAction(RIGHT_TURN, i);
+    Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+    // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
+    if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) < 0.1){
+      (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
+      ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+    }
+    forrAction = FORRAction(LEFT_TURN, i);
+    expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+    // cout << "expectedPosition " << expectedPosition.getX() << " " << expectedPosition.getY() << " Action : " << forrAction.type << " " << forrAction.parameter << endl;
+    if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) < 0.1){
+      (beliefs->getAgentState()->getVetoedActions()->insert(forrAction));
+      ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+    }
+  }
   return false; 
 }
 

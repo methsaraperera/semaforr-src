@@ -27,13 +27,15 @@ struct sk_waypoint {
 	bool isRegion;
     FORRRegion region;
     vector<CartesianPoint> path;
-    sk_waypoint(): isRegion(false), region(), path() { }
-    sk_waypoint(bool b, FORRRegion r, vector<CartesianPoint> p): isRegion(b), region(r), path(p) { }
+    vector<CartesianPoint> original_path;
+    sk_waypoint(): isRegion(false), region(), path(), original_path() { }
+    sk_waypoint(bool b, FORRRegion r, vector<CartesianPoint> p): isRegion(b), region(r), path(p), original_path(p) { }
 
     bool waypointIsRegion() { return isRegion; }
     FORRRegion getRegion() { return region; }
     vector<CartesianPoint> getPath() { return path; }
     CartesianPoint getPathEnd() { return path[path.size()-1]; }
+    void setPath(vector<CartesianPoint> np) { path = np; }
 };
 
 class Task {
@@ -272,7 +274,7 @@ class Task {
 	cout << "plan generation complete" << endl;
   }
 
-  bool generateWaypointsFromInds(Position source, PathPlanner *planner, list<int> indices){
+  bool generateWaypointsFromInds(Position source, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, list<int> indices){
 	waypoints.clear();
 	tierTwoWaypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
@@ -345,7 +347,7 @@ class Task {
 		pathCostInNavOrigGraph = 0;
 	}
 	//setupNextWaypoint(source);
-	setupNearestWaypoint(source);
+	setupNearestWaypoint(source, currentLaserEndpoints);
 	//planner->resetPath();
 	//cout << "plan generation complete" << endl;
   }
@@ -400,7 +402,7 @@ class Task {
 		}
 	}
 
-   void setupNearestWaypoint(Position currentPosition){
+   void setupNearestWaypoint(Position currentPosition, vector<CartesianPoint> currentLaserEndpoints){
    	cout << "inside setup nearest waypoint" << endl;
    	if(plannerName != "skeleton"){
 		double dis;
@@ -445,10 +447,12 @@ class Task {
 	}
 	else{
 		int farthest = -1;
+		int farthest_path = -1;
 		cout << "skeleton_waypoints size: " << skeleton_waypoints.size() << " finished_sk_waypoints size: " << finished_sk_waypoints.size() << endl;
 		for (int i = 0; i < skeleton_waypoints.size(); i++){
 			if(skeleton_waypoints[i].waypointIsRegion()){
-				if(skeleton_waypoints[i].getRegion().inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
+				cout << "region " << i << endl;
+				if(skeleton_waypoints[i].getRegion().inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY())) and skeleton_waypoints[i].getRegion().getCenter().get_distance(CartesianPoint(currentPosition.getX(), currentPosition.getY())) < 0.75){
 					cout << "found skeleton region waypoint: " << i << endl;
 					farthest = i;
 				}
@@ -456,34 +460,69 @@ class Task {
 			else{
 				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
 				double dis;
-				int farthest_path = -1;
-				cout << "pathBetween size: " << pathBetween.size() << endl;
-				for (int j = 0; j < pathBetween.size(); j++){
+				cout << "pathBetween " << i  << " size: " << pathBetween.size() << endl;
+				int farthest_here = -1;
+				for (int j = 0; j < pathBetween.size()-1; j++){
 					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
-					if(dis < 0.75){
-						cout << "found pathBetween with dist < 0.75: " << j << endl;
-						farthest_path = j;
+					if(dis < 0.5 and canAccessPoint(currentLaserEndpoints, CartesianPoint(currentPosition.getX(), currentPosition.getY()), pathBetween[j+1], 20)){
+						cout << "found pathBetween with dist < 0.5: " << j << endl;
+						farthest_here = j;
 					}
 				}
-				if(farthest_path == pathBetween.size()-1){
-					cout << "found skeleton region waypoint: " << i << endl;
+				if(farthest_here > -1 or currentPosition.getDistance(pathBetween[pathBetween.size()-1].get_x(), pathBetween[pathBetween.size()-1].get_y()) < 0.5){
+					cout << "found skeleton region waypoint: " << i << " farthest_here " << farthest_here << endl;
 					farthest = i;
+					farthest_path = farthest_here;
 				}
 			}
 		}
-		if(farthest == 0){
+		cout << "farthest " << farthest << " farthest_path " << farthest_path << endl;
+		if(farthest == 0 and (skeleton_waypoints[0].waypointIsRegion() or (!skeleton_waypoints[0].waypointIsRegion() and farthest_path == skeleton_waypoints[0].getPath().size()-1))){
+			cout << "eliminate first" << endl;
 			finished_sk_waypoints.push_back(skeleton_waypoints[0]);
 			skeleton_waypoints.erase(skeleton_waypoints.begin());
 		}
-		else if(farthest > 0){
+		else if(farthest == 0){
+			cout << "eliminate first path up to farthest_path" << endl;
+			vector<CartesianPoint> new_path;
+			for(int i = farthest_path+1; i < skeleton_waypoints[0].getPath().size(); i++){
+				new_path.push_back(skeleton_waypoints[0].getPath()[i]);
+			}
+			skeleton_waypoints[0].setPath(new_path);
+		}
+		else if(farthest > 0 and skeleton_waypoints[farthest].waypointIsRegion()){
+			cout << "eliminate up to farthest region" << endl;
 			for(int i = 0; i <= farthest; i++){
 				finished_sk_waypoints.push_back(skeleton_waypoints[i]);
 			}
 			skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+farthest);
 		}
+		else if(farthest > 0 and !skeleton_waypoints[farthest].waypointIsRegion()){
+			cout << "eliminate up to farthest path up to farthest_path" << endl;
+			if(farthest_path == skeleton_waypoints[farthest].getPath().size()-1){
+				cout << "farthest_path is equal to last in path " << skeleton_waypoints[farthest].getPath().size()-1 << endl;
+				for(int i = 0; i <= farthest; i++){
+					finished_sk_waypoints.push_back(skeleton_waypoints[i]);
+				}
+				skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+farthest);
+			}
+			else{
+				cout << "eliminate up to one before farthest path" << endl;
+				for(int i = 0; i <= farthest-1; i++){
+					finished_sk_waypoints.push_back(skeleton_waypoints[i]);
+				}
+				skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+(farthest-1));
+				vector<CartesianPoint> new_path;
+				for(int i = farthest_path+1; i < skeleton_waypoints[0].getPath().size(); i++){
+					new_path.push_back(skeleton_waypoints[0].getPath()[i]);
+				}
+				skeleton_waypoints[0].setPath(new_path);
+			}
+		}
 		cout << "skeleton_waypoints size: " << skeleton_waypoints.size() << " finished_sk_waypoints size: " << finished_sk_waypoints.size() << endl;
 		wr = skeleton_waypoints[0];
-		//cout << "check plan active: " << skeleton_waypoints.size() << endl;
+		cout << "new current waypoint " << this->getX() << " " << this->getY() << endl;
+		cout << "check plan active: " << skeleton_waypoints.size() << endl;
 		if(skeleton_waypoints.size() > 0){
 			isPlanActive = true;
 		}
@@ -514,7 +553,7 @@ class Task {
 	// return status;
  //   }
 
-   bool isAnyWaypointComplete(Position currentPosition){
+   bool isAnyWaypointComplete(Position currentPosition, vector<CartesianPoint> currentLaserEndpoints){
 	bool status = false;
 	if(isPlanActive && plannerName != "skeleton"){
 		for (int i = 0; i < waypoints.size(); i++){
@@ -528,7 +567,7 @@ class Task {
 	else if(isPlanActive){
 		for (int i = 0; i < skeleton_waypoints.size(); i++){
 			if(skeleton_waypoints[i].waypointIsRegion()){
-				if(skeleton_waypoints[i].getRegion().inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY()))){
+				if(skeleton_waypoints[i].getRegion().inRegion(CartesianPoint(currentPosition.getX(), currentPosition.getY())) and skeleton_waypoints[i].getRegion().getCenter().get_distance(CartesianPoint(currentPosition.getX(), currentPosition.getY())) < 0.75){
 					status = true;
 					break;
 				}
@@ -538,14 +577,14 @@ class Task {
 				double dis;
 				int farthest_path = -1;
 				cout << "pathBetween size: " << pathBetween.size() << endl;
-				for (int j = 0; j < pathBetween.size(); j++){
+				for (int j = 0; j < pathBetween.size()-1; j++){
 					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
-					if(dis < 0.25){
-						cout << "found pathBetween with dist < 0.25: " << j << endl;
+					if(dis < 0.5 and canAccessPoint(currentLaserEndpoints, CartesianPoint(currentPosition.getX(), currentPosition.getY()), pathBetween[j+1], 20)){
+						cout << "found pathBetween with dist < 0.5: " << j << endl;
 						farthest_path = j;
 					}
 				}
-				if(farthest_path == pathBetween.size()-1){
+				if(farthest_path > -1 or currentPosition.getDistance(pathBetween[pathBetween.size()-1].get_x(), pathBetween[pathBetween.size()-1].get_y()) < 0.5){
 					status = true;
 					break;
 				}

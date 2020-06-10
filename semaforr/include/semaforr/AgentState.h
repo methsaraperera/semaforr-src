@@ -145,9 +145,9 @@ public:
     }
   }
 
-  void setCurrentWaypoints(Position current, PathPlanner *planner, bool aStarOn, list<int> indices){
+  void setCurrentWaypoints(Position current, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, bool aStarOn, list<int> indices){
     if(aStarOn){
-      currentTask->generateWaypointsFromInds(current, planner, indices);
+      currentTask->generateWaypointsFromInds(current, currentLaserEndpoints, planner, indices);
       //currentTask->generateOriginalWaypoints(current, planner);
     }
   }

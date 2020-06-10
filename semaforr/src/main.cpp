@@ -146,8 +146,8 @@ public:
 		geometry_msgs::Twist base_cmd;
 
 		ros::Rate rate(30.0);
-		double epsilon_move = 0.2; //Meters
-		double epsilon_turn = 0.05; //Radians
+		double epsilon_move = 0.06; //Meters
+		double epsilon_turn = 0.11; //Radians
 		bool action_complete = true;
 		bool mission_complete = false;
 		FORRAction semaforr_action;
@@ -238,16 +238,17 @@ public:
 	bool testActionCompletion(FORRAction action, Position current, Position previous, double epsilon_move, double epsilon_rotate, double elapsed_time)
 	{
 		//ROS_DEBUG("Testing if action has been completed by the robot");
-		//ROS_DEBUG_STREAM("Current position " << current.getX() << " " << current.getY() << " " << current.getTheta()); 
-		//ROS_DEBUG_STREAM("Previous position " << previous.getX() << " " << previous.getY() << " " << previous.getTheta());
+		// ROS_DEBUG_STREAM("Current position " << current.getX() << " " << current.getY() << " " << current.getTheta()); 
+		// ROS_DEBUG_STREAM("Previous position " << previous.getX() << " " << previous.getY() << " " << previous.getTheta());
 		bool actionComplete = false;
 		//ROS_DEBUG_STREAM("Position expected " << expected.getX() << " " << expected.getY() << " " << expected.getTheta());
 		if (action.type == FORWARD){
 			double distance_travelled = previous.getDistance(current);
 			double expected_travel = controller->getBeliefs()->getAgentState()->getMovement(action.parameter);
 			//if((abs(distance_travelled - expected_travel) < epsilon_move)){
-			if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel*0.6692+0.0111) or (abs(distance_travelled - expected_travel) < epsilon_move)){
-				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(distance_travelled - expected_travel));
+			// if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel*0.6692+0.0111) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
+			if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
+				ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(distance_travelled - expected_travel));
 				actionComplete = true;
 			}
 			else{
@@ -263,12 +264,13 @@ public:
 			if(turn_completed < -M_PI)
 				turn_completed = turn_completed + (2*M_PI);
 
-			double turn_expected = controller->getBeliefs()->getAgentState()->getRotation(action.parameter);
+			double turn_expected = fabs(controller->getBeliefs()->getAgentState()->getRotation(action.parameter));
 			//if(action.type == RIGHT_TURN) 
 			//	turn_expected = (-1)*turn_expected;
 			//if((abs(turn_completed - turn_expected) < epsilon_rotate)){
-			if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (abs(turn_completed - turn_expected) < epsilon_rotate)){
-				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(turn_completed - turn_expected));
+			// if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate)){
+			if((elapsed_time >= turn_expected/0.5) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate) and fabs(turn_completed) > 0){
+				ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(fabs(turn_completed) - turn_expected));
 				actionComplete = true;
 			}
 			else {

@@ -22,7 +22,8 @@ class FORRRegion{
     center = point;
     // lasers.push_back(lep);
     for(int i = 0; i < 360; i++){
-      visibility.push_back(-1.0);
+      min_visibility.push_back(-1.0);
+      max_visibility.push_back(-1.0);
     }
     this->adjustVisibility(point, lep);
     this->setRadius(r);
@@ -31,7 +32,8 @@ class FORRRegion{
     center = point;
     // lasers.push_back(lep);
     for(int i = 0; i < 360; i++){
-      visibility.push_back(1.0);
+      min_visibility.push_back(r);
+      max_visibility.push_back(r);
     }
     this->setRadius(r);
   }
@@ -132,8 +134,11 @@ class FORRRegion{
       double dist_to_center = lep[i].get_distance(center);
       if(dist_to_center > 25.0) dist_to_center = 25.0;
       // cout << "laser_direction " << laser_direction << " degrees " << degrees << " distance " << dist_to_center << endl;
-      if(visibility[(int)(degrees)] == -1.0 or visibility[(int)(degrees)] > dist_to_center){
-        visibility[(int)(degrees)] = dist_to_center;
+      if(min_visibility[(int)(degrees)] == -1.0 or min_visibility[(int)(degrees)] > dist_to_center){
+        min_visibility[(int)(degrees)] = dist_to_center;
+      }
+      if(max_visibility[(int)(degrees)] == -1.0 or max_visibility[(int)(degrees)] < dist_to_center){
+        max_visibility[(int)(degrees)] = dist_to_center;
       }
     }
     // cout << "Current visibility: ";
@@ -161,8 +166,11 @@ class FORRRegion{
       double dist_to_center = end_point.get_distance(center);
       if(dist_to_center > 25.0) dist_to_center = 25.0;
       // cout << "laser_direction " << laser_direction << " degrees " << degrees << " distance " << dist_to_center << endl;
-      if(visibility[(int)(degrees)] == -1.0 or visibility[(int)(degrees)] > dist_to_center){
-        visibility[(int)(degrees)] = dist_to_center;
+      if(min_visibility[(int)(degrees)] == -1.0 or min_visibility[(int)(degrees)] > dist_to_center){
+        min_visibility[(int)(degrees)] = dist_to_center;
+      }
+      if(max_visibility[(int)(degrees)] == -1.0 or max_visibility[(int)(degrees)] < dist_to_center){
+        max_visibility[(int)(degrees)] = dist_to_center;
       }
     }
     // cout << "Current visibility: ";
@@ -187,7 +195,7 @@ class FORRRegion{
   // }
 
   vector<double> getVisibility(){
-    return visibility;
+    return max_visibility;
   }
 
 
@@ -201,17 +209,17 @@ class FORRRegion{
     double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
     double degrees = point_direction * (180.0/3.141592653589793238463);
     if(degrees < 0) degrees = degrees + 360;
-    cout << "point_direction " << point_direction << " degrees " << degrees << " distance " << distLaserPosToPoint << " current visibility " << visibility[(int)(degrees)] << endl;
+    cout << "point_direction " << point_direction << " degrees " << degrees << " distance " << distLaserPosToPoint << " current visibility " << max_visibility[(int)(degrees)] << endl;
     int index = (int)(degrees);
     while (index-2 < 0){
       index = index + 1;
     }
-    while (index+2 > visibility.size()-1){
+    while (index+2 > max_visibility.size()-1){
       index = index - 1;
     }
     int numFree = 0;
     for(int i = -2; i < 3; i++){
-      if(visibility[index+i] >= distLaserPosToPoint){
+      if(max_visibility[index+i] >= distLaserPosToPoint){
         numFree++;
       }
     }
@@ -318,7 +326,8 @@ class FORRRegion{
  private:
   CartesianPoint center;
   // vector < vector <CartesianPoint> > lasers;
-  vector<double> visibility;
+  vector<double> min_visibility;
+  vector<double> max_visibility;
   double radius;
   bool isLeaf;
   // each value in the list denotes a possible exit from the region

@@ -866,7 +866,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   }
   if(highwayExploration->getHighwaysComplete() or !highwaysOn){
     //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
-    bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current);
+    bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
     if(highwayFinished == 1){
@@ -930,7 +930,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     else if(waypointReached == true and beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 0){
       ROS_DEBUG("Waypoint reached, but task still incomplete, switching to nearest visible waypoint towards target!!");
       //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
-      beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current);
+      beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
       //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
     }
     // else if(isPlanActive == false and aStarOn){
@@ -1551,7 +1551,7 @@ void Controller::tierTwoDecision(Position current){
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       if(planner->getName() == bestPlanNames.at(random_number)){
-        beliefs->getAgentState()->setCurrentWaypoints(current, planner, aStarOn, plans.at(bestPlanInds.at(random_number)));
+        beliefs->getAgentState()->setCurrentWaypoints(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), planner, aStarOn, plans.at(bestPlanInds.at(random_number)));
         break;
       }
     }

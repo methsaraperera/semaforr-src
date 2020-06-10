@@ -167,9 +167,9 @@ explore = "off"
 # whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
 # situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 # experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
-num_runs = 1
-for i in range(0,num_runs):
-    map_name = "map-a"
+num_runs = 10
+for i in range(4,num_runs):
+    map_name = "map-c"
     target_file_name = "target40test.conf"
     log_name = map_name + "_planning_" + str(i) + ".txt"
     advisors = "/config/advisors2.conf"
