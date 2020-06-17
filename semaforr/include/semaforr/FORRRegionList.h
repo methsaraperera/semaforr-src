@@ -353,14 +353,14 @@ class FORRRegionList{
         end_region_id = region_id;
         end_position = j;
         CartesianPoint midpoint = stepped_history[(int)((begin_position+end_position)/2)];
-        cout << "Begin region : " << begin_region_id << " " << regions[begin_region_id].getCenter().get_x() << " " << regions[begin_region_id].getCenter().get_y() << " " << regions[begin_region_id].getRadius() << " End Region : " << end_region_id << " " << regions[end_region_id].getCenter().get_x() << " " << regions[end_region_id].getCenter().get_y() << " " << regions[end_region_id].getRadius() << endl;
-        cout << "Starting position : " << begin_position << " Middle Position : " << (int)((begin_position+end_position)/2) << " Ending Position : " << end_position << endl;
+        // cout << "Begin region : " << begin_region_id << " " << regions[begin_region_id].getCenter().get_x() << " " << regions[begin_region_id].getCenter().get_y() << " " << regions[begin_region_id].getRadius() << " End Region : " << end_region_id << " " << regions[end_region_id].getCenter().get_x() << " " << regions[end_region_id].getCenter().get_y() << " " << regions[end_region_id].getRadius() << endl;
+        // cout << "Starting position : " << begin_position << " Middle Position : " << (int)((begin_position+end_position)/2) << " Ending Position : " << end_position << endl;
         vector<CartesianPoint> pathBetweenRegions;
         vector< vector<CartesianPoint> > laserBetweenRegions;
         double connectionBetweenRegions = 0;
         for(int m = begin_position; m <= end_position; m++){
           // connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
-          cout << "step " << m << " " << stepped_history[m].get_x() << " " << stepped_history[m].get_y() << " point " << run_trace[step_to_trace[m][0]][step_to_trace[m][1]].get_x() << " " << run_trace[step_to_trace[m][0]][step_to_trace[m][1]].get_y() << endl;
+          // cout << "step " << m << " " << stepped_history[m].get_x() << " " << stepped_history[m].get_y() << " point " << run_trace[step_to_trace[m][0]][step_to_trace[m][1]].get_x() << " " << run_trace[step_to_trace[m][0]][step_to_trace[m][1]].get_y() << endl;
           pathBetweenRegions.push_back(run_trace[step_to_trace[m][0]][step_to_trace[m][1]]);
           laserBetweenRegions.push_back(laser_trace[step_to_trace[m][0]][step_to_trace[m][1]]);
         }
@@ -389,23 +389,23 @@ class FORRRegionList{
         // }
         // trailPositions.push_back(regions[end_region_id].getCenter());
         trailPositions.push_back(stepped_history[end_position]);
-        cout << "Length of trail " << trailPositions.size() << endl;
+        // cout << "Length of trail " << trailPositions.size() << endl;
         if(trailPositions.size() == 2 and trailPositions[0] == trailPositions[1]){
           trailPositions.clear();
           trailPositions.push_back(stepped_history[begin_position]);
-          cout << stepped_history[begin_position].get_x() << " " << stepped_history[begin_position].get_y() << endl;
+          // cout << stepped_history[begin_position].get_x() << " " << stepped_history[begin_position].get_y() << endl;
           trailPositions.push_back(stepped_history[end_position]);
-          cout << stepped_history[end_position].get_x() << " " << stepped_history[end_position].get_y() << endl;
+          // cout << stepped_history[end_position].get_x() << " " << stepped_history[end_position].get_y() << endl;
           connectionBetweenRegions += stepped_history[begin_position].get_distance(stepped_history[end_position]);
         }
         else{
           for(int i = 0; i < trailPositions.size()-1; i++){
-            cout << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
+            // cout << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
             connectionBetweenRegions += trailPositions[i].get_distance(trailPositions[i+1]);
           }
-          cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
+          // cout << trailPositions[trailPositions.size()-1].get_x() << " " << trailPositions[trailPositions.size()-1].get_y() << endl;
         }
-        cout << "Distance of connection : " << connectionBetweenRegions << endl;
+        // cout << "Distance of connection : " << connectionBetweenRegions << endl;
         saveExit(stepped_history[begin_position], stepped_history[begin_position+1], begin_region_id, midpoint, stepped_history[end_position-1] , stepped_history[end_position] , end_region_id, connectionBetweenRegions, trace_inds[step_to_trace[begin_position][0]], trailPositions);
       }
     }
@@ -756,9 +756,9 @@ class FORRRegionList{
     
     CartesianPoint exit_begin_p = getCrossingPointOnRegion(begin1, begin2, begin_region);
     CartesianPoint exit_end_p = getCrossingPointOnRegion(end1, end2, end_region);
-    cout << begin1.get_x() << " " << begin1.get_y() << " " << begin2.get_x() << " " << begin2.get_y() << " " << regions[begin_region].getCenter().get_x() << " " << regions[begin_region].getCenter().get_y() << " " << regions[begin_region].getRadius() << " " << exit_begin_p.get_x() << " " << exit_begin_p.get_y() << endl;
-    cout << end1.get_x() << " " << end1.get_y() << " " << end2.get_x() << " " << end2.get_y() << " " << regions[end_region].getCenter().get_x() << " " << regions[end_region].getCenter().get_y() << " " << regions[end_region].getRadius() << " " << exit_end_p.get_x() << " " << exit_end_p.get_y() << endl;
-    cout << midpoint.get_x() << " " << midpoint.get_y() << endl;
+    // cout << begin1.get_x() << " " << begin1.get_y() << " " << begin2.get_x() << " " << begin2.get_y() << " " << regions[begin_region].getCenter().get_x() << " " << regions[begin_region].getCenter().get_y() << " " << regions[begin_region].getRadius() << " " << exit_begin_p.get_x() << " " << exit_begin_p.get_y() << endl;
+    // cout << end1.get_x() << " " << end1.get_y() << " " << end2.get_x() << " " << end2.get_y() << " " << regions[end_region].getCenter().get_x() << " " << regions[end_region].getCenter().get_y() << " " << regions[end_region].getRadius() << " " << exit_end_p.get_x() << " " << exit_end_p.get_y() << endl;
+    // cout << midpoint.get_x() << " " << midpoint.get_y() << endl;
     //cout << "End exit begin/end" << endl;
 
     //cout << "In save exit  " << "Start region : " << begin_region << "End region : " << end_region << endl;

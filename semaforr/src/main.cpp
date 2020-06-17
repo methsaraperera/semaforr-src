@@ -248,7 +248,7 @@ public:
 			//if((abs(distance_travelled - expected_travel) < epsilon_move)){
 			// if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel*0.6692+0.0111) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
 			if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
-				ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(distance_travelled - expected_travel));
+				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(distance_travelled - expected_travel));
 				actionComplete = true;
 			}
 			else{
@@ -270,7 +270,7 @@ public:
 			//if((abs(turn_completed - turn_expected) < epsilon_rotate)){
 			// if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate)){
 			if((elapsed_time >= turn_expected/0.5) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate) and fabs(turn_completed) > 0){
-				ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(fabs(turn_completed) - turn_expected));
+				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(fabs(turn_completed) - turn_expected));
 				actionComplete = true;
 			}
 			else {

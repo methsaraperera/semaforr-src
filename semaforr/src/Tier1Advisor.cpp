@@ -344,7 +344,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         }
       }
     }
-    cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " nextWaypointRegionInSight " << nextWaypointRegionInSight << " nextRegionId " << nextRegionId << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << endl;
+    // cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " nextWaypointRegionInSight " << nextWaypointRegionInSight << " nextRegionId " << nextRegionId << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << endl;
     if(nextWaypointRegionInSight == true){
       ROS_DEBUG("Next Waypoint Region in sight, Enforcer advisor active");
       set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
@@ -356,18 +356,18 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
       FORRAction lastAction;
       int size = actions.size();
-      cout << size << " " << (size - 1) << " " << ((size - 1) >= 0) << endl;
+      // cout << size << " " << (size - 1) << " " << ((size - 1) >= 0) << endl;
       if(size > 0){
-        cout << "first" << endl;
+        // cout << "first" << endl;
         lastAction = actions[size - 1];
-        cout << "after" << endl;
+        // cout << "after" << endl;
       }
       else{
-        cout << "second" << endl;
+        // cout << "second" << endl;
         lastAction = FORRAction(PAUSE, 0);
-        cout << "after" << endl;
+        // cout << "after" << endl;
       }
-      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << endl;
+      // cout << "lastAction " << lastAction.type << " " << lastAction.parameter << endl;
       for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
         FORRAction forrAction = *actionIter;
         if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
@@ -393,7 +393,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             else{
               ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
               double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << dist_from_exp << endl;
+              // cout << dist_from_exp << endl;
               if(dist_from_exp < dist_to_region){
                 dist_to_region = dist_from_exp;
                 closest_action = forrAction;
@@ -409,7 +409,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             else{
               ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
               double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << dist_from_exp << endl;
+              // cout << dist_from_exp << endl;
               if(dist_from_exp < dist_to_region){
                 dist_to_region = dist_from_exp;
                 closest_action = forrAction;
@@ -434,7 +434,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
             if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
               minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << "New minDistance " << minDistance << endl;
+              // cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
             }
@@ -448,7 +448,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
             if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
               minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << "New minDistance " << minDistance << endl;
+              // cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
             }
@@ -475,18 +475,18 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
       FORRAction lastAction;
       int size = actions.size();
-      cout << size << " " << (size - 1) << " " << ((size - 1) >= 0) << endl;
+      // cout << size << " " << (size - 1) << " " << ((size - 1) >= 0) << endl;
       if(size > 0){
-        cout << "first" << endl;
+        // cout << "first" << endl;
         lastAction = actions[size - 1];
-        cout << "after" << endl;
+        // cout << "after" << endl;
       }
       else{
-        cout << "second" << endl;
+        // cout << "second" << endl;
         lastAction = FORRAction(PAUSE, 0);
-        cout << "after" << endl;
+        // cout << "after" << endl;
       }
-      cout << "lastAction " << lastAction.type << " " << lastAction.parameter << endl;
+      // cout << "lastAction " << lastAction.type << " " << lastAction.parameter << endl;
       for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
         FORRAction forrAction = *actionIter;
         if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
@@ -512,7 +512,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             else{
               ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
               double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << dist_from_exp << endl;
+              // cout << dist_from_exp << endl;
               if(dist_from_exp < dist_to_region){
                 dist_to_region = dist_from_exp;
                 closest_action = forrAction;
@@ -528,7 +528,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             else{
               ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
               double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << dist_from_exp << endl;
+              // cout << dist_from_exp << endl;
               if(dist_from_exp < dist_to_region){
                 dist_to_region = dist_from_exp;
                 closest_action = forrAction;
@@ -553,7 +553,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
             if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
               minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << "New minDistance " << minDistance << endl;
+              // cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
             }
@@ -567,7 +567,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
             if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY())) < minDistance){
               minDistance = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              cout << "New minDistance " << minDistance << endl;
+              // cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
             }
@@ -592,13 +592,13 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       else if(pathID == 1){
         pathBetweenWaypoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getPath();
       }
-      cout << "pathBetweenWaypoints " << pathBetweenWaypoints.size() << endl;
+      // cout << "pathBetweenWaypoints " << pathBetweenWaypoints.size() << endl;
       CartesianPoint farthestVisible;
       int farthest = -1;
       for(int i = pathBetweenWaypoints.size()-1; i >= 0; i--){
         if(beliefs->getAgentState()->canSeePoint(pathBetweenWaypoints[i], 20)){
           farthestVisible = pathBetweenWaypoints[i];
-          cout << "farthestVisible " << i << endl;
+          // cout << "farthestVisible " << i << endl;
           farthest = i;
           break;
         }

@@ -117,8 +117,8 @@ public:
 		publish_remaining_targets();
 	}
 	// publish_nodes();
-	publish_reachable_nodes();
-	publish_edges();
+	// publish_reachable_nodes();
+	// publish_edges();
         /*if(visualized < 5){
 		publish_nodes();
 		publish_reachable_nodes();
@@ -127,16 +127,16 @@ public:
 	}*/
 	//publish_edges_cost();
 	publish_conveyor();
-	publish_hallway1();
-	publish_hallway2();
-	publish_hallway3();
-	publish_hallway4();
+	// publish_hallway1();
+	// publish_hallway2();
+	// publish_hallway3();
+	// publish_hallway4();
 	publish_region();
 	publish_exits();
 	publish_skeleton();
 	publish_trails();
 	publish_doors();
-	publish_barriers();
+	// publish_barriers();
 	publish_walls();
 	//publish_occupancy();
 	publish_highway();
@@ -186,7 +186,7 @@ public:
   }
 
   void publish_reachable_nodes(){
-	cout << "publish nodes" << endl;
+	// cout << "publish nodes" << endl;
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "map";
     	marker.header.stamp = ros::Time::now();
@@ -333,7 +333,7 @@ public:
   }
 
   void publish_next_target(){
-	ROS_DEBUG("Inside visualization tool!!");
+	// ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped target;
 	target.header.frame_id = "map";
 	target.header.stamp = ros::Time::now();
@@ -344,7 +344,7 @@ public:
   }
 
   void publish_highway_target(){
-	ROS_DEBUG("Inside visualization tool!!");
+	// ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped target;
 	target.header.frame_id = "map";
 	target.header.stamp = ros::Time::now();
@@ -355,7 +355,7 @@ public:
   }
 
   void publish_next_waypoint(){
-	ROS_DEBUG("Inside visualization tool!!");
+	// ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped waypoint;
 	waypoint.header.frame_id = "map";
 	waypoint.header.stamp = ros::Time::now();
@@ -367,7 +367,7 @@ public:
 
 
   void publish_plan(){
-	ROS_DEBUG("Inside publish plan!!");
+	// ROS_DEBUG("Inside publish plan!!");
 	nav_msgs::Path path;
 	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
@@ -425,7 +425,7 @@ public:
  }
 
  void publish_highway_plan(){
-	ROS_DEBUG("Inside publish highway plan!!");
+	// ROS_DEBUG("Inside publish highway plan!!");
 	nav_msgs::Path path;
 	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
@@ -444,7 +444,7 @@ public:
  }
 
  void publish_original_plan(){
-	ROS_DEBUG("Inside publish original plan!!");
+	// ROS_DEBUG("Inside publish original plan!!");
 	nav_msgs::Path path;
 	//path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
@@ -468,7 +468,7 @@ public:
  }
 
   void publish_conveyor(){
-	ROS_DEBUG("Inside publish conveyor");
+	// ROS_DEBUG("Inside publish conveyor");
 	nav_msgs::OccupancyGrid grid;
 
 	grid.header.frame_id = "map";
@@ -490,10 +490,10 @@ public:
   }
 
   void publish_hallway1(){
-	ROS_DEBUG("Inside publish hallway1");
+	// ROS_DEBUG("Inside publish hallway1");
 	visualization_msgs::Marker marker;
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
-	cout << "There are currently " << hallways.size() << " hallways" << endl;
+	// cout << "There are currently " << hallways.size() << " hallways" << endl;
 	marker.header.frame_id = "map";
 	marker.header.stamp = ros::Time::now();
 	marker.ns = "basic_shapes";
@@ -512,7 +512,7 @@ public:
 	for(int i = 0; i < hallways.size(); i++){
 		vector<CartesianPoint> points = hallways[i].getPoints();
 		int hallway_type = hallways[i].getHallwayType();
-		cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
+		// cout << "Number of points = " << points.size() << " Hallway type = " << hallway_type << endl;
 		if(hallway_type == 0){
 			for(int j = 0; j < points.size(); j++){
 				float x = points[j].get_x();
@@ -535,7 +535,7 @@ public:
   }
 
   void publish_hallway2(){
-	ROS_DEBUG("Inside publish hallway2");
+	// ROS_DEBUG("Inside publish hallway2");
 	visualization_msgs::Marker marker;
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 	//cout << "There are currently " << hallways.size() << " hallways" << endl;
@@ -580,7 +580,7 @@ public:
   }
 
   void publish_hallway3(){
-	ROS_DEBUG("Inside publish hallway3");
+	// ROS_DEBUG("Inside publish hallway3");
 	visualization_msgs::Marker marker;
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 	//cout << "There are currently " << hallways.size() << " hallways" << endl;
@@ -625,7 +625,7 @@ public:
   }
 
   void publish_hallway4(){
-	ROS_DEBUG("Inside publish hallway4");
+	// ROS_DEBUG("Inside publish hallway4");
 	visualization_msgs::Marker marker;
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
 	//cout << "There are currently " << hallways.size() << " hallways" << endl;
@@ -670,7 +670,7 @@ public:
   }
 
   void publish_occupancy(){
-	ROS_DEBUG("Inside publish occupancy");
+	// ROS_DEBUG("Inside publish occupancy");
 	nav_msgs::OccupancyGrid grid;
 
 	grid.header.frame_id = "map";
@@ -698,7 +698,7 @@ public:
   }
 
   void publish_region(){
-	ROS_DEBUG("Inside publish regions");
+	// ROS_DEBUG("Inside publish regions");
 
 	visualization_msgs::MarkerArray markerArray;
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
@@ -738,9 +738,9 @@ public:
   }
 
   void publish_exits(){
-	ROS_DEBUG("Inside publish exits");
+	// ROS_DEBUG("Inside publish exits");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
-	cout << "There are currently " << regions.size() << " regions" << endl;
+	// cout << "There are currently " << regions.size() << " regions" << endl;
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "map";
 	marker.header.stamp = ros::Time::now();
@@ -778,9 +778,9 @@ public:
   	exits_pub_.publish(marker);
   }
   void publish_skeleton(){
-  	ROS_DEBUG("Inside publish skeleton");
+  	// ROS_DEBUG("Inside publish skeleton");
   	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
-	cout << "There are currently " << regions.size() << " regions" << endl;
+	// cout << "There are currently " << regions.size() << " regions" << endl;
 	visualization_msgs::Marker line_list;
 	line_list.header.frame_id = "map";
 	line_list.header.stamp = ros::Time::now();
@@ -812,7 +812,7 @@ public:
   }
 
   void publish_trails(){
-	ROS_DEBUG("Inside publish trail");
+	// ROS_DEBUG("Inside publish trail");
 	//Goal here is to publish all trails
 
 	FORRTrails *trails = beliefs->getSpatialModel()->getTrails();
@@ -846,7 +846,7 @@ public:
 	line_list.scale.x = 0.1;
 	line_list.color.r = 1.0;
 	line_list.color.a = 1.0;
-	cout << "There are currently " << trails->getSize() << " trails" << endl;
+	// cout << "There are currently " << trails->getSize() << " trails" << endl;
 	for(int i = 0 ; i < trails->getSize(); i++){
 		vector<TrailMarker> trail = trails->getTrail(i);
 		for(int j = 0; j < trail.size()-1; j++){
@@ -868,10 +868,10 @@ public:
   }
 
   void publish_doors(){
-	ROS_DEBUG("Inside publish doors");
+	// ROS_DEBUG("Inside publish doors");
 
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
-	cout << "There are currently " << doors.size() << " regions" << endl;
+	// cout << "There are currently " << doors.size() << " regions" << endl;
 	visualization_msgs::Marker line_list;
 	line_list.header.frame_id = "map";
 	line_list.header.stamp = ros::Time::now();
@@ -903,10 +903,10 @@ public:
   }
 
     void publish_barriers(){
-	ROS_DEBUG("Inside publish barriers");
+	// ROS_DEBUG("Inside publish barriers");
 
 	std::vector<LineSegment> barriers = beliefs->getSpatialModel()->getBarriers()->getBarriers();
-	cout << "There are currently " << barriers.size() << " barriers" << endl;
+	// cout << "There are currently " << barriers.size() << " barriers" << endl;
 	visualization_msgs::Marker line_list;
 	line_list.header.frame_id = "map";
 	line_list.header.stamp = ros::Time::now();
@@ -936,9 +936,9 @@ public:
   }
 
   void publish_walls(){
-	ROS_DEBUG("Inside publish walls");
+	// ROS_DEBUG("Inside publish walls");
 	vector<Wall> walls = con->getPlanner()->getMap()->getWalls();
-	cout << "There are currently " << walls.size() << " walls" << endl;
+	// cout << "There are currently " << walls.size() << " walls" << endl;
 	visualization_msgs::Marker line_list;
 	line_list.header.frame_id = "map";
     	line_list.header.stamp = ros::Time::now();
@@ -967,7 +967,7 @@ public:
   }
 
   void publish_all_targets(){
-	ROS_DEBUG("Publish All targets as pose array!!");
+	// ROS_DEBUG("Publish All targets as pose array!!");
 	geometry_msgs::PoseArray targets;
 	targets.header.frame_id = "map";
 	targets.header.stamp = ros::Time::now();
@@ -985,7 +985,7 @@ public:
   }
 
   void publish_remaining_targets(){
-	ROS_DEBUG("Publish remaining targets as pose array!!");
+	// ROS_DEBUG("Publish remaining targets as pose array!!");
 	geometry_msgs::PoseArray targets;
 	targets.header.frame_id = "map";
 	targets.header.stamp = ros::Time::now();
@@ -1003,7 +1003,7 @@ public:
   }
 
   void publish_highway(){
-	ROS_DEBUG("Inside publish highway");
+	// ROS_DEBUG("Inside publish highway");
 	nav_msgs::OccupancyGrid grid;
 
 	grid.header.frame_id = "map";
@@ -1024,7 +1024,7 @@ public:
   }
 
   void publish_log(FORRAction decision, double overallTimeSec, double computationTimeSec){
-	ROS_DEBUG("Inside publish decision log!!");
+	// ROS_DEBUG("Inside publish decision log!!");
 	std_msgs::String log;
 	double robotX = beliefs->getAgentState()->getCurrentPosition().getX();
 	double robotY = beliefs->getAgentState()->getCurrentPosition().getY();

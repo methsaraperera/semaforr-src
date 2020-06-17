@@ -83,7 +83,7 @@ std::map <FORRAction, double> Tier3Advisor::allAdvice(){
     if(vetoed_actions->find(forrAction) != vetoed_actions->end())// is this action vetoed
       continue;
     adviceStrength = this->actionComment(forrAction);
-    std::cout << "Advisor name :"  << this->get_name() << " Strength: " << adviceStrength << " Action Type:" << forrAction.type << " " << "Action intensity " << forrAction.parameter << std::endl;
+    // std::cout << "Advisor name :"  << this->get_name() << " Strength: " << adviceStrength << " Action Type:" << forrAction.type << " " << "Action intensity " << forrAction.parameter << std::endl;
     result[forrAction] = adviceStrength;
   } 
   //if(result.size() > 1){

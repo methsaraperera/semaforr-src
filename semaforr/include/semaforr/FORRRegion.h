@@ -200,7 +200,7 @@ class FORRRegion{
 
 
   bool visibleFromRegion(CartesianPoint point, double distanceLimit){
-    cout << "Inside Visible From Region" << endl;
+    // cout << "Inside Visible From Region" << endl;
     CartesianPoint laserPos = center;
     double distLaserPosToPoint = laserPos.get_distance(point);
     if(distLaserPosToPoint > distanceLimit){
@@ -209,7 +209,7 @@ class FORRRegion{
     double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
     double degrees = point_direction * (180.0/3.141592653589793238463);
     if(degrees < 0) degrees = degrees + 360;
-    cout << "point_direction " << point_direction << " degrees " << degrees << " distance " << distLaserPosToPoint << " current visibility " << max_visibility[(int)(degrees)] << endl;
+    // cout << "point_direction " << point_direction << " degrees " << degrees << " distance " << distLaserPosToPoint << " current visibility " << max_visibility[(int)(degrees)] << endl;
     int index = (int)(degrees);
     while (index-2 < 0){
       index = index + 1;
@@ -245,7 +245,7 @@ class FORRRegion{
   }
 
   void removeExitsToRegion(vector <int> inds){
-    cout << "Remove exits to region " << inds.size() << endl;
+    // cout << "Remove exits to region " << inds.size() << endl;
     vector<FORRExit> new_exits;
     for(int i = 0; i < exits.size(); i++){
       if(find(inds.begin(), inds.end(), exits[i].getExitRegion()) == inds.end()){
@@ -283,11 +283,11 @@ class FORRRegion{
   }
 
   void fixExitReferences(vector <int> inds){
-    cout << "Fixing exit references " << inds.size() << endl;
+    // cout << "Fixing exit references " << inds.size() << endl;
     for(int i = 0; i < exits.size(); i++){
       for(int j = 0; j < inds.size(); j++){
         if(exits[i].getExitRegion() > inds[j]){
-          cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
+          // cout << "Found " << i << " " << exits[i].getExitRegion() << endl;
           exits[i].setExitRegion(exits[i].getExitRegion() - 1);
         }
       }

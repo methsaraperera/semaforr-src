@@ -1108,7 +1108,7 @@ void Controller::updateSkeletonGraph(){
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
       int y = (int)(regions[i].getCenter().get_y()*100);
-      cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
+      // cout << "Region " << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << x << " " << y << endl;
       vector<FORRExit> exits = regions[i].getMinExits();
       // cout << "Exits " << exits.size() << endl;
       if(exits.size() > 0){
@@ -1594,7 +1594,7 @@ void Controller::tierThreeDecision(FORRAction *decision){
        
   std::stringstream advisorsList;
   std::stringstream advisorCommentsList;
-  cout << "processing advisors::"<< endl;
+  // cout << "processing advisors::"<< endl;
   for (advisor3It it = tier3Advisors.begin(); it != tier3Advisors.end(); ++it){
     Tier3Advisor *advisor = *it; 
     // cout << advisor->get_name() << endl;
@@ -1623,7 +1623,7 @@ void Controller::tierThreeDecision(FORRAction *decision){
       // If this is first advisor we need to initialize our final map
       float weight;
       //cout << "Agenda size :::::::::::::::::::::::::::::::::: " << beliefs->getAgenda().size() << endl;
-      cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
+      // cout << "<" << advisor->get_name() << "," << iterator->first.type << "," << iterator->first.parameter << "> : " << iterator->second << endl; 
       weight = advisor->get_weight();
       //cout << "Weight for this advisor : " << weight << endl;
       // if(advisor->get_name() == "Explorer" or advisor->get_name() == "ExplorerRotation" or advisor->get_name() == "LearnSpatialModel" or advisor->get_name() == "LearnSpatialModelRotation" or advisor->get_name() == "Curiosity" or advisor->get_name() == "CuriosityRotation"){
@@ -1649,20 +1649,20 @@ void Controller::tierThreeDecision(FORRAction *decision){
     if(situationsOn){
       action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), iterator->first);
     }
-    cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
+    // cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
     if(action_weight * iterator->second > maxAdviceStrength){
       maxAdviceStrength = action_weight * iterator->second;
       maxWeight = action_weight;
     }
   }
-  cout << "Max vote strength " << maxAdviceStrength << endl;
+  // cout << "Max vote strength " << maxAdviceStrength << endl;
   
   for(mapIt iterator = allComments.begin(); iterator!=allComments.end(); iterator++){
     if(maxWeight * iterator->second == maxAdviceStrength)
       best_decisions.push_back(iterator->first);
   }
   
-  cout << "There are " << best_decisions.size() << " decisions that got the highest grade " << endl;
+  // cout << "There are " << best_decisions.size() << " decisions that got the highest grade " << endl;
   if(best_decisions.size() == 0){
       (*decision) = FORRAction(PAUSE,0);
   }
