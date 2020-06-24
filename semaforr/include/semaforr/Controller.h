@@ -90,7 +90,7 @@ private:
 
   // learns the spatial model and updates the beliefs
   void learnSpatialModel(AgentState *agentState, bool taskStatus);
-  void updateSkeletonGraph();
+  void updateSkeletonGraph(AgentState* agentState);
 
   void initialize_advisors(std::string);
   void initialize_tasks(std::string);

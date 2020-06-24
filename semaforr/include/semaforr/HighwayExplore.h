@@ -153,10 +153,28 @@ struct DecisionPoint{
 		return (point == p.point);
 	}
 	bool operator < (const DecisionPoint p) const{
-		if(farthest_distance_left < p.farthest_distance_left or farthest_distance_middle < p.farthest_distance_middle or farthest_distance_right < p.farthest_distance_right)
+		double dist1 = 0;
+		if(direction == true){
+			dist1 = right_distance;
+		}
+		else{
+			dist1 = left_distance;
+		}
+		double dist2 = 0;
+		if(p.direction == true){
+			dist2 = p.right_distance;
+		}
+		else{
+			dist2 = p.left_distance;
+		}
+		if(dist1 < dist2)
 			return true;
 		else
 			return false;
+		// if(farthest_distance_left < p.farthest_distance_left or farthest_distance_middle < p.farthest_distance_middle or farthest_distance_right < p.farthest_distance_right)
+		// 	return true;
+		// else
+		// 	return false;
 	}
 };
 
@@ -434,6 +452,10 @@ public:
 			// After finishing point on stack, pop next one
 			if(highway_stack.size() > 0){
 				// cout << "Going to top point on stack" << endl;
+				if((highway_stack[0].direction == true and highway_stack[0].right_distance < 2*distance_threshold) or (highway_stack[0].direction == false and highway_stack[0].left_distance < 2*distance_threshold)){
+					sort(highway_stack.begin(), highway_stack.end());
+					reverse(highway_stack.begin(), highway_stack.end());
+				}
 				int start_highway = 0;
 				int end_highway = 0;
 				int middle_highway = 0;
