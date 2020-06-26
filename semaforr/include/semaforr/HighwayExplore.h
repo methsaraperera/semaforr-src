@@ -679,7 +679,7 @@ public:
 			}
 		}
 
-		if(current_position.left_distance <= 0.15 or current_position.right_distance <= 0.15){
+		if(current_position.left_distance <= 0.2 or current_position.right_distance <= 0.2){
 			cout << "Too close on sides, turn away" << endl;
 			// Move away from sides
 			if(highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] >= 0){
@@ -691,13 +691,13 @@ public:
 			// 	return FORRAction(FORWARD, 3);
 			// }
 			// else 
-			if(current_position.left_distance <= 0.15){
+			if(current_position.left_distance <= 0.2){
 				// last_position = current_position;
 				top_point_decisions++;
 				// return FORRAction(RIGHT_TURN, 2);
 				return goTowardsPoint(current_position, current_position.right_point);
 			}
-			else if(current_position.right_distance <= 0.15){
+			else if(current_position.right_distance <= 0.2){
 				// last_position = current_position;
 				top_point_decisions++;
 				// return FORRAction(LEFT_TURN, 2);

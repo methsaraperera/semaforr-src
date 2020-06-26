@@ -1049,3 +1049,16 @@ double AgentState::getFLowObservation(double x, double y){
   double crowdObservationValue = crowdModel.crowd_observations[(floor(y/resolution)*width)+floor(x/resolution)];
   return flowMagnitude*crowdObservationValue;
 }
+
+void AgentState::dfs(int x, int y, int current_label, vector<int> dx, vector<int> dy, int row_count, int col_count, vector< vector<int> > *label, vector< vector<int> > *m) {
+  if (x < 0 || x == row_count) return; // out of bounds
+  if (y < 0 || y == col_count) return; // out of bounds
+  if ((*label)[x][y] != 0 || (*m)[x][y] < 0) return; // already labeled or not marked with 1 in m
+
+  // mark the current cell
+  (*label)[x][y] = current_label;
+
+  // recursively mark the neighbors
+  for (int direction = 0; direction < dx.size(); ++direction)
+    dfs(x + dx[direction], y + dy[direction], current_label, dx, dy, row_count, col_count, label, m);
+}

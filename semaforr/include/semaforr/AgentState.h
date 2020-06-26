@@ -376,6 +376,8 @@ public:
   double getRiskExperience(double x, double y);
   double getFLowObservation(double x, double y);
 
+  void dfs(int x, int y, int current_label, vector<int> dx, vector<int> dy, int row_count, int col_count, vector< vector<int> > *label, vector< vector<int> > *m);
+
  private:
 
   // Stores the move and rotate action values

@@ -1175,6 +1175,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     }
     hwskeleton_planner->resetGraph();
     vector< vector<int> > highway_grid = highwayExploration->getHighwayGrid();
+    cout << "Highway grid" << endl;
+    for(int i = 0; i < highway_grid.size(); i++){
+      for(int j = 0; j < highway_grid[0].size(); j++){
+        cout << highway_grid[i][j] << " ";
+      }
+      cout << endl;
+    }
     vector< vector<int> > decisions_grid;
     for(int i = 0; i < highway_grid.size(); i++){
       vector<int> col;
@@ -1208,13 +1215,31 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         stepped_laser_history.push_back(laser_history[j]);
       }
     }
+    cout << "stepped_history " << stepped_history.size() << " stepped_laser_history " << stepped_laser_history.size() << endl;
+    double step_length = 1;
     for(int k = 0; k < stepped_history.size()-1 ; k++){
       double start_x = stepped_history[k].get_x();
+      if(int(start_x) < 0)
+        start_x = 0;
+      if(int(start_x) >= decisions_grid.size())
+        start_x = decisions_grid.size()-1;
       double start_y = stepped_history[k].get_y();
+      if(int(start_y) < 0)
+        start_y = 0;
+      if(int(start_y) >= decisions_grid[0].size())
+        start_y = decisions_grid[0].size()-1;
       double end_x = stepped_history[k+1].get_x();
+      if(int(end_x) < 0)
+        end_x = 0;
+      if(int(end_x) >= decisions_grid.size())
+        end_x = decisions_grid.size()-1;
       double end_y = stepped_history[k+1].get_y();
-      decisions_grid[int(start_y)][int(start_x)] = 1;
-      decisions_grid[int(end_y)][int(end_x)] = 1;
+      if(int(end_y) < 0)
+        end_y = 0;
+      if(int(end_y) >= decisions_grid[0].size())
+        end_y = decisions_grid[0].size()-1;
+      decisions_grid[int(start_x)][int(start_y)] = 1;
+      decisions_grid[int(end_x)][int(end_y)] = 1;
       // decisions_grid[floor(start_y)][floor(start_x)] = 1;
       // decisions_grid[floor(end_y)][floor(end_x)] = 1;
       // decisions_grid[ceil(start_y)][ceil(start_x)] = 1;
@@ -1224,13 +1249,18 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       // decisions_grid[ceil(start_y)][floor(start_x)] = 1;
       // decisions_grid[ceil(end_y)][floor(end_x)] = 1;
       double length = sqrt((start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y));
-      if(length >= 0.1){
-        double step_size = 0.1 / length;
+      // cout << k << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
+      if(length >= step_length){
+        double step_size = step_length / length;
         double tx, ty;
-        for(int j = 0; j <= 1; j += step_size){
+        // cout << "step_size " << step_size << endl;
+        for(double j = 0; j <= 1; j += step_size){
           tx = (end_x * j) + (start_x * (1 - j));
           ty = (end_y * j) + (start_y * (1 - j));
-          decisions_grid[int(ty)][int(tx)] = 1;
+          if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+            // cout << tx << " " << ty << endl;
+            decisions_grid[int(tx)][int(ty)] = 1;
+          }
           // decisions_grid[floor(ty)][floor(tx)] = 1
           // decisions_grid[ceil(ty)][ceil(tx)] = 1
           // decisions_grid[floor(ty)][ceil(tx)] = 1
@@ -1238,21 +1268,49 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
+    cout << "After decisions_grid" << endl;
+    for(int i = 0; i < decisions_grid.size(); i++){
+      for(int j = 0; j < decisions_grid[0].size(); j++){
+        cout << decisions_grid[i][j] << " ";
+      }
+      cout << endl;
+    }
     for(int k = 0; k < stepped_laser_history.size(); k++){
       double start_x = stepped_history[k].get_x();
+      if(int(start_x) < 0)
+        start_x = 0;
+      if(int(start_x) >= decisions_grid.size())
+        start_x = decisions_grid.size()-1;
       double start_y = stepped_history[k].get_y();
+      if(int(start_y) < 0)
+        start_y = 0;
+      if(int(start_y) >= decisions_grid[0].size())
+        start_y = decisions_grid[0].size()-1;
       for(int j = 0; j < stepped_laser_history[k].size(); j++){
         double end_x = stepped_laser_history[k][j].get_x();
+        if(int(end_x) < 0)
+          end_x = 0;
+        if(int(end_x) >= decisions_grid.size())
+          end_x = decisions_grid.size()-1;
         double end_y = stepped_laser_history[k][j].get_y();
+        if(int(end_y) < 0)
+          end_y = 0;
+        if(int(end_y) >= decisions_grid[0].size())
+          end_y = decisions_grid[0].size()-1;
         if(decisions_grid[int(start_y)][int(start_x)] == 1 and decisions_grid[int(end_y)][int(end_x)] == 1 and ((int(start_y) == int(end_y)) or (int(start_x) == int(end_x)))){
           double length = sqrt((start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y));
-          if(length >= 0.1){
-            double step_size = 0.1 / length;
+          // cout << k << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
+          if(length >= step_length){
+            double step_size = step_length / length;
             double tx, ty;
-            for(int j = 0; j <= 1; j += step_size){
+            // cout << "step_size " << step_size << endl;
+            for(double j = 0; j <= 1; j += step_size){
               tx = (end_x * j) + (start_x * (1 - j));
               ty = (end_y * j) + (start_y * (1 - j));
-              decisions_grid[int(ty)][int(tx)] = 1;
+              if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+                // cout << tx << " " << ty << endl;
+                decisions_grid[int(tx)][int(ty)] = 1;
+              }
               // decisions_grid[floor(ty)][floor(tx)] = 1
               // decisions_grid[ceil(ty)][ceil(tx)] = 1
               // decisions_grid[floor(ty)][ceil(tx)] = 1
@@ -1261,6 +1319,596 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           }
         }
       }
+    }
+    cout << "After laser_grid" << endl;
+    for(int i = 0; i < decisions_grid.size(); i++){
+      for(int j = 0; j < decisions_grid[0].size(); j++){
+        cout << decisions_grid[i][j] << " ";
+      }
+      cout << endl;
+    }
+    vector< vector<int> > passage_grid;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j ++){
+        if(highway_grid[i][j] < 0){
+          vector<int> values;
+          if(i > 0){
+            if(highway_grid[i-1][j] >= 0)
+              values.push_back(highway_grid[i-1][j]);
+          }
+          if(j > 0){
+            if(highway_grid[i][j-1] >= 0)
+              values.push_back(highway_grid[i][j-1]);
+          }
+          if(i < highway_grid.size()-1){
+            if(highway_grid[i+1][j] >= 0)
+              values.push_back(highway_grid[i+1][j]);
+          }
+          if(j < highway_grid[0].size()-1){
+            if(highway_grid[i][j+1] >= 0)
+              values.push_back(highway_grid[i][j+1]);
+          }
+          if(values.size() >= 3){
+            col.push_back(1);
+          }
+          else if(decisions_grid[i][j] > 0){
+            col.push_back(1);
+          }
+          else{
+            col.push_back(-1);
+          }
+        }
+        else{
+          col.push_back(highway_grid[i][j]);
+        }
+      }
+      passage_grid.push_back(col);
+    }
+    cout << "After passage_grid" << endl;
+    for(int i = 0; i < passage_grid.size(); i++){
+      for(int j = 0; j < passage_grid[0].size(); j++){
+        cout << passage_grid[i][j] << " ";
+      }
+      cout << endl;
+    }
+    vector < vector < pair<int, int> > > horizontals;
+    vector < vector <int> > horizontal_lengths;
+    for(int i = 0; i < passage_grid.size(); i++){
+      vector < pair<int, int> > row;
+      vector <int> row_lengths;
+      int start = -1;
+      int stop = -1;
+      for(int j = 0; j < passage_grid[i].size(); j++){
+        if(passage_grid[i][j] >= 0 and start == -1){
+          start = j;
+          stop = j;
+        }
+        else if(passage_grid[i][j] >= 0 and start > -1){
+          stop = j;
+        }
+        else if(passage_grid[i][j] < 0 and start > -1 and stop > -1){
+          // cout << "row " << i << " start " << start << " stop " << stop << " length " << stop-start+1 << endl;
+          row.push_back(make_pair(start, stop));
+          row_lengths.push_back(stop-start+1);
+          start = -1;
+          stop = -1;
+        }
+      }
+      horizontals.push_back(row);
+      horizontal_lengths.push_back(row_lengths);
+    }
+    vector< vector<int> > horizontal_passages;
+    vector< vector<int> > horizontal_passages_filled;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        col.push_back(-1);
+      }
+      horizontal_passages.push_back(col);
+      horizontal_passages_filled.push_back(col);
+    }
+    for(int i = 0; i < horizontals.size(); i++){
+      for(int j = 0; j < horizontals[i].size(); j++){
+        if(horizontal_lengths[i][j] >= 10){
+          for(int k = horizontals[i][j].first; k <= horizontals[i][j].second; k++){
+            horizontal_passages[i][k] = 1;
+            horizontal_passages_filled[i][k] = 1;
+          }
+        }
+      }
+    }
+    cout << "After horizontal_passages" << endl;
+    for(int i = 0; i < horizontal_passages.size(); i++){
+      for(int j = 0; j < horizontal_passages[0].size(); j++){
+        cout << horizontal_passages[i][j] << " ";
+      }
+      cout << endl;
+    }
+    for(int i = 0; i < passage_grid.size(); i++){
+      for(int j = 0; j < passage_grid[i].size(); j++){
+        if(passage_grid[i][j] >= 0 and horizontal_passages[i][j] == -1){
+          if(i > 0 and i < passage_grid.size()-1){
+            if(horizontal_passages[i-1][j] >= 0 or horizontal_passages[i+1][j] >= 0){
+              horizontal_passages_filled[i][j] = 1;
+            }
+          }
+          else if(i == 0){
+            if(horizontal_passages[i+1][j] >= 0){
+              horizontal_passages_filled[i][j] = 1;
+            }
+          }
+          else if(i == passage_grid.size()-1){
+            if(horizontal_passages[i-1][j] >= 0){
+              horizontal_passages_filled[i][j] = 1;
+            }
+          }
+        }
+      }
+    }
+    cout << "After horizontal_passages_filled" << endl;
+    for(int i = 0; i < horizontal_passages_filled.size(); i++){
+      for(int j = 0; j < horizontal_passages_filled[0].size(); j++){
+        cout << horizontal_passages_filled[i][j] << " ";
+      }
+      cout << endl;
+    }
+    vector<int> dx;
+    dx.push_back(1);
+    dx.push_back(0);
+    dx.push_back(-1);
+    dx.push_back(0);
+    dx.push_back(1);
+    dx.push_back(1);
+    dx.push_back(-1);
+    dx.push_back(-1);
+    vector<int> dy;
+    dy.push_back(0);
+    dy.push_back(1);
+    dy.push_back(0);
+    dy.push_back(-1);
+    dy.push_back(1);
+    dy.push_back(-1);
+    dy.push_back(1);
+    dy.push_back(-1);
+
+    // const int dx[] = {+1, 0, -1, 0, +1, +1, -1, -1};
+    // const int dy[] = {0, +1, 0, -1, +1, -1, +1, -1};
+    int row_count = horizontal_passages_filled.size();
+    int col_count = horizontal_passages_filled[0].size();
+    vector< vector<int> > final_horizontal;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        col.push_back(0);
+      }
+      final_horizontal.push_back(col);
+    }
+    int horizontal_component = 0;
+    for(int i = 0; i < row_count; ++i){
+      for(int j = 0; j < col_count; ++j){
+        if(final_horizontal[i][j] == 0 && horizontal_passages_filled[i][j] >= 0){
+          agentState->dfs(i, j, ++horizontal_component, dx, dy, row_count, col_count, &final_horizontal, &horizontal_passages_filled);
+        }
+      }
+    }
+    cout << "final horizontal_component " << horizontal_component << endl;
+    cout << "After final_horizontal" << endl;
+    for(int i = 0; i < final_horizontal.size(); i++){
+      for(int j = 0; j < final_horizontal[0].size(); j++){
+        cout << final_horizontal[i][j] << " ";
+      }
+      cout << endl;
+    }
+    vector < vector<int> > horizontal_ends;
+    for(int i = 1; i <= horizontal_component; i++){
+      // cout << "horizontal_component " << i << endl;
+      int right = -1;
+      int left = final_horizontal[0].size();
+      // cout << right << " " << left << endl;
+      for(int j = 0; j < final_horizontal.size(); j++){
+        for(int k = 0; k < final_horizontal[j].size(); k++){
+          if(final_horizontal[j][k] == i){
+            if(k > right){
+              right = k;
+            }
+            if(k < left){
+              left = k;
+            }
+            // cout << right << " " << left << endl;
+          }
+        }
+      }
+      for(int j = 0; j < final_horizontal.size(); j++){
+        if(final_horizontal[j][right] == i){
+          vector<int> point;
+          point.push_back(j);
+          point.push_back(right);
+          // cout << j << " " << right << endl;
+          horizontal_ends.push_back(point);
+        }
+        if(final_horizontal[j][left] == i){
+          vector<int> point;
+          point.push_back(j);
+          point.push_back(left);
+          // cout << j << " " << left << endl;
+          horizontal_ends.push_back(point);
+        }
+      }
+    }
+    cout << "After horizontal_ends " << horizontal_ends.size() << endl;
+
+    vector < vector < pair<int, int> > > verticals;
+    vector < vector <int> > vertical_lengths;
+    for(int j = 0; j < passage_grid[0].size(); j++){
+      vector < pair<int, int> > col;
+      vector <int> col_lengths;
+      int start = -1;
+      int stop = -1;
+      for(int i = 0; i < passage_grid.size(); i++){
+        if(passage_grid[i][j] >= 0 and start == -1){
+          start = i;
+          stop = i;
+        }
+        else if(passage_grid[i][j] >= 0 and start > -1){
+          stop = i;
+        }
+        else if(passage_grid[i][j] < 0 and start > -1 and stop > -1){
+          // cout << "col " << i << " start " << start << " stop " << stop << " length " << stop-start+1 << endl;
+          col.push_back(make_pair(start, stop));
+          col_lengths.push_back(stop-start+1);
+          start = -1;
+          stop = -1;
+        }
+      }
+      verticals.push_back(col);
+      vertical_lengths.push_back(col_lengths);
+    }
+    vector< vector<int> > vertical_passages;
+    vector< vector<int> > vertical_passages_filled;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        col.push_back(-1);
+      }
+      vertical_passages.push_back(col);
+      vertical_passages_filled.push_back(col);
+    }
+
+    for(int i = 0; i < verticals.size(); i++){
+      for(int j = 0; j < verticals[i].size(); j++){
+        if(vertical_lengths[i][j] >= 10){
+          for(int k = verticals[i][j].first; k <= verticals[i][j].second; k++){
+            vertical_passages[k][i] = 1;
+            vertical_passages_filled[k][i] = 1;
+          }
+        }
+      }
+    }
+    cout << "After vertical_passages" << endl;
+    for(int i = 0; i < vertical_passages.size(); i++){
+      for(int j = 0; j < vertical_passages[0].size(); j++){
+        cout << vertical_passages[i][j] << " ";
+      }
+      cout << endl;
+    }
+    for(int i = 0; i < passage_grid.size(); i++){
+      for(int j = 0; j < passage_grid[i].size(); j++){
+        if(passage_grid[i][j] >= 0 and vertical_passages[i][j] == -1){
+          if(j > 0 and j < passage_grid[i].size()-1){
+            if(vertical_passages[i][j-1] >= 0 or vertical_passages[i][j+1] >= 0){
+              vertical_passages_filled[i][j] = 1;
+            }
+          }
+          else if(j == 0){
+            if(vertical_passages[i][j+1] >= 0){
+              vertical_passages_filled[i][j] = 1;
+            }
+          }
+          else if(j == passage_grid[i].size()-1){
+            if(vertical_passages[i][j-1] >= 0){
+              vertical_passages_filled[i][j] = 1;
+            }
+          }
+        }
+      }
+    }
+    cout << "After vertical_passages_filled" << endl;
+    for(int i = 0; i < vertical_passages_filled.size(); i++){
+      for(int j = 0; j < vertical_passages_filled[0].size(); j++){
+        cout << vertical_passages_filled[i][j] << " ";
+      }
+      cout << endl;
+    }
+    row_count = vertical_passages_filled.size();
+    col_count = vertical_passages_filled[0].size();
+    vector< vector<int> > final_vertical;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        col.push_back(0);
+      }
+      final_vertical.push_back(col);
+    }
+    int vertical_component = 0;
+    for(int i = 0; i < row_count; ++i){
+      for(int j = 0; j < col_count; ++j){
+        if(final_vertical[i][j] == 0 && vertical_passages_filled[i][j] >= 0){
+          agentState->dfs(i, j, ++vertical_component, dx, dy, row_count, col_count, &final_vertical, &vertical_passages_filled);
+        }
+      }
+    }
+    cout << "final vertical_component " << vertical_component << endl;
+    cout << "After final_vertical" << endl;
+    for(int i = 0; i < final_vertical.size(); i++){
+      for(int j = 0; j < final_vertical[0].size(); j++){
+        cout << final_vertical[i][j] << " ";
+      }
+      cout << endl;
+    }
+    vector < vector<int> > vertical_ends;
+    for(int i = 1; i <= vertical_component; i++){
+      // cout << "vertical_component " << i << endl;
+      int bottom = -1;
+      int top = final_vertical[0].size();
+      // cout << bottom << " " << top << endl;
+      for(int j = 0; j < final_vertical.size(); j++){
+        for(int k = 0; k < final_vertical[j].size(); k++){
+          if(final_vertical[j][k] == i){
+            if(j > bottom){
+              bottom = j;
+            }
+            if(j < top){
+              top = j;
+            }
+            // cout << bottom << " " << top << endl;
+          }
+        }
+      }
+      for(int k = 0; k < final_vertical[0].size(); k++){
+        if(final_vertical[bottom][k] == i){
+          vector<int> point;
+          point.push_back(bottom);
+          point.push_back(k);
+          // cout << bottom << " " << k << endl;
+          vertical_ends.push_back(point);
+        }
+        if(final_vertical[top][k] == i){
+          vector<int> point;
+          point.push_back(top);
+          point.push_back(k);
+          // cout << top << " " << k << endl;
+          vertical_ends.push_back(point);
+        }
+      }
+    }
+    cout << "After vertical_ends " << vertical_ends.size() << endl;
+
+    vector < vector<int> > final_combined;
+    for(int i = 0; i < final_horizontal.size(); i++){
+      vector<int> row;
+      for(int j = 0; j < final_horizontal[i].size(); j++){
+        if(final_horizontal[i][j] > 0 and final_vertical[i][j] > 0){
+          row.push_back(1);
+        }
+        else{
+          row.push_back(-1);
+        }
+      }
+      final_combined.push_back(row);
+    }
+    cout << "After final_combined" << endl;
+    for(int i = 0; i < final_combined.size(); i++){
+      for(int j = 0; j < final_combined[0].size(); j++){
+        cout << final_combined[i][j] << " ";
+      }
+      cout << endl;
+    }
+    for(int i = 0; i < horizontal_ends.size(); i++){
+      final_combined[horizontal_ends[i][0]][horizontal_ends[i][1]] = 1;
+    }
+    for(int i = 0; i < vertical_ends.size(); i++){
+      final_combined[vertical_ends[i][0]][vertical_ends[i][1]] = 1;
+    }
+    cout << "After ends" << endl;
+    for(int i = 0; i < final_combined.size(); i++){
+      for(int j = 0; j < final_combined[0].size(); j++){
+        cout << final_combined[i][j] << " ";
+      }
+      cout << endl;
+    }
+
+    row_count = final_combined.size();
+    col_count = final_combined[0].size();
+    vector< vector<int> > intersections;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        col.push_back(0);
+      }
+      intersections.push_back(col);
+    }
+    int intersection_component = 0;
+    for(int i = 0; i < row_count; ++i){
+      for(int j = 0; j < col_count; ++j){
+        if(intersections[i][j] == 0 && final_combined[i][j] >= 0){
+          agentState->dfs(i, j, ++intersection_component, dx, dy, row_count, col_count, &intersections, &final_combined);
+        }
+      }
+    }
+    cout << "final intersection_component " << intersection_component << endl;
+    cout << "After intersections" << endl;
+    for(int i = 0; i < intersections.size(); i++){
+      for(int j = 0; j < intersections[0].size(); j++){
+        cout << intersections[i][j] << " ";
+      }
+      cout << endl;
+    }
+
+    vector < vector<int> > passages_without_intersections;
+    for(int i = 0; i < final_horizontal.size(); i++){
+      vector<int> row;
+      for(int j = 0; j < final_horizontal[i].size(); j++){
+        if(intersections[i][j] == 0 and (final_horizontal[i][j] > 0 or final_vertical[i][j] > 0)){
+          row.push_back(1);
+        }
+        else{
+          row.push_back(-1);
+        }
+      }
+      passages_without_intersections.push_back(row);
+    }
+    cout << "After passages_without_intersections" << endl;
+    for(int i = 0; i < passages_without_intersections.size(); i++){
+      for(int j = 0; j < passages_without_intersections[0].size(); j++){
+        cout << passages_without_intersections[i][j] << " ";
+      }
+      cout << endl;
+    }
+    row_count = passages_without_intersections.size();
+    col_count = passages_without_intersections[0].size();
+    vector< vector<int> > pass_wo_int;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j++){
+        col.push_back(0);
+      }
+      pass_wo_int.push_back(col);
+    }
+    int passage_component = 0;
+    for(int i = 0; i < row_count; ++i){
+      for(int j = 0; j < col_count; ++j){
+        if(pass_wo_int[i][j] == 0 && passages_without_intersections[i][j] >= 0){
+          agentState->dfs(i, j, ++passage_component, dx, dy, row_count, col_count, &pass_wo_int, &passages_without_intersections);
+        }
+      }
+    }
+    cout << "final passage_component " << passage_component << endl;
+    cout << "After pass_wo_int" << endl;
+    for(int i = 0; i < pass_wo_int.size(); i++){
+      for(int j = 0; j < pass_wo_int[0].size(); j++){
+        cout << pass_wo_int[i][j] << " ";
+      }
+      cout << endl;
+    }
+
+    int new_ind = intersection_component;
+    for(int i = 0; i < pass_wo_int.size(); i++){
+      for(int j = 0; j < pass_wo_int[i].size(); j++){
+        if(pass_wo_int[i][j] > 0 and intersections[i][j] == 0){
+          intersections[i][j] = pass_wo_int[i][j] + new_ind;
+        }
+      }
+    }
+    cout << "After intersections + pass_wo_int" << endl;
+    for(int i = 0; i < intersections.size(); i++){
+      for(int j = 0; j < intersections[0].size(); j++){
+        cout << intersections[i][j] << " ";
+      }
+      cout << endl;
+    }
+    vector< vector<int> > edges;
+    for(int i = 0; i < intersections.size(); i++){
+      int start = -1;
+      int stop = -1;
+      for(int j = 0; j < intersections[0].size(); j++){
+        if(intersections[i][j] > 0 and start == -1){
+          start = intersections[i][j];
+        }
+        else if((intersections[i][j] > 0 or intersections[i][j] == -1) and start > -1 and (stop == -1 or stop == start)){
+          stop = intersections[i][j];
+        }
+        else if(intersections[i][j] == 0){
+          start = -1;
+          stop = -1;
+        }
+        if(start > -1 and stop > -1){
+          vector<int> current_pair;
+          if(start < stop){
+            current_pair.push_back(start);
+            current_pair.push_back(stop);
+          }
+          else{
+            current_pair.push_back(stop);
+            current_pair.push_back(start);
+          }
+          if(start != stop and find(edges.begin(), edges.end(), current_pair) == edges.end()){
+            edges.push_back(current_pair);
+          }
+          start = stop;
+          stop = -1;
+        }
+      }
+    }
+    for(int j = 0; j < intersections[0].size(); j++){
+      int start = -1;
+      int stop = -1;
+      for(int i = 0; i < intersections.size(); i++){
+        if(intersections[i][j] > 0 and start == -1){
+          start = intersections[i][j];
+        }
+        else if((intersections[i][j] > 0 or intersections[i][j] == -1) and start > -1 and (stop == -1 or stop == start)){
+          stop = intersections[i][j];
+        }
+        else if(intersections[i][j] == 0){
+          start = -1;
+          stop = -1;
+        }
+        if(start > -1 and stop > -1){
+          vector<int> current_pair;
+          if(start < stop){
+            current_pair.push_back(start);
+            current_pair.push_back(stop);
+          }
+          else{
+            current_pair.push_back(stop);
+            current_pair.push_back(start);
+          }
+          if(start != stop and find(edges.begin(), edges.end(), current_pair) == edges.end()){
+            edges.push_back(current_pair);
+          }
+          start = stop;
+          stop = -1;
+        }
+      }
+    }
+    cout << "After edges" << endl;
+    for(int i = 0; i < edges.size(); i++){
+      cout << "edge " << i << " connecting " << edges[i][0] << " " << edges[i][1] << endl;
+    }
+    vector< vector<int> > graph;
+    vector<int> graph_nodes;
+    vector<int> graph_edges;
+    cout << "graph_nodes" << endl;
+    for(int i = 1; i < new_ind+1; i++){
+      graph_nodes.push_back(i);
+      cout << i << endl;
+    }
+    cout << "graph_edges" << endl;
+    for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
+      graph_edges.push_back(i);
+      cout << i << endl;
+    }
+    for(int i = 0; i < graph_edges.size(); i++){
+      vector< vector<int> > matches;
+      for(int j = 0; j < edges.size(); j++){
+        if(edges[j][1] == graph_edges[i]){
+          matches.push_back(edges[j]);
+        }
+      }
+      for(int j = 0; j < matches.size()-1; j++){
+        for(int k = j+1; k < matches.size(); k++){
+          vector<int> seq;
+          seq.push_back(matches[j][0]);
+          seq.push_back(matches[j][1]);
+          seq.push_back(matches[k][0]);
+          graph.push_back(seq);
+        }
+      }
+    }
+    cout << "after graph" << endl;
+    for(int i = 0; i < graph.size(); i++){
+      cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
     }
 
     // vector< vector< vector< pair<int, int> > > > highway_grid_connections = highwayExploration->getHighwayGridConnections();
