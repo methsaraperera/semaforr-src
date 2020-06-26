@@ -59,6 +59,7 @@ private:
   ros::Publisher highway_pub_;
   ros::Publisher highway_plan_pub_;
   ros::Publisher highway_target_pub_;
+  ros::Publisher highway_stack_pub_;
   Controller *con;
   Beliefs *beliefs;
   ros::NodeHandle *nh_;
@@ -102,6 +103,7 @@ public:
     highway_pub_ = nh_->advertise<nav_msgs::OccupancyGrid>("highway", 1);
     highway_plan_pub_ = nh_->advertise<nav_msgs::Path>("highway_plan", 1);
     highway_target_pub_ = nh_->advertise<geometry_msgs::PointStamped>("highway_target_point", 1);
+    highway_stack_pub_ = nh_->advertise<visualization_msgs::Marker>("highway_stack", 1);
     //declare and create a controller with task, action and advisor configuration
     con = c;
     beliefs = con->getBeliefs();
@@ -142,6 +144,7 @@ public:
 	publish_highway();
 	publish_highway_plan();
 	publish_highway_target();
+	publish_highway_stack();
   }
 
 
@@ -1021,6 +1024,52 @@ public:
 		}
 	}
 	highway_pub_.publish(grid);
+  }
+
+  void publish_highway_stack(){
+	// ROS_DEBUG("Inside publish highway_stack");
+	vector< Position > highway_stack = con->gethighwayExploration()->getHighwayStack();
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "basic_shapes";
+	marker.type = visualization_msgs::Marker::POINTS;
+	marker.pose.position.x = 0;
+	marker.pose.position.y = 0;
+	marker.pose.position.z = 0;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = marker.scale.y = 0.5;
+	marker.scale.z = 0.5;
+	// Set the color -- be sure to set alpha to something non-zero!
+	marker.color.r = 0.0f;
+	marker.color.g = 0.0f;
+	marker.color.b = 1.0f;
+	marker.color.a = 0.5;
+	marker.lifetime = ros::Duration();
+
+	for(int i = 0 ; i < highway_stack.size(); i++){
+		float x = highway_stack[i].getX();
+		float y = highway_stack[i].getY();
+		geometry_msgs::Point point;
+		point.x = x;
+		point.y = y;
+		point.z = 0;
+		marker.points.push_back(point);
+	}
+	for(int i = 0 ; i < highway_stack.size(); i++){
+		std_msgs::ColorRGBA c;
+		double percent = float(i)/float(highway_stack.size()-1);
+		c.r = 1.0 - percent;
+		c.g = 0;
+		c.b = percent - 1.0;
+		c.a = 1.0;
+		marker.colors.push_back(c);
+	}
+  	highway_stack_pub_.publish(marker);
   }
 
   void publish_log(FORRAction decision, double overallTimeSec, double computationTimeSec){

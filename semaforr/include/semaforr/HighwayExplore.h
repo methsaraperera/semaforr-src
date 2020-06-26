@@ -292,6 +292,14 @@ public:
 
 	vector< vector<double> > getHighwayPath(){return path_to_top_point;}
 
+	vector<Position> getHighwayStack(){
+		vector<Position> hwst;
+		for(int i = 0; i < highway_stack.size(); i++){
+			hwst.push_back(highway_stack[i].point);
+		}
+		return hwst;
+	}
+
 	Position getHighwayTarget(){
 		if(go_to_top_point == true){
 			return top_point.point;

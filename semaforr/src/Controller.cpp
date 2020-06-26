@@ -1275,6 +1275,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
       cout << endl;
     }
+    vector< vector<int> > lasers_grid;
+    for(int i = 0; i < highway_grid.size(); i++){
+      vector<int> col;
+      for(int j = 0; j < highway_grid[i].size(); j ++){
+        col.push_back(0);
+      }
+      lasers_grid.push_back(col);
+    }
     for(int k = 0; k < stepped_laser_history.size(); k++){
       double start_x = stepped_history[k].get_x();
       if(int(start_x) < 0)
@@ -1297,7 +1305,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           end_y = 0;
         if(int(end_y) >= decisions_grid[0].size())
           end_y = decisions_grid[0].size()-1;
-        if(decisions_grid[int(start_y)][int(start_x)] == 1 and decisions_grid[int(end_y)][int(end_x)] == 1 and ((int(start_y) == int(end_y)) or (int(start_x) == int(end_x)))){
+        if(decisions_grid[int(start_x)][int(start_y)] == 1 and decisions_grid[int(end_x)][int(end_y)] == 1 and ((int(start_y) == int(end_y)) or (int(start_x) == int(end_x)))){
           double length = sqrt((start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y));
           // cout << k << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
           if(length >= step_length){
@@ -1309,7 +1317,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
               ty = (end_y * j) + (start_y * (1 - j));
               if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
                 // cout << tx << " " << ty << endl;
-                decisions_grid[int(tx)][int(ty)] = 1;
+                lasers_grid[int(tx)][int(ty)] = 1;
               }
               // decisions_grid[floor(ty)][floor(tx)] = 1
               // decisions_grid[ceil(ty)][ceil(tx)] = 1
@@ -1320,9 +1328,19 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "After laser_grid" << endl;
+    cout << "After lasers_grid" << endl;
+    for(int i = 0; i < lasers_grid.size(); i++){
+      for(int j = 0; j < lasers_grid[0].size(); j++){
+        cout << lasers_grid[i][j] << " ";
+      }
+      cout << endl;
+    }
+    cout << "After decisions_grid + lasers_grid" << endl;
     for(int i = 0; i < decisions_grid.size(); i++){
       for(int j = 0; j < decisions_grid[0].size(); j++){
+        if(lasers_grid[i][j] > 0 and decisions_grid[i][j] == 0){
+          decisions_grid[i][j] = 1;
+        }
         cout << decisions_grid[i][j] << " ";
       }
       cout << endl;
@@ -1717,7 +1735,16 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
       cout << endl;
     }
-
+    dx.clear();
+    dx.push_back(1);
+    dx.push_back(0);
+    dx.push_back(-1);
+    dx.push_back(0);
+    dy.clear();
+    dy.push_back(0);
+    dy.push_back(1);
+    dy.push_back(0);
+    dy.push_back(-1);
     row_count = final_combined.size();
     col_count = final_combined[0].size();
     vector< vector<int> > intersections;
