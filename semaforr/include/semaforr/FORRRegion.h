@@ -27,6 +27,7 @@ class FORRRegion{
     }
     this->adjustVisibility(point, lep);
     this->setRadius(r);
+    passage_value = -1;
   }
   FORRRegion(CartesianPoint point, double r){
     center = point;
@@ -36,6 +37,7 @@ class FORRRegion{
       max_visibility.push_back(r);
     }
     this->setRadius(r);
+    passage_value = -1;
   }
 
   bool doIntersect(FORRRegion test){
@@ -123,6 +125,13 @@ class FORRRegion{
   }
   void setRadius(double r){ 
     radius = r;
+  }
+
+  int getPassageValue(){
+    return passage_value;
+  }
+  void setPassageValue(int pv){
+    passage_value = pv;
   }
 
   void adjustVisibility(CartesianPoint point, vector <CartesianPoint> lep){
@@ -330,6 +339,7 @@ class FORRRegion{
   vector<double> max_visibility;
   double radius;
   bool isLeaf;
+  int passage_value;
   // each value in the list denotes a possible exit from the region
   vector<FORRExit> exits;
   vector<FORRExit> ext_exits;

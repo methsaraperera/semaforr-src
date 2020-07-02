@@ -25,6 +25,45 @@ class FORRRegionList{
   //bool isExitToLeaf(FORRExit exit){
   //  return isLeaf(regions[exit.getExitRegion()]);
   //}
+
+  void setRegionPassageValues(vector< vector<int> > passage_grid){
+    for(int i = 0; i < regions.size(); i++){
+      vector<int> pvs;
+      double rx = regions[i].getCenter().get_x();
+      double ry = regions[i].getCenter().get_y();
+      double rr = regions[i].getRadius();
+      for(double j = rx - rr; j <= rx + rr; j+= 0.5){
+        for(double k = ry - rr; k <= ry + rr; k+= 0.5){
+          if(j >= 0 and k >= 0 and j < passage_grid.size() and k < passage_grid[0].size()){
+            if(passage_grid[(int)(j)][(int)(k)] > 0){
+              pvs.push_back(passage_grid[(int)(j)][(int)(k)]);
+            }
+          }
+        }
+      }
+      if(pvs.size() == 1){
+        regions[i].setPassageValue(pvs[0]);
+      }
+      else if(pvs.size() > 1){
+        sort(pvs.begin(), pvs.end());
+        map<int, int> m;
+        for(int j = 0; j < pvs.size(); ++j)
+          m[pvs[j]] = 0;
+        for(int j = 0; j < pvs.size(); ++j){
+          m[pvs[j]] += 1;
+        }
+        int mode = 0;
+        int num_mode = 0;
+        for(map<int,int>::iterator it=m.begin(); it!=m.end(); ++it){
+          if(it->second > mode){
+            mode = it->second;
+            num_mode = it->first;
+          }
+        }
+        regions[i].setPassageValue(num_mode);
+      }
+    }
+  }
     
   bool isLeaf(FORRRegion region, int numDoors){
     //cout << "In isleaf" << endl;
@@ -55,144 +94,7 @@ class FORRRegionList{
       //cout << "In isLeaf setting is leaf to true " << endl; 
     }
     return isLeaf;
-  } 
-
-  
-			   
- //  void learnRegions(vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist){
- //    vector<Position> positionHis = *pos_hist;
- //    vector < vector <CartesianPoint> > laserHis = *laser_hist;
- //    cout << "In learning regions" << endl;
- //    CartesianPoint current_point;
- //    FORRRegion current_region;
- //    for(int k = 0 ; k < laserHis.size(); k++){
- //      vector <CartesianPoint> laserEndpoints = laserHis[k];
- //      Position current_position = positionHis[k];
-
- //      double radius = 10000;
- //      int direction = -1;
- //      for(int i = 0; i< laserEndpoints.size(); i++){
-	// //cout << "wall distance " << wallDistanceVector[i] << endl;
-	// double range = laserEndpoints[i].get_distance(CartesianPoint(current_position.getX(),current_position.getY()));
-	// if (range < radius and range >= 0.1){
-	//   radius = range;
-	//   direction = i;
-	// }
- //      }
-     
- //      current_point = CartesianPoint(current_position.getX(), current_position.getY());
- //      current_region = FORRRegion(current_point, laserEndpoints, radius);
- //      for(int j = k+1 ; j < laserHis.size(); j++){
-	// vector <CartesianPoint> nextLaserEndpoints = laserHis[j];
-	// Position next_position = positionHis[j];
-	// // if next position in still inside the current_region update current_region radius
-	// if(current_region.inRegion(next_position.getX(), next_position.getY()) && j != k){
-	//   double next_radius = 10000;
-	//   int next_direction = -1;
-	//   for(int i = 0; i < nextLaserEndpoints.size(); i++){
-	//     //cout << "wall distance " << wallDistanceVector[i] << endl;
-	//     double next_range = nextLaserEndpoints[i].get_distance(CartesianPoint(next_position.getX(),next_position.getY()));
-	//     if (next_range < next_radius){
-	//       next_radius = next_range;
-	//       next_direction = i;
-	//     }
-	//   }
- //          // current_region.addLaser(nextLaserEndpoints);
- //          current_region.adjustVisibility(CartesianPoint(next_position.getX(), next_position.getY()), nextLaserEndpoints);
-	//   double x = nextLaserEndpoints[next_direction].get_x();
-	//   double y = nextLaserEndpoints[next_direction].get_y();
-	//   double dist = current_region.getCenter().get_distance(CartesianPoint(x , y));
-	//   if(dist < current_region.getRadius() and dist >= 0.1)
-	//     current_region.setRadius(dist);
-	// } 
- //      }
-      
- // //      // check if the robot is in a previously created region
- // //      int robotRegion = -1;
- // //      for(int i = 0; i < regions.size(); i++){
-	// // if(regions[i].inRegion(current_point.get_x(), current_point.get_y()))
-	// //   robotRegion = i;
- // //      }
- // //      // correct previously create region 
- // //      if(robotRegion != -1){
- // //        // regions[robotRegion].addLaser(laserEndpoints);
- // //        regions[robotRegion].adjustVisibility(current_point, laserEndpoints);
-	// // double x = laserEndpoints[direction].get_x();
-	// // double y = laserEndpoints[direction].get_y();
-	// // double dist = regions[robotRegion].getCenter().get_distance(CartesianPoint(x,y));
-	// // if(dist < regions[robotRegion].getRadius())
-	// //   regions[robotRegion].setRadius(dist);
- // //      }
-      
- //      bool new_region = true;
- // //      // if there is atleast one intersecting region which is bigger than the current region , dont add the current region
- // //      for(int i = 0; i < regions.size(); i++){
-	// // if(current_region.doIntersect(regions[i]) == true)
-	// //   if(current_region.getRadius() < regions[i].getRadius()){
-	// //     new_region = false;
-	// //   }
- // //      }
-      
- //      //cout << "Current region " << current_region.getCenter().get_x() << "," << current_region.getCenter().get_y() << ":" << current_region.getRadius() << endl;
- //      //cout << "New region = " << new_region << endl; 
-      
- //      if(new_region == true){
-	// // save the region
-	// //cout << "current_region is a new region , adding it into the list" << endl;
-	
-	// // // delete all intersecting regions
-	// // for(int i = 0; i < regions.size() ; i++){
-	// //   //cout << "for region " << i << endl;
-	// //   if(current_region.doIntersect(regions[i])){
-	// //     //cout << "Deleting region:"  << regions[i].getCenter().get_x() << " " << regions[i].getCenter().get_y() << " " << regions[i].getRadius() << endl;
-	// //     // current_region.addLasers(regions[i].getLasers());
- // //            current_region.mergeVisibility(regions[i].getVisibility());
- // //            regions.erase(regions.begin() + i);
-	// //     i--;
-	// //   }
-	// // }
-	// regions.push_back(current_region);
- //      }
- //    }
- //    cout << "Removing overlapping regions" << endl;
- //    int num_intersections = 0;
- //    int i = 0;
- //    while(i < regions.size()){
- //      cout << "Region " << i << endl;
- //      vector<int> removals;
- //      for(int j = i+1; j < regions.size(); j++){
- //        if(regions[i].doIntersect(regions[j])){
- //          cout << "Intersection with region " << j << endl;
- //          num_intersections++;
- //          if(regions[i].inRegion(regions[j].getCenter())){
- //            cout << "Center inside" << endl;
- //            removals.push_back(j);
- //          }
- //          else{
- //            cout << "Center outside, adjust radius" << endl;
- //            double dist_between_centers = regions[i].getCenter().get_distance(regions[j].getCenter());
- //            cout << "dist_between_centers " << dist_between_centers << " first radius " << regions[i].getRadius() << " second new radius " << dist_between_centers - regions[i].getRadius() - 0.1 << endl;
- //            if(dist_between_centers - regions[i].getRadius() - 0.1 < 0.1){
- //              cout << "new radius too small, remove" << endl;
- //              removals.push_back(j);
- //            }
- //            else{
- //              regions[j].setRadius(dist_between_centers - regions[i].getRadius() - 0.01);
- //            }
- //          }
- //        }
- //      }
- //      cout << "num_intersections " << num_intersections << endl;
- //      for(int j = removals.size()-1; j >= 0; j--){
- //        cout << "Removing region " << removals[j] << endl;
- //        regions.erase(regions.begin()+removals[j]);
- //      }
- //      i++;
- //      num_intersections = 0;
- //    }
- //    cout << "Exit learning regions" << endl;
- //  }
-
+  }
 
   void learnRegions(vector<Position> *pos_hist, vector< vector<CartesianPoint> > *laser_hist){
     vector<Position> positionHis = *pos_hist;
@@ -678,67 +580,11 @@ class FORRRegionList{
       }
       // cout << "regions size " << regions.size() << endl;
     }
-    // cout << "regions " << regions.size() << " regions_to_remove_inds " << regions_to_remove_inds.size() << endl;
-    // sort (regions_to_remove_inds.begin(), regions_to_remove_inds.end());
-    // for(int i = 0; i < regions_to_remove_inds.size(); i++){
-    //   cout << regions_to_remove_inds[i] << endl;
-    // }
-    //remove exits from regions connected to removed regions
-    // for(int i = 0; i < regions.size(); i++){
-    //   regions[i].removeExitsToRegion(regions_to_remove_inds);
-    //   regions[i].fixExitReferences(regions_to_remove_inds);
-    // }
-    // // set <int> paths_for_removed;
-    // vector< vector<CartesianPoint> > paths_for_removed;
-    // //save paths for removed exits
-    // for(int i = 0; i < regions_to_remove_inds.size(); i++){
-    //   vector<FORRExit> region_exits = regions[regions_to_remove_inds[i]].getExits();
-    //   for(int j = 0; j < region_exits.size(); j++){
-    //     paths_for_removed.insert(region_exits[j].getConnectionPoints());
-    //     cout << "region " << regions_to_remove_inds[i] << " path " << region_exits[j].getConnectionPoints().size() << endl;
-    //   }
-    // }
-    // cout << "paths_for_removed " << paths_for_removed.size() << endl;
-    // vector<FORRRegion> new_regions;
-    // for(int i = 0; i < regions.size(); i++){
-    //   if(find(regions_to_remove_inds.begin(), regions_to_remove_inds.end(), i) == regions_to_remove_inds.end()){
-    //     new_regions.push_back(regions[i]);
-    //     cout << "Region added " << i << endl;
-    //   }
-    // }
-    // regions = new_regions;
-    // //remove regions
-    // for(int i=regions_to_remove_inds.size() - 1; i >= 0; i--){
-    //   regions.erase(regions.begin() + regions_to_remove_inds[i]);
-    // }
     cout << "regions " << regions.size() << endl;
-    //add new regions
-    // for(int i = 0; i < new_regions.size(); i++){
-    //   regions.push_back(new_regions[i]);
-    // }
-    //run paths from removed exits and new path
-    // paths_for_removed.insert(run_trace.size()-1);
-    // cout << "paths_for_removed " << paths_for_removed.size() << endl;
-    // vector< vector<CartesianPoint> > selected_traces;
-    // vector< vector < vector<CartesianPoint> > > selected_laser_traces;
     vector <int> selected_inds;
-    // set<int>::iterator it = paths_for_removed.begin();
-    // while (it != paths_for_removed.end())
-    // {
-    //   selected_traces.push_back(run_trace[(*it)]);
-    //   selected_laser_traces.push_back(laser_trace[(*it)]);
-    //   selected_inds.push_back((*it));
-    //   cout << "path " << (*it) << endl;
-    //   it++;
-    // }
-    // learnExits(selected_traces, selected_inds, selected_laser_traces);
     for(int i = 0; i < run_trace.size(); i++){
       selected_inds.push_back(i);
     }
-    // for(int i = 1; i < run_trace.size(); i++){
-    //   run_trace[i-1].push_back(run_trace[i][0]);
-    //   laser_trace[i-1].push_back(laser_trace[i][0]);
-    // }
     clearAllExits();
     learnExits(run_trace, selected_inds, laser_trace);
     cout << "Exit learning regions and exits" << endl;

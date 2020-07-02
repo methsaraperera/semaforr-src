@@ -54,6 +54,7 @@ private:
   vector< vector<Door> > doors;
   vector< vector<CartesianPoint> > trails;
   vector<Aggregate> hallways;
+  vector< vector<int> > passage_grid;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -185,6 +186,10 @@ public:
     }
     trails = interpolatedTrails;
     hallways = hlwys;
+  }
+
+  void setPassageGrid(vector< vector<int> > pg){
+    passage_grid = pg;
   }
 
   void updateNavGraph();

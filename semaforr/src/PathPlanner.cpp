@@ -1040,7 +1040,7 @@ double PathPlanner::getRemainingPathLength(double x, double y) {
  */
 Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
   const string signature = "PathPlanner::getClosestNode()> ";
-  if(findAny){
+  if(findAny and name == "skeleton"){
     Node temp;
     if(PATH_DEBUG)
       cout << signature << "Searching for any closest node " << endl;
@@ -1104,6 +1104,12 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
       }
     }
     return temp;
+  }
+  else if(findAny and name == "hallwayskel"){
+    Node temp;
+    if(PATH_DEBUG)
+      cout << signature << "Searching for any closest node " << endl;
+    
   }
   else{
     Node temp;

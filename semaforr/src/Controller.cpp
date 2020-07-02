@@ -872,8 +872,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     if(highwayFinished == 1){
       if(highwaysOn){
         learnSpatialModel(beliefs->getAgentState(), true);
-        updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Learning Spatial Model!!");
+        updateSkeletonGraph(beliefs->getAgentState());
+        ROS_DEBUG("Finished Updating Skeleton Graph!!");
       }
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -895,8 +896,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //Learn spatial model only on tasks completed successfully
       if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
         learnSpatialModel(beliefs->getAgentState(), true);
-        updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Learning Spatial Model!!");
+        updateSkeletonGraph(beliefs->getAgentState());
+        ROS_DEBUG("Finished Updating Skeleton Graph!!");
         if(situationsOn){
           beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
           ROS_DEBUG("Finished Learning Situations!!");
@@ -950,8 +952,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false);
-        updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Learning Spatial Model!!");
+        updateSkeletonGraph(beliefs->getAgentState());
+        ROS_DEBUG("Finished Updating Skeleton Graph!!");
         if(situationsOn){
           beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
           ROS_DEBUG("Finished Learning Situations!!");
@@ -1163,10 +1166,10 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    skeleton_planner->getGraph()->printGraph();
+    // skeleton_planner->getGraph()->printGraph();
     // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
   }
-  if(hallwayskel and highwayFinished == 1){
+  if(hallwayskel and highwayFinished == 1 and aStarOn){
     PathPlanner *hwskeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       if((*it)->getName() == "hallwayskel"){
@@ -1175,6 +1178,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     }
     hwskeleton_planner->resetGraph();
     vector< vector<int> > highway_grid = highwayExploration->getHighwayGrid();
+    // vector< vector< vector< pair<int, int> > > > highway_grid_connections = highwayExploration->getHighwayGridConnections();
     cout << "Highway grid" << endl;
     for(int i = 0; i < highway_grid.size(); i++){
       for(int j = 0; j < highway_grid[0].size(); j++){
@@ -1904,16 +1908,18 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       cout << "edge " << i << " connecting " << edges[i][0] << " " << edges[i][1] << endl;
     }
     vector< vector<int> > graph;
-    vector<int> graph_nodes;
+    map<int, vector< vector<int> > > graph_nodes;
+    map<int, vector< vector<int> > > graph_edges_map;
     vector<int> graph_edges;
     cout << "graph_nodes" << endl;
     for(int i = 1; i < new_ind+1; i++){
-      graph_nodes.push_back(i);
+      graph_nodes.insert(make_pair(i, vector< vector<int> >()));
       cout << i << endl;
     }
     cout << "graph_edges" << endl;
     for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
       graph_edges.push_back(i);
+      graph_edges_map.insert(make_pair(i, vector< vector<int> >()));
       cout << i << endl;
     }
     for(int i = 0; i < graph_edges.size(); i++){
@@ -1938,36 +1944,58 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
     }
 
-    // vector< vector< vector< pair<int, int> > > > highway_grid_connections = highwayExploration->getHighwayGridConnections();
-    // int index_val = 0;
-    // for(int i = 0; i < highway_grid.size(); i++){
-    //   for(int j = 0; j < highway_grid[i].size(); j++){
-    //     if(highway_grid[i][j] >= 0){
-    //       int x = i*100;
-    //       int y = j*100;
-    //       bool success = hwskeleton_planner->getGraph()->addNode(x, y, index_val);
-    //       if(success)
-    //         index_val++;
-    //     }
-    //   }
-    // }
-    // for(int i = 0; i < highway_grid_connections.size(); i++){
-    //   for(int j = 0; j < highway_grid_connections[i].size(); j++){
-    //     if(highway_grid[i][j] >= 0){
-    //       int x = i*100;
-    //       int y = j*100;
-    //       int start_id = hwskeleton_planner->getGraph()->getNodeID(x, y);
-    //       for(int k = 0; k < highway_grid_connections[i][j].size(); k++){
-    //         int c_x = highway_grid_connections[i][j][k].first*100;
-    //         int c_y = highway_grid_connections[i][j][k].second*100;
-    //         int end_id = hwskeleton_planner->getGraph()->getNodeID(c_x, c_y);
-    //         double dist = CartesianPoint(x,y).get_distance(CartesianPoint(c_x, c_y));
-    //         hwskeleton_planner->getGraph()->addEdge(start_id, end_id, dist*100);
-    //       }
-    //     }
-    //   }
-    // }
-    // cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
+    for(int i = 0; i < intersections.size(); i++){
+      for(int j = 0; j < intersections[i].size(); j++){
+        if(intersections[i][j] < new_ind+1 and intersections[i][j] > 0){
+          vector<int> current_grid;
+          current_grid.push_back(i);
+          current_grid.push_back(j);
+          graph_nodes[intersections[i][j]].push_back(current_grid);
+        }
+        else if(intersections[i][j] >= new_ind+1){
+          vector<int> current_grid;
+          current_grid.push_back(i);
+          current_grid.push_back(j);
+          graph_edges_map[intersections[i][j]].push_back(current_grid);
+        }
+      }
+    }
+    completedTask->setPassageValues(intersections, graph_nodes, graph_edges_map, graph);
+    beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);
+    vector< vector<int> > average_passage;
+    int index_val = 0;
+    for(int i = 1; i < new_ind+1; i++){
+      vector< vector<int> > points = graph_nodes[i];
+      double x, y;
+      for(int j = 0; j < points.size(); j++){
+        x += points[j][0];
+        y += points[j][1];
+      }
+      x = x / points.size();
+      y = y / points.size();
+      vector<int> avg_psg;
+      avg_psg.push_back((int)(x*100));
+      avg_psg.push_back((int)(y*100));
+      average_passage.push_back(avg_psg);
+      bool success = hwskeleton_planner->getGraph()->addNode((int)(x*100), (int)(y*100), 0, index_val);
+      if(success){
+        index_val++;
+      }
+    }
+    for(int i = 0; i < graph.size(); i++){
+      int node_a_id = hwskeleton_planner->getGraph()->getNodeID(average_passage[graph[i][0]-1][0], average_passage[graph[i][0]-1][1]);
+      int node_b_id = hwskeleton_planner->getGraph()->getNodeID(average_passage[graph[i][2]-1][0], average_passage[graph[i][2]-1][1]);
+      if(node_a_id != -1 and node_b_id != -1){
+        double distance_ab = sqrt((average_passage[graph[i][0]-1][0] - average_passage[graph[i][2]-1][0])*(average_passage[graph[i][0]-1][0] - average_passage[graph[i][2]-1][0]) + (average_passage[graph[i][0]-1][1] - average_passage[graph[i][2]-1][1])*(average_passage[graph[i][0]-1][1] - average_passage[graph[i][2]-1][1]));
+        vector<CartesianPoint> path;
+        path.push_back(CartesianPoint(graph[i][0], -1));
+        path.push_back(CartesianPoint(graph[i][1], -1));
+        path.push_back(CartesianPoint(graph[i][2], -1));
+        hwskeleton_planner->getGraph()->addEdge(node_a_id, node_b_id, distance_ab, path);
+      }
+    }
+    hwskeleton_planner->getGraph()->printGraph();
+    cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
   }
 
   gettimeofday(&cv,NULL);
@@ -2046,11 +2074,11 @@ bool Controller::tierOneDecision(FORRAction *decision){
     //   decisionMade = true;
     // }
     // else
-    // if(tier1->advisorGetOut(decision)){
-    //   ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
-    //   decisionStats->decisionTier = 1;
-    //   decisionMade = true;
-    // }
+    if(tier1->advisorGetOut(decision)){
+      ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
+      decisionStats->decisionTier = 1;
+      decisionMade = true;
+    }
     // else{
     //   // group of vetoing tier1 advisors which adds to the list of vetoed actions
     //   ROS_INFO("Advisor don't go back will veto actions");
@@ -2099,6 +2127,9 @@ void Controller::tierTwoDecision(Position current){
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
+    if(highwayFinished == 1){
+      planner->setPassageGrid(beliefs->getAgentState()->getCurrentTask()->getPassageGrid());
+    }
     //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     //gettimeofday(&cv,NULL);
     //start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
