@@ -204,6 +204,9 @@ public:
     // navGraph = new Graph(proximity, length, height);
   }
   Graph* getOrigGraph(){ return originalNavGraph; }
+  void resetOrigGraph(){
+    originalNavGraph->resetGraph();
+  }
 
   Map* getMap() { return &map;}
 

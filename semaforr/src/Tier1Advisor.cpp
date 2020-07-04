@@ -744,7 +744,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
   bool decisionMade = false;
   set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
   int decisionLimit = 10 + (int)(beliefs->getAgentState()->getCurrentTask()->getPositionHistory()->size()/50);
-  if(beliefs->getAgentState()->getGetOutTriggered() == false and beliefs->getAgentState()->getRobotConfined(decisionLimit, beliefs->getAgentState()->getDistanceToNearestObstacle(beliefs->getAgentState()->getCurrentPosition()))){
+  if(beliefs->getAgentState()->getGetOutTriggered() == false and beliefs->getAgentState()->getRobotConfined(decisionLimit, 1)){
     vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
     int size = actions.size();
     cout << "actions size " << size << " rotation size " << rotation_set->size()/2 << endl;

@@ -581,19 +581,21 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     ROS_DEBUG_STREAM("Created planner: turn");
   }
   if(skeleton == 1){
-    Graph *navGraphSkeleton = new Graph((int)(p*1000.0*2), l*100, h*100);
+    Graph *navGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
     cout << "initialized nav graph" << endl;
     PathPlanner *sk_planner = new PathPlanner(navGraphSkeleton, n,n, "skeleton");
     tier2Planners.push_back(sk_planner);
-    sk_planner->setOriginalNavGraph(origNavGraph);
+    Graph *origNavGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
+    sk_planner->setOriginalNavGraph(origNavGraphSkeleton);
     ROS_DEBUG_STREAM("Created planner: skeleton");
   }
   if(hallwayskel == 1){
-    Graph *navGraphHallwaySkeleton = new Graph((int)(p*1000.0*2), l*100, h*100);
+    Graph *navGraphHallwaySkeleton = new Graph((int)(p*100.0), l*100, h*100);
     cout << "initialized nav graph" << endl;
     PathPlanner *hwsk_planner = new PathPlanner(navGraphHallwaySkeleton, n,n, "hallwayskel");
     tier2Planners.push_back(hwsk_planner);
-    hwsk_planner->setOriginalNavGraph(origNavGraph);
+    Graph *origNavGraphHallwaySkeleton = new Graph((int)(p*100.0), l*100, h*100);
+    hwsk_planner->setOriginalNavGraph(origNavGraphHallwaySkeleton);
     ROS_DEBUG_STREAM("Created planner: hallwayskel");
   }
   cout << "initialized planners" << endl;
@@ -1096,15 +1098,23 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
   gettimeofday(&cv,NULL);
   start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 
-  if(skeleton and aStarOn){
+  if((skeleton and aStarOn) or(hallwayskel and highwayFinished == 1 and aStarOn)){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
-      if((*it)->getName() == "skeleton"){
+      if(skeleton and (*it)->getName() == "skeleton"){
+        skeleton_planner = *it;
+      }
+      else if(hallwayskel and (*it)->getName() == "hallwayskel"){
         skeleton_planner = *it;
       }
     }
-    skeleton_planner->resetGraph();
+    if(skeleton){
+      skeleton_planner->resetGraph();
+    }
+    else if(hallwayskel){
+      skeleton_planner->resetOrigGraph();
+    }
     // cout << "Planner reset" << endl;
     vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
     int index_val = 0;
@@ -1115,54 +1125,43 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       vector<FORRExit> exits = regions[i].getMinExits();
       // cout << "Exits " << exits.size() << endl;
       if(exits.size() > 0){
-        bool success = skeleton_planner->getGraph()->addNode(x, y, regions[i].getRadius(), index_val);
-        if(success){
-          index_val++;
+        if(skeleton){
+          bool success = skeleton_planner->getGraph()->addNode(x, y, regions[i].getRadius(), index_val);
+          if(success){
+            index_val++;
+          }
         }
-        // for(int j = 0; j < exits.size() ; j++){
-        //   int ex = (int)(exits[j].getExitPoint().get_x()*100);
-        //   int ey = (int)(exits[j].getExitPoint().get_y()*100);
-        //   // cout << "Exit " << exits[j].getExitPoint().get_x() << " " << exits[j].getExitPoint().get_y() << " " << ex << " " << ey << endl;
-        //   success = skeleton_planner->getGraph()->addNode(ex, ey, index_val);
-        //   if(success){
-        //     index_val++;
-        //   }
-        //   int mx = (int)(exits[j].getMidPoint().get_x()*100);
-        //   int my = (int)(exits[j].getMidPoint().get_y()*100);
-        //   // cout << "Midpoint " << exits[j].getMidPoint().get_x() << " " << exits[j].getMidPoint().get_y() << " " << mx << " " << my << endl;
-        //   success = skeleton_planner->getGraph()->addNode(mx, my, index_val);
-        //   if(success){
-        //     index_val++;
-        //   }
-        // }
+        else if(hallwayskel){
+          bool success = skeleton_planner->getOrigGraph()->addNode(x, y, regions[i].getRadius(), index_val);
+          if(success){
+            index_val++;
+          }
+        }
       }
     }
     for(int i = 0 ; i < regions.size(); i++){
-      int region_id = skeleton_planner->getGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
-      if(region_id != -1){
-        vector<FORRExit> exits = regions[i].getMinExits();
-        for(int j = 0; j < exits.size() ; j++){
-          int index_val = skeleton_planner->getGraph()->getNodeID((int)(regions[exits[j].getExitRegion()].getCenter().get_x()*100), (int)(regions[exits[j].getExitRegion()].getCenter().get_y()*100));
-          if(index_val != -1){
-            skeleton_planner->getGraph()->addEdge(region_id, index_val, exits[j].getExitDistance()*100, exits[j].getConnectionPoints());
+      if(skeleton){
+        int region_id = skeleton_planner->getGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
+        if(region_id != -1){
+          vector<FORRExit> exits = regions[i].getMinExits();
+          for(int j = 0; j < exits.size() ; j++){
+            int index_val = skeleton_planner->getGraph()->getNodeID((int)(regions[exits[j].getExitRegion()].getCenter().get_x()*100), (int)(regions[exits[j].getExitRegion()].getCenter().get_y()*100));
+            if(index_val != -1){
+              skeleton_planner->getGraph()->addEdge(region_id, index_val, exits[j].getExitDistance()*100, exits[j].getConnectionPoints());
+            }
           }
-          // int index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getExitPoint().get_x()*100), (int)(exits[j].getExitPoint().get_y()*100));
-          // if(index_val != -1){
-          //   // cout << "Edge from " << region_id << " to " << index_val << " Distance " << regions[i].getRadius()*100 << endl;
-          //   skeleton_planner->getGraph()->addEdge(region_id, index_val, regions[i].getRadius()*100);
-          //   int mid_index_val = skeleton_planner->getGraph()->getNodeID((int)(exits[j].getMidPoint().get_x()*100), (int)(exits[j].getMidPoint().get_y()*100));
-          //   if(mid_index_val != -1){
-          //     // cout << "Edge from " << index_val << " to " << mid_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
-          //     skeleton_planner->getGraph()->addEdge(index_val, mid_index_val, (exits[j].getExitDistance()*100)/2.0);
-          //     int tx = (int)(exits[j].getExitRegionPoint().get_x()*100);
-          //     int ty = (int)(exits[j].getExitRegionPoint().get_y()*100);
-          //     int end_index_val = skeleton_planner->getGraph()->getNodeID(tx, ty);
-          //     if(end_index_val != -1){
-          //       // cout << "Edge from " << mid_index_val << " to " << end_index_val << " Distance " << (exits[j].getExitDistance()*100)/2.0 << endl;
-          //       skeleton_planner->getGraph()->addEdge(mid_index_val, end_index_val, (exits[j].getExitDistance()*100)/2.0);
-          //     }
-          //   }
-          // }
+        }
+      }
+      else if(hallwayskel){
+        int region_id = skeleton_planner->getOrigGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
+        if(region_id != -1){
+          vector<FORRExit> exits = regions[i].getMinExits();
+          for(int j = 0; j < exits.size() ; j++){
+            int index_val = skeleton_planner->getOrigGraph()->getNodeID((int)(regions[exits[j].getExitRegion()].getCenter().get_x()*100), (int)(regions[exits[j].getExitRegion()].getCenter().get_y()*100));
+            if(index_val != -1){
+              skeleton_planner->getOrigGraph()->addEdge(region_id, index_val, exits[j].getExitDistance()*100, exits[j].getConnectionPoints());
+            }
+          }
         }
       }
     }

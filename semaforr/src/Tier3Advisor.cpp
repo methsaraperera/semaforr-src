@@ -2126,7 +2126,28 @@ double Tier3ConveyLinear::actionComment(FORRAction action){
 
 
 void Tier3ConveyLinear::set_commenting(){
-  advisor_commenting = true;
+  set<int> grid_values;
+  set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+  set<FORRAction> *action_set;
+  action_set = beliefs->getAgentState()->getActionSet();
+  FORRAction forrAction;
+  set<FORRAction>::iterator actionIter;
+  for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+    forrAction = *actionIter;
+    //cout << forrAction.type << " " << forrAction.parameter << endl;
+    if(vetoed_actions->find(forrAction) != vetoed_actions->end())// is this action vetoed
+      continue;
+    Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+    int grid_value = beliefs->getSpatialModel()->getConveyors()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
+    if(grid_value > 0)
+      grid_values.insert(grid_value);
+  }
+  if(grid_values.size() <= 1){
+    advisor_commenting = false;
+  }
+  else{
+    advisor_commenting = true;
+  }
 }
 
 double Tier3ConveyRotation::actionComment(FORRAction action){
@@ -2142,7 +2163,28 @@ double Tier3ConveyRotation::actionComment(FORRAction action){
 }
 
 void Tier3ConveyRotation::set_commenting(){
-  advisor_commenting = true;
+  set<int> grid_values;
+  set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+  set<FORRAction> *action_set;
+  action_set = beliefs->getAgentState()->getActionSet();
+  FORRAction forrAction;
+  set<FORRAction>::iterator actionIter;
+  for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
+    forrAction = *actionIter;
+    //cout << forrAction.type << " " << forrAction.parameter << endl;
+    if(vetoed_actions->find(forrAction) != vetoed_actions->end())// is this action vetoed
+      continue;
+    Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
+    int grid_value = beliefs->getSpatialModel()->getConveyors()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
+    if(grid_value > 0)
+      grid_values.insert(grid_value);
+  }
+  if(grid_values.size() <= 1){
+    advisor_commenting = false;
+  }
+  else{
+    advisor_commenting = true;
+  }
 }
 
 

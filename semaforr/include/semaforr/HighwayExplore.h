@@ -392,7 +392,6 @@ public:
 		avg_right += current_position.farthest_distance_right;
 		avg_count++;
 		double width_length_ratio = (current_position.farthest_distance_middle + dist_travelled_so_far) / (avg_left/avg_count + avg_right/avg_count);
-		double dist_to_current_target = current_target.getDistance(current_position.point);
 		double angle_to_avg_theta = 0;
 		if(highways[last_highway].getSizeHighway() >= 40){
 			angle_to_avg_theta = highways[last_highway].getAvgTheta() - current_position.point.getTheta();
@@ -423,6 +422,7 @@ public:
 			current_target = current_position.middle_point;
 			// cout << "New current_target " << current_target.getX() << " " << current_target.getY() << endl;
 		}
+		double dist_to_current_target = current_target.getDistance(current_position.point);
 
 		if(go_to_farthest_on_grid == true and top_point.point.getDistance(current_position.point) <= 0.5){
 			top_point_decisions = decision_limit;
@@ -460,15 +460,17 @@ public:
 			// After finishing point on stack, pop next one
 			if(highway_stack.size() > 0){
 				// cout << "Going to top point on stack" << endl;
-				if((highway_stack[0].direction == true and highway_stack[0].right_distance < 2*distance_threshold) or (highway_stack[0].direction == false and highway_stack[0].left_distance < 2*distance_threshold)){
-					sort(highway_stack.begin(), highway_stack.end());
-					reverse(highway_stack.begin(), highway_stack.end());
-				}
 				int start_highway = 0;
 				int end_highway = 0;
 				int middle_highway = 0;
 				bool already_completed = true;
+				bool already_sorted = false;
 				while((((start_highway >= 0 and end_highway >= 0) or (start_highway >= 0 and middle_highway >= 0) or (middle_highway >= 0 and end_highway >= 0)) or already_completed) and highway_stack.size() > 0){
+					if(already_sorted == false and (highway_stack[0].direction == true and highway_stack[0].right_distance < 2*distance_threshold) or (highway_stack[0].direction == false and highway_stack[0].left_distance < 2*distance_threshold)){
+						sort(highway_stack.begin(), highway_stack.end());
+						reverse(highway_stack.begin(), highway_stack.end());
+						already_sorted = true;
+					}
 					top_point = highway_stack[0];
 					// cout << "Potential Top point " << top_point.point.getX() << " " << top_point.point.getY() << endl;
 					highway_stack.erase(highway_stack.begin());

@@ -52,15 +52,16 @@ class FORRRegionList{
         for(int j = 0; j < pvs.size(); ++j){
           m[pvs[j]] += 1;
         }
-        int mode = 0;
-        int num_mode = 0;
+        // int mode = 0;
+        // int num_mode = 0;
         for(map<int,int>::iterator it=m.begin(); it!=m.end(); ++it){
-          if(it->second > mode){
-            mode = it->second;
-            num_mode = it->first;
-          }
+          regions[i].setPassageValue(it->first);
+          // if(it->second > mode){
+          //   mode = it->second;
+          //   num_mode = it->first;
+          // }
         }
-        regions[i].setPassageValue(num_mode);
+        // regions[i].setPassageValue(num_mode);
       }
     }
   }
