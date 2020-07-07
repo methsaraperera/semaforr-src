@@ -227,6 +227,14 @@ void Controller::initialize_params(string filename){
       highwaysOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("highwaysOn " << highwaysOn);
     }
+    else if (fileLine.find("outofhereOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      outofhereOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("outofhereOn " << outofhereOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -2073,10 +2081,12 @@ bool Controller::tierOneDecision(FORRAction *decision){
     //   decisionMade = true;
     // }
     // else
-    if(tier1->advisorGetOut(decision)){
-      ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
-      decisionStats->decisionTier = 1;
-      decisionMade = true;
+    if(outofhereOn){
+      if(tier1->advisorGetOut(decision)){
+        ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
+        decisionStats->decisionTier = 1;
+        decisionMade = true;
+      }
     }
     // else{
     //   // group of vetoing tier1 advisors which adds to the list of vetoed actions

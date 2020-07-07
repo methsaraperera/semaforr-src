@@ -2139,7 +2139,7 @@ void Tier3ConveyLinear::set_commenting(){
       continue;
     Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
     int grid_value = beliefs->getSpatialModel()->getConveyors()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
-    if(grid_value > 0)
+    if(grid_value > 1)
       grid_values.insert(grid_value);
   }
   if(grid_values.size() <= 1){
@@ -2176,7 +2176,7 @@ void Tier3ConveyRotation::set_commenting(){
       continue;
     Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction(forrAction);
     int grid_value = beliefs->getSpatialModel()->getConveyors()->getGridValue(expectedPosition.getX(), expectedPosition.getY());
-    if(grid_value > 0)
+    if(grid_value > 1)
       grid_values.insert(grid_value);
   }
   if(grid_values.size() <= 1){
