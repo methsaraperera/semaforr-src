@@ -114,7 +114,7 @@ struct DecisionPoint{
 			else if(i >= 195 and i <= 465){
 				middle_distance += ls.ranges[i];
 				if(ls.ranges[i] > max_value_middle){
-					farthest_distance_middle = ls.ranges[i];
+					// farthest_distance_middle = ls.ranges[i];
 					farthest_view_middle = i;
 					farthest_angle_middle = angle;
 					max_value_middle = ls.ranges[i];
@@ -159,6 +159,10 @@ struct DecisionPoint{
 			farthest_distance_left += ls.ranges[i];
 		}
 		farthest_distance_left = farthest_distance_left / 7.0;
+		for(int i = farthest_view_middle - 3; i <= farthest_view_middle + 3; i++){
+			farthest_distance_middle += ls.ranges[i];
+		}
+		farthest_distance_middle = farthest_distance_middle / 7.0;
 		if(max_right_ind == 0)
 			max_right_ind = 1;
 		if(max_right_ind = 135)
@@ -337,11 +341,13 @@ class Highway{
 public:
 	Highway(DecisionPoint point){
 		highway_points.push_back(point);
+		start_point = point;
 		avg_theta = point.point.getTheta();
 	}
 	vector<DecisionPoint> getHighwayPoints(){return highway_points;}
 	int getSizeHighway(){return highway_points.size();}
 	double getAvgTheta(){return avg_theta;}
+	DecisionPoint getStartPoint(){return start_point;}
 
 	void addPointToHighway(DecisionPoint new_point){
 		std::vector<DecisionPoint>::const_iterator it;
@@ -380,6 +386,7 @@ public:
 
 private:
 	vector<DecisionPoint> highway_points;
+	DecisionPoint start_point;
 	double avg_theta;
 };
 
@@ -572,7 +579,8 @@ public:
 		cout << "highway_stack_longest.size() " << highway_stack_longest.size() << " highway_stack.size() " << highway_stack.size() << endl;
 
 		// Check if you can go further, what the width-to-length ratio is, how close the walls
-		dist_travelled_so_far += last_position.point.getDistance(current_position.point);
+		// dist_travelled_so_far += last_position.point.getDistance(current_position.point);
+		dist_travelled_so_far = highways[last_highway].getStartPoint().point.getDistance(current_position.point);
 		avg_left += current_position.farthest_distance_left;
 		avg_right += current_position.farthest_distance_right;
 		avg_count++;
