@@ -75,6 +75,7 @@ struct DecisionPoint{
 		double min_left_right = 50;
 		double min_right_left = 50;
 		double min_right_right = 50;
+		int max_left_ind, max_right_ind;
 		double max_left_left = 0;
 		double max_left_right = 0;
 		double max_right_left = 0;
@@ -89,7 +90,7 @@ struct DecisionPoint{
 			if(i >= 580 and i <= 620){
 				left_distance += ls.ranges[i];
 				if(ls.ranges[i] > max_value_left){
-					farthest_distance_left = ls.ranges[i];
+					// farthest_distance_left = ls.ranges[i];
 					farthest_view_left = i;
 					farthest_angle_left = angle;
 					max_value_left = ls.ranges[i];
@@ -101,7 +102,7 @@ struct DecisionPoint{
 			else if(i >= 40 and i <= 80){
 				right_distance += ls.ranges[i];
 				if(ls.ranges[i] > max_value_right){
-					farthest_distance_right = ls.ranges[i];
+					// farthest_distance_right = ls.ranges[i];
 					farthest_view_right = i;
 					farthest_angle_right = angle;
 					max_value_right = ls.ranges[i];
@@ -126,7 +127,6 @@ struct DecisionPoint{
 					min_value_middle = ls.ranges[i];
 				}
 			}
-			start_angle = start_angle + increment;
 			overall_avg_distance += ls.ranges[i];
 			if(ls.ranges[i] > max_value_overall){
 				max_value_overall = ls.ranges[i];
@@ -136,55 +136,145 @@ struct DecisionPoint{
 				min_value_overall = ls.ranges[i];
 				overall_min_distance = ls.ranges[i];
 			}
-			if(i >= 19 and i <= 59){
+			laserEndpoints.push_back(CartesianPoint(r_x + ls.ranges[i]*cos(angle), r_y + ls.ranges[i]*sin(angle)));
+			if(i <= 135){
+				if(ls.ranges[i] > max_right_right){
+					max_right_right = ls.ranges[i];
+					max_right_ind = i;
+				}
+			}
+			else if(i >= 524){
+				if(ls.ranges[i] > max_left_left){
+					max_left_left = ls.ranges[i];
+					max_left_ind = i;
+				}
+			}
+			start_angle = start_angle + increment;
+		}
+		for(int i = farthest_view_right - 3; i <= farthest_view_right + 3; i++){
+			farthest_distance_right += ls.ranges[i];
+		}
+		farthest_distance_right = farthest_distance_right / 7.0;
+		for(int i = farthest_view_left - 3; i <= farthest_view_left + 3; i++){
+			farthest_distance_left += ls.ranges[i];
+		}
+		farthest_distance_left = farthest_distance_left / 7.0;
+		if(max_right_ind == 0)
+			max_right_ind = 1;
+		if(max_right_ind = 135)
+			max_right_ind = 134;
+		if(max_left_ind == 524)
+			max_left_ind = 525;
+		if(max_left_ind == ls.ranges.size()-1)
+			max_left_ind = ls.ranges.size()-2;
+		double min_right_right_thr = 0, min_right_left_thr = 0, min_left_right_thr = 0, min_left_left_thr = 0;
+		int min_right_right_ind = 0, min_right_left_ind = 0, min_left_right_ind = 0, min_left_left_ind = 0;
+		start_angle = ls.angle_min;
+		for(int i = 0; i < ls.ranges.size(); i++){
+			double angle = start_angle + r_ang;
+			if(i < max_right_ind){
 				if(ls.ranges[i] < min_right_left){
 					min_right_left = ls.ranges[i];
 					min_right_left_x = r_x + ls.ranges[i]*cos(angle);
 					min_right_left_y = r_y + ls.ranges[i]*sin(angle);
+					min_right_left_ind = i;
+					min_right_left_thr = ls.ranges[i] * 0.1;
 				}
-				else if(ls.ranges[i] > max_right_left){
-					max_right_left = ls.ranges[i];
-					max_right_left_x = r_x + ls.ranges[i]*cos(angle);
-					max_right_left_y = r_y + ls.ranges[i]*sin(angle);
-				}
+				// else if(ls.ranges[i] > max_right_left){
+				// 	max_right_left = ls.ranges[i];
+				// 	max_right_left_x = r_x + ls.ranges[i]*cos(angle);
+				// 	max_right_left_y = r_y + ls.ranges[i]*sin(angle);
+				// }
 			}
-			else if(i >= 61 and i <= 101){
+			else if(i > max_right_ind and i <= 135){
 				if(ls.ranges[i] < min_right_right){
 					min_right_right = ls.ranges[i];
 					min_right_right_x = r_x + ls.ranges[i]*cos(angle);
 					min_right_right_y = r_y + ls.ranges[i]*sin(angle);
+					min_right_right_ind = i;
+					min_right_right_thr = ls.ranges[i] * 0.1;
 				}
-				else if(ls.ranges[i] > max_right_right){
-					max_right_right = ls.ranges[i];
-					max_right_right_x = r_x + ls.ranges[i]*cos(angle);
-					max_right_right_y = r_y + ls.ranges[i]*sin(angle);
-				}
+				// else if(ls.ranges[i] > max_right_right){
+				// 	max_right_right = ls.ranges[i];
+				// 	max_right_right_x = r_x + ls.ranges[i]*cos(angle);
+				// 	max_right_right_y = r_y + ls.ranges[i]*sin(angle);
+				// }
 			}
-			else if(i >= 559 and i <= 599){
+			else if(i >= 524 and i < max_left_ind){
 				if(ls.ranges[i] < min_left_left){
 					min_left_left = ls.ranges[i];
 					min_left_left_x = r_x + ls.ranges[i]*cos(angle);
 					min_left_left_y = r_y + ls.ranges[i]*sin(angle);
+					min_left_left_ind = i;
+					min_left_left_thr = ls.ranges[i] * 0.1;
 				}
-				else if(ls.ranges[i] > max_left_left){
-					max_left_left = ls.ranges[i];
-					max_left_left_x = r_x + ls.ranges[i]*cos(angle);
-					max_left_left_y = r_y + ls.ranges[i]*sin(angle);
-				}
+				// else if(ls.ranges[i] > max_left_left){
+				// 	max_left_left = ls.ranges[i];
+				// 	max_left_left_x = r_x + ls.ranges[i]*cos(angle);
+				// 	max_left_left_y = r_y + ls.ranges[i]*sin(angle);
+				// }
 			}
-			else if(i >= 601 and i <= 641){
+			else if(i > max_left_ind){
 				if(ls.ranges[i] < min_left_right){
 					min_left_right = ls.ranges[i];
 					min_left_right_x = r_x + ls.ranges[i]*cos(angle);
 					min_left_right_y = r_y + ls.ranges[i]*sin(angle);
+					min_left_right_ind = i;
+					min_left_right_thr = ls.ranges[i] * 0.1;
 				}
-				else if(ls.ranges[i] > max_left_right){
-					max_left_right = ls.ranges[i];
-					max_left_right_x = r_x + ls.ranges[i]*cos(angle);
-					max_left_right_y = r_y + ls.ranges[i]*sin(angle);
+				// else if(ls.ranges[i] > max_left_right){
+				// 	max_left_right = ls.ranges[i];
+				// 	max_left_right_x = r_x + ls.ranges[i]*cos(angle);
+				// 	max_left_right_y = r_y + ls.ranges[i]*sin(angle);
+				// }
+			}
+			start_angle = start_angle + increment;
+		}
+		start_angle = ls.angle_min;
+		for(int i = 0; i < ls.ranges.size(); i++){
+			double angle = start_angle + r_ang;
+			if(i > min_right_left_ind and i < max_right_ind){
+				if(abs(ls.ranges[min_right_left_ind] - ls.ranges[i]) <= min_right_left_thr or (abs(min_right_left_x - r_x + ls.ranges[i]*cos(angle)) + abs(min_right_left_y - r_y + ls.ranges[i]*sin(angle))) <= min_right_left_thr){
+					min_right_left = ls.ranges[i];
+					min_right_left_x = r_x + ls.ranges[i]*cos(angle);
+					min_right_left_y = r_y + ls.ranges[i]*sin(angle);
+					min_right_left_ind = i;
+					min_right_left_thr = ls.ranges[i] * 0.1;
 				}
 			}
-			laserEndpoints.push_back(CartesianPoint(r_x + ls.ranges[i]*cos(angle), r_y + ls.ranges[i]*sin(angle)));
+			else if(i > min_left_left_ind and i < max_left_ind){
+				if(abs(ls.ranges[min_left_left_ind] - ls.ranges[i]) <= min_left_left_thr or (abs(min_left_left_x - r_x + ls.ranges[i]*cos(angle)) + abs(min_left_left_y - r_y + ls.ranges[i]*sin(angle))) <= min_left_left_thr){
+					min_left_left = ls.ranges[i];
+					min_left_left_x = r_x + ls.ranges[i]*cos(angle);
+					min_left_left_y = r_y + ls.ranges[i]*sin(angle);
+					min_left_left_ind = i;
+					min_left_left_thr = ls.ranges[i] * 0.1;
+				}
+			}
+			start_angle = start_angle + increment;
+		}
+		start_angle = ls.angle_min;
+		for(int i = ls.ranges.size()-1; i >= 0; i--){
+			double angle = start_angle + r_ang;
+			if(i > max_right_ind and i < min_right_right_ind){
+				if(abs(ls.ranges[min_right_right_ind] - ls.ranges[i]) <= min_right_right_thr or (abs(min_right_right_x - r_x + ls.ranges[i]*cos(angle)) + abs(min_right_right_y - r_y + ls.ranges[i]*sin(angle))) <= min_right_right_thr){
+					min_right_right = ls.ranges[i];
+					min_right_right_x = r_x + ls.ranges[i]*cos(angle);
+					min_right_right_y = r_y + ls.ranges[i]*sin(angle);
+					min_right_right_ind = i;
+					min_right_right_thr = ls.ranges[i] * 0.1;
+				}
+			}
+			else if(i > max_left_ind and i < min_left_right_ind){
+				if(abs(ls.ranges[min_left_right_ind] - ls.ranges[i]) <= min_left_right_thr or (abs(min_left_right_x - r_x + ls.ranges[i]*cos(angle)) + abs(min_left_right_y - r_y + ls.ranges[i]*sin(angle))) <= min_left_right_thr){
+					min_left_right = ls.ranges[i];
+					min_left_right_x = r_x + ls.ranges[i]*cos(angle);
+					min_left_right_y = r_y + ls.ranges[i]*sin(angle);
+					min_left_right_ind = i;
+					min_left_right_thr = ls.ranges[i] * 0.1;
+				}
+			}
+			start_angle = start_angle + increment;
 		}
 		middle_distance = middle_distance / 271.0;
 		left_distance = left_distance / 41.0;
@@ -211,8 +301,8 @@ struct DecisionPoint{
         overall_stdev_distance = sqrt(sqSum / sorted_ranges.size() - overall_avg_distance * overall_avg_distance);
         left_width = sqrt((min_left_right_x - min_left_left_x) * (min_left_right_x - min_left_left_x) + (min_left_right_y - min_left_left_y) * (min_left_right_y - min_left_left_y));
         right_width = sqrt((min_right_right_x - min_right_left_x) * (min_right_right_x - min_right_left_x) + (min_right_right_y - min_right_left_y) * (min_right_right_y - min_right_left_y));
-        left_width_max = sqrt((max_left_right_x - max_left_left_x) * (max_left_right_x - max_left_left_x) + (max_left_right_y - max_left_left_y) * (max_left_right_y - max_left_left_y));
-        right_width_max = sqrt((max_right_right_x - max_right_left_x) * (max_right_right_x - max_right_left_x) + (max_right_right_y - max_right_left_y) * (max_right_right_y - max_right_left_y));
+        // left_width_max = sqrt((max_left_right_x - max_left_left_x) * (max_left_right_x - max_left_left_x) + (max_left_right_y - max_left_left_y) * (max_left_right_y - max_left_left_y));
+        // right_width_max = sqrt((max_right_right_x - max_right_left_x) * (max_right_right_x - max_right_left_x) + (max_right_right_y - max_right_left_y) * (max_right_right_y - max_right_left_y));
 	}
 	bool operator==(const DecisionPoint p) {
 		return (point == p.point);
@@ -386,20 +476,21 @@ public:
 		DecisionPoint current_position = DecisionPoint(current_point, current_laser);
 		position_history.push_back(current_position);
 		cout << "current_position " << current_position.point.getX() << " " << current_position.point.getY() << " " << current_position.point.getTheta() << " mid avg " << current_position.middle_distance << " mid min " << current_position.middle_distance_min << " mid max " << current_position.farthest_distance_middle << " left avg " << current_position.left_distance << " left max " << current_position.farthest_distance_left << " right avg " << current_position.right_distance << " right max " << current_position.farthest_distance_right << endl;
-		cout << "left_width " << current_position.left_width << " right_width " << current_position.right_width << " left_width_max " << current_position.left_width_max << " right_width_max " << current_position.right_width_max << endl;
+		cout << "left_width " << current_position.left_width << " right_width " << current_position.right_width << endl;
+		// cout << " left_width_max " << current_position.left_width_max << " right_width_max " << current_position.right_width_max << endl;
 		// cout << "middle_point " << current_position.middle_point.getX() << " " << current_position.middle_point.getY() << " left_point " << current_position.left_point.getX() << " " << current_position.left_point.getY() << " right_point " << current_position.right_point.getX() << " " << current_position.right_point.getY() << endl;
 		if(current_position.right_distance >= distance_threshold){
 			DecisionPoint right_position = current_position;
 			right_position.direction = true;
 			if(pointAlreadyInStack(right_position) == false){
 				// cout << "Adding to stack " << highway_stack.size() << " distance " << current_position.right_distance << " view " << current_position.farthest_view_right << endl;
-				if(current_position.right_distance >= 2*distance_threshold){
-					cout << "Adding to top of longest stack " << highway_stack_longest.size() << " right distance " << current_position.right_distance << " x " << right_position.point.getX() << " y " << right_position.point.getY() << endl;
+				if(current_position.farthest_distance_right >= 2*distance_threshold){
+					cout << "Adding to top of longest stack " << highway_stack_longest.size() << " farthest right distance " << current_position.farthest_distance_right << " x " << right_position.point.getX() << " y " << right_position.point.getY() << endl;
 					highway_stack_longest.insert(highway_stack_longest.begin(), right_position);
 					stack_longest_index.insert(stack_longest_index.begin(), position_history.size()-1);
 				}
 				else{
-					cout << "Adding to top of shorter stack " << highway_stack.size() << " right distance " << current_position.right_distance << " x " << right_position.point.getX() << " y " << right_position.point.getY() << endl;
+					cout << "Adding to top of shorter stack " << highway_stack.size() << " farthest right distance " << current_position.farthest_distance_right << " x " << right_position.point.getX() << " y " << right_position.point.getY() << endl;
 					highway_stack.insert(highway_stack.begin(), right_position);
 					stack_index.insert(stack_index.begin(), position_history.size()-1);
 				}
@@ -410,13 +501,13 @@ public:
 			left_position.direction = false;
 			if(pointAlreadyInStack(left_position) == false){
 				// cout << "Adding to stack " << highway_stack.size() << " distance " << current_position.left_distance << " view " << current_position.farthest_view_left << endl;
-				if(current_position.left_distance >= 2*distance_threshold){
-					cout << "Adding to top of longest stack " << highway_stack_longest.size() << " left distance " << current_position.left_distance << " x " << left_position.point.getX() << " y " << left_position.point.getY() << endl;
+				if(current_position.farthest_distance_left >= 2*distance_threshold){
+					cout << "Adding to top of longest stack " << highway_stack_longest.size() << " farthest left distance " << current_position.farthest_distance_left << " x " << left_position.point.getX() << " y " << left_position.point.getY() << endl;
 					highway_stack_longest.insert(highway_stack_longest.begin(), left_position);
 					stack_longest_index.insert(stack_longest_index.begin(), position_history.size()-1);
 				}
 				else{
-					cout << "Adding to top of shorter stack " << highway_stack.size() << " left distance " << current_position.left_distance << " x " << left_position.point.getX() << " y " << left_position.point.getY() << endl;
+					cout << "Adding to top of shorter stack " << highway_stack.size() << " farthest left distance " << current_position.farthest_distance_left << " x " << left_position.point.getX() << " y " << left_position.point.getY() << endl;
 					highway_stack.insert(highway_stack.begin(), left_position);
 					stack_index.insert(stack_index.begin(), position_history.size()-1);
 				}
@@ -509,7 +600,7 @@ public:
 		if(angle_to_middle_point < -M_PI)
 			angle_to_middle_point = angle_to_middle_point + (2*M_PI);
 		angle_to_middle_point = fabs(angle_to_middle_point);
-		// cout << "dist_travelled_so_far " << dist_travelled_so_far << " avg_left " << avg_left << " avg_right " << avg_right << " avg_count " << avg_count << " length_width_ratio " << length_width_ratio << " dist_to_current_target " << dist_to_current_target << " angle_to_avg_theta " << angle_to_avg_theta << " angle_to_current_target " << angle_to_current_target << endl;
+		cout << "dist_travelled_so_far " << dist_travelled_so_far << " avg_left " << avg_left << " avg_right " << avg_right << " avg_count " << avg_count << " length_width_ratio " << length_width_ratio << " angle_to_avg_theta " << angle_to_avg_theta << " angle_to_current_target " << angle_to_current_target << endl;
 		if((current_position.farthest_distance_middle > last_position.middle_distance or current_position.middle_distance > 0.5) and angle_to_current_target < 0.3490658504 and angle_to_middle_point < 0.3490658504){
 			// cout << "More space in front from current position" << endl;
 			// Update current target
@@ -528,13 +619,13 @@ public:
 			top_point_decisions = 0;
 		}
 
-		if((((length_width_ratio > 1 and dist_travelled_so_far > current_position.farthest_distance_middle) or angle_to_avg_theta >= 1.5707963268/2.0 or dist_to_current_target <= 0.5 or current_position.middle_distance <= 0.1) and go_to_top_point == false) or top_point_decisions == decision_limit){
+		if((((length_width_ratio < 1 and dist_travelled_so_far > 1.5*current_position.farthest_distance_middle) or angle_to_avg_theta >= 1.5707963268/2.0 or dist_to_current_target <= 0.5 or current_position.middle_distance <= 0.1) and go_to_top_point == false) or top_point_decisions == decision_limit){
 			cout << "Too wide compared to length " << length_width_ratio << " Distance travelled so far " << dist_travelled_so_far << endl;
 			cout << "Turn too big " << angle_to_avg_theta << endl;
 			cout << "Decision limit reached " << top_point_decisions << endl;
 			cout << "Reached current target " << dist_to_current_target << endl;
 			cout << "Too close in front " << current_position.middle_distance << endl;
-			if(length_width_ratio > 1 and dist_travelled_so_far > current_position.farthest_distance_middle){
+			if(length_width_ratio < 1 and dist_travelled_so_far > 1.5*current_position.farthest_distance_middle){
 				cout << "PassageExplorationEnded length_width_ratio" << endl;
 			}
 			else if(angle_to_avg_theta >= 1.5707963268/2.0){
@@ -620,25 +711,25 @@ public:
 				path_to_top_point.clear();
 				go_to_farthest_on_grid = false;
 			}
-			else if(go_to_farthest_on_grid == false){
-				double dist_to_farthest = 0;
-				for(int i = 0; i < highway_grid.size(); i++){
-					for(int j = 0; j < highway_grid[i].size(); j++){
-						if(highway_grid[i][j] >= 0){
-							double dist_to_grid = current_position.point.getDistance(Position(i,j,0));
-							if(dist_to_grid > dist_to_farthest){
-								top_point = highways[highway_grid[i][j]].getClosestPointOnHighway(Position(i,j,0));
-								top_point_index = -1;
-								dist_to_farthest = dist_to_grid;
-							}
-						}
-					}
-				}
-				top_point_decisions = 0;
-				go_to_top_point = true;
-				path_to_top_point.clear();
-				go_to_farthest_on_grid = true;
-			}
+			// else if(go_to_farthest_on_grid == false){
+			// 	double dist_to_farthest = 0;
+			// 	for(int i = 0; i < highway_grid.size(); i++){
+			// 		for(int j = 0; j < highway_grid[i].size(); j++){
+			// 			if(highway_grid[i][j] >= 0){
+			// 				double dist_to_grid = current_position.point.getDistance(Position(i,j,0));
+			// 				if(dist_to_grid > dist_to_farthest){
+			// 					top_point = highways[highway_grid[i][j]].getClosestPointOnHighway(Position(i,j,0));
+			// 					top_point_index = -1;
+			// 					dist_to_farthest = dist_to_grid;
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// 	top_point_decisions = 0;
+			// 	go_to_top_point = true;
+			// 	path_to_top_point.clear();
+			// 	go_to_farthest_on_grid = true;
+			// }
 			else{
 				// cout << "No more in stack" << endl;
 				if(highway_grid[(int)(current_position.point.getX())][(int)(current_position.point.getY())] >= 0){
@@ -730,18 +821,19 @@ public:
 				else{
 					bool can_access_waypoint = canAccessPoint(current_position.laserEndpoints, CartesianPoint(current_position.point.getX(), current_position.point.getY()), CartesianPoint(path_to_top_point[0][0], path_to_top_point[0][1]), 5);
 					if(can_access_waypoint){
-						// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
+						cout << "Can Access Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 						top_point_decisions++;
 						return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
 					}
 					else{
-						int num = 0;
+						int num = -1;
 						while(!can_access_waypoint and num < path_to_top_point.size()){
 							num = num + 1;
 							can_access_waypoint = canAccessPoint(current_position.laserEndpoints, CartesianPoint(current_position.point.getX(), current_position.point.getY()), CartesianPoint(path_to_top_point[num][0], path_to_top_point[num][1]), 5);
 						}
+						cout << "num " << num << " can_access_waypoint " << can_access_waypoint << endl;
 						if(can_access_waypoint){
-							// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
+							cout << "New Access waypoint " << path_to_top_point[num][0] << " " << path_to_top_point[num][1] << endl;
 							top_point_decisions++;
 							return goTowardsPoint(current_position, Position(path_to_top_point[num][0], path_to_top_point[num][1], 0));
 						}
@@ -753,7 +845,7 @@ public:
 						// 	return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
 						// }
 						else{
-							// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
+							cout << "Try Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 							top_point_decisions++;
 							return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
 						}
@@ -1052,6 +1144,7 @@ public:
 
 	void findPathOnGrid(DecisionPoint current_point, DecisionPoint target_point, int target_point_index){
 		path_to_top_point.clear();
+		cout << "current_point " << current_point.point.getX() << " " << current_point.point.getY() << " target_point " << target_point.point.getX() << " " << target_point.point.getY() << " target_point_index " << target_point_index << endl;
 		if(target_point_index == -1){
 			double dist_to_top = 50;
 			for(int i = 0; i < position_history.size(); i++){
@@ -1065,12 +1158,13 @@ public:
 					break;
 				}
 			}
+			cout << "new target_point_index " << target_point_index << endl;
 		}
 		vector<DecisionPoint> trailPositions;
 		trailPositions.push_back(position_history[target_point_index]);
 		for(int i = target_point_index; i < position_history.size(); i++){
 			for(int n = position_history.size()-1; n > i; n--){
-				if(canAccessPoint(position_history[i].laserEndpoints, CartesianPoint(position_history[i].point.getX(), position_history[i].point.getY()), CartesianPoint(position_history[n].point.getX(), position_history[n].point.getY()), 3)) {
+				if(canAccessPoint(position_history[i].laserEndpoints, CartesianPoint(position_history[i].point.getX(), position_history[i].point.getY()), CartesianPoint(position_history[n].point.getX(), position_history[n].point.getY()), 2)) {
 					trailPositions.push_back(position_history[n]);
 					i = n-1;
 				}
@@ -1249,13 +1343,13 @@ public:
 	}
 
 	void waypointAchieved(DecisionPoint current_position){
-		// cout << "In waypointAchieved" << endl;
+		cout << "In waypointAchieved" << endl;
 		bool erase_waypoint = true;
 		while(erase_waypoint){
 			Position current_waypoint = Position(path_to_top_point[0][0], path_to_top_point[0][1], 0);
 			double dist_to_current_waypoint = current_position.point.getDistance(current_waypoint);
 			if(dist_to_current_waypoint <= 0.25){
-				// cout << "Waypoint Achieved, removing waypoint" << endl;
+				cout << "Waypoint Achieved, removing waypoint" << endl;
 				path_to_top_point.erase(path_to_top_point.begin());
 			}
 			else{
@@ -1324,29 +1418,29 @@ public:
 		int end_highway = -1;
 		int middle_highway = -1;
 		double width_length = 0;
-		double near_far_width = 0;
+		// double near_far_width = 0;
 		if(new_point.direction == true){
 			end_highway = highway_grid[(int)(new_point.right_point.getX())][(int)(new_point.right_point.getY())];
 			middle_highway = highway_grid[(int)((new_point.point.getX() + new_point.right_point.getX())/2.0)][(int)((new_point.point.getY() + new_point.right_point.getY())/2.0)];
-			width_length = new_point.farthest_distance_right / (new_point.right_width);
-			near_far_width = new_point.right_width / new_point.right_width_max;
+			width_length = new_point.right_distance / (new_point.right_width);
+			// near_far_width = new_point.right_width / new_point.right_width_max;
 		}
 		else{
 			end_highway = highway_grid[(int)(new_point.left_point.getX())][(int)(new_point.left_point.getY())];
 			middle_highway = highway_grid[(int)((new_point.point.getX() + new_point.left_point.getX())/2.0)][(int)((new_point.point.getY() + new_point.left_point.getY())/2.0)];
-			width_length = new_point.farthest_distance_left / (new_point.left_width);
-			near_far_width = new_point.left_width / new_point.left_width_max;
+			width_length = new_point.left_distance / (new_point.left_width);
+			// near_far_width = new_point.left_width / new_point.left_width_max;
 		}
-		cout << "width_length " << width_length << " near_far_width " << near_far_width << " overall_avg_distance " << new_point.overall_avg_distance << " overall_max_distance " << new_point.overall_max_distance << " overall_min_distance " << new_point.overall_min_distance << " overall_median_distance " << new_point.overall_median_distance << " overall_stdev_distance " << new_point.overall_stdev_distance << endl;
+		cout << "width_length " << width_length << " overall_avg_distance " << new_point.overall_avg_distance << " overall_max_distance " << new_point.overall_max_distance << " overall_min_distance " << new_point.overall_min_distance << " overall_median_distance " << new_point.overall_median_distance << " overall_stdev_distance " << new_point.overall_stdev_distance << endl;
 		cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << endl;
 		if(width_length < 1){
 			cout << "pointAlreadyInStack rejected width_length" << endl;
 			return true;
 		}
-		else if(near_far_width < 1){
-			cout << "pointAlreadyInStack rejected near_far_width" << endl;
-			return true;
-		}
+		// else if(near_far_width < 0.5){
+		// 	cout << "pointAlreadyInStack rejected near_far_width" << endl;
+		// 	return true;
+		// }
 		else if(new_point.overall_avg_distance > 4.75 and new_point.overall_max_distance <= 16.5 and new_point.overall_median_distance > 3.9 and new_point.overall_stdev_distance <= 4.25){
 			cout << "pointAlreadyInStack rejected cluster1" << endl;
 			return true;
