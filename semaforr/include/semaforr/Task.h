@@ -694,6 +694,14 @@ class Task {
   vector< vector<int> > getPassageGrid(){
   	return passage_grid;
   }
+
+  map<int, vector< vector<int> > > getPassageGraphNodes(){
+  	return passage_graph_nodes;
+  }
+
+  vector< vector<int> > getPassageGraph(){
+  	return passage_graph;
+  }
    
  private:
   

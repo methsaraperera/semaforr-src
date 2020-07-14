@@ -2137,7 +2137,7 @@ void Controller::tierTwoDecision(Position current){
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
     if(highwayFinished == 1){
-      planner->setPassageGrid(beliefs->getAgentState()->getCurrentTask()->getPassageGrid());
+      planner->setPassageGrid(beliefs->getAgentState()->getCurrentTask()->getPassageGrid(), beliefs->getAgentState()->getCurrentTask()->getPassageGraphNodes(), beliefs->getAgentState()->getCurrentTask()->getPassageGraph());
     }
     //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     //gettimeofday(&cv,NULL);

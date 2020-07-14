@@ -1110,6 +1110,123 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
     if(PATH_DEBUG)
       cout << signature << "Searching for any closest node " << endl;
     
+    int nPassage = passage_grid[(int)(n.getX()/100.0)][(int)(n.getY()/100.0)];
+    cout << "Point in passage_grid " << nPassage << endl;
+    if(passage_graph_nodes.count(nPassage) != 0){
+      cout << "Point on intersection " << nPassage - 1 << endl;
+      int x = (int)(passage_average_values[nPassage - 1].get_x());
+      int y = (int)(passage_average_values[nPassage - 1].get_y());
+      temp = navGraph->getNode(navGraph->getNodeID(x, y));
+      return temp;
+    }
+    else if(nPassage > 0){
+      cout << "Point on passage" << endl;
+      vector<int> nearby_intersections;
+      for(int i = 0; i < passage_graph.size(); i++){
+        if(passage_graph[i][1] == nPassage){
+          if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][0]) == nearby_intersections.end()){
+            nearby_intersections.push_back(passage_graph[i][0]);
+            cout << "nearby intersection " << passage_graph[i][0] << endl;
+          }
+          if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][2]) == nearby_intersections.end()){
+            nearby_intersections.push_back(passage_graph[i][2]);
+            cout << "nearby intersection " << passage_graph[i][2] << endl;
+          }
+        }
+      }
+      double dist_to_nearby = 1000000.0;
+      int closest_intersection;
+      for(int i = 0; i < nearby_intersections.size(); i++){
+        double dist_to_int = passage_average_values[nearby_intersections[i] - 1].get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+        if(dist_to_int < dist_to_nearby){
+          dist_to_nearby = dist_to_int;
+          closest_intersection = nearby_intersections[i] - 1;
+        }
+      }
+      cout << "closest intersection " << closest_intersection << endl;
+      int x = (int)(passage_average_values[closest_intersection].get_x());
+      int y = (int)(passage_average_values[closest_intersection].get_y());
+      temp = navGraph->getNode(navGraph->getNodeID(x, y));
+      return temp;
+    }
+    else{
+      cout << "Point on neither intersection nor passage" << endl;
+      int nRegion=-1;
+      for(int i = 0; i < regions.size() ; i++){
+        if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0) and regions[i].getMinExits().size() > 0){
+          nRegion = i;
+        }
+        if(nRegion >= 0){
+          break;
+        }
+      }
+      if(nRegion >= 0){
+        int x = (int)(regions[nRegion].getCenter().get_x()*100);
+        int y = (int)(regions[nRegion].getCenter().get_y()*100);
+        cout << "Point in region " << nRegion << " x " << x << " y " << y << endl;
+        vector<int> passage_values = regions[nRegion].getPassageValues();
+        for(int i = 0; i < passage_values.size(); i++){
+          if(passage_graph_nodes.count(passage_values[i]) != 0){
+            cout << "Region on intersection " << passage_values[i] - 1 << endl;
+            int x = (int)(passage_average_values[passage_values[i] - 1].get_x());
+            int y = (int)(passage_average_values[passage_values[i] - 1].get_y());
+            temp = navGraph->getNode(navGraph->getNodeID(x, y));
+            return temp;
+          }
+        }
+        if(passage_values.size() > 0){
+          cout << "Region on passage" << endl;
+        }
+        // temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        // return temp;
+      }
+      else{
+        int vRegion=-1;
+        double vDist=1000000;
+        for(int i = 0; i < regions.size() ; i++){
+          if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+            double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+            if(dist_to_region < vDist){
+              cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+              vRegion = i;
+              vDist = dist_to_region;
+            }
+          }
+        }
+        if(vRegion >= 0){
+          int x = (int)(regions[vRegion].getCenter().get_x()*100);
+          int y = (int)(regions[vRegion].getCenter().get_y()*100);
+          cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
+          // temp = navGraph->getNode(navGraph->getNodeID(x, y));
+          // return temp;
+        }
+        else{
+          cout << "Not in region or visible to region, searching for close node" << endl;
+          vector<Node*> nodes = navGraph->getNodes();
+          vector<Node*>::iterator iter;
+          // double min_distance = 100000000.0;
+          double max_score = -100000000.0;
+          for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+            double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
+            double neighbors = (*iter)->numNeighbors();
+            double score = d + neighbors;
+            // if(d < min_distance){
+              // min_distance = d;
+            if(score > max_score){
+              max_score = score;
+              // temp = (*(*iter));
+              // if(PATH_DEBUG) {
+              //   cout << "\tFound a new candidate!: ";
+              //   temp.printNode();
+              //   cout << endl;
+              //   cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+              // }
+            }
+          }
+          // return temp;
+        }
+      }
+    }
   }
   else{
     Node temp;
