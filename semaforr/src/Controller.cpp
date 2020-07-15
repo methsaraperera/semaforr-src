@@ -155,6 +155,22 @@ void Controller::initialize_params(string filename){
       highwayDistanceThreshold = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("highwayDistanceThreshold " << highwayDistanceThreshold);
     }
+    else if (fileLine.find("highwayTimeThreshold") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      highwayTimeThreshold = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("highwayTimeThreshold " << highwayTimeThreshold);
+    }
+    else if (fileLine.find("highwayDecisionThreshold") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      highwayDecisionThreshold = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("highwayDecisionThreshold " << highwayDecisionThreshold);
+    }
     else if (fileLine.find("maxForwardActionSweepAngle") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -852,7 +868,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 
   // Initialize highways
   highwayFinished = 0;
-  highwayExploration = new HighwayExplorer(l, h, highwayDistanceThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
+  highwayExploration = new HighwayExplorer(l, h, highwayDistanceThreshold, highwayTimeThreshold, highwayDecisionThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
 
   // Initialize circumnavigator
   // PathPlanner *skeleton_planner;
@@ -1114,7 +1130,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
   gettimeofday(&cv,NULL);
   start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 
-  if((skeleton and aStarOn) or(hallwayskel and highwayFinished == 1 and aStarOn)){
+  if((skeleton and aStarOn) or (hallwayskel and highwayFinished >= 1 and aStarOn)){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
@@ -1181,8 +1197,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    // skeleton_planner->getGraph()->printGraph();
-    // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
+    if(skeleton){
+      skeleton_planner->getGraph()->printGraph();
+      // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
+    }
+    else if(hallwayskel){
+      skeleton_planner->getOrigGraph()->printGraph();
+      // cout << "Connected Graph: " << skeleton_planner->getOrigGraph()->isConnected() << endl;
+    }
   }
   if(hallwayskel and highwayFinished == 1 and aStarOn){
     PathPlanner *hwskeleton_planner;
@@ -1960,34 +1982,36 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     }
 
     for(int i = 0; i < intersections.size(); i++){
-      for(int j = 0; j < intersections[i].size(); j++){
+      for(int j = 0; j < intersections[0].size(); j++){
         if(intersections[i][j] < new_ind+1 and intersections[i][j] > 0){
           vector<int> current_grid;
           current_grid.push_back(i);
           current_grid.push_back(j);
           graph_nodes[intersections[i][j]].push_back(current_grid);
+          // cout << "node " << intersections[i][j] << " point " << i << " " << j << endl;
         }
         else if(intersections[i][j] >= new_ind+1){
           vector<int> current_grid;
           current_grid.push_back(i);
           current_grid.push_back(j);
           graph_edges_map[intersections[i][j]].push_back(current_grid);
+          // cout << "edge " << intersections[i][j] << " point " << i << " " << j << endl;
         }
       }
     }
-    completedTask->setPassageValues(intersections, graph_nodes, graph_edges_map, graph);
-    beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);
+    cout << "graph_nodes " << graph_nodes.size() << " graph_edges_map " << graph_edges_map.size() << endl;
     vector< vector<int> > average_passage;
     int index_val = 0;
     for(int i = 1; i < new_ind+1; i++){
       vector< vector<int> > points = graph_nodes[i];
-      double x, y;
+      double x = 0, y = 0;
       for(int j = 0; j < points.size(); j++){
         x += points[j][0];
         y += points[j][1];
       }
       x = x / points.size();
       y = y / points.size();
+      cout << "node " << i << " index_val " << index_val << " x " << x << " y " << y << " node_x " << (int)(x*100) << " node_y " << (int)(y*100) << endl;
       vector<int> avg_psg;
       avg_psg.push_back((int)(x*100));
       avg_psg.push_back((int)(y*100));
@@ -1997,20 +2021,27 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         index_val++;
       }
     }
+    cout << "finished creating nodes" << endl;
     for(int i = 0; i < graph.size(); i++){
       int node_a_id = hwskeleton_planner->getGraph()->getNodeID(average_passage[graph[i][0]-1][0], average_passage[graph[i][0]-1][1]);
       int node_b_id = hwskeleton_planner->getGraph()->getNodeID(average_passage[graph[i][2]-1][0], average_passage[graph[i][2]-1][1]);
+      cout << "graph " << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << " node_a_id " << node_a_id << " node_b_id " << node_b_id << endl;
       if(node_a_id != -1 and node_b_id != -1){
         double distance_ab = sqrt((average_passage[graph[i][0]-1][0] - average_passage[graph[i][2]-1][0])*(average_passage[graph[i][0]-1][0] - average_passage[graph[i][2]-1][0]) + (average_passage[graph[i][0]-1][1] - average_passage[graph[i][2]-1][1])*(average_passage[graph[i][0]-1][1] - average_passage[graph[i][2]-1][1]));
         vector<CartesianPoint> path;
         path.push_back(CartesianPoint(graph[i][0], -1));
         path.push_back(CartesianPoint(graph[i][1], -1));
         path.push_back(CartesianPoint(graph[i][2], -1));
+        cout << "distance_ab " << distance_ab << " path " << path.size() << endl;
         hwskeleton_planner->getGraph()->addEdge(node_a_id, node_b_id, distance_ab, path);
       }
     }
+    cout << "finished creating edges" << endl;
     hwskeleton_planner->getGraph()->printGraph();
     cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
+    agentState->setPassageValues(intersections, graph_nodes, graph_edges_map, graph, average_passage);
+    beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);
+    cout << "after setPassageValues and setRegionPassageValues" << endl;
   }
 
   gettimeofday(&cv,NULL);
@@ -2066,6 +2097,13 @@ bool Controller::tierOneDecision(FORRAction *decision){
   bool decisionMade = false;
   // ROS_INFO("Advisor circumnavigate will create subplan");
   // tier1->advisorCircumnavigate(decision);
+  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+  if(positionHis->size() > 1){
+    CartesianPoint current_position = CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY());
+    if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.1){
+      beliefs->getAgentState()->setGetOutTriggered(false);
+    }
+  }
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor Victory has made a decision " << decision->type << " " << decision->parameter);
     // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
@@ -2144,8 +2182,8 @@ void Controller::tierTwoDecision(Position current){
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
-    if(highwayFinished == 1){
-      planner->setPassageGrid(beliefs->getAgentState()->getCurrentTask()->getPassageGrid(), beliefs->getAgentState()->getCurrentTask()->getPassageGraphNodes(), beliefs->getAgentState()->getCurrentTask()->getPassageGraph());
+    if(highwayFinished >= 1){
+      planner->setPassageGrid(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage());
     }
     //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     //gettimeofday(&cv,NULL);

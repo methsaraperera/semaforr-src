@@ -392,8 +392,9 @@ private:
 
 class HighwayExplorer{
 public:
-	HighwayExplorer(int l, int h, double threshold, double arrMove[], double arrRotate[], int moveArrMax, int rotateArrMax){
-		distance_threshold = threshold;
+	HighwayExplorer(int l, int h, double dthreshold, double tthreshold, double decthreshold, double arrMove[], double arrRotate[], int moveArrMax, int rotateArrMax){
+		distance_threshold = dthreshold;
+		time_threshold = tthreshold;
 		length = l;
 		height = h;
 		numMoves = moveArrMax;
@@ -430,14 +431,14 @@ public:
 		too_close = false;
 		too_close_front = false;
 		top_point_decisions = 0;
-		decision_limit = 750;
+		decision_limit = decthreshold;
 		start_rotations = 0;
 	};
 	~HighwayExplorer(){};
 
 	bool getHighwaysComplete(){return highways_complete;}
 	void setHighwaysComplete(double time){
-		if(time >= 1200 and time <= 1210){
+		if(time >= time_threshold and time <= time_threshold+10){
 			highways_complete = true;
 			cout << "Highway grid" << endl;
 			for(int i = 0; i < highway_grid[0].size(); i++){
@@ -1656,6 +1657,7 @@ private:
 	int length;
 	int height;
 	double distance_threshold;
+	double time_threshold;
 	double move[300];  
 	double rotate[300];
 	int numMoves, numRotates;

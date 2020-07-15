@@ -401,12 +401,20 @@ class Task {
 			}
 		}
 		if(found == false or addAnyway){
-			waypoints.insert(waypoints.begin(), new_point);
-			// waypoints.push_back(new_point);
-			isPlanActive = true;
-			wx = new_point.get_x();
-			wy = new_point.get_y();
-			cout << wx << " " << wy << endl;
+			if(plannerName != "skeleton"){
+				waypoints.insert(waypoints.begin(), new_point);
+				// waypoints.push_back(new_point);
+				isPlanActive = true;
+				wx = new_point.get_x();
+				wy = new_point.get_y();
+				cout << wx << " " << wy << endl;
+			}
+			else{
+				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(true, FORRRegion(new_point, 0.5), vector<CartesianPoint>()));
+				isPlanActive = true;
+				wr = skeleton_waypoints[0];
+				cout << wr.getRegion().getCenter().get_x() << " " << wr.getRegion().getCenter().get_y() << endl;
+			}
 		}
 	}
 
@@ -684,24 +692,24 @@ class Task {
 	planPositions = grid;
   }
 
-  void setPassageValues(vector< vector<int> > pg, map<int, vector< vector<int> > > pgn, map<int, vector< vector<int> > > pge, vector< vector<int> > pgr){
-  	passage_grid = pg;
-  	passage_graph_nodes = pgn;
-  	passage_graph_edges = pge;
-  	passage_graph = pgr;
-  }
+  // void setPassageValues(vector< vector<int> > pg, map<int, vector< vector<int> > > pgn, map<int, vector< vector<int> > > pge, vector< vector<int> > pgr){
+  // 	passage_grid = pg;
+  // 	passage_graph_nodes = pgn;
+  // 	passage_graph_edges = pge;
+  // 	passage_graph = pgr;
+  // }
 
-  vector< vector<int> > getPassageGrid(){
-  	return passage_grid;
-  }
+  // vector< vector<int> > getPassageGrid(){
+  // 	return passage_grid;
+  // }
 
-  map<int, vector< vector<int> > > getPassageGraphNodes(){
-  	return passage_graph_nodes;
-  }
+  // map<int, vector< vector<int> > > getPassageGraphNodes(){
+  // 	return passage_graph_nodes;
+  // }
 
-  vector< vector<int> > getPassageGraph(){
-  	return passage_graph;
-  }
+  // vector< vector<int> > getPassageGraph(){
+  // 	return passage_graph;
+  // }
    
  private:
   
@@ -715,10 +723,10 @@ class Task {
   vector<sk_waypoint> skeleton_waypoints;
   vector<sk_waypoint> finished_sk_waypoints;
 
-  vector< vector<int> > passage_grid;
-  map<int, vector< vector<int> > > passage_graph_nodes;
-  map<int, vector< vector<int> > > passage_graph_edges;
-  vector< vector<int> > passage_graph;
+  // vector< vector<int> > passage_grid;
+  // map<int, vector< vector<int> > > passage_graph_nodes;
+  // map<int, vector< vector<int> > > passage_graph_edges;
+  // vector< vector<int> > passage_graph;
 
   list<int> waypointInd;
   vector< list<int> > plansInds;

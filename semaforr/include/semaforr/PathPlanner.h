@@ -60,7 +60,7 @@ private:
   vector<Aggregate> hallways;
   vector< vector<int> > passage_grid;
   std::map<int, vector< vector<int> > > passage_graph_nodes;
-  vector<CartesianPoint> passage_average_values;
+  vector< vector<int> > passage_average_values;
   vector< vector<int> > passage_graph;
 
   //list<int>::iterator head;
@@ -195,22 +195,11 @@ public:
     hallways = hlwys;
   }
 
-  void setPassageGrid(vector< vector<int> > pg, std::map<int, vector< vector<int> > > pgn, vector< vector<int> > pgr){
+  void setPassageGrid(vector< vector<int> > pg, std::map<int, vector< vector<int> > > pgn, vector< vector<int> > pgr, vector< vector<int> > ap){
     passage_grid = pg;
     passage_graph_nodes = pgn;
     passage_graph = pgr;
-    
-    for(int i = 1; i <= passage_graph_nodes.size(); i++){
-      vector< vector<int> > points = passage_graph_nodes[i];
-      double x, y;
-      for(int j = 0; j < points.size(); j++){
-        x += points[j][0];
-        y += points[j][1];
-      }
-      x = x / points.size();
-      y = y / points.size();
-      passage_average_values.push_back(CartesianPoint((int)(x*100), (int)(y*100)));
-    }
+    passage_average_values = ap;
   }
 
   void updateNavGraph();

@@ -378,6 +378,30 @@ public:
 
   void dfs(int x, int y, int current_label, vector<int> dx, vector<int> dy, int row_count, int col_count, vector< vector<int> > *label, vector< vector<int> > *m);
 
+  void setPassageValues(vector< vector<int> > pg, map<int, vector< vector<int> > > pgn, map<int, vector< vector<int> > > pge, vector< vector<int> > pgr, vector< vector<int> > ap){
+    passage_grid = pg;
+    passage_graph_nodes = pgn;
+    passage_graph_edges = pge;
+    passage_graph = pgr;
+    average_passage = ap;
+  }
+
+  vector< vector<int> > getPassageGrid(){
+    return passage_grid;
+  }
+
+  map<int, vector< vector<int> > > getPassageGraphNodes(){
+    return passage_graph_nodes;
+  }
+
+  vector< vector<int> > getPassageGraph(){
+    return passage_graph;
+  }
+
+  vector< vector<int> > getAveragePassage(){
+    return average_passage;
+  }
+
  private:
 
   // Stores the move and rotate action values
@@ -481,6 +505,13 @@ public:
 
   // Parameters
   double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle;
+
+  // Passage Values
+  vector< vector<int> > passage_grid;
+  map<int, vector< vector<int> > > passage_graph_nodes;
+  map<int, vector< vector<int> > > passage_graph_edges;
+  vector< vector<int> > passage_graph;
+  vector< vector<int> > average_passage;
 
 };
 
