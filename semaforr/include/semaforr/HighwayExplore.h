@@ -1439,8 +1439,15 @@ public:
 			width_length = new_point.left_distance / (new_point.left_width);
 			// near_far_width = new_point.left_width / new_point.left_width_max;
 		}
+		int numInvalid = 0;
+		if(start_highway >= 0 or start_highway == -2)
+			numInvalid++;
+		if(middle_highway >= 0 or middle_highway == -2)
+			numInvalid++;
+		if(end_highway >= 0 or end_highway == -2)
+			numInvalid++;
 		cout << "width_length " << width_length << " overall_avg_distance " << new_point.overall_avg_distance << " overall_max_distance " << new_point.overall_max_distance << " overall_min_distance " << new_point.overall_min_distance << " overall_median_distance " << new_point.overall_median_distance << " overall_stdev_distance " << new_point.overall_stdev_distance << endl;
-		cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << endl;
+		cout << "start_highway " << start_highway << " middle_highway " << middle_highway << " end_highway " << end_highway << " numInvalid " << numInvalid << endl;
 		if(width_length < 1){
 			cout << "pointAlreadyInStack rejected width_length" << endl;
 			return true;
@@ -1457,8 +1464,8 @@ public:
 			cout << "pointAlreadyInStack rejected cluster2" << endl;
 			return true;
 		}
-		else if(start_highway >= 0 and middle_highway >= 0 and end_highway >= 0){
-			cout << "pointAlreadyInStack rejected all_labeled" << endl;
+		else if(numInvalid >= 2){
+			cout << "pointAlreadyInStack rejected atleast_two_labeled" << endl;
 			return true;
 		}
 		else if(anySimilarOnList(new_point, highway_stack) == true){

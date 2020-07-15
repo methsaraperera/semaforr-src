@@ -239,6 +239,8 @@ public:
 
   Node getClosestNode(Node n, Node ref, bool findAny);
 
+  vector<Node> getClosestNodes(Node n, Node ref, bool findAny);
+
   Node getTarget(){ return target; }
 
   string getName(){ return name;}

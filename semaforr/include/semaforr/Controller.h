@@ -114,7 +114,7 @@ private:
   // Checks if a given advisor is active
   bool isAdvisorActive(string advisorName);
 
-  double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle;
+  double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle, highwayDistanceThreshold;
   double arrMove[300];
   double arrRotate[300];
   int moveArrMax, rotateArrMax;

@@ -147,6 +147,14 @@ void Controller::initialize_params(string filename){
       maxForwardActionBuffer = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("maxForwardActionBuffer " << maxForwardActionBuffer);
     }
+    else if (fileLine.find("highwayDistanceThreshold") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      highwayDistanceThreshold = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("highwayDistanceThreshold " << highwayDistanceThreshold);
+    }
     else if (fileLine.find("maxForwardActionSweepAngle") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -844,7 +852,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 
   // Initialize highways
   highwayFinished = 0;
-  highwayExploration = new HighwayExplorer(l, h, 7, arrMove, arrRotate, moveArrMax, rotateArrMax);
+  highwayExploration = new HighwayExplorer(l, h, highwayDistanceThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
 
   // Initialize circumnavigator
   // PathPlanner *skeleton_planner;
