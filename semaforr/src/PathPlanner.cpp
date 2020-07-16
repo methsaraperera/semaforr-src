@@ -123,6 +123,53 @@ int PathPlanner::calcPath(bool cautious){
       for (int i=0; i<paths.size(); i++){
         pathCosts.push_back(calcPathCost(paths[i]));
       }
+      if(name == "hallwayskel"){
+        if(!(s == rs) and !(s == rt)){
+          origPathCost = 0;
+          astar rnewsearch(*originalNavGraph, rs, rt, name);
+          if ( rnewsearch.isPathFound()) {
+            origPath1 = rnewsearch.getPathToTarget();
+            origPaths.push_back(origPath1);
+            origObjectiveSet = false;
+            origPathCompleted = false;
+
+            if(!cautious)
+              smoothPath(origPath1, rs, rt);
+
+            origPathCost += calcOrigPathCost(origPath1);
+            origPathCalculated = true;
+            origPathCosts.push_back(calcOrigPathCost(origPath1));
+          }
+          else{
+            origPaths.push_back(origPath1);
+          }
+        }
+        else{
+          origPaths.push_back(origPath1);
+        }
+        if(!(t == ts) and !(t == tt)){
+          astar tnewsearch(*originalNavGraph, ts, tt, name);
+          if ( tnewsearch.isPathFound()) {
+            origPath2 = tnewsearch.getPathToTarget();
+            origPaths.push_back(origPath2);
+            origObjectiveSet = false;
+            origPathCompleted = false;
+
+            if(!cautious)
+              smoothPath(origPath2, ts, tt);
+
+            origPathCost += calcOrigPathCost(origPath2);
+            origPathCalculated = true;
+            origPathCosts.push_back(calcOrigPathCost(origPath2));
+          }
+          else{
+            origPaths.push_back(origPath2);
+          }
+        }
+        else{
+          origPaths.push_back(origPath2);
+        }
+      }
     }
     else {
       return 3;

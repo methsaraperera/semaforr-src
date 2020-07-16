@@ -85,19 +85,30 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
 
     # Wait till semaforr completes the process
-    while semaforr_process.poll() is None and menge_sim_process.poll() is None:
+    while semaforr_process.poll() is None:
         print "Semaforr process still running ..."
         if rviz_process.poll() is not None:
             rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
+        if menge_sim_process.poll() is not None or str(subprocess.check_output(["ps -A | grep 'menge' | wc -l"],shell=True))[0] != "1":
+            break
         time.sleep(1)
-
+    try:
+        semaforr_process.terminate()
+        while semaforr_process.poll() is None:
+            print "Semaforr process still running ..."
+            time.sleep(1)
+    except:
+        print "Semaforr already terminated"
     print "Semaforr process has ended ..."
     print "Terminating the simulator"
 
-    menge_sim_process.terminate()
-    while menge_sim_process.poll() is None:
-        print "Menge process still running ..."
-        time.sleep(1)
+    try:
+        menge_sim_process.terminate()
+        while menge_sim_process.poll() is None:
+            print "Menge process still running ..."
+            time.sleep(1)
+    except:
+        print "Menge already terminated"
     print "Menge terminated!"
 
     # people_trajectories_process.terminate()
@@ -136,13 +147,11 @@ cusum = "off"
 discount = "off"
 explore = "off"
 
-# map_name = "gradcenter-5"
 advisors = "/config/advisors2.conf"
-params = "/config/params1.conf"
 situations = "/config/situations5.conf"
 spatials = "/config/spatial_model.conf"
 
-num_runs = 6
+num_runs = 2
 # for i in range(3,num_runs):
 #     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
 #     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
@@ -157,25 +166,24 @@ num_runs = 6
 #     # target_file_name = "targetone.conf"
 #     # experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-map_name = "moma-5"
-for i in range(0,num_runs):
-    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    for j in range(1,6):
-        log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target40test-" + str(j) + ".conf"
-        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
-    # log_name = map_name + "_passageplantest_" + str(i) + ".txt"
-    # target_file_name = "target40test-1.conf"
-    # experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+# map_name = "moma-5"
+# for i in range(0,num_runs):
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     for j in range(1,6):
+#         log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
+#         target_file_name = "target40test-" + str(j) + ".conf"
+#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+#     # log_name = map_name + "_passageplantest_" + str(i) + ".txt"
+#     # target_file_name = "target40test-1.conf"
+#     # experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
 params = "/config/params2.conf"
-
 map_name = "moma-5"
-for i in range(0,num_runs):
+for i in range(1,num_runs):
     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
@@ -184,4 +192,17 @@ for i in range(0,num_runs):
     for j in range(1,6):
         log_name = map_name + "_T1_CS_SM_SP_OH_EX_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target40test-" + str(j) + ".conf"
+        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+
+params = "/config/params1.conf"
+map_name = "gradcenter-5"
+for i in range(0,num_runs):
+    why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+    whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+    why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+    whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+    situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+    for j in range(1,6):
+        log_name = map_name + "_T1_CS_SM_SP_OH_EX_" + str(j) + "_" + str(i) + ".txt"
+        target_file_name = "target" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)

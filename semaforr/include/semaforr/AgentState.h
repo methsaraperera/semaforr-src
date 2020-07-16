@@ -394,6 +394,10 @@ public:
     return passage_graph_nodes;
   }
 
+  map<int, vector< vector<int> > > getPassageGraphEdges(){
+    return passage_graph_edges;
+  }
+
   vector< vector<int> > getPassageGraph(){
     return passage_graph;
   }

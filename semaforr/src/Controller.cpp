@@ -2184,6 +2184,7 @@ void Controller::tierTwoDecision(Position current){
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
     if(highwayFinished >= 1){
       planner->setPassageGrid(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage());
+      beliefs->getAgentState()->getCurrentTask()->setPassageValues(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraphEdges(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage());
     }
     //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     //gettimeofday(&cv,NULL);

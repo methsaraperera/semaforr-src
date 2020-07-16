@@ -39,9 +39,13 @@ private:
   list<int> path;
   vector< list<int> > paths;
   double pathCost;
-  list<int> origPath; 
+  list<int> origPath;
+  list<int> origPath1;
+  list<int> origPath2;
+  vector< list<int> > origPaths;
   double origPathCost;
   vector <double> pathCosts;
+  vector <double> origPathCosts;
   string name;
   vector< vector<int> > posHistMap;
   vector< vector<double> > posHistMapNorm;
@@ -94,6 +98,7 @@ public:
   list<int> getOrigPath(){ return origPath; }
 
   vector< list<int> > getPaths(){ return paths; }
+  vector< list<int> > getOrigPaths(){ return origPaths; }
 
   void resetPath() { 
     path.clear();

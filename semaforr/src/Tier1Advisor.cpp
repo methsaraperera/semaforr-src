@@ -300,27 +300,27 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     int nextRegionId = -1;
     bool waypointPathInSight = false;
     int pathID = -1;
-    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
+    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0){
       waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius(), 20);
       regionID = 0;
     }
     else{
       if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 1){
-        if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].waypointIsRegion()){
+        if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getType() == 0){
           waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius(), 20);
           regionID = 1;
         }
       }
     }
-    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion() and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
+    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
       nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius(), 20);
       nextRegionId = 2;
     }
-    else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4 and !beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
+    else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4 and !(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0)){
       nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius(), 20);
       nextRegionId = 3;
     }
-    if(!beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().waypointIsRegion()){
+    if(!(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0)){
       vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getPath();
       for(int i = 0; i < pathBetween.size(); i++){
         if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 20)){
@@ -332,7 +332,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     }
     else{
       if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 1){
-        if(!beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].waypointIsRegion()){
+        if(!(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getType() == 0)){
           vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getPath();
           for(int i = 0; i < pathBetween.size(); i++){
             if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 20)){
