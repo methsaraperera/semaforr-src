@@ -2039,6 +2039,21 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     cout << "finished creating edges" << endl;
     hwskeleton_planner->getGraph()->printGraph();
     cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
+    for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
+      vector< vector<int> > points = graph_edges_map[i];
+      double x = 0, y = 0;
+      for(int j = 0; j < points.size(); j++){
+        x += points[j][0];
+        y += points[j][1];
+      }
+      x = x / points.size();
+      y = y / points.size();
+      cout << "edge " << i << " index_val " << index_val << " x " << x << " y " << y << " edge_x " << (int)(x*100) << " edge_y " << (int)(y*100) << endl;
+      vector<int> avg_psg;
+      avg_psg.push_back((int)(x*100));
+      avg_psg.push_back((int)(y*100));
+      average_passage.push_back(avg_psg);
+    }
     agentState->setPassageValues(intersections, graph_nodes, graph_edges_map, graph, average_passage);
     beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);
     cout << "after setPassageValues and setRegionPassageValues" << endl;
