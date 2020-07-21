@@ -69,6 +69,15 @@ public:
 
   HighwayExplorer *gethighwayExploration() { return highwayExploration; }
 
+  bool getHighwayFinished(){
+    if(highwayFinished >= 1){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
 private:
 
   //FORR decision loop and tiers

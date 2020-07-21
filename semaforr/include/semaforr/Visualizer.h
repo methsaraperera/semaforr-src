@@ -1017,7 +1017,14 @@ public:
 	grid.info.resolution = 1;
 	grid.info.width = con->gethighwayExploration()->getLength();
 	grid.info.height = con->gethighwayExploration()->getHeight();
-	vector< vector<int> > highways = con->gethighwayExploration()->getHighwayGrid();
+	vector< vector<int> > highways;
+	if(con->getHighwayFinished()){
+		highways = beliefs->getAgentState()->getPassageGrid();
+	}
+	else{
+		highways = con->gethighwayExploration()->getHighwayGrid();
+	}
+	
 	for(int j = 0; j < grid.info.height; j++){
 		for(int i = 0; i < grid.info.width; i++){
 			grid.data.push_back(highways[i][j]);
