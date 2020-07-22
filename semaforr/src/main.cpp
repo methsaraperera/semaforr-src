@@ -185,9 +185,9 @@ public:
 				gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
-				//ROS_DEBUG("Finished UpdateState");
+				ROS_DEBUG("Finished UpdateState");
 				viz_->publish();
-				//ROS_DEBUG("Finished Publish");
+				ROS_DEBUG("Finished Publish");
 				previous = current;
 				ROS_DEBUG("Check if mission is complete");
 				mission_complete = controller->isMissionComplete();

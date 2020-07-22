@@ -903,6 +903,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
+    cout << "waypointReached " <<   waypointReached << " taskCompleted " << taskCompleted << " isPlanActive " << isPlanActive << endl;
     if(highwayFinished == 1){
       if(highwaysOn){
         learnSpatialModel(beliefs->getAgentState(), true);
@@ -1014,7 +1015,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     }
   }
   
-  //ROS_DEBUG("End Of UpdateState");
+  ROS_DEBUG("End Of UpdateState");
 }
 
 
@@ -2053,6 +2054,18 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       avg_psg.push_back((int)(x*100));
       avg_psg.push_back((int)(y*100));
       average_passage.push_back(avg_psg);
+      index_val++;
+    }
+    for(int i = 0; i < graph.size(); i++){
+      cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+      vector< vector<int> > intersection1_points = graph_nodes[graph[i][0]];
+      for(int j = 0; j < intersection1_points.size(); j++){
+        graph_edges_map[graph[i][1]].push_back(intersection1_points[j]);
+      }
+      vector< vector<int> > intersection2_points = graph_nodes[graph[i][1]];
+      for(int j = 0; j < intersection2_points.size(); j++){
+        graph_edges_map[graph[i][1]].push_back(intersection2_points[j]);
+      }
     }
     agentState->setPassageValues(intersections, graph_nodes, graph_edges_map, graph, average_passage);
     beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);

@@ -130,6 +130,7 @@ int PathPlanner::calcPath(bool cautious){
           if ( rnewsearch.isPathFound()) {
             origPath1 = rnewsearch.getPathToTarget();
             origPaths.push_back(origPath1);
+            cout << "prologue path found " << origPath1.size() << " " << origPaths.size() << endl;
             origObjectiveSet = false;
             origPathCompleted = false;
 
@@ -152,6 +153,7 @@ int PathPlanner::calcPath(bool cautious){
           if ( tnewsearch.isPathFound()) {
             origPath2 = tnewsearch.getPathToTarget();
             origPaths.push_back(origPath2);
+            cout << "epilogue path found " << origPath2.size() << " " << origPaths.size() << endl;
             origObjectiveSet = false;
             origPathCompleted = false;
 
@@ -1343,12 +1345,13 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
       nRegion = cRegion;
     }
     if(nRegion >= 0){
-      int x = (int)(regions[nRegion].getCenter().get_x()*100);
-      int y = (int)(regions[nRegion].getCenter().get_y()*100);
-      cout << "Point in region " << nRegion << " x " << x << " y " << y << endl;
-      region_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(x, y));
+      int rx = (int)(regions[nRegion].getCenter().get_x()*100);
+      int ry = (int)(regions[nRegion].getCenter().get_y()*100);
+      cout << "Point in region " << nRegion << " rx " << rx << " ry " << ry << " ID " << originalNavGraph->getNodeID(rx, ry) << endl;
+      region_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(rx, ry));
       vector<int> passage_values = regions[nRegion].getPassageValues();
       for(int i = 0; i < passage_values.size(); i++){
+        cout << "passage_values " << passage_values[i] << endl;
         if(passage_graph_nodes.count(passage_values[i]) != 0){
           cout << "nRegion on intersection " << passage_values[i] - 1 << endl;
           int x = passage_average_values[passage_values[i] - 1][0];
@@ -1368,15 +1371,29 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
       }
       if(passage_values.size() > 0){
         cout << "nRegion on passage" << endl;
+        vector<int> nearby_intersections;
+        for(int i = 0; i < passage_graph.size(); i++){
+          for(int j = 0; j < passage_values.size(); j++){
+            if(passage_graph[i][1] == passage_values[j]){
+              if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][0]) == nearby_intersections.end()){
+                nearby_intersections.push_back(passage_graph[i][0]);
+                cout << "nearby intersection " << passage_graph[i][0] << endl;
+              }
+              if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][2]) == nearby_intersections.end()){
+                nearby_intersections.push_back(passage_graph[i][2]);
+                cout << "nearby intersection " << passage_graph[i][2] << endl;
+              }
+            }
+          }
+        }
         double dist_to_nearby = 1000000.0;
         int closest_intersection;
-        for(int i = 0; i < passage_values.size(); i++){
-          cout << "passage_values " << passage_values[i] << endl;
-          double dist_to_int = CartesianPoint(passage_average_values[passage_values[i]][0], passage_average_values[passage_values[i]][1]).get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+        for(int i = 0; i < nearby_intersections.size(); i++){
+          double dist_to_int = CartesianPoint(passage_average_values[nearby_intersections[i] - 1][0], passage_average_values[nearby_intersections[i] - 1][1]).get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
           cout << "dist_to_int " << dist_to_int << " dist_to_nearby " << dist_to_nearby << endl;
           if(dist_to_int < dist_to_nearby){
             dist_to_nearby = dist_to_int;
-            closest_intersection = passage_values[i];
+            closest_intersection = nearby_intersections[i] - 1;
           }
         }
         cout << "closest intersection " << closest_intersection << endl;
@@ -1387,6 +1404,10 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
         if(PATH_DEBUG) {
           cout << "\tFound a new candidate!: ";
           temp.printNode();
+          cout << endl << endl;
+          region_temp.printNode();
+          cout << endl << endl;
+          region_temp.printNode();
           cout << endl << endl;
         }
         nodes_for_point.push_back(temp);
@@ -1427,8 +1448,8 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
         }
         int lx = (int)(regions[lRegion].getCenter().get_x()*100);
         int ly = (int)(regions[lRegion].getCenter().get_y()*100);
-        cout << "Point in lregion " << lRegion << " x " << lx << " y " << ly << endl;
-        lregion_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(x, y));
+        cout << "Point in lregion " << lRegion << " lx " << lx << " ly " << ly << " ID " << originalNavGraph->getNodeID(lx, ly) << endl;
+        lregion_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(lx, ly));
         vector<int> lpassage_values = regions[lRegion].getPassageValues();
         for(int i = 0; i < lpassage_values.size(); i++){
           if(passage_graph_nodes.count(lpassage_values[i]) != 0){
@@ -1440,6 +1461,10 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
             if(PATH_DEBUG) {
               cout << "\tFound a new candidate!: ";
               temp.printNode();
+              cout << endl << endl;
+              region_temp.printNode();
+              cout << endl << endl;
+              lregion_temp.printNode();
               cout << endl << endl;
             }
             nodes_for_point.push_back(temp);
@@ -1482,6 +1507,10 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
           if(PATH_DEBUG) {
             cout << "\tFound a new candidate!: ";
             temp.printNode();
+            cout << endl << endl;
+            region_temp.printNode();
+            cout << endl << endl;
+            lregion_temp.printNode();
             cout << endl << endl;
           }
           nodes_for_point.push_back(temp);

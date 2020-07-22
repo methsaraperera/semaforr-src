@@ -336,7 +336,7 @@ public:
   }
 
   void publish_next_target(){
-	// ROS_DEBUG("Inside visualization tool!!");
+	ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped target;
 	target.header.frame_id = "map";
 	target.header.stamp = ros::Time::now();
@@ -347,7 +347,7 @@ public:
   }
 
   void publish_highway_target(){
-	// ROS_DEBUG("Inside visualization tool!!");
+	ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped target;
 	target.header.frame_id = "map";
 	target.header.stamp = ros::Time::now();
@@ -358,7 +358,7 @@ public:
   }
 
   void publish_next_waypoint(){
-	// ROS_DEBUG("Inside visualization tool!!");
+	ROS_DEBUG("Inside visualization tool!!");
 	geometry_msgs::PointStamped waypoint;
 	waypoint.header.frame_id = "map";
 	waypoint.header.stamp = ros::Time::now();
@@ -370,7 +370,7 @@ public:
 
 
   void publish_plan(){
-	// ROS_DEBUG("Inside publish plan!!");
+	ROS_DEBUG("Inside publish plan!!");
 	nav_msgs::Path path;
 	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
@@ -428,7 +428,7 @@ public:
  }
 
  void publish_highway_plan(){
-	// ROS_DEBUG("Inside publish highway plan!!");
+	ROS_DEBUG("Inside publish highway plan!!");
 	nav_msgs::Path path;
 	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
@@ -471,7 +471,7 @@ public:
  }
 
   void publish_conveyor(){
-	// ROS_DEBUG("Inside publish conveyor");
+	ROS_DEBUG("Inside publish conveyor");
 	nav_msgs::OccupancyGrid grid;
 
 	grid.header.frame_id = "map";
@@ -701,7 +701,7 @@ public:
   }
 
   void publish_region(){
-	// ROS_DEBUG("Inside publish regions");
+	ROS_DEBUG("Inside publish regions");
 
 	visualization_msgs::MarkerArray markerArray;
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
@@ -741,7 +741,7 @@ public:
   }
 
   void publish_exits(){
-	// ROS_DEBUG("Inside publish exits");
+	ROS_DEBUG("Inside publish exits");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	// cout << "There are currently " << regions.size() << " regions" << endl;
 	visualization_msgs::Marker marker;
@@ -781,7 +781,7 @@ public:
   	exits_pub_.publish(marker);
   }
   void publish_skeleton(){
-  	// ROS_DEBUG("Inside publish skeleton");
+  	ROS_DEBUG("Inside publish skeleton");
   	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	// cout << "There are currently " << regions.size() << " regions" << endl;
 	visualization_msgs::Marker line_list;
@@ -815,7 +815,7 @@ public:
   }
 
   void publish_trails(){
-	// ROS_DEBUG("Inside publish trail");
+	ROS_DEBUG("Inside publish trail");
 	//Goal here is to publish all trails
 
 	FORRTrails *trails = beliefs->getSpatialModel()->getTrails();
@@ -871,7 +871,7 @@ public:
   }
 
   void publish_doors(){
-	// ROS_DEBUG("Inside publish doors");
+	ROS_DEBUG("Inside publish doors");
 
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
 	// cout << "There are currently " << doors.size() << " regions" << endl;
@@ -939,7 +939,7 @@ public:
   }
 
   void publish_walls(){
-	// ROS_DEBUG("Inside publish walls");
+	ROS_DEBUG("Inside publish walls");
 	vector<Wall> walls = con->getPlanner()->getMap()->getWalls();
 	// cout << "There are currently " << walls.size() << " walls" << endl;
 	visualization_msgs::Marker line_list;
@@ -970,7 +970,7 @@ public:
   }
 
   void publish_all_targets(){
-	// ROS_DEBUG("Publish All targets as pose array!!");
+	ROS_DEBUG("Publish All targets as pose array!!");
 	geometry_msgs::PoseArray targets;
 	targets.header.frame_id = "map";
 	targets.header.stamp = ros::Time::now();
@@ -988,7 +988,7 @@ public:
   }
 
   void publish_remaining_targets(){
-	// ROS_DEBUG("Publish remaining targets as pose array!!");
+	ROS_DEBUG("Publish remaining targets as pose array!!");
 	geometry_msgs::PoseArray targets;
 	targets.header.frame_id = "map";
 	targets.header.stamp = ros::Time::now();
@@ -1006,7 +1006,7 @@ public:
   }
 
   void publish_highway(){
-	// ROS_DEBUG("Inside publish highway");
+	ROS_DEBUG("Inside publish highway");
 	nav_msgs::OccupancyGrid grid;
 
 	grid.header.frame_id = "map";
@@ -1024,17 +1024,18 @@ public:
 	else{
 		highways = con->gethighwayExploration()->getHighwayGrid();
 	}
-	
-	for(int j = 0; j < grid.info.height; j++){
-		for(int i = 0; i < grid.info.width; i++){
-			grid.data.push_back(highways[i][j]);
+	if(highways.size() > 0){
+		for(int j = 0; j < grid.info.height; j++){
+			for(int i = 0; i < grid.info.width; i++){
+				grid.data.push_back(highways[i][j]);
+			}
 		}
+		highway_pub_.publish(grid);
 	}
-	highway_pub_.publish(grid);
   }
 
   void publish_highway_stack(){
-	// ROS_DEBUG("Inside publish highway_stack");
+	ROS_DEBUG("Inside publish highway_stack");
 	vector< Position > highway_stack = con->gethighwayExploration()->getHighwayStack();
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "map";
@@ -1080,7 +1081,7 @@ public:
   }
 
   void publish_log(FORRAction decision, double overallTimeSec, double computationTimeSec){
-	// ROS_DEBUG("Inside publish decision log!!");
+	ROS_DEBUG("Inside publish decision log!!");
 	std_msgs::String log;
 	double robotX = beliefs->getAgentState()->getCurrentPosition().getX();
 	double robotY = beliefs->getAgentState()->getCurrentPosition().getY();
@@ -1109,14 +1110,14 @@ public:
 	laser_pub_.publish(laserScan);
 
 	FORRAction max_forward = beliefs->getAgentState()->maxForwardAction();
-	//ROS_DEBUG("After max_forward");
+	ROS_DEBUG("After max_forward");
 	//vector< vector<CartesianPoint> > allTrace = beliefs->getAgentState()->getAllTrace();
 	list<Task*>& agenda = beliefs->getAgentState()->getAgenda();
 	list<Task*>& all_agenda = beliefs->getAgentState()->getAllAgenda();
-	//ROS_DEBUG("After all_agenda");
+	ROS_DEBUG("After all_agenda");
 	vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
 	vector< vector< CartesianPoint> > trails =  beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-	//ROS_DEBUG("After trails");
+	ROS_DEBUG("After trails");
 	FORRActionType chosenActionType = decision.type;
 	int chosenActionParameter = decision.parameter;
 	int decisionTier = con->getCurrentDecisionStats()->decisionTier;
@@ -1127,7 +1128,7 @@ public:
 	double planningComputationTime = con->getCurrentDecisionStats()->planningComputationTime;
 	double learningComputationTime = con->getCurrentDecisionStats()->learningComputationTime;
 	string chosenPlanner = con->getCurrentDecisionStats()->chosenPlanner;
-	//cout << "vetoedActions = " << vetoedActions << " decisionTier = " << decisionTier << " advisors = " << advisors << " advisorComments = " << advisorComments << endl;
+	cout << "vetoedActions = " << vetoedActions << " decisionTier = " << decisionTier << " advisors = " << advisors << " advisorComments = " << advisorComments << endl;
 	vector< vector<int> > conveyors = beliefs->getSpatialModel()->getConveyors()->getConveyors();
 	std::vector< std::vector<Door> > doors = beliefs->getSpatialModel()->getDoors()->getDoors();
 	vector<Aggregate> hallways = beliefs->getSpatialModel()->getHallways()->getHallways();
@@ -1135,7 +1136,7 @@ public:
     vector< vector<double> > situation_assignments = beliefs->getSpatialModel()->getSituations()->getSituationActionAssignments();
     vector<int> situation_counts = beliefs->getSpatialModel()->getSituations()->getSituationCounts();
 
-	//ROS_DEBUG("After decision statistics");
+	ROS_DEBUG("After decision statistics");
 	int decisionCount = -1;
 	int currentTask = -1;
 	if(!agenda.empty()){
@@ -1143,7 +1144,7 @@ public:
   		//if(currentTask != 0)
 		decisionCount = beliefs->getAgentState()->getCurrentTask()->getDecisionCount();
 	}
-	//ROS_DEBUG("After decisionCount");
+	ROS_DEBUG("After decisionCount");
 
 	cout << "Current task " << currentTask << " and decision number " << decisionCount << " with overall time " << overallTimeSec << " and computation time " << computationTimeSec << endl;
 
@@ -1153,7 +1154,7 @@ public:
  		double y = laserEndpoints[i].get_y();
 		lep << x << "," << y << ";";
 	}
-	//ROS_DEBUG("After laserEndpoints");
+	ROS_DEBUG("After laserEndpoints");
 
 
 	std::stringstream ls;
@@ -1165,7 +1166,7 @@ public:
 		}
 		ls << length << ",";
 	}
-	//ROS_DEBUG("After laserScan");
+	// ROS_DEBUG("After laserScan");
 	/*int totalSize = 0;
 	for(int i = 0; i < allTrace.size(); i++){
 		totalSize += allTrace[i].size();
@@ -1181,7 +1182,7 @@ public:
 		}
 		regionsstream << ";";
 	}
-	//ROS_DEBUG("After regions");
+	ROS_DEBUG("After regions");
 
 
 	std::stringstream trailstream;
@@ -1191,7 +1192,7 @@ public:
 		}
 		trailstream << ";";
 	}
-	//ROS_DEBUG("After trails");
+	ROS_DEBUG("After trails");
 
 	std::stringstream conveyorStream;
 	for(int j = 0; j < conveyors.size()-1; j++){
@@ -1200,7 +1201,7 @@ public:
 		}
 		conveyorStream << ";";
 	}
-	//ROS_DEBUG("After conveyors");
+	ROS_DEBUG("After conveyors");
 	
 
 	std::stringstream doorStream;
@@ -1211,7 +1212,7 @@ public:
 		doorStream << ";";
 	}
 
-	//ROS_DEBUG("After doors");
+	ROS_DEBUG("After doors");
 
 	std::stringstream hallwayStream;
 	for(int i = 0; i < hallways.size(); i++){
@@ -1223,7 +1224,7 @@ public:
 		hallwayStream << ";";
 	}
 
-	//ROS_DEBUG("After hallways");
+	// ROS_DEBUG("After hallways");
 
 	std::stringstream planStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
@@ -1237,7 +1238,7 @@ public:
 		//double plancost = beliefs->getAgentState()->getCurrentTask()->planCost(waypoints, con->getPlanner(), beliefs->getAgentState()->getCurrentPosition(), Position(targetX,targetY,0));
 		//planStream << "\t" << plancost;
 	}
-	//ROS_DEBUG("After planStream");
+	ROS_DEBUG("After planStream");
 
 	std::stringstream origPlanStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
