@@ -903,7 +903,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
-    cout << "waypointReached " <<   waypointReached << " taskCompleted " << taskCompleted << " isPlanActive " << isPlanActive << endl;
+    // cout << "waypointReached " <<   waypointReached << " taskCompleted " << taskCompleted << " isPlanActive " << isPlanActive << endl;
     if(highwayFinished == 1){
       if(highwaysOn){
         learnSpatialModel(beliefs->getAgentState(), true);
@@ -2056,17 +2056,30 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       average_passage.push_back(avg_psg);
       index_val++;
     }
-    for(int i = 0; i < graph.size(); i++){
-      cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
-      vector< vector<int> > intersection1_points = graph_nodes[graph[i][0]];
-      for(int j = 0; j < intersection1_points.size(); j++){
-        graph_edges_map[graph[i][1]].push_back(intersection1_points[j]);
+    cout << "graph_nodes " << graph_nodes.size() << " graph_edges_map " << graph_edges_map.size() << endl;
+    for(int k = 0; k < graph.size(); k++){
+      cout << graph[k][0] << " " << graph[k][1] << " " << graph[k][2] << endl;
+      for(int i = 0; i < intersections.size(); i++){
+        for(int j = 0; j < intersections[0].size(); j++){
+          if(intersections[i][j] == graph[k][0] or intersections[i][j] == graph[k][2]){
+            cout << intersections[i][j] << " " << i << " " << j << endl;
+            vector<int> current_grid;
+            current_grid.push_back(i);
+            current_grid.push_back(j);
+            graph_edges_map[graph[k][1]].push_back(current_grid);
+          }
+        }
       }
-      vector< vector<int> > intersection2_points = graph_nodes[graph[i][1]];
-      for(int j = 0; j < intersection2_points.size(); j++){
-        graph_edges_map[graph[i][1]].push_back(intersection2_points[j]);
-      }
+      // vector< vector<int> > intersection1_points = graph_nodes[graph[i][0]];
+      // for(int j = 0; j < intersection1_points.size(); j++){
+      //   graph_edges_map[graph[i][1]].push_back(intersection1_points[j]);
+      // }
+      // vector< vector<int> > intersection2_points = graph_nodes[graph[i][1]];
+      // for(int j = 0; j < intersection2_points.size(); j++){
+      //   graph_edges_map[graph[i][1]].push_back(intersection2_points[j]);
+      // }
     }
+    cout << "graph_nodes " << graph_nodes.size() << " graph_edges_map " << graph_edges_map.size() << endl;
     agentState->setPassageValues(intersections, graph_nodes, graph_edges_map, graph, average_passage);
     beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);
     cout << "after setPassageValues and setRegionPassageValues" << endl;

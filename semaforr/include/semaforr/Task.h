@@ -31,6 +31,7 @@ struct sk_waypoint {
     vector< vector<int> > passage_points;
     CartesianPoint passage_centroid;
     int passage_label;
+    int passage_orientation; // 0 = vertical, 1 = horizontal
     sk_waypoint(): type(-1), region(), path(), original_path(), passage_points() { }
     sk_waypoint(int b, FORRRegion r, vector<CartesianPoint> p, vector< vector<int> > pp): type(b), region(r), path(p), original_path(p), passage_points(pp) { }
 
@@ -44,6 +45,8 @@ struct sk_waypoint {
     int getPassageLabel() { return passage_label; }
     void setPassageCentroid(CartesianPoint p) { passage_centroid = p; }
     CartesianPoint getPassageCentroid() { return passage_centroid; }
+    void setPassageOrientation(int ori) { passage_orientation = ori; }
+    int getPassageOrientation() { return passage_orientation; }
 };
 
 class Task {
@@ -281,7 +284,11 @@ class Task {
 	if(planner->getName() == "hallwayskel"){
 		origNavGraph = planner->getOrigGraph();
 		origPlansInds = planner->getOrigPaths();
-		cout << "origPlansInds " << origPlansInds.size() << endl;
+		cout << "origPlansInds " << origPlansInds.size() << " ";
+		if(origPlansInds.size() > 0){
+			cout << origPlansInds[0].size() << " " << origPlansInds[1].size();
+		}
+		cout << endl;
 		planner->resetOrigPath();
 	}
 	// Graph *navGraph = planner->getGraph();
@@ -488,6 +495,7 @@ class Task {
 				sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[passage12]);
 				new_passage.setPassageLabel(passage12);
 				new_passage.setPassageCentroid(average_passage[passage12-1]);
+				new_passage.setPassageOrientation(passage_graph_edges_orientation[passage12]);
 				skeleton_waypoints.push_back(new_passage);
 				cout << new_passage.getPassageCentroid().get_x() << " " << new_passage.getPassageCentroid().get_y() << endl;
 			}
@@ -1042,6 +1050,30 @@ class Task {
 	for(int i = 0; i < ap.size(); i++){
 		average_passage.push_back(CartesianPoint(((double)(ap[i][0]))/100.0, ((double)(ap[i][1]))/100.0));
 	}
+	for(int i = 0; i < passage_graph.size(); i++){
+		vector< vector<int> > passage_points = passage_graph_edges[passage_graph[i][1]];
+		int min_x = 100000, max_x = 0, min_y = 100000, max_y = 0;
+		for(int j = 0; j < passage_points.size(); j++){
+			if(passage_points[j][0] < min_x){
+				min_x = passage_points[j][0];
+			}
+			if(passage_points[j][0] > max_x){
+				max_x = passage_points[j][0];
+			}
+			if(passage_points[j][1] < min_y){
+				min_y = passage_points[j][1];
+			}
+			if(passage_points[j][1] > max_y){
+				max_y = passage_points[j][1];
+			}
+		}
+		if((max_x - min_x) > (max_y - min_y)){
+			passage_graph_edges_orientation[passage_graph[i][1]] = 1;
+		}
+		else{
+			passage_graph_edges_orientation[passage_graph[i][1]] = 0;
+		}
+	}
   }
    
  private:
@@ -1059,6 +1091,7 @@ class Task {
   vector< vector<int> > passage_grid;
   map<int, vector< vector<int> > > passage_graph_nodes;
   map<int, vector< vector<int> > > passage_graph_edges;
+  map<int, int> passage_graph_edges_orientation;
   vector< vector<int> > passage_graph;
   vector<CartesianPoint> average_passage;
 

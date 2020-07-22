@@ -124,7 +124,15 @@ int PathPlanner::calcPath(bool cautious){
         pathCosts.push_back(calcPathCost(paths[i]));
       }
       if(name == "hallwayskel"){
-        if(!(s == rs) and !(s == rt)){
+        if(rs.getID() != Node::invalid_node_index or rt.getID() != Node::invalid_node_index){
+          if(PATH_DEBUG) {
+            cout << signature << "rs:";
+            rs.printNode();
+            cout << endl;
+            cout << signature << "rt:";
+            rt.printNode();
+            cout << endl;
+          }
           origPathCost = 0;
           astar rnewsearch(*originalNavGraph, rs, rt, name);
           if ( rnewsearch.isPathFound()) {
@@ -142,13 +150,21 @@ int PathPlanner::calcPath(bool cautious){
             origPathCosts.push_back(calcOrigPathCost(origPath1));
           }
           else{
-            origPaths.push_back(origPath1);
+            origPaths.push_back(list<int>());
           }
         }
         else{
-          origPaths.push_back(origPath1);
+          origPaths.push_back(list<int>());
         }
-        if(!(t == ts) and !(t == tt)){
+        if(ts.getID() != Node::invalid_node_index or tt.getID() != Node::invalid_node_index){
+          if(PATH_DEBUG) {
+            cout << signature << "ts:";
+            ts.printNode();
+            cout << endl;
+            cout << signature << "tt:";
+            tt.printNode();
+            cout << endl;
+          }
           astar tnewsearch(*originalNavGraph, ts, tt, name);
           if ( tnewsearch.isPathFound()) {
             origPath2 = tnewsearch.getPathToTarget();
@@ -165,11 +181,11 @@ int PathPlanner::calcPath(bool cautious){
             origPathCosts.push_back(calcOrigPathCost(origPath2));
           }
           else{
-            origPaths.push_back(origPath2);
+            origPaths.push_back(list<int>());
           }
         }
         else{
-          origPaths.push_back(origPath2);
+          origPaths.push_back(list<int>());
         }
       }
     }
@@ -1246,21 +1262,24 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
   cout << "node n " << ((int)(n.getX()/100.0)) << " " << ((int)(n.getY()/100.0)) << endl;
   cout << "passage_grid " << passage_grid.size() << " " << passage_grid[0].size() << endl;
   int nPassage = passage_grid[(int)(n.getX()/100.0)][(int)(n.getY()/100.0)];
-  cout << "Point in passage_grid " << nPassage << endl;
+  cout << "Point in passage_grid " << nPassage << " graph_node " << passage_graph_nodes.count(nPassage) << endl;
   if(passage_graph_nodes.count(nPassage) != 0){
     cout << "Point on intersection " << nPassage - 1 << endl;
     int x = passage_average_values[nPassage - 1][0];
     int y = passage_average_values[nPassage - 1][1];
     cout << "x " << x << " y " << y << endl;
     temp = navGraph->getNode(navGraph->getNodeID(x, y));
+    Node placeHolder;
     if(PATH_DEBUG) {
       cout << "\tFound a new candidate!: ";
       temp.printNode();
+      placeHolder.printNode();
+      placeHolder.printNode();
       cout << endl << endl;
     }
     nodes_for_point.push_back(temp);
-    nodes_for_point.push_back(temp);
-    nodes_for_point.push_back(temp);
+    nodes_for_point.push_back(placeHolder);
+    nodes_for_point.push_back(placeHolder);
     return nodes_for_point;
   }
   else if(nPassage > 0){
@@ -1292,14 +1311,17 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
     int y = passage_average_values[closest_intersection][1];
     cout << "x " << x << " y " << y << endl;
     temp = navGraph->getNode(navGraph->getNodeID(x, y));
+    Node placeHolder;
     if(PATH_DEBUG) {
       cout << "\tFound a new candidate!: ";
       temp.printNode();
+      placeHolder.printNode();
+      placeHolder.printNode();
       cout << endl << endl;
     }
     nodes_for_point.push_back(temp);
-    nodes_for_point.push_back(temp);
-    nodes_for_point.push_back(temp);
+    nodes_for_point.push_back(placeHolder);
+    nodes_for_point.push_back(placeHolder);
     return nodes_for_point;
   }
   else{
@@ -1358,14 +1380,17 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
           int y = passage_average_values[passage_values[i] - 1][1];
           cout << "x " << x << " y " << y << endl;
           temp = navGraph->getNode(navGraph->getNodeID(x, y));
+          Node placeHolder;
           if(PATH_DEBUG) {
             cout << "\tFound a new candidate!: ";
             temp.printNode();
+            placeHolder.printNode();
+            placeHolder.printNode();
             cout << endl << endl;
           }
           nodes_for_point.push_back(temp);
-          nodes_for_point.push_back(temp);
-          nodes_for_point.push_back(temp);
+          nodes_for_point.push_back(placeHolder);
+          nodes_for_point.push_back(placeHolder);
           return nodes_for_point;
         }
       }
