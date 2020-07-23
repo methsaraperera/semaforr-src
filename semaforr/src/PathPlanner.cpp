@@ -80,8 +80,8 @@ int PathPlanner::calcPath(bool cautious){
       else if(name == "hallwayskel"){
         vector<Node> end_nodes = getClosestNodes(target, source, true);
         t = end_nodes[0];
-        ts = end_nodes[1];
-        tt = end_nodes[2];
+        ts = end_nodes[2];
+        tt = end_nodes[1];
       }
       else{
         t = getClosestNode(target, source, false);
