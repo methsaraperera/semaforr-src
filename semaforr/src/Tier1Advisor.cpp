@@ -812,13 +812,13 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             CartesianPoint closest_cell;
             bool found_closest = false;
             if(robot_in_intersection == true){
-              cout << "Robot in intersection, go towards centroid " << robot_x << " " << robot_y << endl;
-              if(abs(beliefs->getAgentState()->getCurrentPosition().getX() - intersectionCentroid.get_x()) <= 0.5 or abs(beliefs->getAgentState()->getCurrentPosition().getY() - intersectionCentroid.get_y()) <= 0.5){
-                cout << "Aligned with centroid but cannot see it" << endl;
-              }
-              else{
-                cout << "Not aligned with centroid and cannot see it" << endl;
-              }
+              // cout << "Robot in intersection, go towards centroid " << robot_x << " " << robot_y << endl;
+              // if(abs(beliefs->getAgentState()->getCurrentPosition().getX() - intersectionCentroid.get_x()) <= 0.5 or abs(beliefs->getAgentState()->getCurrentPosition().getY() - intersectionCentroid.get_y()) <= 0.5){
+              //   cout << "Aligned with centroid but cannot see it" << endl;
+              // }
+              // else{
+              //   cout << "Not aligned with centroid and cannot see it" << endl;
+              // }
               double dist_to_centroid = 100000;
               for(int j = 0; j < passagePoints.size(); j++){
                 double dist_to_cell = intersectionCentroid.get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
@@ -830,7 +830,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               }
             }
             else{
-              cout << "Robot not in intersection, go towards closest cell to robot" << endl;
+              // cout << "Robot not in intersection, go towards closest cell to robot" << endl;
               double dist_to_robot = 100000;
               for(int j = 0; j < passagePoints.size(); j++){
                 double dist_to_cell = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()).get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
@@ -841,9 +841,9 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
                 }
               }
             }
-            cout << "found_closest " << found_closest << endl;
+            // cout << "found_closest " << found_closest << endl;
             if(found_closest == true){
-              cout << "closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << endl;
+              // cout << "closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << endl;
               (*decision) = beliefs->getAgentState()->moveTowards(closest_cell);
               if(decision->parameter != 0){
                 set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
@@ -902,7 +902,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           CartesianPoint closest_cell;
           bool found_closest = false;
           if(robot_in_passage == false){
-            cout << "Not in passage, go towards closest cell to robot" << endl;
+            // cout << "Not in passage, go towards closest cell to robot" << endl;
             double dist_to_robot = 100000;
             CartesianPoint closest_cell_aligned;
             double dist_to_robot_aligned = 100000;
@@ -917,14 +917,14 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
                 closest_cell_aligned = CartesianPoint(passagePoints[j][0], passagePoints[j][1]);
               }
             }
-            cout << "dist_to_robot " << dist_to_robot << " closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << " dist_to_robot_aligned " << dist_to_robot_aligned << " closest_cell_aligned " << closest_cell_aligned.get_x() << " " << closest_cell_aligned.get_y() << endl;
+            // cout << "dist_to_robot " << dist_to_robot << " closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << " dist_to_robot_aligned " << dist_to_robot_aligned << " closest_cell_aligned " << closest_cell_aligned.get_x() << " " << closest_cell_aligned.get_y() << endl;
             if(dist_to_robot_aligned < 100000){
-              cout << "In aligned position, go towards aligned passage cell" << endl;
+              // cout << "In aligned position, go towards aligned passage cell" << endl;
               closest_cell = closest_cell_aligned;
               found_closest = true;
             }
             else{
-              cout << "Not aligned, follow triangle to get to alignment" << endl;
+              // cout << "Not aligned, follow triangle to get to alignment" << endl;
               double dist_to_closest = 100000;
               for(int j = 0; j < passagePoints.size(); j++){
                 double dist_to_cell = closest_cell.get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
@@ -938,7 +938,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             }
           }
           else{
-            cout << "Within passage, go towards closest cell to next element" << endl;
+            // cout << "Within passage, go towards closest cell to next element" << endl;
             CartesianPoint next_element;
             if(beliefs->getAgentState()->getCurrentTask()->getPlanSize()-1 > i){
               if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[i+1].getType() == 0){
@@ -951,15 +951,15 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             else{
               next_element = CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
             }
-            cout << "next_element " << next_element.get_x() << " " << next_element.get_y() << endl;
+            // cout << "next_element " << next_element.get_x() << " " << next_element.get_y() << endl;
             CartesianPoint passageCentroid = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[passageID].getPassageCentroid();
             int passageOrientation = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[passageID].getPassageOrientation();
-            if(passageOrientation == 0){
-              cout << "passageOrientation vertical use x " << passageCentroid.get_x() << endl;
-            }
-            else{
-              cout << "passageOrientation horizontal use y " << passageCentroid.get_y() << endl;
-            }
+            // if(passageOrientation == 0){
+            //   cout << "passageOrientation vertical use x " << passageCentroid.get_x() << endl;
+            // }
+            // else{
+            //   cout << "passageOrientation horizontal use y " << passageCentroid.get_y() << endl;
+            // }
             CartesianPoint closest_cell_not_in_line;
             CartesianPoint closest_cell_in_line;
             double min_dist = 100000;
@@ -982,15 +982,15 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               }
             }
             double dist_to_next = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()).get_distance(next_element);
-            cout << "closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << " closest_cell_in_line " << closest_cell_in_line.get_x() << " " << closest_cell_in_line.get_y() << " closest_cell_not_in_line " << closest_cell_not_in_line.get_x() << " " << closest_cell_not_in_line.get_y() << endl;
-            cout << "min_dist_from_next " << min_dist_from_next << " min_dist_from_next_in_line " << min_dist_from_next_in_line << " min_dist " << min_dist << " dist_to_next " << dist_to_next << endl; 
+            // cout << "closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << " closest_cell_in_line " << closest_cell_in_line.get_x() << " " << closest_cell_in_line.get_y() << " closest_cell_not_in_line " << closest_cell_not_in_line.get_x() << " " << closest_cell_not_in_line.get_y() << endl;
+            // cout << "min_dist_from_next " << min_dist_from_next << " min_dist_from_next_in_line " << min_dist_from_next_in_line << " min_dist " << min_dist << " dist_to_next " << dist_to_next << endl; 
             if(min_dist_from_next == 100000 and min_dist_from_next_in_line == 100000){
               if(min_dist == 100000){
-                cout << "Cannot see any closer cells" << endl;
+                // cout << "Cannot see any closer cells" << endl;
                 found_closest = false;
               }
               else{
-                cout << "Not aligned, follow triangle to get to closest_cell_not_in_line" << endl;
+                // cout << "Not aligned, follow triangle to get to closest_cell_not_in_line" << endl;
                 double dist_to_closest = 100000;
                 for(int j = 0; j < passagePoints.size(); j++){
                   double dist_to_cell = closest_cell_not_in_line.get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
@@ -1004,20 +1004,20 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             }
             else{
               if(min_dist_from_next < 100000 and min_dist_from_next_in_line < 100000){
-                cout << "found both alignments" << endl;
+                // cout << "found both alignments" << endl;
                 if(min_dist_from_next_in_line < min_dist_from_next){
-                  cout << "use cell aligned to passage_centroid" << endl;
+                  // cout << "use cell aligned to passage_centroid" << endl;
                   closest_cell = closest_cell_in_line;
                 }
-                else{
-                  cout << "use cell aligned to passage_centroid" << endl;
-                }
+                // else{
+                //   cout << "use cell aligned to passage_centroid" << endl;
+                // }
               }
-              else if(min_dist_from_next < 100000){
-                cout << "found cell aligned with next_element" << endl;
-              }
+              // else if(min_dist_from_next < 100000){
+              //   cout << "found cell aligned with next_element" << endl;
+              // }
               else{
-                cout << "found cell aligned with passage_centroid" << endl;
+                // cout << "found cell aligned with passage_centroid" << endl;
                 closest_cell = closest_cell_in_line;
               }
               found_closest = true;
@@ -1031,7 +1031,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             //   closest_cell = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), closest_cell.get_y());
             // }
           }
-          cout << "found_closest " << found_closest << endl;
+          // cout << "found_closest " << found_closest << endl;
           if(found_closest == true){
             (*decision) = beliefs->getAgentState()->moveTowards(closest_cell);
             if(decision->parameter != 0){
@@ -1068,7 +1068,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       }
     }
 
-    cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " nextWaypointRegionInSight " << nextWaypointRegionInSight << " nextRegionID " << nextRegionID << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << " intersectionInSight " << intersectionInSight << " intersectionID " << intersectionID << " nextIntersectionInSight " << nextIntersectionInSight << " nextIntersectionID " << nextIntersectionID << " passageInSight " << passageInSight << " passageID " << passageID << endl;
+    // cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " nextWaypointRegionInSight " << nextWaypointRegionInSight << " nextRegionID " << nextRegionID << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << " intersectionInSight " << intersectionInSight << " intersectionID " << intersectionID << " nextIntersectionInSight " << nextIntersectionInSight << " nextIntersectionID " << nextIntersectionID << " passageInSight " << passageInSight << " passageID " << passageID << endl;
     if(decisionMade == false and pathID > -1 and waypointPathInSight){
       ROS_DEBUG("Waypoint Region or Intersection not in sight or no action can get there, try waypoint path");
       vector<CartesianPoint> pathBetweenWaypoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[pathID].getPath();

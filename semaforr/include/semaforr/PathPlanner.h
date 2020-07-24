@@ -66,6 +66,8 @@ private:
   std::map<int, vector< vector<int> > > passage_graph_nodes;
   vector< vector<int> > passage_average_values;
   vector< vector<int> > passage_graph;
+  vector<Node> otherIntersection;
+  vector<bool> usedOtherIntersection;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -105,6 +107,8 @@ public:
     paths.clear();
     pathCompleted = true; 
     pathCalculated = false;
+    otherIntersection.clear();
+    usedOtherIntersection.clear();
   }
 
   void resetOrigPath() { 
@@ -206,6 +210,8 @@ public:
     passage_graph_nodes = pgn;
     passage_graph = pgr;
     passage_average_values = ap;
+    otherIntersection.clear();
+    usedOtherIntersection.clear();
   }
 
   void updateNavGraph();

@@ -27,34 +27,45 @@ class FORRRegionList{
   //}
 
   void setRegionPassageValues(vector< vector<int> > passage_grid){
+    // cout << "Inside setRegionPassageValues " << regions.size() << endl;
     for(int i = 0; i < regions.size(); i++){
+      regions[i].resetPassageValues();
       vector<int> pvs;
       double rx = regions[i].getCenter().get_x();
       double ry = regions[i].getCenter().get_y();
       double rr = regions[i].getRadius();
-      for(double j = rx - rr; j <= rx + rr; j+= 0.5){
-        for(double k = ry - rr; k <= ry + rr; k+= 0.5){
+      double increment = 0.5;
+      if(rr < increment)
+        increment = rr;
+      // cout << "region " << i << " rx " << rx << " ry " << ry << " rr " << rr << " increment " << increment << endl;
+      for(double j = (rx - rr); j <= (rx + rr); j+= increment){
+        for(double k = (ry - rr); k <= (ry + rr); k+= increment){
           if(j >= 0 and k >= 0 and j < passage_grid.size() and k < passage_grid[0].size()){
+            // cout << "check " << j << ", " << k << " inds " << (int)(j) << ", " << (int)(k) << " passage_grid " << passage_grid[(int)(j)][(int)(k)] << endl;
             if(passage_grid[(int)(j)][(int)(k)] > 0){
               pvs.push_back(passage_grid[(int)(j)][(int)(k)]);
             }
           }
         }
       }
+      // cout << "pvs " << pvs.size() << endl;
       if(pvs.size() == 1){
+        // cout << pvs[0] << endl;
         regions[i].setPassageValue(pvs[0]);
       }
       else if(pvs.size() > 1){
         sort(pvs.begin(), pvs.end());
         map<int, int> m;
-        for(int j = 0; j < pvs.size(); ++j)
+        for(int j = 0; j < pvs.size(); ++j){
           m[pvs[j]] = 0;
+        }
         for(int j = 0; j < pvs.size(); ++j){
           m[pvs[j]] += 1;
         }
         // int mode = 0;
         // int num_mode = 0;
         for(map<int,int>::iterator it=m.begin(); it!=m.end(); ++it){
+          // cout << it->first << endl;
           regions[i].setPassageValue(it->first);
           // if(it->second > mode){
           //   mode = it->second;
@@ -63,6 +74,7 @@ class FORRRegionList{
         }
         // regions[i].setPassageValue(num_mode);
       }
+      // cout << "region " << i << " passage_values " << regions[i].getPassageValues() << endl;
     }
   }
     

@@ -133,6 +133,9 @@ class FORRRegion{
   void setPassageValue(int pv){
     passage_values.push_back(pv);
   }
+  void resetPassageValues(){
+    passage_values.clear();
+  }
 
   void adjustVisibility(CartesianPoint point, vector <CartesianPoint> lep){
     // cout << "Inside Adjust Visibility" << endl;
