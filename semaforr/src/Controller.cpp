@@ -1015,7 +1015,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     }
   }
   
-  ROS_DEBUG("End Of UpdateState");
+  // ROS_DEBUG("End Of UpdateState");
 }
 
 
@@ -1260,7 +1260,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         stepped_laser_history.push_back(laser_history[j]);
       }
     }
-    cout << "stepped_history " << stepped_history.size() << " stepped_laser_history " << stepped_laser_history.size() << endl;
+    // cout << "stepped_history " << stepped_history.size() << " stepped_laser_history " << stepped_laser_history.size() << endl;
     double step_length = 1;
     for(int k = 0; k < stepped_history.size()-1 ; k++){
       double start_x = stepped_history[k].get_x();
@@ -1380,15 +1380,15 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     //   }
     //   cout << endl;
     // }
-    cout << "After decisions_grid + lasers_grid" << endl;
+    // cout << "After decisions_grid + lasers_grid" << endl;
     for(int i = 0; i < decisions_grid.size(); i++){
       for(int j = 0; j < decisions_grid[0].size(); j++){
         if(lasers_grid[i][j] > 0 and decisions_grid[i][j] == 0){
           decisions_grid[i][j] = 1;
         }
-        cout << decisions_grid[i][j] << " ";
+        // cout << decisions_grid[i][j] << " ";
       }
-      cout << endl;
+      // cout << endl;
     }
     vector< vector<int> > passage_grid;
     for(int i = 0; i < highway_grid.size(); i++){
@@ -1459,13 +1459,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
       passage_grid.push_back(col);
     }
-    cout << "After passage_grid" << endl;
-    for(int i = 0; i < passage_grid.size(); i++){
-      for(int j = 0; j < passage_grid[0].size(); j++){
-        cout << passage_grid[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After passage_grid" << endl;
+    // for(int i = 0; i < passage_grid.size(); i++){
+    //   for(int j = 0; j < passage_grid[0].size(); j++){
+    //     cout << passage_grid[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     vector < vector < pair<int, int> > > horizontals;
     vector < vector <int> > horizontal_lengths;
     for(int i = 0; i < passage_grid.size(); i++){
@@ -1512,13 +1512,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "After horizontal_passages" << endl;
-    for(int i = 0; i < horizontal_passages.size(); i++){
-      for(int j = 0; j < horizontal_passages[0].size(); j++){
-        cout << horizontal_passages[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After horizontal_passages" << endl;
+    // for(int i = 0; i < horizontal_passages.size(); i++){
+    //   for(int j = 0; j < horizontal_passages[0].size(); j++){
+    //     cout << horizontal_passages[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     // for(int i = 0; i < passage_grid.size(); i++){
     //   for(int j = 0; j < passage_grid[i].size(); j++){
     //     if(passage_grid[i][j] >= 0 and horizontal_passages[i][j] == -1){
@@ -1540,13 +1540,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     //     }
     //   }
     // }
-    cout << "After horizontal_passages_filled" << endl;
-    for(int i = 0; i < horizontal_passages_filled.size(); i++){
-      for(int j = 0; j < horizontal_passages_filled[0].size(); j++){
-        cout << horizontal_passages_filled[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After horizontal_passages_filled" << endl;
+    // for(int i = 0; i < horizontal_passages_filled.size(); i++){
+    //   for(int j = 0; j < horizontal_passages_filled[0].size(); j++){
+    //     cout << horizontal_passages_filled[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     vector<int> dx;
     dx.push_back(1);
     dx.push_back(0);
@@ -1586,14 +1586,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "final horizontal_component " << horizontal_component << endl;
-    cout << "After final_horizontal" << endl;
-    for(int i = 0; i < final_horizontal.size(); i++){
-      for(int j = 0; j < final_horizontal[0].size(); j++){
-        cout << final_horizontal[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "final horizontal_component " << horizontal_component << endl;
+    // cout << "After final_horizontal" << endl;
+    // for(int i = 0; i < final_horizontal.size(); i++){
+    //   for(int j = 0; j < final_horizontal[0].size(); j++){
+    //     cout << final_horizontal[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     vector < vector<int> > horizontal_ends;
     for(int i = 1; i <= horizontal_component; i++){
       // cout << "horizontal_component " << i << endl;
@@ -1679,13 +1679,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "After vertical_passages" << endl;
-    for(int i = 0; i < vertical_passages.size(); i++){
-      for(int j = 0; j < vertical_passages[0].size(); j++){
-        cout << vertical_passages[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After vertical_passages" << endl;
+    // for(int i = 0; i < vertical_passages.size(); i++){
+    //   for(int j = 0; j < vertical_passages[0].size(); j++){
+    //     cout << vertical_passages[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     // for(int i = 0; i < passage_grid.size(); i++){
     //   for(int j = 0; j < passage_grid[i].size(); j++){
     //     if(passage_grid[i][j] >= 0 and vertical_passages[i][j] == -1){
@@ -1707,13 +1707,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     //     }
     //   }
     // }
-    cout << "After vertical_passages_filled" << endl;
-    for(int i = 0; i < vertical_passages_filled.size(); i++){
-      for(int j = 0; j < vertical_passages_filled[0].size(); j++){
-        cout << vertical_passages_filled[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After vertical_passages_filled" << endl;
+    // for(int i = 0; i < vertical_passages_filled.size(); i++){
+    //   for(int j = 0; j < vertical_passages_filled[0].size(); j++){
+    //     cout << vertical_passages_filled[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     row_count = vertical_passages_filled.size();
     col_count = vertical_passages_filled[0].size();
     vector< vector<int> > final_vertical;
@@ -1732,14 +1732,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "final vertical_component " << vertical_component << endl;
-    cout << "After final_vertical" << endl;
-    for(int i = 0; i < final_vertical.size(); i++){
-      for(int j = 0; j < final_vertical[0].size(); j++){
-        cout << final_vertical[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "final vertical_component " << vertical_component << endl;
+    // cout << "After final_vertical" << endl;
+    // for(int i = 0; i < final_vertical.size(); i++){
+    //   for(int j = 0; j < final_vertical[0].size(); j++){
+    //     cout << final_vertical[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     vector < vector<int> > vertical_ends;
     for(int i = 1; i <= vertical_component; i++){
       // cout << "vertical_component " << i << endl;
@@ -1791,26 +1791,26 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
       final_combined.push_back(row);
     }
-    cout << "After final_combined" << endl;
-    for(int i = 0; i < final_combined.size(); i++){
-      for(int j = 0; j < final_combined[0].size(); j++){
-        cout << final_combined[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After final_combined" << endl;
+    // for(int i = 0; i < final_combined.size(); i++){
+    //   for(int j = 0; j < final_combined[0].size(); j++){
+    //     cout << final_combined[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     for(int i = 0; i < horizontal_ends.size(); i++){
       final_combined[horizontal_ends[i][0]][horizontal_ends[i][1]] = 1;
     }
     for(int i = 0; i < vertical_ends.size(); i++){
       final_combined[vertical_ends[i][0]][vertical_ends[i][1]] = 1;
     }
-    cout << "After ends" << endl;
-    for(int i = 0; i < final_combined.size(); i++){
-      for(int j = 0; j < final_combined[0].size(); j++){
-        cout << final_combined[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After ends" << endl;
+    // for(int i = 0; i < final_combined.size(); i++){
+    //   for(int j = 0; j < final_combined[0].size(); j++){
+    //     cout << final_combined[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     dx.clear();
     dx.push_back(1);
     dx.push_back(0);
@@ -1839,14 +1839,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "final intersection_component " << intersection_component << endl;
-    cout << "After intersections" << endl;
-    for(int i = 0; i < intersections.size(); i++){
-      for(int j = 0; j < intersections[0].size(); j++){
-        cout << intersections[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "final intersection_component " << intersection_component << endl;
+    // cout << "After intersections" << endl;
+    // for(int i = 0; i < intersections.size(); i++){
+    //   for(int j = 0; j < intersections[0].size(); j++){
+    //     cout << intersections[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
 
     vector < vector<int> > passages_without_intersections;
     for(int i = 0; i < final_horizontal.size(); i++){
@@ -1861,13 +1861,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
       passages_without_intersections.push_back(row);
     }
-    cout << "After passages_without_intersections" << endl;
-    for(int i = 0; i < passages_without_intersections.size(); i++){
-      for(int j = 0; j < passages_without_intersections[0].size(); j++){
-        cout << passages_without_intersections[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After passages_without_intersections" << endl;
+    // for(int i = 0; i < passages_without_intersections.size(); i++){
+    //   for(int j = 0; j < passages_without_intersections[0].size(); j++){
+    //     cout << passages_without_intersections[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     row_count = passages_without_intersections.size();
     col_count = passages_without_intersections[0].size();
     vector< vector<int> > pass_wo_int;
@@ -1886,35 +1886,35 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "final passage_component " << passage_component << endl;
-    cout << "After pass_wo_int" << endl;
-    for(int i = 0; i < pass_wo_int.size(); i++){
-      for(int j = 0; j < pass_wo_int[0].size(); j++){
-        cout << pass_wo_int[i][j] << " ";
-      }
-      cout << endl;
-    }
-    for(int k = 1; k <= passage_component; k++){
-      int minx = 100000;
-      int maxx = -1;
-      int miny = 100000;
-      int maxy = -1;
-      for(int i = 0; i < pass_wo_int.size(); i++){
-        for(int j = 0; j < pass_wo_int[0].size(); j++){
-          if(pass_wo_int[i][j] == k){
-            if(i < minx)
-              minx = i;
-            if(i > maxx)
-              maxx = i;
-            if(j < miny)
-              miny = j;
-            if(j > maxy)
-              maxy = j;
-          }
-        }
-      }
-      cout << "passage " << k << " width " << (maxx - minx +1) << " height " << (maxy - miny +1) << endl;
-    }
+    // cout << "final passage_component " << passage_component << endl;
+    // cout << "After pass_wo_int" << endl;
+    // for(int i = 0; i < pass_wo_int.size(); i++){
+    //   for(int j = 0; j < pass_wo_int[0].size(); j++){
+    //     cout << pass_wo_int[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
+    // for(int k = 1; k <= passage_component; k++){
+    //   int minx = 100000;
+    //   int maxx = -1;
+    //   int miny = 100000;
+    //   int maxy = -1;
+    //   for(int i = 0; i < pass_wo_int.size(); i++){
+    //     for(int j = 0; j < pass_wo_int[0].size(); j++){
+    //       if(pass_wo_int[i][j] == k){
+    //         if(i < minx)
+    //           minx = i;
+    //         if(i > maxx)
+    //           maxx = i;
+    //         if(j < miny)
+    //           miny = j;
+    //         if(j > maxy)
+    //           maxy = j;
+    //       }
+    //     }
+    //   }
+    //   cout << "passage " << k << " width " << (maxx - minx +1) << " height " << (maxy - miny +1) << endl;
+    // }
 
     int new_ind = intersection_component;
     for(int i = 0; i < pass_wo_int.size(); i++){
@@ -1924,13 +1924,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "After intersections + pass_wo_int" << endl;
-    for(int i = 0; i < intersections.size(); i++){
-      for(int j = 0; j < intersections[0].size(); j++){
-        cout << intersections[i][j] << " ";
-      }
-      cout << endl;
-    }
+    // cout << "After intersections + pass_wo_int" << endl;
+    // for(int i = 0; i < intersections.size(); i++){
+    //   for(int j = 0; j < intersections[0].size(); j++){
+    //     cout << intersections[i][j] << " ";
+    //   }
+    //   cout << endl;
+    // }
     vector< vector<int> > edges;
     for(int i = 0; i < intersections.size(); i++){
       int start = -1;
@@ -2024,14 +2024,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "after graph" << endl;
-    for(int i = 0; i < graph.size(); i++){
-      cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
-    }
-    cout << "checking if graph is connected" << endl;
+    // cout << "after graph" << endl;
+    // for(int i = 0; i < graph.size(); i++){
+    //   cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+    // }
+    // cout << "checking if graph is connected" << endl;
     vector< set<int> > components;
     for(int j = 0; j < graph.size(); j++){
-      cout << j << " " << graph[j][0] << " " << graph[j][1] << " " << graph[j][2] << endl;
+      // cout << j << " " << graph[j][0] << " " << graph[j][1] << " " << graph[j][2] << endl;
       set<int> neighbor_nodes;
       // neighbor_nodes.insert(graph[j][0]);
       // cout << "Neighbor nodes " << neighbor_nodes.size() << " Graph Nodes " << numNodes() << " Added " << nodes[0]->getID() << endl;
@@ -2040,16 +2040,16 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       while(nbrs.size()>0){
         int node_id = nbrs[0];
         neighbor_nodes.insert(node_id);
-        cout << "Neighbor nodes " << neighbor_nodes.size() << " Added " << node_id << endl;
+        // cout << "Neighbor nodes " << neighbor_nodes.size() << " Added " << node_id << endl;
         vector<int> new_nbrs;
         for(int i = 0; i < graph.size(); i++){
           if(graph[i][0] == node_id){
             new_nbrs.push_back(graph[i][2]);
-            cout << "neighbor " << graph[i][2] << endl;
+            // cout << "neighbor " << graph[i][2] << endl;
           }
           if(graph[i][2] == node_id){
             new_nbrs.push_back(graph[i][0]);
-            cout << "neighbor " << graph[i][0] << endl;
+            // cout << "neighbor " << graph[i][0] << endl;
           }
         }
         for(int i = 0; i < new_nbrs.size(); i++){
@@ -2063,14 +2063,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         nbrs.erase(nbrs.begin());
         // cout << "Neighbors to add " << nbrs.size() << endl;
       }
-      cout << "neighbor_nodes " << neighbor_nodes.size() << endl;
+      // cout << "neighbor_nodes " << neighbor_nodes.size() << endl;
       if(new_ind == neighbor_nodes.size()){
-        cout << "entire graph one component" << endl;
+        // cout << "entire graph one component" << endl;
         components.push_back(neighbor_nodes);
         break;
       }
       else if(neighbor_nodes.size() < new_ind){
-        cout << "insert component if not already on list" << endl;
+        // cout << "insert component if not already on list" << endl;
         bool found = false;
         for(int i = 0; i < components.size(); i++){
           for(set<int>::iterator it = components[i].begin(); it != components[i].end(); it++){
@@ -2084,12 +2084,12 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           }
         }
         if(found == false){
-          cout << "not found, adding to components" << endl;
+          // cout << "not found, adding to components" << endl;
           components.push_back(neighbor_nodes);
         }
       }
     }
-    cout << "components " << components.size() << endl;
+    // cout << "components " << components.size() << endl;
     set<int> smallest_component;
     set<int> smallest_component_edges;
     int smallest_component_size;
@@ -2097,27 +2097,27 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       int biggest_component;
       int biggest_component_size = 0;
       for(int i = 0; i < components.size(); i++){
-        cout << "components " << i << " " << components[i].size() << endl;
+        // cout << "components " << i << " " << components[i].size() << endl;
         if(components[i].size() > biggest_component_size){
           biggest_component_size = components[i].size();
           biggest_component = i;
         }
       }
-      cout << "biggest_component " << biggest_component << " biggest_component_size " << biggest_component_size << endl;
+      // cout << "biggest_component " << biggest_component << " biggest_component_size " << biggest_component_size << endl;
       for(int i = 0; i < components.size(); i++){
-        cout << "components " << i << " " << components[i].size() << endl;
+        // cout << "components " << i << " " << components[i].size() << endl;
         if(i != biggest_component){
           for(set<int>::iterator it = components[i].begin(); it != components[i].end(); it++){
-            cout << "added to smallest_component " << (*it) << endl;
+            // cout << "added to smallest_component " << (*it) << endl;
             smallest_component.insert((*it));
           }
         }
       }
       smallest_component_size = smallest_component.size();
-      cout << "smallest_component_size " << smallest_component_size << endl;
-      cout << "smallest_component " << smallest_component.size() << endl;
+      // cout << "smallest_component_size " << smallest_component_size << endl;
+      // cout << "smallest_component " << smallest_component.size() << endl;
       for(int i = 0; i < graph.size(); i++){
-        cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+        // cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
         if(smallest_component.find(graph[i][0]) != smallest_component.end()){
           smallest_component_edges.insert(graph[i][1]);
         }
@@ -2125,13 +2125,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           smallest_component_edges.insert(graph[i][2]);
         }
       }
-      cout << "smallest_component_edges " << smallest_component_edges.size() << endl;
+      // cout << "smallest_component_edges " << smallest_component_edges.size() << endl;
     }
     
     map<int, vector< vector<int> > > graph_nodes;
     map<int, vector<int> > node_steps;
     map<int, vector< vector<int> > > graph_edges_map;
-    cout << "graph_nodes" << endl;
+    // cout << "graph_nodes" << endl;
     for(int i = 1; i < new_ind+1; i++){
       if(smallest_component.find(i) != smallest_component.end()){
         continue;
@@ -2139,17 +2139,17 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       else{
         graph_nodes.insert(make_pair(i, vector< vector<int> >()));
         node_steps.insert(make_pair(i, vector<int>()));
-        cout << i << endl;
+        // cout << i << endl;
       }
     }
-    cout << "graph_edges_map" << endl;
+    // cout << "graph_edges_map" << endl;
     for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
       if(smallest_component_edges.find(i) != smallest_component_edges.end()){
         continue;
       }
       else{
         graph_edges_map.insert(make_pair(i, vector< vector<int> >()));
-        cout << i << endl;
+        // cout << i << endl;
       }
     }
 
@@ -2182,6 +2182,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
     }
     // cout << "graph_nodes " << graph_nodes.size() << " graph_edges_map " << graph_edges_map.size() << endl;
+    cout << "final passage_grid" << endl;
+    for(int i = 0; i < intersections.size(); i++){
+      for(int j = 0; j < intersections[0].size(); j++){
+        cout << intersections[i][j] << " ";
+      }
+      cout << endl;
+    }
     vector< vector<int> > average_passage;
     int index_val = 0;
     for(int i = 1; i < new_ind+1; i++){
@@ -2294,8 +2301,8 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         reduced_graph.push_back(graph[i]);
       }
     }
-    cout << "graph " << graph.size() << " reduced_graph " << reduced_graph.size() << endl;
-    cout << "creating trails between intersections" << endl;
+    // cout << "graph " << graph.size() << " reduced_graph " << reduced_graph.size() << endl;
+    // cout << "creating trails between intersections" << endl;
     for(int k = 0; k < stepped_history.size(); k++){
       double start_x = stepped_history[k].get_x();
       if(int(start_x) < 0)
@@ -2318,7 +2325,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
     }
     for(map<int, vector<int> >::iterator it = node_steps.begin(); it != node_steps.end(); it++){
-      cout << "intersection " << it->first << " " << (it->second).size() << endl;
+      // cout << "intersection " << it->first << " " << (it->second).size() << endl;
       double dist_limit = 0.25;
       while((it->second).size() == 0){
         dist_limit = dist_limit + 0.25;
@@ -2332,14 +2339,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "found points associated with each intersection" << endl;
+    // cout << "found points associated with each intersection" << endl;
     vector< vector<CartesianPoint> > graph_trails;
     vector<bool> reverse_order;
     for(int i = 0; i < reduced_graph.size(); i++){
-      cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
+      // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
       vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
       vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
-      cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
+      // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
       int start_ind = -1;
       int end_ind = -1;
       int length_path = 10000000;
@@ -2364,31 +2371,31 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           }
         }
       }
-      cout << "length_path " << length_path << " start_ind " << start_ind << " end_ind " << end_ind << " need_to_reverse " << need_to_reverse << endl;
+      // cout << "length_path " << length_path << " start_ind " << start_ind << " end_ind " << end_ind << " need_to_reverse " << need_to_reverse << endl;
       vector<CartesianPoint> trailPositions;
       trailPositions.push_back(stepped_history[start_ind]);
       for(int i = start_ind; i < end_ind; i++){
         for(int n = end_ind; n > i; n--){
-          if(canAccessPoint(stepped_laser_history[i], stepped_history[i], stepped_history[n], 5)) {
+          if(canAccessPoint(stepped_laser_history[i], stepped_history[i], stepped_history[n], 3.25)) {
             trailPositions.push_back(stepped_history[n]);
             i = n-1;
           }
         }
       }
       trailPositions.push_back(stepped_history[end_ind]);
-      cout << "trailPositions " << trailPositions.size() << endl;
+      // cout << "trailPositions " << trailPositions.size() << endl;
       if(need_to_reverse){
-        cout << "reversing order of trailPositions" << endl;
+        // cout << "reversing order of trailPositions" << endl;
         reverse(trailPositions.begin(),trailPositions.end());
       }
       graph_trails.push_back(trailPositions);
     }
-    cout << "found trails between intersections, check if trail follows passage" << endl;
+    // cout << "found trails between intersections, check if trail follows passage" << endl;
     for(int i = 0; i < reduced_graph.size(); i++){
-      cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
+      // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
       vector<CartesianPoint> trailPositions = graph_trails[i];
       vector< vector<int> > points = graph_edges_map[reduced_graph[i][1]];
-      cout << "trailPositions " << trailPositions.size() << " passage points " << points.size() << endl;
+      // cout << "trailPositions " << trailPositions.size() << " passage points " << points.size() << endl;
       bool overlap = false;
       for(int j = 0; j < trailPositions.size(); j++){
         for(int k = 0; k < points.size(); k++){
@@ -2401,12 +2408,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           break;
         }
       }
-      cout << "overlap " << overlap << endl;
+      // cout << "overlap " << overlap << endl;
       if(overlap == false){
         vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
         vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
-        cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
+        // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
         bool new_path_found = false;
+        double min_start_x, min_start_y, min_end_x, min_end_y;
+        double min_start_end_dist = 1000000;
         for(int j = 0; j < intersection1_points.size(); j++){
           for(int k = 0; k < intersection2_points.size(); k++){
             double start_x = stepped_history[intersection1_points[j]].get_x();
@@ -2429,27 +2438,88 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
               end_y = 0;
             if(int(end_y) >= decisions_grid[0].size())
               end_y = decisions_grid[0].size()-1;
-            cout << start_x << " " << start_y << " " << end_x << " " << end_y << endl;
+            // cout << start_x << " " << start_y << " " << end_x << " " << end_y << endl;
+            double start_end_dist = stepped_history[intersection1_points[j]].get_distance(stepped_history[intersection2_points[k]]);
             if((int)(start_x) == (int)(end_x) or (int)(start_y) == (int)(end_y)){
               if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], stepped_history[intersection2_points[k]], 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], stepped_history[intersection1_points[j]], 25)){
-                cout << "found laser that connects" << endl;
+                // cout << "found laser that connects" << endl;
                 vector<CartesianPoint> new_trailPositions;
-                new_trailPositions.push_back(CartesianPoint(start_x, start_y));
                 if(((int)(start_x)) == ((int)(end_x))){
-                  for(int l = ((int)(start_y)); l <= ((int)(end_y)); l++){
-                    new_trailPositions.push_back(CartesianPoint(start_x, l));
+                  // cout << "x values same, iterate over y values " << ((int)(start_y)) << " " << ((int)(end_y)) << endl;
+                  int start_val, end_val;
+                  bool reverse = false;
+                  if(((int)(start_y)) < ((int)(end_y))){
+                    start_val = ((int)(start_y));
+                    end_val = ((int)(end_y));
                   }
-                  new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+                  else{
+                    end_val = ((int)(start_y));
+                    start_val = ((int)(end_y));
+                    reverse = true;
+                  }
+                  if(reverse == false){
+                    new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+                    for(int l = start_val; l <= end_val; l++){
+                      if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(start_x, l), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(start_x, l), 25)){
+                        new_trailPositions.push_back(CartesianPoint(start_x, l));
+                      }
+                    }
+                    new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+                  }
+                  else{
+                    new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+                    for(int l = start_val; l <= end_val; l++){
+                      if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(start_x, l), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(start_x, l), 25)){
+                        new_trailPositions.push_back(CartesianPoint(start_x, l));
+                      }
+                    }
+                    new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+                    std::reverse(new_trailPositions.begin(), new_trailPositions.end());
+                  }
                 }
-                else{
-                  for(int l = ((int)(start_x)); l <= ((int)(end_x)); l++){
-                    new_trailPositions.push_back(CartesianPoint(l, start_y));
+                else if(((int)(start_y)) == ((int)(end_y))){
+                  // cout << "y values same, iterate over x values " << ((int)(start_x)) << " " << ((int)(end_x)) << endl;
+                  int start_val, end_val;
+                  bool reverse = false;
+                  if(((int)(start_x)) < ((int)(end_x))){
+                    start_val = ((int)(start_x));
+                    end_val = ((int)(end_x));
                   }
-                  new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+                  else{
+                    end_val = ((int)(start_x));
+                    start_val = ((int)(end_x));
+                    reverse = true;
+                  }
+                  if(reverse == false){
+                    new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+                    for(int l = start_val; l <= end_val; l++){
+                      if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(l, start_y), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(l, start_y), 25)){
+                        new_trailPositions.push_back(CartesianPoint(l, start_y));
+                      }
+                    }
+                    new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+                  }
+                  else{
+                    new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+                    for(int l = start_val; l <= end_val; l++){
+                      if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(l, start_y), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(l, start_y), 25)){
+                        new_trailPositions.push_back(CartesianPoint(l, start_y));
+                      }
+                    }
+                    new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+                    std::reverse(new_trailPositions.begin(), new_trailPositions.end());
+                  }
                 }
                 graph_trails[i] = new_trailPositions;
                 new_path_found = true;
                 break;
+              }
+              else if(start_end_dist > 25 and start_end_dist < min_start_end_dist){
+                min_start_end_dist = start_end_dist;
+                min_start_x = start_x;
+                min_start_y = start_y;
+                min_end_x = end_x;
+                min_end_y = end_y;
               }
             }
           }
@@ -2457,17 +2527,35 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
             break;
           }
         }
-        cout << "new_path_found " << new_path_found << " trail size " << graph_trails[i].size() << endl;
+        if(new_path_found == false and min_start_end_dist < 1000000){
+          // cout << "no direct path found, follow closest path between" << endl;
+          vector<CartesianPoint> new_trailPositions;
+          new_trailPositions.push_back(CartesianPoint(min_start_x, min_start_y));
+          if(((int)(min_start_x)) == ((int)(min_end_x))){
+            for(int l = ((int)(min_start_y)); l <= ((int)(min_end_y)); l++){
+              new_trailPositions.push_back(CartesianPoint(min_start_x, l));
+            }
+            new_trailPositions.push_back(CartesianPoint(min_end_x, min_end_y));
+          }
+          else{
+            for(int l = ((int)(min_start_x)); l <= ((int)(min_end_x)); l++){
+              new_trailPositions.push_back(CartesianPoint(l, min_start_y));
+            }
+            new_trailPositions.push_back(CartesianPoint(min_end_x, min_end_y));
+          }
+          graph_trails[i] = new_trailPositions;
+        }
+        // cout << "new_path_found " << new_path_found << " trail size " << graph_trails[i].size() << endl;
       }
     }
-    cout << "graph_trails " << graph_trails.size() << endl;
-    for(int i = 0; i < graph_trails.size(); i++){
-      cout << "  " << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
-      for(int j = 0; j < graph_trails[i].size(); j++){
-        cout << graph_trails[i][j].get_x() << " " << graph_trails[i][j].get_y() << endl;
-      } 
-    }
-    cout << "find trail between intersection points" << endl;
+    // cout << "graph_trails " << graph_trails.size() << endl;
+    // for(int i = 0; i < graph_trails.size(); i++){
+    //   cout << "  " << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
+    //   for(int j = 0; j < graph_trails[i].size(); j++){
+    //     cout << graph_trails[i][j].get_x() << " " << graph_trails[i][j].get_y() << endl;
+    //   } 
+    // }
+    // cout << "find trail between intersection points" << endl;
     vector< vector<int> > graph_by_edges;
     for(int i = 0; i < reduced_graph.size(); i++){
       vector<int> pair;
@@ -2496,7 +2584,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     }
     vector< vector<CartesianPoint> > graph_intersection_trails;
     for(int i = 0; i < graph_through_intersections.size(); i++){
-      cout << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
+      // cout << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
       CartesianPoint start;
       CartesianPoint end;
       bool found_start = false;
@@ -2505,22 +2593,22 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         // cout << k << " " << reduced_graph[k][0] << " " << reduced_graph[k][1] << " " << reduced_graph[k][2] << endl;
         if(graph_through_intersections[i][0] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][0]){
           start = graph_trails[k][0];
-          cout << "found start " << start.get_x() << " " << start.get_y() << endl;
+          // cout << "found start " << start.get_x() << " " << start.get_y() << endl;
           found_start = true;
         }
         else if(graph_through_intersections[i][0] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][2]){
           start = graph_trails[k][graph_trails[k].size()-1];
-          cout << "found start " << start.get_x() << " " << start.get_y() << endl;
+          // cout << "found start " << start.get_x() << " " << start.get_y() << endl;
           found_start = true;
         }
         if(graph_through_intersections[i][2] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][0]){
           end = graph_trails[k][0];
-          cout << "found end " << end.get_x() << " " << end.get_y() << endl;
+          // cout << "found end " << end.get_x() << " " << end.get_y() << endl;
           found_end = true;
         }
         else if(graph_through_intersections[i][2] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][2]){
           end = graph_trails[k][graph_trails[k].size()-1];
-          cout << "found end " << end.get_x() << " " << end.get_y() << endl;
+          // cout << "found end " << end.get_x() << " " << end.get_y() << endl;
           found_end = true;
         }
         if(found_start and found_end){
@@ -2529,14 +2617,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       }
       vector<CartesianPoint> trailPositions;
       if(start == end){
-        cout << "start and end the same, add one" << endl;
+        // cout << "start and end the same, add one" << endl;
         trailPositions.push_back(start);
         graph_intersection_trails.push_back(trailPositions);
       }
       else{
-        cout << "start and end different" << endl;
+        // cout << "start and end different" << endl;
         vector<int> intersection_points = node_steps[graph_through_intersections[i][1]];
-        cout << "intersection_points " << intersection_points.size() << endl;
+        // cout << "intersection_points " << intersection_points.size() << endl;
         int start_ind = -1;
         int end_ind = -1;
         for(int j = 0; j < intersection_points.size(); j++){
@@ -2550,15 +2638,15 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
             break;
           }
         }
-        cout << "start_ind " << start_ind << " end_ind " << end_ind << endl;
+        // cout << "start_ind " << start_ind << " end_ind " << end_ind << endl;
         if(canAccessPoint(stepped_laser_history[start_ind], stepped_history[start_ind], stepped_history[end_ind], 25) or canAccessPoint(stepped_laser_history[end_ind], stepped_history[end_ind], stepped_history[start_ind], 25)){
-          cout << "points can see each other, add both" << endl;
+          // cout << "points can see each other, add both" << endl;
           trailPositions.push_back(start);
           trailPositions.push_back(end);
           graph_intersection_trails.push_back(trailPositions);
         }
         else{
-          cout << "points cannot see each other, find in sequence between" << endl;
+          // cout << "points cannot see each other, find in sequence between" << endl;
           vector<int> in_between_inds;
           bool found_each_other = false;
           vector<int> all_sees_start;
@@ -2567,13 +2655,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
               all_sees_start.push_back(intersection_points[j]);
             }
           }
-          cout << "all_sees_start " << all_sees_start.size() << endl;
+          // cout << "all_sees_start " << all_sees_start.size() << endl;
           while(found_each_other == false){
             double min_dist_to_end = 1000000;
             int between_ind = -1;
             for(int j = 0; j < all_sees_start.size(); j++){
               if(canAccessPoint(stepped_laser_history[all_sees_start[j]], stepped_history[all_sees_start[j]], stepped_history[end_ind], 25) or canAccessPoint(stepped_laser_history[end_ind], stepped_history[end_ind], stepped_history[all_sees_start[j]], 25)){
-                cout << "found something that sees end " << all_sees_start[j] << endl;
+                // cout << "found something that sees end " << all_sees_start[j] << endl;
                 in_between_inds.push_back(all_sees_start[j]);
                 found_each_other = true;
                 break;
@@ -2584,16 +2672,18 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
                 between_ind = all_sees_start[j];
               }
             }
-            cout << "added closest to end " << between_ind << " min_dist_to_end " << min_dist_to_end << endl;
-            in_between_inds.push_back(between_ind);
-            all_sees_start.clear();
-            for(int j = 0; j < intersection_points.size(); j++){
-              if(canAccessPoint(stepped_laser_history[intersection_points[j]], stepped_history[intersection_points[j]], stepped_history[between_ind], 25) or canAccessPoint(stepped_laser_history[between_ind], stepped_history[between_ind], stepped_history[intersection_points[j]], 25)){
-                all_sees_start.push_back(intersection_points[j]);
+            if(!found_each_other){
+              // cout << "added closest to end " << between_ind << " min_dist_to_end " << min_dist_to_end << endl;
+              in_between_inds.push_back(between_ind);
+              all_sees_start.clear();
+              for(int j = 0; j < intersection_points.size(); j++){
+                if(canAccessPoint(stepped_laser_history[intersection_points[j]], stepped_history[intersection_points[j]], stepped_history[between_ind], 25) or canAccessPoint(stepped_laser_history[between_ind], stepped_history[between_ind], stepped_history[intersection_points[j]], 25)){
+                  all_sees_start.push_back(intersection_points[j]);
+                }
               }
             }
           }
-          cout << "finished finding in between points" << endl;
+          // cout << "finished finding in between points" << endl;
           trailPositions.push_back(start);
           for(int j = 0; j < in_between_inds.size(); j++){
             trailPositions.push_back(stepped_history[in_between_inds[j]]);
@@ -2603,13 +2693,13 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         }
       }
     }
-    cout << "graph_intersection_trails " << graph_intersection_trails.size() << endl;
-    for(int i = 0; i < graph_intersection_trails.size(); i++){
-      cout << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
-      for(int j = 0; j < graph_intersection_trails[i].size(); j++){
-        cout << graph_intersection_trails[i][j].get_x() << " " << graph_intersection_trails[i][j].get_y() << endl;
-      }
-    }
+    // cout << "graph_intersection_trails " << graph_intersection_trails.size() << endl;
+    // for(int i = 0; i < graph_intersection_trails.size(); i++){
+    //   cout << "  " << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
+    //   for(int j = 0; j < graph_intersection_trails[i].size(); j++){
+    //     cout << graph_intersection_trails[i][j].get_x() << " " << graph_intersection_trails[i][j].get_y() << endl;
+    //   }
+    // }
 
     agentState->setPassageValues(intersections, graph_nodes, graph_edges_map, reduced_graph, average_passage, graph_trails, graph_through_intersections, graph_intersection_trails);
     beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(intersections);
@@ -2699,7 +2789,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     //   decisionMade = true;
     // }
     // else
-    if(outofhereOn){
+    if(outofhereOn and decisionMade == false){
       if(tier1->advisorGetOut(decision)){
         ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
         decisionStats->decisionTier = 1;
@@ -2755,11 +2845,11 @@ void Controller::tierTwoDecision(Position current){
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
     if(highwayFinished >= 1){
-      cout << "setting values for highways" << endl;
+      // cout << "setting values for highways" << endl;
       planner->setPassageGrid(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage());
-      cout << "set planner values" << endl;
+      // cout << "set planner values" << endl;
       beliefs->getAgentState()->getCurrentTask()->setPassageValues(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraphEdges(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage(), beliefs->getAgentState()->getGraphTrails(), beliefs->getAgentState()->getGraphThroughIntersections(), beliefs->getAgentState()->getGraphIntersectionTrails());
-      cout << "set task values" << endl;
+      // cout << "set task values" << endl;
     }
     //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     //gettimeofday(&cv,NULL);

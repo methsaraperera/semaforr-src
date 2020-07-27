@@ -649,7 +649,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     int nextIntersectionID = -1;
     bool passageInSight = false;
     int passageID = -1;
-    int lookAhead = 4;
+    int lookAhead = 3;
     if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() < lookAhead){
       lookAhead = beliefs->getAgentState()->getCurrentTask()->getPlanSize();
     }
@@ -663,8 +663,8 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
           set<FORRAction> possible_set;
           set<FORRAction>::iterator actionIter;
-          // FORRAction closest_action;
-          // double dist_to_region = 100000;
+          FORRAction closest_action;
+          double dist_to_region = 100000;
           vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
           FORRAction lastAction;
           int size = actions.size();
@@ -701,15 +701,15 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
                 ROS_DEBUG_STREAM("Potential action : " << a.type << " " << a.parameter);
                 possible_set.insert(a);
               }
-              // else{
-              //   ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
-              //   double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[regionID].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
-              //   // cout << dist_from_exp << endl;
-              //   if(dist_from_exp < dist_to_region){
-              //     dist_to_region = dist_from_exp;
-              //     closest_action = forrAction;
-              //   }
-              // }
+              else{
+                ROS_DEBUG_STREAM("Get closer action : " << forrAction.type << " " << forrAction.parameter);
+                double dist_from_exp = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[regionID].getRegion().getCenter().get_distance(CartesianPoint(expectedPosition.getX(), expectedPosition.getY()));
+                // cout << dist_from_exp << endl;
+                if(dist_from_exp < dist_to_region){
+                  dist_to_region = dist_from_exp;
+                  closest_action = forrAction;
+                }
+              }
             }
           }
           if(possible_set.size() == 1){
@@ -733,11 +733,11 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               }
             }
           }
-          // else if(dist_to_region < 100000){
-          //   ROS_DEBUG("Action to get closest to visible Waypoint Region, Enforcer advisor to take decision");
-          //   (*decision) = closest_action;
-          //   decisionMade = true;
-          // }
+          else if(dist_to_region < 100000){
+            ROS_DEBUG("Action to get closest to visible Waypoint Region, Enforcer advisor to take decision");
+            (*decision) = closest_action;
+            decisionMade = true;
+          }
           if(decisionMade){
             break;
           }
@@ -796,83 +796,83 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               }
             }
           }
-          else{
-            ROS_DEBUG("Waypoint Intersection Centroid not in sight, find closest visible cell");
-            vector< vector<int> > passagePoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[intersectionID].getPassagePoints();
-            bool robot_in_intersection = false;
-            int robot_x, robot_y;
-            for(int j = 0; j < passagePoints.size(); j++){
-              if(passagePoints[j][0] == (int)(beliefs->getAgentState()->getCurrentPosition().getX()) and passagePoints[j][1] == (int)(beliefs->getAgentState()->getCurrentPosition().getY())){
-                robot_in_intersection = true;
-                robot_x = passagePoints[j][0];
-                robot_y = passagePoints[j][1];
-                break;
-              }
-            }
-            CartesianPoint closest_cell;
-            bool found_closest = false;
-            if(robot_in_intersection == true){
-              // cout << "Robot in intersection, go towards centroid " << robot_x << " " << robot_y << endl;
-              // if(abs(beliefs->getAgentState()->getCurrentPosition().getX() - intersectionCentroid.get_x()) <= 0.5 or abs(beliefs->getAgentState()->getCurrentPosition().getY() - intersectionCentroid.get_y()) <= 0.5){
-              //   cout << "Aligned with centroid but cannot see it" << endl;
-              // }
-              // else{
-              //   cout << "Not aligned with centroid and cannot see it" << endl;
-              // }
-              double dist_to_centroid = 100000;
-              for(int j = 0; j < passagePoints.size(); j++){
-                double dist_to_cell = intersectionCentroid.get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
-                if(dist_to_cell < dist_to_centroid and beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20) and (passagePoints[j][0] == robot_x-1 or passagePoints[j][0] == robot_x+1) and (passagePoints[j][1] == robot_y-1 or passagePoints[j][1] == robot_y+1)){
-                  dist_to_centroid = dist_to_cell;
-                  closest_cell = CartesianPoint(passagePoints[j][0], passagePoints[j][1]);
-                  found_closest = true;
-                }
-              }
-            }
-            else{
-              // cout << "Robot not in intersection, go towards closest cell to robot" << endl;
-              double dist_to_robot = 100000;
-              for(int j = 0; j < passagePoints.size(); j++){
-                double dist_to_cell = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()).get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
-                if(dist_to_cell < dist_to_robot and beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20)){
-                  dist_to_robot = dist_to_cell;
-                  closest_cell = CartesianPoint(passagePoints[j][0], passagePoints[j][1]);
-                  found_closest = true;
-                }
-              }
-            }
-            // cout << "found_closest " << found_closest << endl;
-            if(found_closest == true){
-              // cout << "closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << endl;
-              (*decision) = beliefs->getAgentState()->moveTowards(closest_cell);
-              if(decision->parameter != 0){
-                set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
-                if(vetoed_actions->find(*decision) != vetoed_actions->end()){
-                  decisionMade = false;
-                }
-                else{
-                  Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
-                  if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
-                    if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
-                      ROS_DEBUG("Waypoint closest cell in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
-                      decisionMade = true;
-                    }
-                    else{
-                      FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-                      if(forward.parameter >= decision->parameter){
-                        ROS_DEBUG("Waypoint closest cell in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
-                        decisionMade = true;
-                        // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-                        // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
-                        // if(decision->type == FORWARD)
-                        //   beliefs->getAgentState()->setGetOutTriggered(false);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+          // else{
+          //   ROS_DEBUG("Waypoint Intersection Centroid not in sight, find closest visible cell");
+          //   vector< vector<int> > passagePoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[intersectionID].getPassagePoints();
+          //   bool robot_in_intersection = false;
+          //   int robot_x, robot_y;
+          //   for(int j = 0; j < passagePoints.size(); j++){
+          //     if(passagePoints[j][0] == (int)(beliefs->getAgentState()->getCurrentPosition().getX()) and passagePoints[j][1] == (int)(beliefs->getAgentState()->getCurrentPosition().getY())){
+          //       robot_in_intersection = true;
+          //       robot_x = passagePoints[j][0];
+          //       robot_y = passagePoints[j][1];
+          //       break;
+          //     }
+          //   }
+          //   CartesianPoint closest_cell;
+          //   bool found_closest = false;
+          //   if(robot_in_intersection == true){
+          //     // cout << "Robot in intersection, go towards centroid " << robot_x << " " << robot_y << endl;
+          //     // if(abs(beliefs->getAgentState()->getCurrentPosition().getX() - intersectionCentroid.get_x()) <= 0.5 or abs(beliefs->getAgentState()->getCurrentPosition().getY() - intersectionCentroid.get_y()) <= 0.5){
+          //     //   cout << "Aligned with centroid but cannot see it" << endl;
+          //     // }
+          //     // else{
+          //     //   cout << "Not aligned with centroid and cannot see it" << endl;
+          //     // }
+          //     double dist_to_centroid = 100000;
+          //     for(int j = 0; j < passagePoints.size(); j++){
+          //       double dist_to_cell = intersectionCentroid.get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
+          //       if(dist_to_cell < dist_to_centroid and beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20) and (passagePoints[j][0] == robot_x-1 or passagePoints[j][0] == robot_x+1) and (passagePoints[j][1] == robot_y-1 or passagePoints[j][1] == robot_y+1)){
+          //         dist_to_centroid = dist_to_cell;
+          //         closest_cell = CartesianPoint(passagePoints[j][0], passagePoints[j][1]);
+          //         found_closest = true;
+          //       }
+          //     }
+          //   }
+          //   else{
+          //     // cout << "Robot not in intersection, go towards closest cell to robot" << endl;
+          //     double dist_to_robot = 100000;
+          //     for(int j = 0; j < passagePoints.size(); j++){
+          //       double dist_to_cell = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()).get_distance(CartesianPoint(passagePoints[j][0], passagePoints[j][1]));
+          //       if(dist_to_cell < dist_to_robot and beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20)){
+          //         dist_to_robot = dist_to_cell;
+          //         closest_cell = CartesianPoint(passagePoints[j][0], passagePoints[j][1]);
+          //         found_closest = true;
+          //       }
+          //     }
+          //   }
+          //   // cout << "found_closest " << found_closest << endl;
+          //   if(found_closest == true){
+          //     // cout << "closest_cell " << closest_cell.get_x() << " " << closest_cell.get_y() << endl;
+          //     (*decision) = beliefs->getAgentState()->moveTowards(closest_cell);
+          //     if(decision->parameter != 0){
+          //       set<FORRAction> *vetoed_actions = beliefs->getAgentState()->getVetoedActions();
+          //       if(vetoed_actions->find(*decision) != vetoed_actions->end()){
+          //         decisionMade = false;
+          //       }
+          //       else{
+          //         Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+          //         if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+          //           if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+          //             ROS_DEBUG("Waypoint closest cell in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
+          //             decisionMade = true;
+          //           }
+          //           else{
+          //             FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+          //             if(forward.parameter >= decision->parameter){
+          //               ROS_DEBUG("Waypoint closest cell in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
+          //               decisionMade = true;
+          //               // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+          //               // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+          //               // if(decision->type == FORWARD)
+          //               //   beliefs->getAgentState()->setGetOutTriggered(false);
+          //             }
+          //           }
+          //         }
+          //       }
+          //     }
+          //   }
+          // }
           if(decisionMade){
             break;
           }

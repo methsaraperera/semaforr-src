@@ -188,13 +188,13 @@ for i in range(0,num_runs):
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    # for j in range(1,2):
-    #     log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
-    #     target_file_name = "target" + str(j) + ".conf"
-    #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
-    log_name = map_name + "_passagetest_" + str(i) + ".txt"
-    target_file_name = "target1.conf"
-    experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+    for j in range(1,6):
+        log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
+        target_file_name = "target" + str(j) + ".conf"
+        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+    # log_name = map_name + "_passagetest_" + str(i) + ".txt"
+    # target_file_name = "target1.conf"
+    # experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
 # map_name = "moma-5"
 # for i in range(1,num_runs):
