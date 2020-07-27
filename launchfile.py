@@ -181,37 +181,37 @@ spatials = "/config/spatial_model.conf"
 
 num_runs = 2
 params = "/config/params1.conf"
-# map_name = "gradcenter-5"
-# for i in range(0,num_runs):
-#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
-#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
-#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
-#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
-#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-#     # for j in range(1,2):
-#     #     log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
-#     #     target_file_name = "target" + str(j) + ".conf"
-#     #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
-#     log_name = map_name + "_passagetest_" + str(i) + ".txt"
-#     target_file_name = "target1.conf"
-#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
-
-map_name = "moma-5"
-for i in range(1,num_runs):
+map_name = "gradcenter-5"
+for i in range(0,num_runs):
     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
-    # for j in range(1,6):
+    # for j in range(1,2):
     #     log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
-    #     target_file_name = "target40test-" + str(j) + ".conf"
+    #     target_file_name = "target" + str(j) + ".conf"
     #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
-    log_name = map_name + "_passageplantest_" + str(i) + ".txt"
-    target_file_name = "target40test-1.conf"
+    log_name = map_name + "_passagetest_" + str(i) + ".txt"
+    target_file_name = "target1.conf"
     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-# num_runs = 1
+# map_name = "moma-5"
+# for i in range(1,num_runs):
+#     why_explanations_name = map_name + "_" + str(i) + "_why_explanations.txt"
+#     whyplan_explanations_name = map_name + "_" + str(i) + "_why_plan_explanations.txt"
+#     why_log_name = map_name + "_" + str(i) + "_why_log.txt"
+#     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
+#     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
+#     # for j in range(1,6):
+#     #     log_name = map_name + "_T1_CS_SM_SP_OH_" + str(j) + "_" + str(i) + ".txt"
+#     #     target_file_name = "target40test-" + str(j) + ".conf"
+#     #     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+#     log_name = map_name + "_passageplantest_" + str(i) + ".txt"
+#     target_file_name = "target40test-1.conf"
+#     experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+
+# num_runs = 2
 # params = "/config/params4.conf"
 # map_name = "gradcenter-5"
 # for i in range(0,num_runs):
@@ -221,7 +221,7 @@ for i in range(1,num_runs):
 #     whyplan_log_name = map_name + "_" + str(i) + "_why_plan_log.txt"
 #     situation_log_name = map_name + "_" + str(i) + "_situation_log.txt"
 #     for j in range(1,6):
-#         log_name = map_name + "_T1_CS_SM_SP_OH_EX30_" + str(j) + "_" + str(i) + ".txt"
+#         log_name = map_name + "_T1_CS_SM_PP_OH_EX30_" + str(j) + "_" + str(i) + ".txt"
 #         target_file_name = "target" + str(j) + ".conf"
 #         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 

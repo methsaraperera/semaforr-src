@@ -15,6 +15,8 @@ protected:
   int x, y; 
 
   double radius;
+
+  int intersection_id;
   
   bool inBuffer;           // true if within a wall buffer ( too close to a wall ) 
 
@@ -45,6 +47,10 @@ public:
   void setID(int i) { id = i; }
 
   int getID() const { return id; }
+
+  void setIntersectionID(int i) { intersection_id = i; }
+
+  int getIntersectionID() const { return intersection_id; }
 
   void setX(int x) { this->x = x; }
 

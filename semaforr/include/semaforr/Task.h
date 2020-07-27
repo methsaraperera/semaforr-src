@@ -108,7 +108,8 @@ class Task {
 				return wr.getPassageCentroid().get_x();
 			}
 			else if(wr.getType() == 3){
-				return wr.getPassageCentroid().get_x();
+				// return wr.getPassageCentroid().get_x();
+				return wr.getPathEnd().get_x();
 			}
 		}
 	}
@@ -141,7 +142,8 @@ class Task {
 				return wr.getPassageCentroid().get_y();
 			}
 			else if(wr.getType() == 3){
-				return wr.getPassageCentroid().get_y();
+				// return wr.getPassageCentroid().get_y();
+				return wr.getPathEnd().get_y();
 			}
 		}
 	}
@@ -229,14 +231,14 @@ class Task {
   				points.push_back(skeleton_waypoints[i].getRegion().getCenter());
   				// cout << "region waypoint " << i << " " << skeleton_waypoints[i].getRegion().getCenter().get_x() << " " << skeleton_waypoints[i].getRegion().getCenter().get_y() << " " << skeleton_waypoints[i].getRegion().getRadius() << endl;
   			}
-  			else if(skeleton_waypoints[i].getType() == 1){
+  			else if(skeleton_waypoints[i].getType() == 1 or skeleton_waypoints[i].getType() == 3){
   				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
   				for(int j = 0; j < pathBetween.size(); j++){
   					points.push_back(pathBetween[j]);
   					// cout << "path waypoint " << i << " " << j << " " << pathBetween[j].get_x() << " " << pathBetween[j].get_y() << endl;
   				}
   			}
-  			else if(skeleton_waypoints[i].getType() == 2 or skeleton_waypoints[i].getType() == 3){
+  			else if(skeleton_waypoints[i].getType() == 2){
   				points.push_back(skeleton_waypoints[i].getPassageCentroid());
   			}
   		}
@@ -347,6 +349,7 @@ class Task {
   }
 
   bool generateWaypointsFromInds(Position source, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, list<int> indices){
+  	cout << "Inside generateWaypointsFromInds" << endl;
 	waypoints.clear();
 	tierTwoWaypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
@@ -431,7 +434,7 @@ class Task {
 		// origPlansInds = planner->getOrigPaths();
 		// cout << "origPlansInds " << origPlansInds.size() << " " << origPlansInds[0].size() << " " << origPlansInds[1].size() << endl;
 		if(origPlansInds[0].size() > 0){
-			// cout << "prologue creation" << endl;
+			cout << "prologue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[0].size()-1;
 			list<int>::iterator it;
@@ -458,51 +461,77 @@ class Task {
 						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >()));
 					}
 				}
-				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+				cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
 		}
-		// cout << "passage plan creation" << endl;
+		cout << "passage plan creation" << endl;
 		int step = -1;
 		int max_step = waypointInd.size()-1;
+		int start_passage = skeleton_waypoints.size();
 		list<int>::iterator it;
 		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 			step = step + 1;
-			// cout << "node " << (*it) << " step " << step << endl;
-			int intersection1 = navGraph->getNode(*it).getID()+1;
-			// cout << "intersection1 " << intersection1 << endl;
+			cout << "node " << (*it) << " step " << step << endl;
+			int intersection1 = navGraph->getNode(*it).getIntersectionID();
+			cout << "intersection1 " << intersection1 << endl;
 			sk_waypoint new_waypoint = sk_waypoint(2, FORRRegion(), vector<CartesianPoint>(), passage_graph_nodes[intersection1]);
 			new_waypoint.setPassageLabel(intersection1);
 			new_waypoint.setPassageCentroid(average_passage[intersection1-1]);
 			skeleton_waypoints.push_back(new_waypoint);
-			// cout << new_waypoint.getPassageCentroid().get_x() << " " << new_waypoint.getPassageCentroid().get_y() << endl;
+			cout << new_waypoint.getPassageCentroid().get_x() << " " << new_waypoint.getPassageCentroid().get_y() << endl;
 			list<int>::iterator itr1; 
 			itr1 = it; 
 			advance(itr1, 1);
 			int forward_step = step + 1;
-			// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+			cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 			if(forward_step <= max_step){
-				int intersection2 = navGraph->getNode(*itr1).getID()+1;
-				// cout << "intersection2 " << intersection2 << endl;
+				int intersection2 = navGraph->getNode(*itr1).getIntersectionID();
+				cout << "intersection2 " << intersection2 << endl;
 				int passage12;
+				vector<CartesianPoint> passage_path;
 				for(int i = 0; i < passage_graph.size(); i++){
-					// cout << "passage_graph " << passage_graph[i][0] << " " << passage_graph[i][1] << " " << passage_graph[i][2] << endl;
-					if((passage_graph[i][0] == intersection1 and passage_graph[i][2] == intersection2) or (passage_graph[i][0] == intersection2 and passage_graph[i][2] == intersection1)){
+					cout << "passage_graph " << passage_graph[i][0] << " " << passage_graph[i][1] << " " << passage_graph[i][2] << endl;
+					if(passage_graph[i][0] == intersection1 and passage_graph[i][2] == intersection2){
 						passage12 = passage_graph[i][1];
+						passage_path = graph_trails[i];
+						break;
+					}
+					else if(passage_graph[i][0] == intersection2 and passage_graph[i][2] == intersection1){
+						passage12 = passage_graph[i][1];
+						passage_path = graph_trails[i];
+						std::reverse(passage_path.begin(), passage_path.end());
 						break;
 					}
 				}
-				// cout << "passage12 " << passage12 << endl;
-				sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[passage12]);
+				cout << "passage12 " << passage12 << endl;
+				sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), passage_path, passage_graph_edges[passage12]);
 				new_passage.setPassageLabel(passage12);
 				new_passage.setPassageCentroid(average_passage[passage12-1]);
 				new_passage.setPassageOrientation(passage_graph_edges_orientation[passage12]);
 				skeleton_waypoints.push_back(new_passage);
-				// cout << new_passage.getPassageCentroid().get_x() << " " << new_passage.getPassageCentroid().get_y() << endl;
+				cout << new_passage.getPassageCentroid().get_x() << " " << new_passage.getPassageCentroid().get_y() << endl;
 			}
-			// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+			cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+		}
+		int end_passage = skeleton_waypoints.size();
+		for(int i = start_passage+1; i < end_passage-1; i+=3){
+			for(int j = 0; j < graph_through_intersections.size(); j++){
+				if(graph_through_intersections[j][0] == skeleton_waypoints[i].getPassageLabel() and graph_through_intersections[j][1] == skeleton_waypoints[i+1].getPassageLabel() and graph_through_intersections[j][2] == skeleton_waypoints[i+2].getPassageLabel()){
+					for(int k = 0; k < graph_intersection_trails[j].size(); k++){
+						skeleton_waypoints[i].getPath().push_back(graph_intersection_trails[j][k]);
+					}
+					break;
+				}
+				else if(graph_through_intersections[j][2] == skeleton_waypoints[i].getPassageLabel() and graph_through_intersections[j][1] == skeleton_waypoints[i+1].getPassageLabel() and graph_through_intersections[j][0] == skeleton_waypoints[i+2].getPassageLabel()){
+					for(int k = graph_intersection_trails[j].size()-1; k >= 0; k--){
+						skeleton_waypoints[i].getPath().push_back(graph_intersection_trails[j][k]);
+					}
+					break;
+				}
+			}
 		}
 		if(origPlansInds[1].size() > 0){
-			// cout << "epilogue creation" << endl;
+			cout << "epilogue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[1].size()-1;
 			list<int>::iterator it;
@@ -529,7 +558,7 @@ class Task {
 						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >()));
 					}
 				}
-				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+				cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
 		}
 		if(skeleton_waypoints.size() > 0){
@@ -778,22 +807,38 @@ class Task {
 			}
 			else if(skeleton_waypoints[i].getType() == 3){
 				// cout << "passage " << i << endl;
-				vector< vector<int> > grid_points = skeleton_waypoints[i].getPassagePoints();
-				for(int j = 0; j < grid_points.size(); j++){
-					if((int)(currentPosition.getX()) == grid_points[j][0] and (int)(currentPosition.getY()) == grid_points[j][1]){
-						farthest = i;
-						break;
+				// vector< vector<int> > grid_points = skeleton_waypoints[i].getPassagePoints();
+				// for(int j = 0; j < grid_points.size(); j++){
+				// 	if((int)(currentPosition.getX()) == grid_points[j][0] and (int)(currentPosition.getY()) == grid_points[j][1]){
+				// 		farthest = i;
+				// 		break;
+				// 	}
+				// }
+				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
+				double dis;
+				// cout << "pathBetween " << i  << " size: " << pathBetween.size() << endl;
+				int farthest_here = -1;
+				for (int j = 0; j < pathBetween.size()-1; j++){
+					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
+					if(dis < 0.5 and canAccessPoint(currentLaserEndpoints, CartesianPoint(currentPosition.getX(), currentPosition.getY()), pathBetween[j+1], 20)){
+						// cout << "found pathBetween with dist < 0.5: " << j << endl;
+						farthest_here = j;
 					}
+				}
+				if(farthest_here > -1 or currentPosition.getDistance(pathBetween[pathBetween.size()-1].get_x(), pathBetween[pathBetween.size()-1].get_y()) < 0.5){
+					// cout << "found skeleton region waypoint: " << i << " farthest_here " << farthest_here << endl;
+					farthest = i;
+					farthest_path = farthest_here;
 				}
 			}
 		}
 		// cout << "farthest " << farthest << " farthest_path " << farthest_path << endl;
-		if(farthest == 0 and (skeleton_waypoints[0].getType() == 0 or (skeleton_waypoints[0].getType() == 1 and farthest_path == skeleton_waypoints[0].getPath().size()-1) or skeleton_waypoints[0].getType() == 2)){
+		if(farthest == 0 and (skeleton_waypoints[0].getType() == 0 or (skeleton_waypoints[0].getType() == 1 and farthest_path == skeleton_waypoints[0].getPath().size()-1) or skeleton_waypoints[0].getType() == 2 or (skeleton_waypoints[0].getType() == 3 and farthest_path == skeleton_waypoints[0].getPath().size()-1))){
 			// cout << "eliminate first" << endl;
 			finished_sk_waypoints.push_back(skeleton_waypoints[0]);
 			skeleton_waypoints.erase(skeleton_waypoints.begin());
 		}
-		else if(farthest == 0 and skeleton_waypoints[0].getType() == 1){
+		else if(farthest == 0 and (skeleton_waypoints[0].getType() == 1 or skeleton_waypoints[0].getType() == 3)){
 			// cout << "eliminate first path up to farthest_path" << endl;
 			vector<CartesianPoint> new_path;
 			for(int i = farthest_path+1; i < skeleton_waypoints[0].getPath().size(); i++){
@@ -808,7 +853,7 @@ class Task {
 			}
 			skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+farthest);
 		}
-		else if(farthest > 0 and skeleton_waypoints[farthest].getType() == 1){
+		else if(farthest > 0 and (skeleton_waypoints[farthest].getType() == 1 or skeleton_waypoints[0].getType() == 3)){
 			// cout << "eliminate up to farthest path up to farthest_path" << endl;
 			if(farthest_path == skeleton_waypoints[farthest].getPath().size()-1){
 				// cout << "farthest_path is equal to last in path " << skeleton_waypoints[farthest].getPath().size()-1 << endl;
@@ -830,17 +875,17 @@ class Task {
 				skeleton_waypoints[0].setPath(new_path);
 			}
 		}
-		else if(farthest > 0 and skeleton_waypoints[farthest].getType() == 3){
-			for(int i = 0; i <= (farthest-1); i++){
-				finished_sk_waypoints.push_back(skeleton_waypoints[i]);
-			}
-			if(farthest-1 == 0){
-				skeleton_waypoints.erase(skeleton_waypoints.begin());
-			}
-			else{
-				skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+(farthest-1));
-			}
-		}
+		// else if(farthest > 0 and skeleton_waypoints[farthest].getType() == 3){
+		// 	for(int i = 0; i <= (farthest-1); i++){
+		// 		finished_sk_waypoints.push_back(skeleton_waypoints[i]);
+		// 	}
+		// 	if(farthest-1 == 0){
+		// 		skeleton_waypoints.erase(skeleton_waypoints.begin());
+		// 	}
+		// 	else{
+		// 		skeleton_waypoints.erase(skeleton_waypoints.begin(), skeleton_waypoints.begin()+(farthest-1));
+		// 	}
+		// }
 		// cout << "skeleton_waypoints size: " << skeleton_waypoints.size() << " finished_sk_waypoints size: " << finished_sk_waypoints.size() << endl;
 		cout << "check plan active: " << skeleton_waypoints.size() << endl;
 		if(skeleton_waypoints.size() > 0){
@@ -921,7 +966,7 @@ class Task {
 					break;
 				}
 			}
-			else if(skeleton_waypoints[i].getType() == 1){
+			else if(skeleton_waypoints[i].getType() == 1 or skeleton_waypoints[i].getType() == 3){
 				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
 				double dis;
 				int farthest_path = -1;
@@ -944,17 +989,17 @@ class Task {
 					break;
 				}
 			}
-			else if(skeleton_waypoints[i].getType() == 3){
-				if(i > 0){
-					vector< vector<int> > grid_points = skeleton_waypoints[i].getPassagePoints();
-					for(int j = 0; j < grid_points.size(); j++){
-						if((int)(currentPosition.getX()) == grid_points[j][0] and (int)(currentPosition.getY()) == grid_points[j][1]){
-							status = true;
-							break;
-						}
-					}
-				}
-			}
+			// else if(skeleton_waypoints[i].getType() == 3){
+			// 	if(i > 0){
+			// 		vector< vector<int> > grid_points = skeleton_waypoints[i].getPassagePoints();
+			// 		for(int j = 0; j < grid_points.size(); j++){
+			// 			if((int)(currentPosition.getX()) == grid_points[j][0] and (int)(currentPosition.getY()) == grid_points[j][1]){
+			// 				status = true;
+			// 				break;
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}
 	}
 	return status;
@@ -1042,7 +1087,8 @@ class Task {
 	planPositions = grid;
   }
 
-  void setPassageValues(vector< vector<int> > pg, map<int, vector< vector<int> > > pgn, map<int, vector< vector<int> > > pge, vector< vector<int> > pgr, vector< vector<int> > ap){
+  void setPassageValues(vector< vector<int> > pg, map<int, vector< vector<int> > > pgn, map<int, vector< vector<int> > > pge, vector< vector<int> > pgr, vector< vector<int> > ap, vector< vector<CartesianPoint> > gt, vector< vector<int> > gti, vector< vector<CartesianPoint> > git){
+  	cout << "inside setPassageValues" << endl;
 	passage_grid = pg;
 	passage_graph_nodes = pgn;
 	passage_graph_edges = pge;
@@ -1050,6 +1096,7 @@ class Task {
 	for(int i = 0; i < ap.size(); i++){
 		average_passage.push_back(CartesianPoint(((double)(ap[i][0]))/100.0, ((double)(ap[i][1]))/100.0));
 	}
+	cout << "calculated average_passage" << endl;
 	for(int i = 0; i < passage_graph.size(); i++){
 		vector< vector<int> > passage_points = passage_graph_edges[passage_graph[i][1]];
 		int min_x = 100000, max_x = 0, min_y = 100000, max_y = 0;
@@ -1074,6 +1121,10 @@ class Task {
 			passage_graph_edges_orientation[passage_graph[i][1]] = 0;
 		}
 	}
+	cout << "calculated passage_graph_edges_orientation" << endl;
+	graph_trails = gt;
+	graph_through_intersections = gti;
+    graph_intersection_trails = git;
   }
    
  private:
@@ -1094,6 +1145,9 @@ class Task {
   map<int, int> passage_graph_edges_orientation;
   vector< vector<int> > passage_graph;
   vector<CartesianPoint> average_passage;
+  vector< vector<CartesianPoint> > graph_trails;
+  vector< vector<int> > graph_through_intersections;
+  vector< vector<CartesianPoint> > graph_intersection_trails;
 
   list<int> waypointInd;
   vector< list<int> > plansInds;
