@@ -1134,23 +1134,25 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
   if((skeleton and aStarOn) or (hallwayskel and highwayFinished >= 1 and aStarOn)){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
+    PathPlanner *hallway_skeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       if(skeleton and (*it)->getName() == "skeleton"){
         skeleton_planner = *it;
       }
-      else if(hallwayskel and (*it)->getName() == "hallwayskel"){
-        skeleton_planner = *it;
+      if(hallwayskel and (*it)->getName() == "hallwayskel"){
+        hallway_skeleton_planner = *it;
       }
     }
     if(skeleton){
       skeleton_planner->resetGraph();
     }
-    else if(hallwayskel){
-      skeleton_planner->resetOrigGraph();
+    if(hallwayskel){
+      hallway_skeleton_planner->resetOrigGraph();
     }
     // cout << "Planner reset" << endl;
     vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
     int index_val = 0;
+    int hallway_index_val = 0;
     for(int i = 0 ; i < regions.size(); i++){
       int x = (int)(regions[i].getCenter().get_x()*100);
       int y = (int)(regions[i].getCenter().get_y()*100);
@@ -1164,10 +1166,10 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
             index_val++;
           }
         }
-        else if(hallwayskel){
-          bool success = skeleton_planner->getOrigGraph()->addNode(x, y, regions[i].getRadius(), index_val);
+        if(hallwayskel){
+          bool success = hallway_skeleton_planner->getOrigGraph()->addNode(x, y, regions[i].getRadius(), hallway_index_val);
           if(success){
-            index_val++;
+            hallway_index_val++;
           }
         }
       }
@@ -1185,14 +1187,14 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
           }
         }
       }
-      else if(hallwayskel){
-        int region_id = skeleton_planner->getOrigGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
+      if(hallwayskel){
+        int region_id = hallway_skeleton_planner->getOrigGraph()->getNodeID((int)(regions[i].getCenter().get_x()*100), (int)(regions[i].getCenter().get_y()*100));
         if(region_id != -1){
           vector<FORRExit> exits = regions[i].getMinExits();
           for(int j = 0; j < exits.size() ; j++){
-            int index_val = skeleton_planner->getOrigGraph()->getNodeID((int)(regions[exits[j].getExitRegion()].getCenter().get_x()*100), (int)(regions[exits[j].getExitRegion()].getCenter().get_y()*100));
+            int index_val = hallway_skeleton_planner->getOrigGraph()->getNodeID((int)(regions[exits[j].getExitRegion()].getCenter().get_x()*100), (int)(regions[exits[j].getExitRegion()].getCenter().get_y()*100));
             if(index_val != -1){
-              skeleton_planner->getOrigGraph()->addEdge(region_id, index_val, exits[j].getExitDistance()*100, exits[j].getConnectionPoints());
+              hallway_skeleton_planner->getOrigGraph()->addEdge(region_id, index_val, exits[j].getExitDistance()*100, exits[j].getConnectionPoints());
             }
           }
         }
@@ -1203,7 +1205,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       // skeleton_planner->getGraph()->printGraph();
       // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
     }
-    else if(hallwayskel){
+    if(hallwayskel){
       cout << "Finished updating skeleton graph for passage planner" << endl;
       // skeleton_planner->getOrigGraph()->printGraph();
       beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(beliefs->getAgentState()->getPassageGrid());
@@ -2874,11 +2876,14 @@ void Controller::tierTwoDecision(Position current){
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       vector<double> planCost;
-      // ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
+      ROS_DEBUG_STREAM("Computing plan cost " << planner->getName());
       for (vecIT vt = plans.begin(); vt != plans.end(); vt++){
-        double costOfPlan = planner->calcPathCost(*vt);
+        double costOfPlan = 0;
+        if(planner->getName() != "skeleton" and planner->getName() != "hallwayskel"){
+          costOfPlan = planner->calcPathCost(*vt);
+        }
         planCost.push_back(costOfPlan);
-        // ROS_DEBUG_STREAM("Cost = " << costOfPlan);
+        ROS_DEBUG_STREAM("Cost = " << costOfPlan);
       }
       planCosts.push_back(planCost);
     }

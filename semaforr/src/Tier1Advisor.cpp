@@ -656,7 +656,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     for(int i = lookAhead-1; i >=0; i--){
       if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[i].getType() == 0){
         regionID = i;
-        waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[regionID].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[regionID].getRegion().getRadius(), 20);
+        waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[regionID].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[regionID].getRegion().getRadius(), 25);
         if(waypointRegionInSight){
           ROS_DEBUG("Waypoint Region in sight, Enforcer advisor active");
           set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
@@ -757,7 +757,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         intersectionID = i;
         vector< vector<int> > passagePoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[intersectionID].getPassagePoints();
         for(int j = 0; j < passagePoints.size(); j++){
-          if(beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20)){
+          if(beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 5)){
             intersectionInSight = true;
             break;
           }
@@ -873,16 +873,16 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           //     }
           //   }
           // }
-          if(decisionMade){
-            break;
-          }
+          // if(decisionMade){
+          //   break;
+          // }
         }
       }
       else if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[i].getType() == 3){
         passageID = i;
         vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[passageID].getPath();
         for(int j = 0; j < pathBetween.size(); j++){
-          if(beliefs->getAgentState()->canSeePoint(pathBetween[j], 20)){
+          if(beliefs->getAgentState()->canSeePoint(pathBetween[j], 5)){
             passageInSight = true;
             break;
           }
@@ -892,7 +892,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           CartesianPoint farthestVisible;
           int farthest = -1;
           for(int i = pathBetween.size()-1; i >= 0; i--){
-            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 20)){
+            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 5)){
               farthestVisible = pathBetween[i];
               // cout << "farthestVisible " << i << endl;
               farthest = i;
@@ -929,9 +929,9 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             }
           }
         }
-        if(decisionMade){
-          break;
-        }
+        // if(decisionMade){
+        //   break;
+        // }
         // vector< vector<int> > passagePoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[passageID].getPassagePoints();
         // for(int j = 0; j < passagePoints.size(); j++){
         //   if(beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20)){

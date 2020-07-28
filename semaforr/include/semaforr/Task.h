@@ -463,6 +463,20 @@ class Task {
 				}
 				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
+			if(waypointInd.size() > 0){
+				if(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_distance(average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1]) > 5){
+					double start_x = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y();
+					double start_y = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x();
+					double end_x = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_x();
+					double end_y = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_y();
+					double tx, ty;
+					for(double j = 0; j <= 1; j += 0.1){
+						tx = (end_x * j) + (start_x * (1 - j));
+						ty = (end_y * j) + (start_y * (1 - j));
+						skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+					}
+				}
+			}
 		}
 		// cout << "passage plan creation" << endl;
 		int step = -1;
@@ -531,6 +545,20 @@ class Task {
 			}
 		}
 		if(origPlansInds[1].size() > 0){
+			if(waypointInd.size() > 0){
+				if(CartesianPoint(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0,origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0).get_distance(skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid()) > 5){
+					double start_x = origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0;
+					double start_y = origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0;
+					double end_x = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_x();
+					double end_y = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_y();
+					double tx, ty;
+					for(double j = 0; j <= 1; j += 0.1){
+						tx = (end_x * j) + (start_x * (1 - j));
+						ty = (end_y * j) + (start_y * (1 - j));
+						skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+					}
+				}
+			}
 			// cout << "epilogue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[1].size()-1;

@@ -147,6 +147,7 @@ int PathPlanner::calcPath(bool cautious){
         pathCosts.push_back(calcPathCost(paths[i]));
       }
       if(name == "hallwayskel"){
+        origPathCost = 0;
         if(rs.getID() != Node::invalid_node_index or rt.getID() != Node::invalid_node_index){
           if(PATH_DEBUG) {
             cout << signature << "rs:";
@@ -156,7 +157,6 @@ int PathPlanner::calcPath(bool cautious){
             rt.printNode();
             cout << endl;
           }
-          origPathCost = 0;
           astar rnewsearch(*originalNavGraph, rs, rt, name);
           if ( rnewsearch.isPathFound()) {
             origPath1 = rnewsearch.getPathToTarget();
@@ -210,6 +210,10 @@ int PathPlanner::calcPath(bool cautious){
         else{
           origPaths.push_back(list<int>());
         }
+        cout << "Plan " << name << " cost = " << pathCost << " origPathCost " << origPathCost << endl;
+      }
+      else{
+        cout << "Plan " << name << " cost = " << pathCost << endl;
       }
     }
     else {
