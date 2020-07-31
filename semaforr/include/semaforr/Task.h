@@ -463,20 +463,20 @@ class Task {
 				}
 				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
-			if(waypointInd.size() > 0){
-				if(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_distance(average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1]) > 5){
-					double start_x = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y();
-					double start_y = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x();
-					double end_x = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_x();
-					double end_y = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_y();
-					double tx, ty;
-					for(double j = 0; j <= 1; j += 0.1){
-						tx = (end_x * j) + (start_x * (1 - j));
-						ty = (end_y * j) + (start_y * (1 - j));
-						skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
-					}
-				}
-			}
+			// if(waypointInd.size() > 0){
+			// 	if(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_distance(average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1]) > 5){
+			// 		double start_x = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y();
+			// 		double start_y = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x();
+			// 		double end_x = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_x();
+			// 		double end_y = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_y();
+			// 		double tx, ty;
+			// 		for(double j = 0; j <= 1; j += 0.1){
+			// 			tx = (end_x * j) + (start_x * (1 - j));
+			// 			ty = (end_y * j) + (start_y * (1 - j));
+			// 			skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+			// 		}
+			// 	}
+			// }
 		}
 		// cout << "passage plan creation" << endl;
 		int step = -1;
@@ -545,20 +545,20 @@ class Task {
 			}
 		}
 		if(origPlansInds[1].size() > 0){
-			if(waypointInd.size() > 0){
-				if(CartesianPoint(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0,origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0).get_distance(skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid()) > 5){
-					double start_x = origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0;
-					double start_y = origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0;
-					double end_x = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_x();
-					double end_y = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_y();
-					double tx, ty;
-					for(double j = 0; j <= 1; j += 0.1){
-						tx = (end_x * j) + (start_x * (1 - j));
-						ty = (end_y * j) + (start_y * (1 - j));
-						skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
-					}
-				}
-			}
+			// if(waypointInd.size() > 0){
+			// 	if(CartesianPoint(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0,origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0).get_distance(skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid()) > 5){
+			// 		double start_x = origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0;
+			// 		double start_y = origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0;
+			// 		double end_x = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_x();
+			// 		double end_y = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_y();
+			// 		double tx, ty;
+			// 		for(double j = 0; j <= 1; j += 0.1){
+			// 			tx = (end_x * j) + (start_x * (1 - j));
+			// 			ty = (end_y * j) + (start_y * (1 - j));
+			// 			skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+			// 		}
+			// 	}
+			// }
 			// cout << "epilogue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[1].size()-1;
@@ -849,12 +849,12 @@ class Task {
 				int farthest_here = -1;
 				for (int j = 0; j < pathBetween.size()-1; j++){
 					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
-					if(dis < 0.5 and canAccessPoint(currentLaserEndpoints, CartesianPoint(currentPosition.getX(), currentPosition.getY()), pathBetween[j+1], 20)){
+					if(dis < 0.75 and canAccessPoint(currentLaserEndpoints, CartesianPoint(currentPosition.getX(), currentPosition.getY()), pathBetween[j+1], 20)){
 						// cout << "found pathBetween with dist < 0.5: " << j << endl;
 						farthest_here = j;
 					}
 				}
-				if(farthest_here > -1 or currentPosition.getDistance(pathBetween[pathBetween.size()-1].get_x(), pathBetween[pathBetween.size()-1].get_y()) < 0.5){
+				if(farthest_here > -1 or currentPosition.getDistance(pathBetween[pathBetween.size()-1].get_x(), pathBetween[pathBetween.size()-1].get_y()) < 0.75){
 					// cout << "found skeleton region waypoint: " << i << " farthest_here " << farthest_here << endl;
 					farthest = i;
 					farthest_passage = farthest_here;
@@ -1025,7 +1025,7 @@ class Task {
 					break;
 				}
 			}
-			else if(skeleton_waypoints[i].getType() == 1 or skeleton_waypoints[i].getType() == 3){
+			else if(skeleton_waypoints[i].getType() == 1){
 				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
 				double dis;
 				int farthest_path = -1;
@@ -1044,6 +1044,23 @@ class Task {
 			}
 			else if(skeleton_waypoints[i].getType() == 2){
 				if(average_passage[skeleton_waypoints[i].getPassageLabel()-1].get_distance(CartesianPoint(currentPosition.getX(), currentPosition.getY())) < 0.75){
+					status = true;
+					break;
+				}
+			}
+			else if(skeleton_waypoints[i].getType() == 3){
+				vector<CartesianPoint> pathBetween = skeleton_waypoints[i].getPath();
+				double dis;
+				int farthest_path = -1;
+				// cout << "pathBetween size: " << pathBetween.size() << endl;
+				for (int j = 0; j < pathBetween.size()-1; j++){
+					dis = currentPosition.getDistance(pathBetween[j].get_x(), pathBetween[j].get_y());
+					if(dis < 0.75 and canAccessPoint(currentLaserEndpoints, CartesianPoint(currentPosition.getX(), currentPosition.getY()), pathBetween[j+1], 20)){
+						// cout << "found pathBetween with dist < 0.5: " << j << endl;
+						farthest_path = j;
+					}
+				}
+				if(farthest_path > -1 or currentPosition.getDistance(pathBetween[pathBetween.size()-1].get_x(), pathBetween[pathBetween.size()-1].get_y()) < 0.75){
 					status = true;
 					break;
 				}

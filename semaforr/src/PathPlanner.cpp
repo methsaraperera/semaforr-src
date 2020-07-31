@@ -126,10 +126,10 @@ int PathPlanner::calcPath(bool cautious){
             }
           }
           if(otherfound == false){
-            if(i == 0 and rs.getID() == Node::invalid_node_index and rt.getID() == Node::invalid_node_index){
+            if(i == 0){
               path.insert(path.begin(), otherIntersection[i].getID());
             }
-            else if(i == 1 and ts.getID() == Node::invalid_node_index and tt.getID() == Node::invalid_node_index){
+            else if(i == 1){
               path.push_back(otherIntersection[i].getID());
             }
           }

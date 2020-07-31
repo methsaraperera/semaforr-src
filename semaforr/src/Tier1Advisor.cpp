@@ -757,7 +757,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         intersectionID = i;
         vector< vector<int> > passagePoints = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[intersectionID].getPassagePoints();
         for(int j = 0; j < passagePoints.size(); j++){
-          if(beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 5)){
+          if(beliefs->getAgentState()->canSeePoint(CartesianPoint(passagePoints[j][0], passagePoints[j][1]), 20)){
             intersectionInSight = true;
             break;
           }
@@ -882,7 +882,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         passageID = i;
         vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[passageID].getPath();
         for(int j = 0; j < pathBetween.size(); j++){
-          if(beliefs->getAgentState()->canSeePoint(pathBetween[j], 5)){
+          if(beliefs->getAgentState()->canSeePoint(pathBetween[j], 20)){
             passageInSight = true;
             break;
           }
@@ -892,7 +892,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           CartesianPoint farthestVisible;
           int farthest = -1;
           for(int i = pathBetween.size()-1; i >= 0; i--){
-            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 5)){
+            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 20)){
               farthestVisible = pathBetween[i];
               // cout << "farthestVisible " << i << endl;
               farthest = i;
@@ -1372,143 +1372,143 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
       }
     }
   }
-  else if(beliefs->getAgentState()->getGetOutTriggered() == true){
-    CartesianPoint farthest_position = beliefs->getAgentState()->getFarthestPoint();
-    CartesianPoint intermediate_position = beliefs->getAgentState()->getIntermediatePoint();
-    vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
-    vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getCurrentTask()->getLaserHistory();
-    CartesianPoint current_position = CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY());
-    CartesianPoint last_position = CartesianPoint(positionHis->at(positionHis->size()-2).getX(), positionHis->at(positionHis->size()-2).getY());
-    vector <CartesianPoint> current_laser = laserHis->at(laserHis->size()-1);
-    double distance_from_last = current_position.get_distance(last_position);
-    double distance_from_farthest = current_position.get_distance(farthest_position);
-    double distance_from_intermediate = current_position.get_distance(intermediate_position);
-    // cout << "farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << " intermediate_position " << intermediate_position.get_x() << " " << intermediate_position.get_y() << endl;
-    // cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << " last_position " << last_position.get_x() << " " << last_position.get_y() << endl;
-    // cout << "distance_from_last " << distance_from_last << " distance_from_intermediate " << distance_from_intermediate << " distance_from_farthest " << distance_from_farthest << endl;
-    FORRAction forward = beliefs->getAgentState()->maxForwardAction();
-    if(distance_from_farthest <= 0.1){
-      beliefs->getAgentState()->setGetOutTriggered(false);
-    }
-    else if(beliefs->getAgentState()->canSeePoint(farthest_position, 25)){
-      // cout << "farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
-      (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
-      ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
-      decisionMade = true;
-    }
-    else if(distance_from_intermediate > 0.1 and beliefs->getAgentState()->canSeePoint(intermediate_position, 25)){
-      // cout << "intermediate_position " << intermediate_position.get_x() << " " << intermediate_position.get_y() << endl;
-      (*decision) = beliefs->getAgentState()->moveTowards(intermediate_position);
-      ROS_DEBUG("intermediate_position in sight and no obstacles, get out advisor to take decision");
-      decisionMade = true;
-    }
-    else{
-      CartesianPoint shifted_point1 = CartesianPoint(current_position.get_x()+0.5, current_position.get_y());
-      CartesianPoint shifted_point2 = CartesianPoint(current_position.get_x()-0.5, current_position.get_y());
-      CartesianPoint shifted_point3 = CartesianPoint(current_position.get_x(), current_position.get_y()+0.5);
-      CartesianPoint shifted_point4 = CartesianPoint(current_position.get_x(), current_position.get_y()-0.5);
-      CartesianPoint shifted_point5 = CartesianPoint(current_position.get_x()+0.5, current_position.get_y()+0.5);
-      CartesianPoint shifted_point6 = CartesianPoint(current_position.get_x()-0.5, current_position.get_y()-0.5);
-      CartesianPoint shifted_point7 = CartesianPoint(current_position.get_x()-0.5, current_position.get_y()+0.5);
-      CartesianPoint shifted_point8 = CartesianPoint(current_position.get_x()+0.5, current_position.get_y()-0.5);
-      vector<CartesianPoint> shifted_points;
-      shifted_points.push_back(shifted_point1);
-      shifted_points.push_back(shifted_point2);
-      shifted_points.push_back(shifted_point3);
-      shifted_points.push_back(shifted_point4);
-      shifted_points.push_back(shifted_point5);
-      shifted_points.push_back(shifted_point6);
-      shifted_points.push_back(shifted_point7);
-      shifted_points.push_back(shifted_point8);
-      bool can_see_1 = beliefs->getAgentState()->canSeePoint(shifted_point1, 25);
-      bool can_see_2 = beliefs->getAgentState()->canSeePoint(shifted_point2, 25);
-      bool can_see_3 = beliefs->getAgentState()->canSeePoint(shifted_point3, 25);
-      bool can_see_4 = beliefs->getAgentState()->canSeePoint(shifted_point4, 25);
-      bool can_see_5 = beliefs->getAgentState()->canSeePoint(shifted_point5, 25);
-      bool can_see_6 = beliefs->getAgentState()->canSeePoint(shifted_point6, 25);
-      bool can_see_7 = beliefs->getAgentState()->canSeePoint(shifted_point7, 25);
-      bool can_see_8 = beliefs->getAgentState()->canSeePoint(shifted_point8, 25);
-      vector<bool> can_see_points;
-      can_see_points.push_back(can_see_1);
-      can_see_points.push_back(can_see_2);
-      can_see_points.push_back(can_see_3);
-      can_see_points.push_back(can_see_4);
-      can_see_points.push_back(can_see_5);
-      can_see_points.push_back(can_see_6);
-      can_see_points.push_back(can_see_7);
-      can_see_points.push_back(can_see_8);
-      // cout << "shifted_point1 " << shifted_point1.get_x() << " " << shifted_point1.get_y() << " can_see_1 " << can_see_1 << endl;
-      // cout << "shifted_point2 " << shifted_point2.get_x() << " " << shifted_point2.get_y() << " can_see_2 " << can_see_2 << endl;
-      // cout << "shifted_point3 " << shifted_point3.get_x() << " " << shifted_point3.get_y() << " can_see_3 " << can_see_3 << endl;
-      // cout << "shifted_point4 " << shifted_point4.get_x() << " " << shifted_point4.get_y() << " can_see_4 " << can_see_4 << endl;
-      // cout << "shifted_point5 " << shifted_point5.get_x() << " " << shifted_point5.get_y() << " can_see_5 " << can_see_5 << endl;
-      // cout << "shifted_point6 " << shifted_point6.get_x() << " " << shifted_point6.get_y() << " can_see_6 " << can_see_6 << endl;
-      // cout << "shifted_point7 " << shifted_point7.get_x() << " " << shifted_point7.get_y() << " can_see_7 " << can_see_7 << endl;
-      // cout << "shifted_point8 " << shifted_point8.get_x() << " " << shifted_point8.get_y() << " can_see_8 " << can_see_8 << endl;
-      vector< pair <double,int> > distance_to_farthest;
-      distance_to_farthest.push_back(make_pair(shifted_point1.get_distance(farthest_position),0));
-      distance_to_farthest.push_back(make_pair(shifted_point2.get_distance(farthest_position),1));
-      distance_to_farthest.push_back(make_pair(shifted_point3.get_distance(farthest_position),2));
-      distance_to_farthest.push_back(make_pair(shifted_point4.get_distance(farthest_position),3));
-      distance_to_farthest.push_back(make_pair(shifted_point5.get_distance(farthest_position),4));
-      distance_to_farthest.push_back(make_pair(shifted_point6.get_distance(farthest_position),5));
-      distance_to_farthest.push_back(make_pair(shifted_point7.get_distance(farthest_position),6));
-      distance_to_farthest.push_back(make_pair(shifted_point8.get_distance(farthest_position),7));
-      sort(distance_to_farthest.begin(), distance_to_farthest.end());
-      if(can_see_points[distance_to_farthest[0].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[0].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[0].second]);
-        cout << "shifted_point" << distance_to_farthest[0].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[1].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[1].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[1].second]);
-        cout << "shifted_point" << distance_to_farthest[1].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[2].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[2].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[2].second]);
-        cout << "shifted_point" << distance_to_farthest[2].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[3].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[3].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[3].second]);
-        cout << "shifted_point" << distance_to_farthest[3].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[4].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[4].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[4].second]);
-        cout << "shifted_point" << distance_to_farthest[4].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[5].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[5].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[5].second]);
-        cout << "shifted_point" << distance_to_farthest[5].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[6].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[6].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[6].second]);
-        cout << "shifted_point" << distance_to_farthest[6].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else if(can_see_points[distance_to_farthest[7].second]){
-        // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[7].second]);
-        (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[7].second]);
-        cout << "shifted_point" << distance_to_farthest[7].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
-        decisionMade = true;
-      }
-      else{
-        (*decision) = FORRAction(LEFT_TURN, rotation_set->size()/2);
-        decisionMade = true;
-      }
-    }
-  }
+  // else if(beliefs->getAgentState()->getGetOutTriggered() == true){
+  //   CartesianPoint farthest_position = beliefs->getAgentState()->getFarthestPoint();
+  //   CartesianPoint intermediate_position = beliefs->getAgentState()->getIntermediatePoint();
+  //   vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+  //   vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getCurrentTask()->getLaserHistory();
+  //   CartesianPoint current_position = CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY());
+  //   CartesianPoint last_position = CartesianPoint(positionHis->at(positionHis->size()-2).getX(), positionHis->at(positionHis->size()-2).getY());
+  //   vector <CartesianPoint> current_laser = laserHis->at(laserHis->size()-1);
+  //   double distance_from_last = current_position.get_distance(last_position);
+  //   double distance_from_farthest = current_position.get_distance(farthest_position);
+  //   double distance_from_intermediate = current_position.get_distance(intermediate_position);
+  //   // cout << "farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << " intermediate_position " << intermediate_position.get_x() << " " << intermediate_position.get_y() << endl;
+  //   // cout << "current_position " << current_position.get_x() << " " << current_position.get_y() << " last_position " << last_position.get_x() << " " << last_position.get_y() << endl;
+  //   // cout << "distance_from_last " << distance_from_last << " distance_from_intermediate " << distance_from_intermediate << " distance_from_farthest " << distance_from_farthest << endl;
+  //   FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+  //   if(distance_from_farthest <= 0.1){
+  //     beliefs->getAgentState()->setGetOutTriggered(false);
+  //   }
+  //   else if(beliefs->getAgentState()->canSeePoint(farthest_position, 25)){
+  //     // cout << "farthest_position " << farthest_position.get_x() << " " << farthest_position.get_y() << endl;
+  //     (*decision) = beliefs->getAgentState()->moveTowards(farthest_position);
+  //     ROS_DEBUG("farthest_position in sight and no obstacles, get out advisor to take decision");
+  //     decisionMade = true;
+  //   }
+  //   else if(distance_from_intermediate > 0.1 and beliefs->getAgentState()->canSeePoint(intermediate_position, 25)){
+  //     // cout << "intermediate_position " << intermediate_position.get_x() << " " << intermediate_position.get_y() << endl;
+  //     (*decision) = beliefs->getAgentState()->moveTowards(intermediate_position);
+  //     ROS_DEBUG("intermediate_position in sight and no obstacles, get out advisor to take decision");
+  //     decisionMade = true;
+  //   }
+    // else{
+    //   CartesianPoint shifted_point1 = CartesianPoint(current_position.get_x()+0.5, current_position.get_y());
+    //   CartesianPoint shifted_point2 = CartesianPoint(current_position.get_x()-0.5, current_position.get_y());
+    //   CartesianPoint shifted_point3 = CartesianPoint(current_position.get_x(), current_position.get_y()+0.5);
+    //   CartesianPoint shifted_point4 = CartesianPoint(current_position.get_x(), current_position.get_y()-0.5);
+    //   CartesianPoint shifted_point5 = CartesianPoint(current_position.get_x()+0.5, current_position.get_y()+0.5);
+    //   CartesianPoint shifted_point6 = CartesianPoint(current_position.get_x()-0.5, current_position.get_y()-0.5);
+    //   CartesianPoint shifted_point7 = CartesianPoint(current_position.get_x()-0.5, current_position.get_y()+0.5);
+    //   CartesianPoint shifted_point8 = CartesianPoint(current_position.get_x()+0.5, current_position.get_y()-0.5);
+    //   vector<CartesianPoint> shifted_points;
+    //   shifted_points.push_back(shifted_point1);
+    //   shifted_points.push_back(shifted_point2);
+    //   shifted_points.push_back(shifted_point3);
+    //   shifted_points.push_back(shifted_point4);
+    //   shifted_points.push_back(shifted_point5);
+    //   shifted_points.push_back(shifted_point6);
+    //   shifted_points.push_back(shifted_point7);
+    //   shifted_points.push_back(shifted_point8);
+    //   bool can_see_1 = beliefs->getAgentState()->canSeePoint(shifted_point1, 25);
+    //   bool can_see_2 = beliefs->getAgentState()->canSeePoint(shifted_point2, 25);
+    //   bool can_see_3 = beliefs->getAgentState()->canSeePoint(shifted_point3, 25);
+    //   bool can_see_4 = beliefs->getAgentState()->canSeePoint(shifted_point4, 25);
+    //   bool can_see_5 = beliefs->getAgentState()->canSeePoint(shifted_point5, 25);
+    //   bool can_see_6 = beliefs->getAgentState()->canSeePoint(shifted_point6, 25);
+    //   bool can_see_7 = beliefs->getAgentState()->canSeePoint(shifted_point7, 25);
+    //   bool can_see_8 = beliefs->getAgentState()->canSeePoint(shifted_point8, 25);
+    //   vector<bool> can_see_points;
+    //   can_see_points.push_back(can_see_1);
+    //   can_see_points.push_back(can_see_2);
+    //   can_see_points.push_back(can_see_3);
+    //   can_see_points.push_back(can_see_4);
+    //   can_see_points.push_back(can_see_5);
+    //   can_see_points.push_back(can_see_6);
+    //   can_see_points.push_back(can_see_7);
+    //   can_see_points.push_back(can_see_8);
+    //   // cout << "shifted_point1 " << shifted_point1.get_x() << " " << shifted_point1.get_y() << " can_see_1 " << can_see_1 << endl;
+    //   // cout << "shifted_point2 " << shifted_point2.get_x() << " " << shifted_point2.get_y() << " can_see_2 " << can_see_2 << endl;
+    //   // cout << "shifted_point3 " << shifted_point3.get_x() << " " << shifted_point3.get_y() << " can_see_3 " << can_see_3 << endl;
+    //   // cout << "shifted_point4 " << shifted_point4.get_x() << " " << shifted_point4.get_y() << " can_see_4 " << can_see_4 << endl;
+    //   // cout << "shifted_point5 " << shifted_point5.get_x() << " " << shifted_point5.get_y() << " can_see_5 " << can_see_5 << endl;
+    //   // cout << "shifted_point6 " << shifted_point6.get_x() << " " << shifted_point6.get_y() << " can_see_6 " << can_see_6 << endl;
+    //   // cout << "shifted_point7 " << shifted_point7.get_x() << " " << shifted_point7.get_y() << " can_see_7 " << can_see_7 << endl;
+    //   // cout << "shifted_point8 " << shifted_point8.get_x() << " " << shifted_point8.get_y() << " can_see_8 " << can_see_8 << endl;
+    //   vector< pair <double,int> > distance_to_farthest;
+    //   distance_to_farthest.push_back(make_pair(shifted_point1.get_distance(farthest_position),0));
+    //   distance_to_farthest.push_back(make_pair(shifted_point2.get_distance(farthest_position),1));
+    //   distance_to_farthest.push_back(make_pair(shifted_point3.get_distance(farthest_position),2));
+    //   distance_to_farthest.push_back(make_pair(shifted_point4.get_distance(farthest_position),3));
+    //   distance_to_farthest.push_back(make_pair(shifted_point5.get_distance(farthest_position),4));
+    //   distance_to_farthest.push_back(make_pair(shifted_point6.get_distance(farthest_position),5));
+    //   distance_to_farthest.push_back(make_pair(shifted_point7.get_distance(farthest_position),6));
+    //   distance_to_farthest.push_back(make_pair(shifted_point8.get_distance(farthest_position),7));
+    //   sort(distance_to_farthest.begin(), distance_to_farthest.end());
+    //   if(can_see_points[distance_to_farthest[0].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[0].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[0].second]);
+    //     cout << "shifted_point" << distance_to_farthest[0].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[1].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[1].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[1].second]);
+    //     cout << "shifted_point" << distance_to_farthest[1].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[2].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[2].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[2].second]);
+    //     cout << "shifted_point" << distance_to_farthest[2].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[3].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[3].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[3].second]);
+    //     cout << "shifted_point" << distance_to_farthest[3].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[4].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[4].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[4].second]);
+    //     cout << "shifted_point" << distance_to_farthest[4].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[5].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[5].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[5].second]);
+    //     cout << "shifted_point" << distance_to_farthest[5].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[6].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[6].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[6].second]);
+    //     cout << "shifted_point" << distance_to_farthest[6].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else if(can_see_points[distance_to_farthest[7].second]){
+    //     // beliefs->getAgentState()->setIntermediatePoint(shifted_points[distance_to_farthest[7].second]);
+    //     (*decision) = beliefs->getAgentState()->moveTowards(shifted_points[distance_to_farthest[7].second]);
+    //     cout << "shifted_point" << distance_to_farthest[7].second+1 << " in sight and no obstacles, get out advisor to take decision" << endl;
+    //     decisionMade = true;
+    //   }
+    //   else{
+    //     (*decision) = FORRAction(LEFT_TURN, rotation_set->size()/2);
+    //     decisionMade = true;
+    //   }
+    // }
+  // }
   // cout << "decisionMade " << decisionMade << endl;
   return decisionMade;
 }

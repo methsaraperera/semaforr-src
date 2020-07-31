@@ -20,6 +20,7 @@
 #include "PathPlanner.h"
 #include "HighwayExplore.h"
 #include "Circumnavigate.h"
+#include "FORRPassages.h"
 
 #include <fstream>
 #include <ros/ros.h>

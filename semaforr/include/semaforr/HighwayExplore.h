@@ -32,10 +32,11 @@ struct DecisionPoint{
 	sensor_msgs::LaserScan laser;
 	vector<CartesianPoint> laserEndpoints;
 	double farthest_view_left, farthest_view_middle, farthest_view_right;
-	double farthest_angle_left, farthest_angle_middle, farthest_angle_right;
+	// double farthest_angle_left, farthest_angle_middle, farthest_angle_right;
 	double farthest_distance_left, farthest_distance_middle, farthest_distance_right;
 	double middle_distance, middle_distance_min, left_distance, right_distance, overall_avg_distance, overall_max_distance, overall_min_distance, overall_median_distance, overall_stdev_distance;
-	double left_width, right_width, left_width_max, right_width_max;
+	double left_width, right_width;
+	// double left_width_max, right_width_max;
 	bool direction;
 	Position middle_point;
 	Position left_point;
@@ -83,7 +84,7 @@ struct DecisionPoint{
 		vector<double> sorted_ranges;
 		double left_x = 0, left_y = 0, right_x = 0, right_y = 0, middle_x = 0, middle_y = 0;
 		double min_left_left_x = 0, min_left_right_x = 0, min_right_left_x = 0, min_right_right_x = 0, min_left_left_y = 0, min_left_right_y = 0, min_right_left_y = 0, min_right_right_y = 0;
-		double max_left_left_x = 0, max_left_right_x = 0, max_right_left_x = 0, max_right_right_x = 0, max_left_left_y = 0, max_left_right_y = 0, max_right_left_y = 0, max_right_right_y = 0;
+		// double max_left_left_x = 0, max_left_right_x = 0, max_right_left_x = 0, max_right_right_x = 0, max_left_left_y = 0, max_left_right_y = 0, max_right_left_y = 0, max_right_right_y = 0;
 		for(int i = 0; i < ls.ranges.size(); i++){
 			sorted_ranges.push_back(ls.ranges[i]);
 			double angle = start_angle + r_ang;
@@ -92,7 +93,7 @@ struct DecisionPoint{
 				if(ls.ranges[i] > max_value_left){
 					// farthest_distance_left = ls.ranges[i];
 					farthest_view_left = i;
-					farthest_angle_left = angle;
+					// farthest_angle_left = angle;
 					max_value_left = ls.ranges[i];
 					// left_point = Position(r_x + ls.ranges[i]*cos(angle), r_y + ls.ranges[i]*sin(angle), 0);
 				}
@@ -104,7 +105,7 @@ struct DecisionPoint{
 				if(ls.ranges[i] > max_value_right){
 					// farthest_distance_right = ls.ranges[i];
 					farthest_view_right = i;
-					farthest_angle_right = angle;
+					// farthest_angle_right = angle;
 					max_value_right = ls.ranges[i];
 					// right_point = Position(r_x + ls.ranges[i]*cos(angle), r_y + ls.ranges[i]*sin(angle), 0);
 				}
@@ -116,7 +117,7 @@ struct DecisionPoint{
 				if(ls.ranges[i] > max_value_middle){
 					// farthest_distance_middle = ls.ranges[i];
 					farthest_view_middle = i;
-					farthest_angle_middle = angle;
+					// farthest_angle_middle = angle;
 					max_value_middle = ls.ranges[i];
 					// middle_point = Position(r_x + ls.ranges[i]*cos(angle), r_y + ls.ranges[i]*sin(angle), 0);
 				}
@@ -344,7 +345,7 @@ public:
 		start_point = point;
 		avg_theta = point.point.getTheta();
 	}
-	vector<DecisionPoint> getHighwayPoints(){return highway_points;}
+	// vector<DecisionPoint> getHighwayPoints(){return highway_points;}
 	int getSizeHighway(){return highway_points.size();}
 	double getAvgTheta(){return avg_theta;}
 	DecisionPoint getStartPoint(){return start_point;}
@@ -371,18 +372,18 @@ public:
 		}
 	}
 
-	DecisionPoint getClosestPointOnHighway(Position point){
-		DecisionPoint closest;
-		double min_distance = 10000000;
-		for(int i = 0; i < highway_points.size(); i++){
-			double distance = highway_points[i].point.getDistance(point);
-			if(distance < min_distance){
-				min_distance = distance;
-				closest = highway_points[i];
-			}
-		}
-		return closest;
-	}
+	// DecisionPoint getClosestPointOnHighway(Position point){
+	// 	DecisionPoint closest;
+	// 	double min_distance = 10000000;
+	// 	for(int i = 0; i < highway_points.size(); i++){
+	// 		double distance = highway_points[i].point.getDistance(point);
+	// 		if(distance < min_distance){
+	// 			min_distance = distance;
+	// 			closest = highway_points[i];
+	// 		}
+	// 	}
+	// 	return closest;
+	// }
 
 private:
 	vector<DecisionPoint> highway_points;
@@ -429,7 +430,7 @@ public:
 		go_to_top_point = false;
 		go_to_farthest_on_grid = false;
 		too_close = false;
-		too_close_front = false;
+		// too_close_front = false;
 		top_point_decisions = 0;
 		decision_limit = decthreshold;
 		start_rotations = 0;
@@ -453,7 +454,7 @@ public:
 
 	vector< vector<int> > getHighwayGrid(){return highway_grid;}
 
-	vector< vector< vector< pair<int, int> > > > getHighwayGridConnections(){return highway_grid_connections;}
+	// vector< vector< vector< pair<int, int> > > > getHighwayGridConnections(){return highway_grid_connections;}
 
 	vector< vector<double> > getHighwayPath(){return path_to_top_point;}
 
@@ -1686,7 +1687,7 @@ private:
 	bool go_to_top_point;
 	bool go_to_farthest_on_grid;
 	bool too_close;
-	bool too_close_front;
+	// bool too_close_front;
 	double dist_travelled_so_far;
 	double avg_left;
 	double avg_right;
