@@ -1361,6 +1361,10 @@ bool Controller::tierOneDecision(FORRAction *decision){
       decisionStats->decisionTier = 1;
       decisionMade = true;
     }
+    if(decisionMade == false){
+      ROS_INFO("Advisor Doorway will generate waypoints if necessary");
+      tier1->advisorDoorway();
+    }
     // if(circumnavigator->advisorCircumnavigate(decision)){
     //   ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
     //   decisionStats->decisionTier = 2.5;

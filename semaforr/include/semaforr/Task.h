@@ -39,6 +39,7 @@ struct sk_waypoint {
     FORRRegion getRegion() { return region; }
     vector<CartesianPoint> getPath() { return path; }
     CartesianPoint getPathEnd() { return path[path.size()-1]; }
+    CartesianPoint getPathBegin() { return path[0]; }
     void setPath(vector<CartesianPoint> np) { path = np; }
     vector< vector<int> > getPassagePoints() { return passage_points; }
     void setPassageLabel(int lab) { passage_label = lab; }
@@ -94,7 +95,7 @@ class Task {
 				return wr.getRegion().getCenter().get_x();
 			}
 			else{
-				return wr.getPathEnd().get_x();
+				return wr.getPathBegin().get_x();
 			}
 		}
 		else if(plannerName == "hallwayskel"){
@@ -102,14 +103,14 @@ class Task {
 				return wr.getRegion().getCenter().get_x();
 			}
 			else if(wr.getType() == 1){
-				return wr.getPathEnd().get_x();
+				return wr.getPathBegin().get_x();
 			}
 			else if(wr.getType() == 2){
 				return wr.getPassageCentroid().get_x();
 			}
 			else if(wr.getType() == 3){
 				// return wr.getPassageCentroid().get_x();
-				return wr.getPathEnd().get_x();
+				return wr.getPathBegin().get_x();
 			}
 		}
 	}
@@ -128,7 +129,7 @@ class Task {
 				return wr.getRegion().getCenter().get_y();
 			}
 			else{
-				return wr.getPathEnd().get_y();
+				return wr.getPathBegin().get_y();
 			}
 		}
 		else if(plannerName == "hallwayskel"){
@@ -136,14 +137,14 @@ class Task {
 				return wr.getRegion().getCenter().get_y();
 			}
 			else if(wr.getType() == 1){
-				return wr.getPathEnd().get_y();
+				return wr.getPathBegin().get_y();
 			}
 			else if(wr.getType() == 2){
 				return wr.getPassageCentroid().get_y();
 			}
 			else if(wr.getType() == 3){
 				// return wr.getPassageCentroid().get_y();
-				return wr.getPathEnd().get_y();
+				return wr.getPathBegin().get_y();
 			}
 		}
 	}
@@ -653,7 +654,10 @@ class Task {
 				// cout << wx << " " << wy << endl;
 			}
 			else{
-				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(0, FORRRegion(new_point, 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+				vector<CartesianPoint> addPoint;
+				addPoint.push_back(new_point);
+				// skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(0, FORRRegion(new_point, 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(1, FORRRegion(), addPoint, vector< vector<int> >()));
 				isPlanActive = true;
 				wr = skeleton_waypoints[0];
 				// cout << wr.getRegion().getCenter().get_x() << " " << wr.getRegion().getCenter().get_y() << endl;

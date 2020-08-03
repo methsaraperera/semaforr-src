@@ -166,7 +166,7 @@ struct DecisionPoint{
 		farthest_distance_middle = farthest_distance_middle / 7.0;
 		if(max_right_ind == 0)
 			max_right_ind = 1;
-		if(max_right_ind = 135)
+		if(max_right_ind == 135)
 			max_right_ind = 134;
 		if(max_left_ind == 524)
 			max_left_ind = 525;

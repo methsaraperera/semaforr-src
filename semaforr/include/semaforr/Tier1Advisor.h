@@ -18,8 +18,9 @@ public:
         Tier1Advisor(Beliefs *b){
 		beliefs = b;
 	}
-        void advisorNotOpposite();
-	//void advisorCircle(Beliefs *beliefs);
+
+	void advisorNotOpposite();
+
 	bool advisorAvoidObstacles();
 
 	bool advisorDontGoBack();
@@ -32,7 +33,7 @@ public:
 
 	bool advisorEnforcer(FORRAction *decision);
 
-	// bool advisorCircumnavigate(FORRAction *decision);
+	bool advisorDoorway();
 	
 private:
 	Beliefs *beliefs;

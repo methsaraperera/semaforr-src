@@ -346,6 +346,8 @@ public:
 
   bool getRotateMode(){return rotateMode;}
   void setRotateMode(bool mode){rotateMode = mode;}
+
+  double getRobotFootPrint(){return robotFootPrint;}
  
   void setAgentStateParameters(double val1, double val2, double val3, double val4, double val5, double val6, double val7);
   
