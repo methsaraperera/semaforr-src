@@ -1117,7 +1117,56 @@ bool Tier1Advisor::advisorDoorway(){
       }
     }
     target_width = sqrt((min_right_x - min_left_x) * (min_right_x - min_left_x) + (min_right_y - min_left_y) * (min_right_y - min_left_y));
-    // find perpendicular bisector
+    double mid_x = (min_right_x + min_left_x) / 2;
+    double mid_y = (min_right_y + min_left_y) / 2;
+    double travel_x, travel_y;
+    if(min_right_x == min_left_x){
+      // BC vertical
+      travel_x = laserPos.get_x();
+      travel_y = mid_y;
+    }
+    else if(min_right_y == min_left_y){
+      // BC horizontal
+      travel_x = mid_x;
+      travel_y = laserPos.get_y();
+    }
+    else{
+      double width_slope = ((min_right_y - min_left_y) / (min_right_x - min_left_x));
+      travel_x = (width_slope * (mid_y + laserPos.get_y() - width_slope * laserPos.get_x()) - mid_x) / (-1 - (width_slope * width_slope));
+      travel_y = laserPos.get_y() + width_slope * (travel_x - laserPos.get_x());
+    }
+    double step_length = 0.1;
+    double length = sqrt((laserPos.get_x() - travel_x) * (laserPos.get_x() - travel_x) + (laserPos.get_y() - travel_y) * (laserPos.get_y() - travel_y));
+    // cout << i << " " << laserPos.get_x() << " " << laserPos.get_y() << " " << travel_x << " " << travel_y << " length " << length << endl;
+    if(length >= step_length){
+      double step_size = step_length / length;
+      double tx, ty;
+      // cout << "step_size " << step_size << endl;
+      for(double j = 0; j <= 1; j += step_size){
+        tx = (laserPos.get_x() * j) + (travel_x * (1 - j));
+        ty = (laserPos.get_y() * j) + (travel_y * (1 - j));
+        beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
+      }
+    }
+    else{
+      beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(travel_x, travel_y), true);
+    }
+    length = sqrt((mid_x - travel_x) * (mid_x - travel_x) + (mid_y - travel_y) * (mid_y - travel_y));
+    // cout << i << " " << laserPos.get_x() << " " << laserPos.get_y() << " " << travel_x << " " << travel_y << " length " << length << endl;
+    if(length >= step_length){
+      double step_size = step_length / length;
+      double tx, ty;
+      // cout << "step_size " << step_size << endl;
+      for(double j = 0; j <= 1; j += step_size){
+        tx = (travel_x * j) + (mid_x * (1 - j));
+        ty = (travel_y * j) + (mid_y * (1 - j));
+        beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
+      }
+    }
+    else{
+      beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(mid_x, mid_y), true);
+    }
+
   }
   else if(waypointInSight){
     cout << "waypointInSight " << waypointInSight << endl;

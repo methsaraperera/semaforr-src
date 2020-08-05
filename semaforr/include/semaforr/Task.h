@@ -654,10 +654,10 @@ class Task {
 				// cout << wx << " " << wy << endl;
 			}
 			else{
-				vector<CartesianPoint> addPoint;
-				addPoint.push_back(new_point);
-				// skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(0, FORRRegion(new_point, 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
-				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(1, FORRRegion(), addPoint, vector< vector<int> >()));
+				// vector<CartesianPoint> addPoint;
+				// addPoint.push_back(new_point);
+				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(0, FORRRegion(new_point, 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+				// skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(1, FORRRegion(), addPoint, vector< vector<int> >()));
 				isPlanActive = true;
 				wr = skeleton_waypoints[0];
 				// cout << wr.getRegion().getCenter().get_x() << " " << wr.getRegion().getCenter().get_y() << endl;

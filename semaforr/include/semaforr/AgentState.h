@@ -395,6 +395,10 @@ public:
     return passage_grid;
   }
 
+  void setPassageGrid(vector< vector<int> > pg){
+    passage_grid = pg;
+  }
+
   map<int, vector< vector<int> > > getPassageGraphNodes(){
     return passage_graph_nodes;
   }

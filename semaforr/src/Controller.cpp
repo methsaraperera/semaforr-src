@@ -259,6 +259,14 @@ void Controller::initialize_params(string filename){
       outofhereOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("outofhereOn " << outofhereOn);
     }
+    else if (fileLine.find("doorwayOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      doorwayOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("doorwayOn " << doorwayOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -910,6 +918,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
+        beliefs->getAgentState()->setPassageGrid(highwayExploration->getHighwayGrid());
       }
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -1361,7 +1370,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
       decisionStats->decisionTier = 1;
       decisionMade = true;
     }
-    if(decisionMade == false){
+    if(doorwayOn and decisionMade == false){
       ROS_INFO("Advisor Doorway will generate waypoints if necessary");
       tier1->advisorDoorway();
     }
