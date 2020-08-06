@@ -33,7 +33,7 @@ public:
 
 	bool advisorEnforcer(FORRAction *decision);
 
-	bool advisorDoorway();
+	bool advisorDoorway(FORRAction *decision);
 	
 private:
 	Beliefs *beliefs;

@@ -128,6 +128,9 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       }
     }
   }
+  if(decisionMade == true){
+    beliefs->getAgentState()->setRepositionTriggered(false);
+  }
   return decisionMade;
 }
 
@@ -179,30 +182,31 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     int nextRegionID = -1;
     bool waypointPathInSight = false;
     int pathID = -1;
+    double waypointDistThreshold = 20;
     if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0){
-      waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius(), 20);
+      waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius(), waypointDistThreshold);
       regionID = 0;
     }
     else{
       if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 1){
         if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getType() == 0){
-          waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius(), 20);
+          waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius(), waypointDistThreshold);
           regionID = 1;
         }
       }
     }
     if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
-      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius(), 20);
+      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius(), waypointDistThreshold);
       nextRegionID = 2;
     }
     else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4 and !(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0)){
-      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius(), 20);
+      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius(), waypointDistThreshold);
       nextRegionID = 3;
     }
     if(!(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0)){
       vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getPath();
       for(int i = 0; i < pathBetween.size(); i++){
-        if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 20)){
+        if(beliefs->getAgentState()->canSeePoint(pathBetween[i], waypointDistThreshold)){
           waypointPathInSight = true;
           pathID = 0;
           break;
@@ -214,7 +218,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         if(!(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getType() == 0)){
           vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getPath();
           for(int i = 0; i < pathBetween.size(); i++){
-            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], 20)){
+            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], waypointDistThreshold)){
               waypointPathInSight = true;
               pathID = 1;
               break;
@@ -777,6 +781,9 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     }
 
   }
+  if(decisionMade == true){
+    beliefs->getAgentState()->setRepositionTriggered(false);
+  }
   return decisionMade;
 }
 
@@ -975,201 +982,496 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
   return decisionMade;
 }
 
-bool Tier1Advisor::advisorDoorway(){
+bool Tier1Advisor::advisorDoorway(FORRAction *decision){
   ROS_DEBUG("In advisor doorway");
-  CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
-  ROS_DEBUG("Check if target or waypoint can be spotted using laser scan");
-  cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
-  bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 20);
-  CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
-  cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
-  bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
-  cout << "targetInSight " << targetInSight << " waypointInSight " << waypointInSight << endl;
-  if(targetInSight){
-    std::vector<CartesianPoint> givenLaserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
-    CartesianPoint laserPos = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
-    double point_direction = atan2((task.get_y() - laserPos.get_y()), (task.get_x() - laserPos.get_x()));
-    int index = 0;
-    double min_angle = 100000;
-    // double multiplier = 10;
-    // vector< vector<int> > laserGrid;
-    // for(int i = 0; i < (50*multiplier)+1; i++){
-    //   vector<int> col;
-    //   for(int j = 0; j < (50*multiplier)+1; j++){
-    //     col.push_back(0);
-    //   }
-    //   laserGrid.push_back(col);
-    // }
-    // double step_length = 1;
-    // double start_x = 25*multiplier;
-    // double start_y = 25*multiplier;
-    // double x_diff = start_x - (laserPos.get_x() * multiplier);
-    // double y_diff = start_y - (laserPos.get_y() * multiplier);
-    for(int i = 0; i < givenLaserEndpoints.size(); i++){
-      // double end_x = (givenLaserEndpoints[i].get_x() * multiplier) + x_diff;
-      // if(int(end_x) < 0)
-      //   end_x = 0;
-      // if(int(end_x) >= laserGrid.size())
-      //   end_x = laserGrid.size()-1;
-      // double end_y = (givenLaserEndpoints[i].get_y() * multiplier) + y_diff;
-      // if(int(end_y) < 0)
-      //   end_y = 0;
-      // if(int(end_y) >= laserGrid[0].size())
-      //   end_y = laserGrid[0].size()-1;
-      // double length = sqrt((start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y));
-      // // cout << i << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
-      // if(length >= step_length){
-      //   double step_size = step_length / length;
-      //   double tx, ty;
-      //   // cout << "step_size " << step_size << endl;
-      //   for(double j = 0; j <= 1; j += step_size){
-      //     tx = (end_x * j) + (start_x * (1 - j));
-      //     ty = (end_y * j) + (start_y * (1 - j));
-      //     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < laserGrid.size() and int(ty) < laserGrid[0].size()){
-      //       // cout << tx << " " << ty << endl;
-      //       laserGrid[int(tx)][int(ty)] = 1;
-      //     }
-      //   }
-      // }
-      double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
-      double angle_diff = laser_direction - point_direction;
-      if(angle_diff > M_PI)
-        angle_diff = angle_diff - 2*M_PI;
-      if(angle_diff < -M_PI)
-        angle_diff = angle_diff + 2*M_PI;
-      angle_diff = fabs(angle_diff);
-      // cout << "point_direction " << point_direction << " laser_direction " << laser_direction << " angle_diff " << angle_diff << endl;
-      if(angle_diff < min_angle){
-        // cout << "Laser Direction : " << laser_direction << ", Point Direction : " << point_direction << endl;
-        min_angle = angle_diff;
-        index = i;
-      }
-    }
-    // double robotFootPrint = beliefs->getAgentState()->getRobotFootPrint();
-    if(index - 68 < 0){
-      index = 68;
-    }
-    if(index + 68 > givenLaserEndpoints.size()){
-      index = givenLaserEndpoints.size()-68;
-    }
-    double target_width;
-    int max_ind;
-    double max_target = 0;
-    vector<double> distsToEndpoints;
-    for(int i = 0; i < givenLaserEndpoints.size(); i++){
-      double dist_to_endpoint = givenLaserEndpoints[i].get_distance(laserPos);
-      distsToEndpoints.push_back(dist_to_endpoint);
-    }
-    for(int i = index - 68; i < index + 68; i++){
-      if(distsToEndpoints[i] > max_target){
-        max_target = distsToEndpoints[i];
-        max_ind = i;
-      }
-    }
-    if(max_ind == index - 68)
-      max_ind = index - 67;
-    if(max_ind == index + 67)
-      max_ind = index + 66;
-    double min_right = 50, min_left = 50;
-    double min_right_x = 0, min_right_y = 0, min_left_x = 0, min_left_y = 0;
-    double min_right_thr = 0, min_left_thr = 0;
-    int min_right_ind = 0, min_left_ind = 0;
-    for(int i = index - 68; i < index + 68; i++){
-      if(i < max_ind){
-        if(distsToEndpoints[i] < min_left){
-          min_left = distsToEndpoints[i];
-          min_left_x = givenLaserEndpoints[i].get_x();
-          min_left_y = givenLaserEndpoints[i].get_y();
-          min_left_ind = i;
-          min_left_thr = distsToEndpoints[i] * 0.1;
+  bool decisionMade = false;
+  if(beliefs->getAgentState()->getRepositionTriggered()){
+    cout << "Reposition already triggered, move towards point" << endl;
+    (*decision) = beliefs->getAgentState()->moveTowards(beliefs->getAgentState()->getRepositionPoint());
+    if(decision->parameter != 0){
+      Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+      if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+        if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+          ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
+          decisionMade = true;
         }
-      }
-      else if(i > max_ind){
-        if(distsToEndpoints[i] < min_right){
-          min_right = distsToEndpoints[i];
-          min_right_x = givenLaserEndpoints[i].get_x();
-          min_right_y = givenLaserEndpoints[i].get_y();
-          min_right_ind = i;
-          min_right_thr = distsToEndpoints[i] * 0.1;
+        else{
+          FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+          if(forward.parameter >= decision->parameter){
+            ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
+            decisionMade = true;
+          }
         }
       }
     }
-    for(int i = index - 68; i < index + 68; i++){
-      if(i > min_left_ind and i < max_ind){
-        if(abs(distsToEndpoints[min_left_ind] - distsToEndpoints[i]) <= min_left_thr or (abs(min_left_x - givenLaserEndpoints[i].get_x()) + abs(min_left_y - givenLaserEndpoints[i].get_y())) <= min_left_thr){
-          min_left = distsToEndpoints[i];
-          min_left_x = givenLaserEndpoints[i].get_x();
-          min_left_y = givenLaserEndpoints[i].get_y();
-          min_left_ind = i;
-          min_left_thr = distsToEndpoints[i] * 0.1;
-        }
-      }
-    }
-    for(int i = index + 68-1; i >= index - 68; i--){
-      if(i > max_ind and i < min_right_ind){
-        if(abs(distsToEndpoints[min_right_ind] - distsToEndpoints[i]) <= min_right_thr or (abs(min_right_x - givenLaserEndpoints[i].get_x()) + abs(min_right_y - givenLaserEndpoints[i].get_y())) <= min_right_thr){
-          min_right = distsToEndpoints[i];
-          min_right_x = givenLaserEndpoints[i].get_x();
-          min_right_y = givenLaserEndpoints[i].get_y();
-          min_right_ind = i;
-          min_right_thr = distsToEndpoints[i] * 0.1;
-        }
-      }
-    }
-    target_width = sqrt((min_right_x - min_left_x) * (min_right_x - min_left_x) + (min_right_y - min_left_y) * (min_right_y - min_left_y));
-    double mid_x = (min_right_x + min_left_x) / 2;
-    double mid_y = (min_right_y + min_left_y) / 2;
-    double travel_x, travel_y;
-    if(min_right_x == min_left_x){
-      // BC vertical
-      travel_x = laserPos.get_x();
-      travel_y = mid_y;
-    }
-    else if(min_right_y == min_left_y){
-      // BC horizontal
-      travel_x = mid_x;
-      travel_y = laserPos.get_y();
-    }
-    else{
-      double width_slope = ((min_right_y - min_left_y) / (min_right_x - min_left_x));
-      travel_x = (width_slope * (mid_y + laserPos.get_y() - width_slope * laserPos.get_x()) - mid_x) / (-1 - (width_slope * width_slope));
-      travel_y = laserPos.get_y() + width_slope * (travel_x - laserPos.get_x());
-    }
-    double step_length = 0.1;
-    double length = sqrt((laserPos.get_x() - travel_x) * (laserPos.get_x() - travel_x) + (laserPos.get_y() - travel_y) * (laserPos.get_y() - travel_y));
-    // cout << i << " " << laserPos.get_x() << " " << laserPos.get_y() << " " << travel_x << " " << travel_y << " length " << length << endl;
-    if(length >= step_length){
-      double step_size = step_length / length;
-      double tx, ty;
-      // cout << "step_size " << step_size << endl;
-      for(double j = 0; j <= 1; j += step_size){
-        tx = (laserPos.get_x() * j) + (travel_x * (1 - j));
-        ty = (laserPos.get_y() * j) + (travel_y * (1 - j));
-        beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
-      }
-    }
-    else{
-      beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(travel_x, travel_y), true);
-    }
-    length = sqrt((mid_x - travel_x) * (mid_x - travel_x) + (mid_y - travel_y) * (mid_y - travel_y));
-    // cout << i << " " << laserPos.get_x() << " " << laserPos.get_y() << " " << travel_x << " " << travel_y << " length " << length << endl;
-    if(length >= step_length){
-      double step_size = step_length / length;
-      double tx, ty;
-      // cout << "step_size " << step_size << endl;
-      for(double j = 0; j <= 1; j += step_size){
-        tx = (travel_x * j) + (mid_x * (1 - j));
-        ty = (travel_y * j) + (mid_y * (1 - j));
-        beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
-      }
-    }
-    else{
-      beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(mid_x, mid_y), true);
-    }
-
   }
-  else if(waypointInSight){
-    cout << "waypointInSight " << waypointInSight << endl;
+  else{
+    CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
+    ROS_DEBUG("Check if target or waypoint can be spotted using laser scan");
+    cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
+    bool targetInSight = beliefs->getAgentState()->canSeePoint(task, 20);
+    CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+    cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
+    bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
+    cout << "targetInSight " << targetInSight << " waypointInSight " << waypointInSight << endl;
+    CartesianPoint subgoal;
+    if(targetInSight){
+      subgoal = task;
+    }
+    else if(waypointInSight){
+      subgoal = waypoint;
+    }
+    if(targetInSight or waypointInSight){
+      std::vector<CartesianPoint> givenLaserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+      CartesianPoint laserPos = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+      double point_direction = atan2((subgoal.get_y() - laserPos.get_y()), (subgoal.get_x() - laserPos.get_x()));
+      cout << "Robot position " << laserPos.get_x() << " " << laserPos.get_y() << " " << beliefs->getAgentState()->getCurrentPosition().getTheta() << " point_direction " << point_direction << endl;
+      int index = 0;
+      double min_angle = 100000;
+      for(int i = 0; i < givenLaserEndpoints.size(); i++){
+        double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
+        double angle_diff = laser_direction - point_direction;
+        if(angle_diff > M_PI)
+          angle_diff = angle_diff - 2*M_PI;
+        if(angle_diff < -M_PI)
+          angle_diff = angle_diff + 2*M_PI;
+        angle_diff = fabs(angle_diff);
+        // cout << "point_direction " << point_direction << " laser_direction " << laser_direction << " angle_diff " << angle_diff << endl;
+        if(angle_diff < min_angle){
+          // cout << "Laser Direction : " << laser_direction << ", Point Direction : " << point_direction << endl;
+          min_angle = angle_diff;
+          index = i;
+        }
+      }
+      if(index + 1 >= givenLaserEndpoints.size()){
+        index = index - 1;
+      }
+      cout << "min_angle " << min_angle << " index " << index << " endpoint " << givenLaserEndpoints[index].get_x() << " " << givenLaserEndpoints[index].get_y() << endl;
+      double distLeft = 0, xLeft = 0, yLeft = 0, countLeft = 0;
+      double distRight = 0, xRight = 0, yRight = 0, countRight = 0;
+      for(int i = 0; i < index; i++){
+        double dist_to_endpoint = givenLaserEndpoints[i].get_distance(laserPos);
+        distLeft += dist_to_endpoint;
+        countLeft++;
+        xLeft += givenLaserEndpoints[i].get_x();
+        yLeft += givenLaserEndpoints[i].get_y();
+      }
+      for(int i = index + 1; i < givenLaserEndpoints.size(); i++){
+        double dist_to_endpoint = givenLaserEndpoints[i].get_distance(laserPos);
+        distRight += dist_to_endpoint;
+        countRight++;
+        xRight += givenLaserEndpoints[i].get_x();
+        yRight += givenLaserEndpoints[i].get_y();
+      }
+      cout << "distLeft " << distLeft << " xLeft " << xLeft << " yLeft " << yLeft << " countLeft " << countLeft << " distRight " << distRight << " xRight " << xRight << " yRight " << yRight << " countRight " << countRight << endl;
+      distLeft = distLeft / countLeft;
+      xLeft = xLeft / countLeft;
+      yLeft = yLeft / countLeft;
+      distRight = distRight / countRight;
+      xRight = xRight / countRight;
+      yRight = yRight / countRight;
+      cout << "distLeft " << distLeft << " xLeft " << xLeft << " yLeft " << yLeft << " countLeft " << countLeft << " distRight " << distRight << " xRight " << xRight << " yRight " << yRight << " countRight " << countRight << endl;
+      if(distLeft > distRight){
+        double tx, ty;
+        for(double j = 0; j <= 1; j += 0.1){
+          tx = (laserPos.get_x() * j) + (xLeft * (1 - j));
+          ty = (laserPos.get_y() * j) + (yLeft * (1 - j));
+          if(beliefs->getAgentState()->canSeePoint(CartesianPoint(tx, ty), 20)){
+            break;
+          }
+        }
+        beliefs->getAgentState()->setRepositionPoint(CartesianPoint(tx, ty));
+        beliefs->getAgentState()->setRepositionTriggered(true);
+      }
+      else{
+        double tx, ty;
+        for(double j = 0; j <= 1; j += 0.1){
+          tx = (laserPos.get_x() * j) + (xRight * (1 - j));
+          ty = (laserPos.get_y() * j) + (yRight * (1 - j));
+          if(beliefs->getAgentState()->canSeePoint(CartesianPoint(tx, ty), 20)){
+            break;
+          }
+        }
+        beliefs->getAgentState()->setRepositionPoint(CartesianPoint(tx, ty));
+        beliefs->getAgentState()->setRepositionTriggered(true);
+      }
+      if(beliefs->getAgentState()->getRepositionTriggered()){
+        cout << "Reposition triggered, move towards point" << endl;
+        (*decision) = beliefs->getAgentState()->moveTowards(beliefs->getAgentState()->getRepositionPoint());
+        if(decision->parameter != 0){
+          Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
+          if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
+            if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
+              ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
+              decisionMade = true;
+            }
+            else{
+              FORRAction forward = beliefs->getAgentState()->maxForwardAction();
+              if(forward.parameter >= decision->parameter){
+                ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
+                decisionMade = true;
+              }
+            }
+          }
+        }
+      }
+    }
   }
-  return false; 
+  return decisionMade; 
 }
+  // int sweepRange = 135;
+  // if(targetInSight){
+  //   std::vector<CartesianPoint> givenLaserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+  //   CartesianPoint laserPos = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+  //   double point_direction = atan2((task.get_y() - laserPos.get_y()), (task.get_x() - laserPos.get_x()));
+  //   cout << "Robot position " << laserPos.get_x() << " " << laserPos.get_y() << " " << beliefs->getAgentState()->getCurrentPosition().getTheta() << " point_direction " << point_direction << endl;
+  //   int index = 0;
+  //   double min_angle = 100000;
+  //   // double multiplier = 10;
+  //   // vector< vector<int> > laserGrid;
+  //   // for(int i = 0; i < (50*multiplier)+1; i++){
+  //   //   vector<int> col;
+  //   //   for(int j = 0; j < (50*multiplier)+1; j++){
+  //   //     col.push_back(0);
+  //   //   }
+  //   //   laserGrid.push_back(col);
+  //   // }
+  //   // double step_length = 1;
+  //   // double start_x = 25*multiplier;
+  //   // double start_y = 25*multiplier;
+  //   // double x_diff = start_x - (laserPos.get_x() * multiplier);
+  //   // double y_diff = start_y - (laserPos.get_y() * multiplier);
+  //   for(int i = 0; i < givenLaserEndpoints.size(); i++){
+  //     // double end_x = (givenLaserEndpoints[i].get_x() * multiplier) + x_diff;
+  //     // if(int(end_x) < 0)
+  //     //   end_x = 0;
+  //     // if(int(end_x) >= laserGrid.size())
+  //     //   end_x = laserGrid.size()-1;
+  //     // double end_y = (givenLaserEndpoints[i].get_y() * multiplier) + y_diff;
+  //     // if(int(end_y) < 0)
+  //     //   end_y = 0;
+  //     // if(int(end_y) >= laserGrid[0].size())
+  //     //   end_y = laserGrid[0].size()-1;
+  //     // double length = sqrt((start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y));
+  //     // // cout << i << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
+  //     // if(length >= step_length){
+  //     //   double step_size = step_length / length;
+  //     //   double tx, ty;
+  //     //   // cout << "step_size " << step_size << endl;
+  //     //   for(double j = 0; j <= 1; j += step_size){
+  //     //     tx = (end_x * j) + (start_x * (1 - j));
+  //     //     ty = (end_y * j) + (start_y * (1 - j));
+  //     //     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < laserGrid.size() and int(ty) < laserGrid[0].size()){
+  //     //       // cout << tx << " " << ty << endl;
+  //     //       laserGrid[int(tx)][int(ty)] = 1;
+  //     //     }
+  //     //   }
+  //     // }
+  //     double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
+  //     double angle_diff = laser_direction - point_direction;
+  //     if(angle_diff > M_PI)
+  //       angle_diff = angle_diff - 2*M_PI;
+  //     if(angle_diff < -M_PI)
+  //       angle_diff = angle_diff + 2*M_PI;
+  //     angle_diff = fabs(angle_diff);
+  //     // cout << "point_direction " << point_direction << " laser_direction " << laser_direction << " angle_diff " << angle_diff << endl;
+  //     if(angle_diff < min_angle){
+  //       // cout << "Laser Direction : " << laser_direction << ", Point Direction : " << point_direction << endl;
+  //       min_angle = angle_diff;
+  //       index = i;
+  //     }
+  //   }
+  //   cout << "min_angle " << min_angle << " index " << index << " endpoint " << givenLaserEndpoints[index].get_x() << " " << givenLaserEndpoints[index].get_y() << endl;
+  //   // double robotFootPrint = beliefs->getAgentState()->getRobotFootPrint();
+  //   if(index - sweepRange < 0){
+  //     index = sweepRange;
+  //   }
+  //   if(index + sweepRange > givenLaserEndpoints.size()){
+  //     index = givenLaserEndpoints.size()-sweepRange;
+  //   }
+  //   cout << "index " << index << endl;
+  //   double target_width;
+  //   int max_ind;
+  //   double max_target = 0;
+  //   vector<double> distsToEndpoints;
+  //   for(int i = 0; i < givenLaserEndpoints.size(); i++){
+  //     double dist_to_endpoint = givenLaserEndpoints[i].get_distance(laserPos);
+  //     distsToEndpoints.push_back(dist_to_endpoint);
+  //   }
+  //   for(int i = index - sweepRange; i < index + sweepRange; i++){
+  //     if(distsToEndpoints[i] > max_target){
+  //       max_target = distsToEndpoints[i];
+  //       max_ind = i;
+  //     }
+  //   }
+  //   cout << "max_ind " << max_ind << endl;
+  //   if(max_ind == index - sweepRange)
+  //     max_ind = index - sweepRange - 1;
+  //   if(max_ind == index + sweepRange - 1)
+  //     max_ind = index + sweepRange - 2;
+  //   cout << "max_ind " << max_ind << endl;
+  //   double min_right = 50, min_left = 50;
+  //   double min_right_x = 0, min_right_y = 0, min_left_x = 0, min_left_y = 0;
+  //   double min_right_thr = 0, min_left_thr = 0;
+  //   int min_right_ind = 0, min_left_ind = 0;
+  //   for(int i = index - sweepRange; i < index + sweepRange; i++){
+  //     if(i < max_ind){
+  //       if(distsToEndpoints[i] < min_left){
+  //         min_left = distsToEndpoints[i];
+  //         min_left_x = givenLaserEndpoints[i].get_x();
+  //         min_left_y = givenLaserEndpoints[i].get_y();
+  //         min_left_ind = i;
+  //         min_left_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //     else if(i > max_ind){
+  //       if(distsToEndpoints[i] < min_right){
+  //         min_right = distsToEndpoints[i];
+  //         min_right_x = givenLaserEndpoints[i].get_x();
+  //         min_right_y = givenLaserEndpoints[i].get_y();
+  //         min_right_ind = i;
+  //         min_right_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //   }
+  //   cout << "min_left " << min_left << " min_left_ind " << min_left_ind << " min_right " << min_right << " min_right_ind " << min_right_ind << endl;
+  //   for(int i = index - sweepRange; i < index + sweepRange; i++){
+  //     if(i > min_left_ind and i < max_ind){
+  //       if(abs(distsToEndpoints[min_left_ind] - distsToEndpoints[i]) <= min_left_thr or (abs(min_left_x - givenLaserEndpoints[i].get_x()) + abs(min_left_y - givenLaserEndpoints[i].get_y())) <= min_left_thr){
+  //         min_left = distsToEndpoints[i];
+  //         min_left_x = givenLaserEndpoints[i].get_x();
+  //         min_left_y = givenLaserEndpoints[i].get_y();
+  //         min_left_ind = i;
+  //         min_left_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //   }
+  //   for(int i = index + sweepRange-1; i >= index - sweepRange; i--){
+  //     if(i > max_ind and i < min_right_ind){
+  //       if(abs(distsToEndpoints[min_right_ind] - distsToEndpoints[i]) <= min_right_thr or (abs(min_right_x - givenLaserEndpoints[i].get_x()) + abs(min_right_y - givenLaserEndpoints[i].get_y())) <= min_right_thr){
+  //         min_right = distsToEndpoints[i];
+  //         min_right_x = givenLaserEndpoints[i].get_x();
+  //         min_right_y = givenLaserEndpoints[i].get_y();
+  //         min_right_ind = i;
+  //         min_right_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //   }
+  //   cout << "min_left " << min_left << " min_left_ind " << min_left_ind << " min_right " << min_right << " min_right_ind " << min_right_ind << endl;
+  //   target_width = sqrt((min_right_x - min_left_x) * (min_right_x - min_left_x) + (min_right_y - min_left_y) * (min_right_y - min_left_y));
+  //   cout << "target_width " << target_width << " right " << min_right_x << " " << min_right_y << " left " << min_left_x << " " << min_left_y << endl;
+  //   double mid_x = (min_right_x + min_left_x) / 2;
+  //   double mid_y = (min_right_y + min_left_y) / 2;
+  //   cout << "mid " << mid_x << " " << mid_y << endl;
+  //   double travel_x, travel_y;
+  //   if(min_right_x == min_left_x){
+  //     // BC vertical
+  //     travel_x = laserPos.get_x();
+  //     travel_y = mid_y;
+  //   }
+  //   else if(min_right_y == min_left_y){
+  //     // BC horizontal
+  //     travel_x = mid_x;
+  //     travel_y = laserPos.get_y();
+  //   }
+  //   else{
+  //     double width_slope = ((min_right_y - min_left_y) / (min_right_x - min_left_x));
+  //     travel_x = (width_slope * (mid_y + laserPos.get_y() - width_slope * laserPos.get_x()) - mid_x) / (-1 - (width_slope * width_slope));
+  //     travel_y = laserPos.get_y() + width_slope * (travel_x - laserPos.get_x());
+  //   }
+  //   cout << "travel " << travel_x << " " << travel_y << endl;
+  //   double step_length = 0.1;
+  //   double length = sqrt((laserPos.get_x() - travel_x) * (laserPos.get_x() - travel_x) + (laserPos.get_y() - travel_y) * (laserPos.get_y() - travel_y));
+  //   cout << "length " << length << endl;
+  //   if(length >= step_length){
+  //     double step_size = step_length / length;
+  //     double tx, ty;
+  //     // cout << "step_size " << step_size << endl;
+  //     for(double j = 0; j <= 1; j += step_size){
+  //       tx = (laserPos.get_x() * j) + (travel_x * (1 - j));
+  //       ty = (laserPos.get_y() * j) + (travel_y * (1 - j));
+  //       cout << "waypoint " << tx << " " << ty << endl;
+  //       beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
+  //     }
+  //   }
+  //   else{
+  //     cout << "waypoint " << travel_x << " " << travel_y << endl;
+  //     beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(travel_x, travel_y), true);
+  //   }
+  //   length = sqrt((mid_x - travel_x) * (mid_x - travel_x) + (mid_y - travel_y) * (mid_y - travel_y));
+  //   cout << "length " << length << endl;
+  //   if(length >= step_length){
+  //     double step_size = step_length / length;
+  //     double tx, ty;
+  //     // cout << "step_size " << step_size << endl;
+  //     for(double j = 0; j <= 1; j += step_size){
+  //       tx = (travel_x * j) + (mid_x * (1 - j));
+  //       ty = (travel_y * j) + (mid_y * (1 - j));
+  //       cout << "waypoint " << tx << " " << ty << endl;
+  //       beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
+  //     }
+  //   }
+  //   else{
+  //     cout << "waypoint " << mid_x << " " << mid_y << endl;
+  //     beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(mid_x, mid_y), true);
+  //   }
+  // }
+  // else if(waypointInSight){
+  //   std::vector<CartesianPoint> givenLaserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+  //   CartesianPoint laserPos = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+  //   double point_direction = atan2((waypoint.get_y() - laserPos.get_y()), (waypoint.get_x() - laserPos.get_x()));
+  //   cout << "Robot position " << laserPos.get_x() << " " << laserPos.get_y() << " " << beliefs->getAgentState()->getCurrentPosition().getTheta() << " point_direction " << point_direction << endl;
+  //   int index = 0;
+  //   double min_angle = 100000;
+  //   for(int i = 0; i < givenLaserEndpoints.size(); i++){
+  //     double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
+  //     double angle_diff = laser_direction - point_direction;
+  //     if(angle_diff > M_PI)
+  //       angle_diff = angle_diff - 2*M_PI;
+  //     if(angle_diff < -M_PI)
+  //       angle_diff = angle_diff + 2*M_PI;
+  //     angle_diff = fabs(angle_diff);
+  //     // cout << "point_direction " << point_direction << " laser_direction " << laser_direction << " angle_diff " << angle_diff << endl;
+  //     if(angle_diff < min_angle){
+  //       // cout << "Laser Direction : " << laser_direction << ", Point Direction : " << point_direction << endl;
+  //       min_angle = angle_diff;
+  //       index = i;
+  //     }
+  //   }
+  //   cout << "min_angle " << min_angle << " index " << index << endl;
+  //   // double robotFootPrint = beliefs->getAgentState()->getRobotFootPrint();
+  //   if(index - sweepRange < 0){
+  //     index = sweepRange;
+  //   }
+  //   if(index + sweepRange > givenLaserEndpoints.size()){
+  //     index = givenLaserEndpoints.size()-sweepRange;
+  //   }
+  //   cout << "index " << index << endl;
+  //   double target_width;
+  //   int max_ind;
+  //   double max_target = 0;
+  //   vector<double> distsToEndpoints;
+  //   for(int i = 0; i < givenLaserEndpoints.size(); i++){
+  //     double dist_to_endpoint = givenLaserEndpoints[i].get_distance(laserPos);
+  //     distsToEndpoints.push_back(dist_to_endpoint);
+  //   }
+  //   for(int i = index - sweepRange; i < index + sweepRange; i++){
+  //     if(distsToEndpoints[i] > max_target){
+  //       max_target = distsToEndpoints[i];
+  //       max_ind = i;
+  //     }
+  //   }
+  //   cout << "max_ind " << max_ind << endl;
+  //   if(max_ind == index - sweepRange)
+  //     max_ind = index - sweepRange - 1;
+  //   if(max_ind == index + sweepRange - 1)
+  //     max_ind = index + sweepRange - 2;
+  //   cout << "max_ind " << max_ind << endl;
+  //   double min_right = 50, min_left = 50;
+  //   double min_right_x = 0, min_right_y = 0, min_left_x = 0, min_left_y = 0;
+  //   double min_right_thr = 0, min_left_thr = 0;
+  //   int min_right_ind = 0, min_left_ind = 0;
+  //   for(int i = index - sweepRange; i < index + sweepRange; i++){
+  //     if(i < max_ind){
+  //       if(distsToEndpoints[i] < min_left){
+  //         min_left = distsToEndpoints[i];
+  //         min_left_x = givenLaserEndpoints[i].get_x();
+  //         min_left_y = givenLaserEndpoints[i].get_y();
+  //         min_left_ind = i;
+  //         min_left_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //     else if(i > max_ind){
+  //       if(distsToEndpoints[i] < min_right){
+  //         min_right = distsToEndpoints[i];
+  //         min_right_x = givenLaserEndpoints[i].get_x();
+  //         min_right_y = givenLaserEndpoints[i].get_y();
+  //         min_right_ind = i;
+  //         min_right_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //   }
+  //   cout << "min_left " << min_left << " min_left_ind " << min_left_ind << " min_right " << min_right << " min_right_ind " << min_right_ind << endl;
+  //   for(int i = index - sweepRange; i < index + sweepRange; i++){
+  //     if(i > min_left_ind and i < max_ind){
+  //       if(abs(distsToEndpoints[min_left_ind] - distsToEndpoints[i]) <= min_left_thr or (abs(min_left_x - givenLaserEndpoints[i].get_x()) + abs(min_left_y - givenLaserEndpoints[i].get_y())) <= min_left_thr){
+  //         min_left = distsToEndpoints[i];
+  //         min_left_x = givenLaserEndpoints[i].get_x();
+  //         min_left_y = givenLaserEndpoints[i].get_y();
+  //         min_left_ind = i;
+  //         min_left_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //   }
+  //   for(int i = index + sweepRange-1; i >= index - sweepRange; i--){
+  //     if(i > max_ind and i < min_right_ind){
+  //       if(abs(distsToEndpoints[min_right_ind] - distsToEndpoints[i]) <= min_right_thr or (abs(min_right_x - givenLaserEndpoints[i].get_x()) + abs(min_right_y - givenLaserEndpoints[i].get_y())) <= min_right_thr){
+  //         min_right = distsToEndpoints[i];
+  //         min_right_x = givenLaserEndpoints[i].get_x();
+  //         min_right_y = givenLaserEndpoints[i].get_y();
+  //         min_right_ind = i;
+  //         min_right_thr = distsToEndpoints[i] * 0.1;
+  //       }
+  //     }
+  //   }
+  //   cout << "min_left " << min_left << " min_left_ind " << min_left_ind << " min_right " << min_right << " min_right_ind " << min_right_ind << endl;
+  //   target_width = sqrt((min_right_x - min_left_x) * (min_right_x - min_left_x) + (min_right_y - min_left_y) * (min_right_y - min_left_y));
+  //   cout << "target_width " << target_width << " right " << min_right_x << " " << min_right_y << " left " << min_left_x << " " << min_left_y << endl;
+  //   double mid_x = (min_right_x + min_left_x) / 2;
+  //   double mid_y = (min_right_y + min_left_y) / 2;
+  //   cout << "mid " << mid_x << " " << mid_y << endl;
+  //   double travel_x, travel_y;
+  //   if(min_right_x == min_left_x){
+  //     // BC vertical
+  //     travel_x = laserPos.get_x();
+  //     travel_y = mid_y;
+  //   }
+  //   else if(min_right_y == min_left_y){
+  //     // BC horizontal
+  //     travel_x = mid_x;
+  //     travel_y = laserPos.get_y();
+  //   }
+  //   else{
+  //     double width_slope = ((min_right_y - min_left_y) / (min_right_x - min_left_x));
+  //     travel_x = (width_slope * (mid_y + laserPos.get_y() - width_slope * laserPos.get_x()) - mid_x) / (-1 - (width_slope * width_slope));
+  //     travel_y = laserPos.get_y() + width_slope * (travel_x - laserPos.get_x());
+  //   }
+  //   cout << "travel " << travel_x << " " << travel_y << endl;
+  //   double step_length = 0.1;
+  //   double length = sqrt((laserPos.get_x() - travel_x) * (laserPos.get_x() - travel_x) + (laserPos.get_y() - travel_y) * (laserPos.get_y() - travel_y));
+  //   cout << "length " << length << endl;
+  //   if(length >= step_length){
+  //     double step_size = step_length / length;
+  //     double tx, ty;
+  //     // cout << "step_size " << step_size << endl;
+  //     for(double j = 0; j <= 1; j += step_size){
+  //       tx = (laserPos.get_x() * j) + (travel_x * (1 - j));
+  //       ty = (laserPos.get_y() * j) + (travel_y * (1 - j));
+  //       cout << "waypoint " << tx << " " << ty << endl;
+  //       beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
+  //     }
+  //   }
+  //   else{
+  //     cout << "waypoint " << travel_x << " " << travel_y << endl;
+  //     beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(travel_x, travel_y), true);
+  //   }
+  //   length = sqrt((mid_x - travel_x) * (mid_x - travel_x) + (mid_y - travel_y) * (mid_y - travel_y));
+  //   cout << "length " << length << endl;
+  //   if(length >= step_length){
+  //     double step_size = step_length / length;
+  //     double tx, ty;
+  //     // cout << "step_size " << step_size << endl;
+  //     for(double j = 0; j <= 1; j += step_size){
+  //       tx = (travel_x * j) + (mid_x * (1 - j));
+  //       ty = (travel_y * j) + (mid_y * (1 - j));
+  //       cout << "waypoint " << tx << " " << ty << endl;
+  //       beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(tx, ty), true);
+  //     }
+  //   }
+  //   else{
+  //     cout << "waypoint " << mid_x << " " << mid_y << endl;
+  //     beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(CartesianPoint(mid_x, mid_y), true);
+  //   }
+  // }
+//   return false; 
+// }

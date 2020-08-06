@@ -931,6 +931,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG("Next Task Selected!!");
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
+      beliefs->getAgentState()->setRepositionTriggered(false);
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
     }
@@ -949,6 +950,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         }
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
+      beliefs->getAgentState()->setRepositionTriggered(false);
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
       //Clear existing task and associated plans
@@ -993,6 +995,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       if(beliefs->getAgentState()->getCurrentTask()->getDecisionCount() > taskDecisionLimit){
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
+        beliefs->getAgentState()->setRepositionTriggered(false);
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false);
@@ -1346,12 +1349,12 @@ bool Controller::tierOneDecision(FORRAction *decision){
   bool decisionMade = false;
   // ROS_INFO("Advisor circumnavigate will create subplan");
   // tier1->advisorCircumnavigate(decision);
-  vector<Position> *positionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
-  if(positionHis->size() > 1){
-    CartesianPoint current_position = CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY());
-    if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.1){
-      beliefs->getAgentState()->setGetOutTriggered(false);
-    }
+  CartesianPoint current_position = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+  if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.1){
+    beliefs->getAgentState()->setGetOutTriggered(false);
+  }
+  if(current_position.get_distance(beliefs->getAgentState()->getRepositionPoint()) <= 0.1){
+    beliefs->getAgentState()->setRepositionTriggered(false);
   }
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor Victory has made a decision " << decision->type << " " << decision->parameter);
@@ -1371,8 +1374,11 @@ bool Controller::tierOneDecision(FORRAction *decision){
       decisionMade = true;
     }
     if(doorwayOn and decisionMade == false){
-      ROS_INFO("Advisor Doorway will generate waypoints if necessary");
-      tier1->advisorDoorway();
+      if(tier1->advisorDoorway(decision)){
+        ROS_INFO_STREAM("Advisor Doorway has made a decision " << decision->type << " " << decision->parameter);
+        decisionStats->decisionTier = 1;
+        decisionMade = true;
+      }
     }
     // if(circumnavigator->advisorCircumnavigate(decision)){
     //   ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
@@ -1382,7 +1388,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     // else
     if(outofhereOn and decisionMade == false){
       if(tier1->advisorGetOut(decision)){
-        ROS_INFO_STREAM("Advisor get out has made a decision " << decision->type << " " << decision->parameter);
+        ROS_INFO_STREAM("Advisor GetOut has made a decision " << decision->type << " " << decision->parameter);
         decisionStats->decisionTier = 1;
         decisionMade = true;
       }

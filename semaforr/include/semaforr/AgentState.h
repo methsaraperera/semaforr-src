@@ -51,6 +51,8 @@ public:
     currentDirection = -1;
     desiredDirection = -1;
     directionEnd = false;
+    repositionTriggered = false;
+    repositionPoint = CartesianPoint(0.0,0.0);
 
     for(int i = 1; i < numRotates; i++){
       action_set->insert(FORRAction(LEFT_TURN, i));
@@ -331,6 +333,25 @@ public:
     directionEnd = status;
   }
 
+  bool getRepositionTriggered(){
+    cout << "repositionTriggered " << repositionTriggered << endl;
+    return repositionTriggered;
+  }
+  void setRepositionTriggered(bool status){
+    cout << "setRepositionTriggered " << status << endl;
+    repositionTriggered = status;
+    if(status == false){
+      repositionPoint = CartesianPoint(0.0,0.0);
+    }
+  }
+
+  void setRepositionPoint(CartesianPoint reposition_point){
+    cout << "setRepositionPoint " << reposition_point.get_x() << " " << reposition_point.get_y() << endl;
+    repositionPoint = reposition_point;
+  }
+
+  CartesianPoint getRepositionPoint(){return repositionPoint;}
+
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
@@ -521,6 +542,10 @@ public:
   int currentDirection;
   int desiredDirection;
   bool directionEnd;
+
+  // Doorway
+  CartesianPoint repositionPoint;
+  bool repositionTriggered;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);
