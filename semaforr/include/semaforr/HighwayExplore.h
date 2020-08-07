@@ -469,6 +469,43 @@ public:
 		return hwst;
 	}
 
+	vector< vector<Position> > getRemainingHighwayStack(){
+		vector< vector<Position> > hwst;
+		for(int i = 0; i < highway_stack_longest.size(); i++){
+			if(pointAlreadyInStack(highway_stack_longest[i]) == false){
+				if(highway_stack_longest[i].direction == true){
+					vector<Position> pair_points;
+					pair_points.push_back(highway_stack_longest[i].point);
+					pair_points.push_back(highway_stack_longest[i].right_point);
+					hwst.push_back(pair_points);
+				}
+				else{
+					vector<Position> pair_points;
+					pair_points.push_back(highway_stack_longest[i].point);
+					pair_points.push_back(highway_stack_longest[i].left_point);
+					hwst.push_back(pair_points);
+				}
+			}
+		}
+		for(int i = 0; i < highway_stack.size(); i++){
+			if(pointAlreadyInStack(highway_stack[i]) == false){
+				if(highway_stack[i].direction == true){
+					vector<Position> pair_points;
+					pair_points.push_back(highway_stack[i].point);
+					pair_points.push_back(highway_stack[i].right_point);
+					hwst.push_back(pair_points);
+				}
+				else{
+					vector<Position> pair_points;
+					pair_points.push_back(highway_stack[i].point);
+					pair_points.push_back(highway_stack[i].left_point);
+					hwst.push_back(pair_points);
+				}
+			}
+		}
+		return hwst;
+	}
+
 	Position getHighwayTarget(){
 		if(go_to_top_point == true){
 			return top_point.point;

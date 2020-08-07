@@ -267,6 +267,14 @@ void Controller::initialize_params(string filename){
       doorwayOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("doorwayOn " << doorwayOn);
     }
+    else if (fileLine.find("findawayOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      findawayOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("findawayOn " << findawayOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -919,6 +927,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
         beliefs->getAgentState()->setPassageGrid(highwayExploration->getHighwayGrid());
+        beliefs->getAgentState()->setRemainingCandidates(highwayExploration->getRemainingHighwayStack());
       }
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -1359,7 +1368,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor Victory has made a decision " << decision->type << " " << decision->parameter);
     // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
-    decisionStats->decisionTier = 1;
+    decisionStats->decisionTier = 1.1;
     decisionMade = true;
   }
   else{
@@ -1370,13 +1379,13 @@ bool Controller::tierOneDecision(FORRAction *decision){
     if(tier1->advisorEnforcer(decision)){ 
       ROS_INFO_STREAM("Advisor Enforcer has made a decision " << decision->type << " " << decision->parameter);
       // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
-      decisionStats->decisionTier = 1;
+      decisionStats->decisionTier = 1.2;
       decisionMade = true;
     }
     if(doorwayOn and decisionMade == false){
       if(tier1->advisorDoorway(decision)){
         ROS_INFO_STREAM("Advisor Doorway has made a decision " << decision->type << " " << decision->parameter);
-        decisionStats->decisionTier = 1;
+        decisionStats->decisionTier = 1.3;
         decisionMade = true;
       }
     }
@@ -1389,7 +1398,14 @@ bool Controller::tierOneDecision(FORRAction *decision){
     if(outofhereOn and decisionMade == false){
       if(tier1->advisorGetOut(decision)){
         ROS_INFO_STREAM("Advisor GetOut has made a decision " << decision->type << " " << decision->parameter);
-        decisionStats->decisionTier = 1;
+        decisionStats->decisionTier = 1.4;
+        decisionMade = true;
+      }
+    }
+    if(findawayOn and decisionMade == false){
+      if(tier1->advisorFindAWay(decision)){
+        ROS_INFO_STREAM("Advisor FindAWay has made a decision " << decision->type << " " << decision->parameter);
+        decisionStats->decisionTier = 1.5;
         decisionMade = true;
       }
     }

@@ -412,6 +412,10 @@ public:
     graph_intersection_trails = git;
   }
 
+  void setRemainingCandidates(vector< vector<Position> > rc){
+    remaining_candidates = rc;
+  }
+
   vector< vector<int> > getPassageGrid(){
     return passage_grid;
   }
@@ -446,6 +450,10 @@ public:
 
   vector< vector<CartesianPoint> > getGraphIntersectionTrails(){
     return graph_intersection_trails;
+  }
+
+  vector< vector<Position> > getRemainingCandidates(){
+    return remaining_candidates;
   }
 
  private:
@@ -565,6 +573,7 @@ public:
   vector< vector<CartesianPoint> > graph_trails;
   vector< vector<int> > graph_through_intersections;
   vector< vector<CartesianPoint> > graph_intersection_trails;
+  vector< vector<Position> > remaining_candidates;
 
 };
 

@@ -34,6 +34,8 @@ public:
 	bool advisorEnforcer(FORRAction *decision);
 
 	bool advisorDoorway(FORRAction *decision);
+
+	bool advisorFindAWay(FORRAction *decision);
 	
 private:
 	Beliefs *beliefs;
