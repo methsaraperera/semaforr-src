@@ -22,7 +22,7 @@
 #include <map>
 #include <set>
 #include <numeric>
-#include <queue>
+// #include <queue>
 #include <sensor_msgs/LaserScan.h>
 
 using namespace std;

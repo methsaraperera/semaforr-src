@@ -10,6 +10,7 @@
 #include <vector>
 #include "FORRAction.h"
 #include "Beliefs.h"
+#include "LocalExplore.h"
 
 // A t1 advisor class contains a list of functions each of which returns a single action or vetoes a set of actions
 class Tier1Advisor{
@@ -17,6 +18,7 @@ class Tier1Advisor{
 public:
         Tier1Advisor(Beliefs *b){
 		beliefs = b;
+		localExploration = new LocalExplorer();
 	}
 
 	void advisorNotOpposite();
@@ -39,4 +41,5 @@ public:
 	
 private:
 	Beliefs *beliefs;
+	LocalExplore *localExploration;
 };

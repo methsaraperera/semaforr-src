@@ -70,6 +70,14 @@ class FORRRegion{
     cout << endl;
   }
 
+  void printVisibility(){
+    cout << center.get_x() << " " << center.get_y() << " " << this->getRadius();
+    for(int i = 0; i < max_visibility.size(); i++){
+      cout << " " << max_visibility[i];
+    }
+    cout << endl;
+  }
+
   bool equals(FORRRegion test) { 
     if(test.getCenter().get_x() == center.get_x() && test.getCenter().get_y() == center.get_y() && test.getRadius() == this->getRadius())
       return true;
@@ -208,6 +216,27 @@ class FORRRegion{
 
   vector<double> getVisibility(){
     return max_visibility;
+  }
+
+  vector<CartesianPoint> getVisibilityEndPoints(){
+    vector<CartesianPoint> endPoints;
+    for(int i = 0; i < max_visibility.size(); i++){
+      if(max_visibility[i] == -1){
+        endPoints.push_back(center);
+      }
+      else{
+        double angle;
+        if(i > 180){
+          angle = (i - 360.0)/(180.0/3.141592653589793238463);
+        }
+        else{
+          angle = (i - 0.0)/(180.0/3.141592653589793238463);
+        }
+        CartesianPoint end_point = CartesianPoint(center.get_x() + max_visibility[i]*cos(angle), center.get_y() + max_visibility[i]*sin(angle));
+        endPoints.push_back(end_point);
+      }
+    }
+    return endPoints;
   }
 
 

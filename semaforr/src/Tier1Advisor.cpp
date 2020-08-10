@@ -1125,7 +1125,55 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
   bool decisionMade = false;
   if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0 or !beliefs->getAgentState()->getCurrentTask()->getIsPlanActive()){
     cout << "No active plan, try to do local exploration" << endl;
-    vector< vector<Position> > remaining_candidates = beliefs->getAgentState()->getRemainingCandidates();
+    if(localExploration->getAlreadyStarted()){
+      if(localExploration->getStartOfPotential()){
+        cout << "go to end of current potential" << endl;
+      }
+      else{
+        cout << "get to start of current potential" << endl;
+      }
+    }
+    else{
+      CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
+      cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
+      double search_radius = 10.0;
+      vector< vector<Position> > remaining_candidates = beliefs->getAgentState()->getRemainingCandidates();
+      vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+      vector< LineSegment > potential_exploration;
+      for(int i = 0; i < remaining_candidates.size(); i++){
+        LineSegment pair = LineSegment(CartesianPoint(remaining_candidates[i][0].getX(), remaining_candidates[i][0].gety()), CartesianPoint(remaining_candidates[i][1].getX(), remaining_candidates[i][1].gety()));
+        if(distance(task, pair) < search_radius){
+          potential_exploration.push_back(pair);
+        }
+        // if(task.get_distance(remaining_candidates[i][0].getX(), remaining_candidates[i][0].gety()) < search_radius or task.get_distance(remaining_candidates[i][1].getX(), remaining_candidates[i][1].gety()) < search_radius or task.get_distance((remaining_candidates[i][0].getX() + remaining_candidates[i][1].getX())/2, (remaining_candidates[i][0].gety() + remaining_candidates[i][1].gety())/2) < search_radius){
+        //   vector<CartesianPoint> potential;
+        //   potential.push_back(CartesianPoint(remaining_candidates[i][0].getX(), remaining_candidates[i][0].gety()));
+        //   potential.push_back(CartesianPoint(remaining_candidates[i][1].getX(), remaining_candidates[i][1].gety()));
+        //   potential_exploration.push_back(potential);
+        // }
+      }
+      for(int i = 0; i < regions.size(); i++){
+        vector<CartesianPoint> vis_endpoints = regions[i].getVisibilityEndPoints();
+        for(int j = 0; j < vis_endpoints; j++){
+          LineSegment pair = LineSegment(regions[i].getCenter(), vis_endpoints[j]);
+          if(distance(task, pair) < search_radius){
+            potential_exploration.push_back(pair);
+          }
+          // if(task.get_distance(vis_endpoints[j]) < search_radius or task.get_distance((vis_endpoints[j].get_x() + regions[i].getCenter().get_x())/2, (vis_endpoints[j].get_y() + regions[i].getCenter().get_y())/2) < search_radius){
+          //   vector<CartesianPoint> potential;
+          //   potential.push_back(regions[i].getCenter());
+          //   potential.push_back(vis_endpoints[j]);
+          //   potential_exploration.push_back(potential);
+          // }
+        }
+      }
+      if(potential_exploration.size() > 0){
+        localExploration->setQueue(task, potential_exploration);
+      }
+      else{
+        cout << "no available potential places" << endl;
+      }
+    }
   }
   return decisionMade;
 }
