@@ -6,9 +6,10 @@
 import rospy
 import time
 import subprocess
+import os
 
 def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials):
-    project_home = "/home/rajkochhar/catkin_ws1/src"
+    project_home = os.path.expanduser("~/catkin_ws1/src")
     menge_path = project_home+"/examples/core"
     semaforr_path = project_home+"/semaforr"
 
