@@ -41,5 +41,5 @@ public:
 	
 private:
 	Beliefs *beliefs;
-	LocalExplore *localExploration;
+	LocalExplorer *localExploration;
 };

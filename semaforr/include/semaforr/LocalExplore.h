@@ -38,6 +38,10 @@ struct PotentialPoints{
 		dist_to_goal = distance(target, pair);
 		start_dist_to_goal = start.get_distance(target);
 		end_dist_to_goal = end.get_distance(target);
+		printDetails();
+	}
+	void printDetails(){
+		cout << "start " << start.get_x() << " " << start.get_y() << " end " << end.get_x() << " " << end.get_y() << " dist_to_goal " << dist_to_goal << " start_dist_to_goal " << start_dist_to_goal << " end_dist_to_goal " << end_dist_to_goal << endl;
 	}
 	bool operator==(const PotentialPoints p) {
 		return (start == p.start and end == p.end);
@@ -76,6 +80,8 @@ public:
 			potential_queue.push(PotentialPoints(potential_exploration[i], task));
 		}
 		current_potential = potential_queue.top();
+		cout << "current_potential ";
+		current_potential.printDetails();
 		potential_queue.pop();
 		already_started = true;
 	}
@@ -85,8 +91,8 @@ private:
 	CartesianPoint task;
 	vector< LineSegment > potential_exploration;
 	priority_queue<PotentialPoints> potential_queue;
-	LineSegment current_potential;
+	PotentialPoints current_potential;
 	bool start_of_potential;
-}
+};
 
 #endif

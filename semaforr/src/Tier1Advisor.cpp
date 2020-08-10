@@ -1139,9 +1139,10 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       double search_radius = 10.0;
       vector< vector<Position> > remaining_candidates = beliefs->getAgentState()->getRemainingCandidates();
       vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+      cout << "remaining_candidates " << remaining_candidates.size() << " regions " << regions.size() << endl;
       vector< LineSegment > potential_exploration;
       for(int i = 0; i < remaining_candidates.size(); i++){
-        LineSegment pair = LineSegment(CartesianPoint(remaining_candidates[i][0].getX(), remaining_candidates[i][0].gety()), CartesianPoint(remaining_candidates[i][1].getX(), remaining_candidates[i][1].gety()));
+        LineSegment pair = LineSegment(CartesianPoint(remaining_candidates[i][0].getX(), remaining_candidates[i][0].getY()), CartesianPoint(remaining_candidates[i][1].getX(), remaining_candidates[i][1].getY()));
         if(distance(task, pair) < search_radius){
           potential_exploration.push_back(pair);
         }
@@ -1154,7 +1155,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       }
       for(int i = 0; i < regions.size(); i++){
         vector<CartesianPoint> vis_endpoints = regions[i].getVisibilityEndPoints();
-        for(int j = 0; j < vis_endpoints; j++){
+        for(int j = 0; j < vis_endpoints.size(); j++){
           LineSegment pair = LineSegment(regions[i].getCenter(), vis_endpoints[j]);
           if(distance(task, pair) < search_radius){
             potential_exploration.push_back(pair);
@@ -1167,6 +1168,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           // }
         }
       }
+      cout << "potential_exploration " << potential_exploration.size() << endl;
       if(potential_exploration.size() > 0){
         localExploration->setQueue(task, potential_exploration);
       }
