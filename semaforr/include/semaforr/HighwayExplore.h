@@ -470,6 +470,7 @@ public:
 	}
 
 	vector< vector<Position> > getRemainingHighwayStack(){
+		cout << "getRemainingHighwayStack " << highway_stack_longest.size() << " " << highway_stack.size() << endl;
 		vector< vector<Position> > hwst;
 		for(int i = 0; i < highway_stack_longest.size(); i++){
 			if(pointAlreadyInStack(highway_stack_longest[i]) == false){
@@ -503,6 +504,7 @@ public:
 				}
 			}
 		}
+		cout << "hwst " << hwst.size() << endl;
 		return hwst;
 	}
 

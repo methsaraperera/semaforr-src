@@ -941,6 +941,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
+      tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
     }
@@ -960,6 +961,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
+      tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
       //Clear existing task and associated plans
@@ -1005,6 +1007,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
         beliefs->getAgentState()->setRepositionTriggered(false);
+        tier1->resetLocalExploration();
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
         learnSpatialModel(beliefs->getAgentState(), false);

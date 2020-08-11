@@ -38,6 +38,10 @@ public:
 	bool advisorDoorway(FORRAction *decision);
 
 	bool advisorFindAWay(FORRAction *decision);
+
+	void resetLocalExploration(){
+		localExploration->resetLocalExplorer();
+	}
 	
 private:
 	Beliefs *beliefs;

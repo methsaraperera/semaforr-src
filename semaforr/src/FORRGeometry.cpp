@@ -200,7 +200,7 @@ double distance(CartesianPoint point, LineSegment segment){
   double tmp_distance;
   if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) 
       && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) 
-     ||(point.y > min(segment.end_point_1.y , segment.end_point_2.y) 
+     && (point.y > min(segment.end_point_1.y , segment.end_point_2.y) 
 	&& point.y < max(segment.end_point_1.y , segment.end_point_2.y)))
     // In this case we can reuse distance between point and line function
     tmp_distance = distance(point, static_cast<Line>(segment));

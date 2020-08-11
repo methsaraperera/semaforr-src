@@ -64,6 +64,23 @@ struct PotentialPoints{
 	}
 };
 
+bool compoperator()(PotentialPoints a, PotentialPoints b){
+	if(a.dist_to_goal > b.dist_to_goal){
+		return true;
+	}
+	else if(a.dist_to_goal < b.dist_to_goal){
+		return false;
+	}
+	else{
+		if(a.start_dist_to_goal > b.start_dist_to_goal or a.end_dist_to_goal > b.end_dist_to_goal){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+}
+
 class LocalExplorer{
 public:
 	LocalExplorer(){
@@ -73,6 +90,14 @@ public:
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
 	bool getStartOfPotential() { return start_of_potential; }
+	void resetLocalExplorer(){
+		already_started = false;
+		start_of_potential = false;
+		task = CartesianPoint();
+		potential_exploration.clear();
+		potential_queue.clear();
+		current_potential = PotentialPoints();
+	}
 	void setQueue(CartesianPoint goal, vector< LineSegment > pairs){
 		task = goal;
 		potential_exploration = pairs;
@@ -90,7 +115,7 @@ private:
 	bool already_started;
 	CartesianPoint task;
 	vector< LineSegment > potential_exploration;
-	priority_queue<PotentialPoints> potential_queue;
+	priority_queue<PotentialPoints, vector<PotentialPoints>, compoperator> potential_queue;
 	PotentialPoints current_potential;
 	bool start_of_potential;
 };

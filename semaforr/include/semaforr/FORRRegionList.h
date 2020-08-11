@@ -329,7 +329,7 @@ class FORRRegionList{
       regions[i].print();
     }
     for(int i = 0; i< regions.size(); i++){
-      cout << i;
+      cout << i << " ";
       regions[i].printVisibility();
     }
   }
