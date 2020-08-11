@@ -62,24 +62,23 @@ struct PotentialPoints{
 			}
 		}
 	}
-};
-
-bool compoperator()(PotentialPoints a, PotentialPoints b){
-	if(a.dist_to_goal > b.dist_to_goal){
-		return true;
-	}
-	else if(a.dist_to_goal < b.dist_to_goal){
-		return false;
-	}
-	else{
-		if(a.start_dist_to_goal > b.start_dist_to_goal or a.end_dist_to_goal > b.end_dist_to_goal){
+	bool operator > (const PotentialPoints p) const{
+		if(dist_to_goal > p.dist_to_goal){
 			return true;
 		}
-		else{
+		else if(dist_to_goal < p.dist_to_goal){
 			return false;
 		}
+		else{
+			if(start_dist_to_goal > p.start_dist_to_goal or end_dist_to_goal > p.end_dist_to_goal){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
 	}
-}
+};
 
 class LocalExplorer{
 public:
@@ -95,7 +94,7 @@ public:
 		start_of_potential = false;
 		task = CartesianPoint();
 		potential_exploration.clear();
-		potential_queue.clear();
+		potential_queue = priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> >();
 		current_potential = PotentialPoints();
 	}
 	void setQueue(CartesianPoint goal, vector< LineSegment > pairs){
@@ -115,7 +114,7 @@ private:
 	bool already_started;
 	CartesianPoint task;
 	vector< LineSegment > potential_exploration;
-	priority_queue<PotentialPoints, vector<PotentialPoints>, compoperator> potential_queue;
+	priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> > potential_queue;
 	PotentialPoints current_potential;
 	bool start_of_potential;
 };

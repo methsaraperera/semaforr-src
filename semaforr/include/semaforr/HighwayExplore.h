@@ -473,7 +473,7 @@ public:
 		cout << "getRemainingHighwayStack " << highway_stack_longest.size() << " " << highway_stack.size() << endl;
 		vector< vector<Position> > hwst;
 		for(int i = 0; i < highway_stack_longest.size(); i++){
-			if(pointAlreadyInStack(highway_stack_longest[i]) == false){
+			if(pointAlreadyInStack(highway_stack_longest[i], true) == false){
 				if(highway_stack_longest[i].direction == true){
 					vector<Position> pair_points;
 					pair_points.push_back(highway_stack_longest[i].point);
@@ -489,7 +489,7 @@ public:
 			}
 		}
 		for(int i = 0; i < highway_stack.size(); i++){
-			if(pointAlreadyInStack(highway_stack[i]) == false){
+			if(pointAlreadyInStack(highway_stack[i], true) == false){
 				if(highway_stack[i].direction == true){
 					vector<Position> pair_points;
 					pair_points.push_back(highway_stack[i].point);
@@ -1461,7 +1461,7 @@ public:
 		return decision;
 	}
 
-	bool pointAlreadyInStack(DecisionPoint new_point){
+	bool pointAlreadyInStack(DecisionPoint new_point, bool onlyCompleted = false){
 		cout << "Check if point in stack" << endl;
 		int start_highway = highway_grid[(int)(new_point.point.getX())][(int)(new_point.point.getY())];
 		int end_highway = -1;
@@ -1509,11 +1509,11 @@ public:
 			cout << "pointAlreadyInStack rejected atleast_two_labeled" << endl;
 			return true;
 		}
-		else if(anySimilarOnList(new_point, highway_stack) == true){
+		else if(anySimilarOnList(new_point, highway_stack) == true and !onlyCompleted){
 			cout << "pointAlreadyInStack rejected similar_stack" << endl;
 			return true;
 		}
-		else if(anySimilarOnList(new_point, highway_stack_longest) == true){
+		else if(anySimilarOnList(new_point, highway_stack_longest) == true and !onlyCompleted){
 			cout << "pointAlreadyInStack rejected similar_stack_longest" << endl;
 			return true;
 		}
