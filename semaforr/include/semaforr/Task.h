@@ -259,6 +259,8 @@ class Task {
 
   string getPlannerName(){ return plannerName; }
 
+  PathPlanner *getPathPlanner(){ return pathPlanner; }
+
   void clearWaypoints(){
   	waypoints.clear();
   	skeleton_waypoints.clear();
@@ -363,6 +365,7 @@ class Task {
 	//cout << "plan generation status" << planner->calcPath(true) << endl;
 	waypointInd = indices;
 	navGraph = planner->getGraph();
+	pathPlanner = planner;
 	plannerName = planner->getName();
 	if(plannerName != "skeleton" and plannerName != "hallwayskel"){
 		list<int>::iterator it;
@@ -1243,6 +1246,7 @@ class Task {
 
   bool isPlanActive;
   bool isPlanComplete;
+  PathPlanner *pathPlanner;
   string plannerName;
   Graph *navGraph;
   Graph *origNavGraph;

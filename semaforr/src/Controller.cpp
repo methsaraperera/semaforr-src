@@ -1362,10 +1362,10 @@ bool Controller::tierOneDecision(FORRAction *decision){
   // ROS_INFO("Advisor circumnavigate will create subplan");
   // tier1->advisorCircumnavigate(decision);
   CartesianPoint current_position = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
-  if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.1){
+  if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.75){
     beliefs->getAgentState()->setGetOutTriggered(false);
   }
-  if(current_position.get_distance(beliefs->getAgentState()->getRepositionPoint()) <= 0.1){
+  if(current_position.get_distance(beliefs->getAgentState()->getRepositionPoint()) <= 0.75){
     beliefs->getAgentState()->setRepositionTriggered(false);
   }
   if(tier1->advisorVictory(decision)){ 

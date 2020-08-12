@@ -26,6 +26,7 @@ class FORRRegion{
       max_visibility.push_back(-1.0);
       avg_visibility.push_back(0.0);
       count_visibility.push_back(0.0);
+      start_max_visibility.push_back(CartesianPoint());
     }
     this->adjustVisibility(point, lep);
     this->setRadius(r);
@@ -39,6 +40,7 @@ class FORRRegion{
       max_visibility.push_back(r);
       avg_visibility.push_back(r);
       count_visibility.push_back(1);
+      start_max_visibility.push_back(center);
     }
     this->setRadius(r);
     // passage_value = -1;
@@ -76,8 +78,8 @@ class FORRRegion{
 
   void printVisibility(){
     cout << center.get_x() << " " << center.get_y() << " " << this->getRadius();
-    for(int i = 0; i < avg_visibility.size(); i++){
-      cout << " " << avg_visibility[i];
+    for(int i = 0; i < max_visibility.size(); i++){
+      cout << " " << max_visibility[i];
     }
     cout << endl;
   }
@@ -163,6 +165,7 @@ class FORRRegion{
       }
       if(max_visibility[(int)(degrees)] == -1.0 or max_visibility[(int)(degrees)] < dist_to_center){
         max_visibility[(int)(degrees)] = dist_to_center;
+        start_max_visibility[(int)(degrees)] = point;
       }
       avg_visibility[(int)(degrees)] = ((avg_visibility[(int)(degrees)] * count_visibility[(int)(degrees)]) + dist_to_center) / (count_visibility[(int)(degrees)] + 1);
       count_visibility[(int)(degrees)] ++;
@@ -177,6 +180,7 @@ class FORRRegion{
   void mergeVisibility(FORRRegion rg){
     // cout << "Inside Merge Visibility" << endl;
     vector<double> vis = rg.getMaxVisibility();
+    vector<CartesianPoint> = visStart = rg.getStartMaxVisibility();
     for(int i = 0; i < vis.size(); i++){
       double dist = vis[i];
       double angle;
@@ -194,6 +198,7 @@ class FORRRegion{
       // cout << "laser_direction " << laser_direction << " degrees " << degrees << " distance " << dist_to_center << endl;
       if(max_visibility[(int)(degrees)] == -1.0 or max_visibility[(int)(degrees)] < dist_to_center){
         max_visibility[(int)(degrees)] = dist_to_center;
+        start_max_visibility[(int)(degrees)] = visStart[i];
       }
     }
     vis = rg.getMinVisibility();
@@ -268,11 +273,19 @@ class FORRRegion{
     return avg_visibility;
   }
 
-  vector<CartesianPoint> getVisibilityEndPoints(){
-    vector<CartesianPoint> endPoints;
-    for(int i = 0; i < avg_visibility.size(); i++){
-      if(avg_visibility[i] == -1){
-        endPoints.push_back(center);
+  vector<double> getCountVisibility(){
+    return count_visibility;
+  }
+
+  vector<CartesianPoint> getStartMaxVisibility(){
+    return start_max_visibility;
+  }
+
+  vector<LineSegment> getVisibilityLineSegments(){
+    vector<LineSegment> endPoints;
+    for(int i = 0; i < max_visibility.size(); i++){
+      if(max_visibility[i] == -1){
+        endPoints.push_back(LineSegment(center, center));
       }
       else{
         double angle;
@@ -282,8 +295,8 @@ class FORRRegion{
         else{
           angle = (i - 0.0)/(180.0/3.141592653589793238463);
         }
-        CartesianPoint end_point = CartesianPoint(center.get_x() + avg_visibility[i]*cos(angle), center.get_y() + avg_visibility[i]*sin(angle));
-        endPoints.push_back(end_point);
+        CartesianPoint end_point = CartesianPoint(start_max_visibility[i].get_x() + max_visibility[i]*cos(angle), start_max_visibility[i].get_y() + max_visibility[i]*sin(angle));
+        endPoints.push_back(LineSegment(start_max_visibility[i], end_point));
       }
     }
     return endPoints;
@@ -421,6 +434,7 @@ class FORRRegion{
   vector<double> max_visibility;
   vector<double> avg_visibility;
   vector<double> count_visibility;
+  vector<CartesianPoint> start_max_visibility;
   double radius;
   bool isLeaf;
   vector<int> passage_values;

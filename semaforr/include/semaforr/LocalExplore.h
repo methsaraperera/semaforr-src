@@ -11,6 +11,7 @@
 
 #include <FORRGeometry.h>
 #include <Position.h>
+#include "PathPlanner.h"
 #include <vector>
 #include <math.h>
 #include <iostream>
@@ -85,19 +86,22 @@ public:
 	LocalExplorer(){
 		already_started = false;
 		start_of_potential = false;
+		finished_potentials = false;
 	};
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
 	bool getStartOfPotential() { return start_of_potential; }
+	bool getFinishedPotentials() { return finished_potentials; }
 	void resetLocalExplorer(){
 		already_started = false;
 		start_of_potential = false;
+		finished_potentials = false;
 		task = CartesianPoint();
 		potential_exploration.clear();
 		potential_queue = priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> >();
 		current_potential = PotentialPoints();
 	}
-	void setQueue(CartesianPoint goal, vector< LineSegment > pairs){
+	void setQueue(CartesianPoint goal, vector< LineSegment > pairs, PathPlanner *planner){
 		task = goal;
 		potential_exploration = pairs;
 		for(int i = 0; i < potential_exploration.size(); i++){
@@ -108,6 +112,59 @@ public:
 		current_potential.printDetails();
 		potential_queue.pop();
 		already_started = true;
+		pathPlanner = planner;
+	}
+	void atStartOfPotential(CartesianPoint current){
+		if(current.get_distance(current_potential.start) < 0.75){
+			start_of_potential = true;
+		}
+	}
+	bool atEndOfPotential(CartesianPoint current){
+		if(current.get_distance(current_potential.end) < 0.75){
+			if(potential_queue.size() > 0){
+				current_potential = potential_queue.top();
+				cout << "current_potential ";
+				current_potential.printDetails();
+				potential_queue.pop();
+			}
+			else{
+				finished_potentials = true;
+			}
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	vector<CartesianPoint> getPathToStart(CartesianPoint current){
+		vector<CartesianPoint> waypoints;
+		Node s(1, current.get_x()*100, current.get_y()*100);
+		pathPlanner->setSource(s);
+		Node t(1, current_potential.start.get_x()*100, current_potential.start.get_y()*100);
+		pathPlanner->setTarget(t);
+		cout << "plan generation status" << pathPlanner->calcPath(true) << endl;
+		list<int> waypointInd = pathPlanner->getPath();
+		list<int>::iterator it;
+		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+			// cout << "node " << (*it) << endl;
+			double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
+			double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
+			// cout << r_x << " " << r_y << endl;
+			CartesianPoint waypoint(r_x,r_y);
+			waypoints.push_back(waypoint);
+		}
+		return waypoints;
+	}
+
+	vector<CartesianPoint> getPathToEnd(){
+		vector<CartesianPoint> waypoints;
+		double tx, ty;
+		for(double j = 0; j <= 1; j += 0.1){
+			tx = (current_potential.end.get_x() * j) + (current_potential.start.get_x() * (1 - j));
+			ty = (current_potential.end.get_y() * j) + (current_potential.start.get_y() * (1 - j));
+			waypoints.push_back(CartesianPoint(tx, ty));
+		}
+		return waypoints;
 	}
 
 private:
@@ -117,6 +174,8 @@ private:
 	priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> > potential_queue;
 	PotentialPoints current_potential;
 	bool start_of_potential;
+	PathPlanner *pathPlanner;
+	bool finished_potentials;
 };
 
 #endif
