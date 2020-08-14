@@ -192,9 +192,9 @@ public:
 				search_access.push_back(false);
 			}
 			else{
-				for(int i = 0; i < laserEndpoints.size(); i++){
-					//ROS_DEBUG_STREAM("Laser endpoint : " << laserEndpoints[i].get_x() << "," << laserEndpoints[i].get_y());
-					if(do_intersect(Circle(task, search_radii[i]), LineSegment(current, laserEndpoints[i]))){
+				for(int j = 0; j < laserEndpoints.size(); j++){
+					//ROS_DEBUG_STREAM("Laser endpoint : " << laserEndpoints[j].get_x() << "," << laserEndpoints[j].get_y());
+					if(do_intersect(Circle(task, search_radii[i]), LineSegment(current, laserEndpoints[j]))){
 						canAccessRegion = true;
 						break;
 					}

@@ -191,17 +191,17 @@ double distance(CartesianPoint first, CartesianPoint second){
 
 
 CartesianPoint get_perpendicular(CartesianPoint point, Line line){
-  if(line.coefficient_b != 0){
-    double orig_slope = -line.coefficient_a / line.coefficient_b;
-    double orig_intercept = -line.coefficient_c / line.coefficient_b;
-    double perp_slope = line.coefficient_b / line.coefficient_a;
+  if(line.get_value_b() != 0){
+    double orig_slope = -line.get_value_a() / line.get_value_b();
+    double orig_intercept = line.get_value_c() / line.get_value_b();
+    double perp_slope = line.get_value_b() / line.get_value_a();
     double perp_intercept = point.get_y() - perp_slope * point.get_x();
     double intersection_x = (perp_intercept - orig_intercept) / (orig_slope - perp_slope);
     double intersection_y = orig_slope * intersection_x + orig_intercept;
     return CartesianPoint(intersection_x, intersection_y);
   }
   else{
-    return CartesianPoint(-line.coefficient_c / line.coefficient_a, point.get_y());
+    return CartesianPoint(line.get_value_c() / line.get_value_a(), point.get_y());
   }
 }
 
