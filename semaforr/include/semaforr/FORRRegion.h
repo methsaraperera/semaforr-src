@@ -180,7 +180,7 @@ class FORRRegion{
   void mergeVisibility(FORRRegion rg){
     // cout << "Inside Merge Visibility" << endl;
     vector<double> vis = rg.getMaxVisibility();
-    vector<CartesianPoint> = visStart = rg.getStartMaxVisibility();
+    vector<CartesianPoint> visStart = rg.getStartMaxVisibility();
     for(int i = 0; i < vis.size(); i++){
       double dist = vis[i];
       double angle;
@@ -295,7 +295,7 @@ class FORRRegion{
         else{
           angle = (i - 0.0)/(180.0/3.141592653589793238463);
         }
-        CartesianPoint end_point = CartesianPoint(start_max_visibility[i].get_x() + max_visibility[i]*cos(angle), start_max_visibility[i].get_y() + max_visibility[i]*sin(angle));
+        CartesianPoint end_point = CartesianPoint(center.get_x() + max_visibility[i]*cos(angle), center.get_y() + max_visibility[i]*sin(angle));
         endPoints.push_back(LineSegment(start_max_visibility[i], end_point));
       }
     }

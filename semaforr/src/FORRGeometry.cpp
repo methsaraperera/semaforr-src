@@ -190,6 +190,21 @@ double distance(CartesianPoint first, CartesianPoint second){
 }
 
 
+CartesianPoint get_perpendicular(CartesianPoint point, Line line){
+  if(line.coefficient_b != 0){
+    double orig_slope = -line.coefficient_a / line.coefficient_b;
+    double orig_intercept = -line.coefficient_c / line.coefficient_b;
+    double perp_slope = line.coefficient_b / line.coefficient_a;
+    double perp_intercept = point.get_y() - perp_slope * point.get_x();
+    double intersection_x = (perp_intercept - orig_intercept) / (orig_slope - perp_slope);
+    double intersection_y = orig_slope * intersection_x + orig_intercept;
+    return CartesianPoint(intersection_x, intersection_y);
+  }
+  else{
+    return CartesianPoint(-line.coefficient_c / line.coefficient_a, point.get_y());
+  }
+}
+
 // Formula taken from Wikipedia
 double distance(CartesianPoint point, Line line){
   return abs(line.coefficient_a * point.x + line.coefficient_b * point.y - line.coefficient_c) / sqrt (line.coefficient_a*line.coefficient_a + line.coefficient_b*line.coefficient_b);
@@ -197,18 +212,23 @@ double distance(CartesianPoint point, Line line){
 
 
 double distance(CartesianPoint point, LineSegment segment){
-  double tmp_distance;
-  if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) 
-      && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) 
-     && (point.y > min(segment.end_point_1.y , segment.end_point_2.y) 
-	&& point.y < max(segment.end_point_1.y , segment.end_point_2.y)))
-    // In this case we can reuse distance between point and line function
-    tmp_distance = distance(point, static_cast<Line>(segment));
-  
+  double tmp_distance_1 = -1;
+  double tmp_distance_2 = -1;
+  // if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) || (point.y > min(segment.end_point_1.y , segment.end_point_2.y) && point.y < max(segment.end_point_1.y , segment.end_point_2.y))){
+  //   // In this case we can reuse distance between point and line function
+  //   tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  // }
+  if(is_point_in_segment(get_perpendicular(point, static_cast<Line>(segment)), segment)){
+    tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  }
+  // else
+  tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2));
+  if(tmp_distance_1 > -1 and tmp_distance_1 < tmp_distance_2)
+    return tmp_distance_1;
   else
-    tmp_distance = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2));
+    return tmp_distance_2;
 
-  return tmp_distance;
+  // return tmp_distance;
 }
 
 

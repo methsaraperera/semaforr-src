@@ -166,6 +166,50 @@ public:
 		}
 		return waypoints;
 	}
+	void randomExploration(CartesianPoint current, vector<CartesianPoint> laserEndpoints, CartesianPoint goal){
+		cout << "randomExploration " << current.get_x() << " " << current.get_y() << " " << goal.get_x() << " " << goal.get_y() << endl;
+		task = goal;
+		double dist_to_goal = task.get_distance(current);
+		double max_search_radius = (int)(dist_to_goal)+1.0;
+		double min_search_radius = 5.0;
+		cout << "dist_to_goal " << dist_to_goal << " min_search_radius " << min_search_radius << " max_search_radius " << max_search_radius << endl;
+		vector<double> search_radii;
+		if(max_search_radius >= min_search_radius){
+			for(double i = min_search_radius; i <= max_search_radius; i += 1.0){
+				search_radii.push_back(i);
+			}
+		}
+		else{
+			search_radii.push_back(min_search_radius);
+		}
+		cout << "search_radii " << search_radii.size() << endl;
+		vector<bool> search_access;
+		for(int i = 0; i < search_radii.size(); i++){
+			bool canAccessRegion = false;
+			double distLaserPosToPoint = current.get_distance(task);
+			if(distLaserPosToPoint - search_radii[i] > 20){
+				cout << search_radii[i] << " 0" << endl;
+				search_access.push_back(false);
+			}
+			else{
+				for(int i = 0; i < laserEndpoints.size(); i++){
+					//ROS_DEBUG_STREAM("Laser endpoint : " << laserEndpoints[i].get_x() << "," << laserEndpoints[i].get_y());
+					if(do_intersect(Circle(task, search_radii[i]), LineSegment(current, laserEndpoints[i]))){
+						canAccessRegion = true;
+						break;
+					}
+				}
+				cout << search_radii[i] << " " << canAccessRegion << endl;
+				search_access.push_back(canAccessRegion);
+			}
+		}
+		for(int i = search_radii.size()-1; i >= 0; i--){
+			if(search_access[i]){
+				cout << "closest visible radii " << search_radii[i] << endl;
+				break;
+			}
+		}
+	}
 
 private:
 	bool already_started;
