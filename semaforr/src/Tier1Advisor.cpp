@@ -1160,6 +1160,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
     else{
       CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
       cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
+      CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
       double search_radius = 5.0;
       vector< vector<Position> > remaining_candidates = beliefs->getAgentState()->getRemainingCandidates();
       vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
@@ -1178,29 +1179,31 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         // }
       }
       for(int i = 0; i < regions.size(); i++){
-        vector<LineSegment> vis_segments = regions[i].getVisibilityLineSegments();
-        double min_distance = search_radius;
-        LineSegment min_segment;
-        for(int j = 0; j < vis_segments.size(); j++){
-          double dist_to_target = distance(task, vis_segments[j]);
-          if(dist_to_target < search_radius and dist_to_target < min_distance){
-            min_segment = vis_segments[j];
-            min_distance = dist_to_target;
+        if(current.get_distance(regions[i].getCenter()) - regions[i].getRadius() <= 25){
+          vector<LineSegment> vis_segments = regions[i].getVisibilityLineSegments();
+          double min_distance = search_radius;
+          LineSegment min_segment;
+          for(int j = 0; j < vis_segments.size(); j++){
+            double dist_to_target = distance(task, vis_segments[j]);
+            if(dist_to_target < search_radius and dist_to_target < min_distance){
+              min_segment = vis_segments[j];
+              min_distance = dist_to_target;
+            }
+            // if(task.get_distance(vis_endpoints[j]) < search_radius or task.get_distance((vis_endpoints[j].get_x() + regions[i].getCenter().get_x())/2, (vis_endpoints[j].get_y() + regions[i].getCenter().get_y())/2) < search_radius){
+            //   vector<CartesianPoint> potential;
+            //   potential.push_back(regions[i].getCenter());
+            //   potential.push_back(vis_endpoints[j]);
+            //   potential_exploration.push_back(potential);
+            // }
           }
-          // if(task.get_distance(vis_endpoints[j]) < search_radius or task.get_distance((vis_endpoints[j].get_x() + regions[i].getCenter().get_x())/2, (vis_endpoints[j].get_y() + regions[i].getCenter().get_y())/2) < search_radius){
-          //   vector<CartesianPoint> potential;
-          //   potential.push_back(regions[i].getCenter());
-          //   potential.push_back(vis_endpoints[j]);
-          //   potential_exploration.push_back(potential);
-          // }
-        }
-        if(min_distance < search_radius){
-          potential_exploration.push_back(min_segment);
+          if(min_distance < search_radius){
+            potential_exploration.push_back(min_segment);
+          }
         }
       }
       vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
       for(int i = 0; i < laserEndpoints.size(); i++){
-        LineSegment pair = LineSegment(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()), laserEndpoints[i]);
+        LineSegment pair = LineSegment(current, laserEndpoints[i]);
         if(distance(task, pair) < search_radius){
           potential_exploration.push_back(pair);
         }
@@ -1208,7 +1211,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       cout << "potential_exploration " << potential_exploration.size() << endl;
       if(potential_exploration.size() > 0){
         localExploration->setQueue(task, potential_exploration, beliefs->getAgentState()->getCurrentTask()->getPathPlanner());
-        localExploration->atStartOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()));
+        localExploration->atStartOfPotential(current);
         if(localExploration->getStartOfPotential()){
           cout << "go to end of current potential" << endl;
           vector<CartesianPoint> waypoints = localExploration->getPathToEnd();
@@ -1224,7 +1227,8 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
             beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], true);
           }
-          vector<CartesianPoint> waypoints = localExploration->getPathToStart(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()));
+          //CHECK IF CURRENT IN REGION OTHERWISE FOLLOW PATH TRAIL BACK TO REGION
+          vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
           for(int i = waypoints.size()-1; i >= 0; i--){
             cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
             beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], true);
@@ -1233,7 +1237,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       }
       else{
         cout << "no available potential places" << endl;
-        localExploration->randomExploration(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()), beliefs->getAgentState()->getCurrentLaserEndpoints(), task);
+        localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task);
       }
     }
   }
