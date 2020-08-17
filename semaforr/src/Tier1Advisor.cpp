@@ -1198,6 +1198,13 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           potential_exploration.push_back(min_segment);
         }
       }
+      vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+      for(int i = 0; i < laserEndpoints.size(); i++){
+        LineSegment pair = LineSegment(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()), laserEndpoints[i]);
+        if(distance(task, pair) < search_radius){
+          potential_exploration.push_back(pair);
+        }
+      }
       cout << "potential_exploration " << potential_exploration.size() << endl;
       if(potential_exploration.size() > 0){
         localExploration->setQueue(task, potential_exploration, beliefs->getAgentState()->getCurrentTask()->getPathPlanner());
@@ -1206,6 +1213,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           cout << "go to end of current potential" << endl;
           vector<CartesianPoint> waypoints = localExploration->getPathToEnd();
           for(int i = waypoints.size()-1; i >= 0; i--){
+            cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
             beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], true);
           }
         }
