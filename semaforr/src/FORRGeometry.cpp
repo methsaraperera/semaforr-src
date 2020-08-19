@@ -220,6 +220,27 @@ double distance(CartesianPoint point, LineSegment segment){
   // }
   CartesianPoint perpendicular_point = get_perpendicular(point, static_cast<Line>(segment));
   if(is_point_in_segment(perpendicular_point, segment)){
+    tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  }
+  // else
+  tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2));
+  if(tmp_distance_1 > -1 and tmp_distance_1 < tmp_distance_2)
+    return tmp_distance_1;
+  else
+    return tmp_distance_2;
+
+  // return tmp_distance;
+}
+
+double distance_to_intersection(CartesianPoint point, LineSegment segment){
+  double tmp_distance_1 = -1;
+  double tmp_distance_2 = -1;
+  // if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) || (point.y > min(segment.end_point_1.y , segment.end_point_2.y) && point.y < max(segment.end_point_1.y , segment.end_point_2.y))){
+  //   // In this case we can reuse distance between point and line function
+  //   tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  // }
+  CartesianPoint perpendicular_point = get_perpendicular(point, static_cast<Line>(segment));
+  if(is_point_in_segment(perpendicular_point, segment)){
     tmp_distance_1 = distance(point, static_cast<Line>(segment)) + distance(perpendicular_point, segment.end_point_1);
   }
   // else
@@ -231,6 +252,7 @@ double distance(CartesianPoint point, LineSegment segment){
 
   // return tmp_distance;
 }
+
 
 
 bool is_point_on_line(CartesianPoint point, Line line){

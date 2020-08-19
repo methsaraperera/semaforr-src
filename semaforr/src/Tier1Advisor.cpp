@@ -132,6 +132,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
     beliefs->getAgentState()->setRepositionTriggered(false);
   }
   if(localExploration->getAlreadyStarted()){
+    double search_radius = 7.0;
     CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
     vector< LineSegment > potential_exploration;
     vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();

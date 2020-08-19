@@ -36,7 +36,7 @@ struct PotentialPoints{
 		pair = p;
 		start = pair.get_endpoints().first;
 		end = pair.get_endpoints().second;
-		dist_to_goal = distance(target, pair);
+		dist_to_goal = distance_to_intersection(target, pair);
 		start_dist_to_goal = start.get_distance(target);
 		end_dist_to_goal = end.get_distance(target);
 		printDetails();
