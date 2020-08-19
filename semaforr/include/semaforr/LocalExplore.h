@@ -91,7 +91,19 @@ public:
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
 	bool getStartOfPotential() { return start_of_potential; }
-	bool getFinishedPotentials() { return finished_potentials; }
+	bool getFinishedPotentials() { 
+		if(potential_queue.size() > 0){
+			current_potential = potential_queue.top();
+			cout << "current_potential ";
+			current_potential.printDetails();
+			potential_queue.pop();
+			finished_potentials = false;
+		}
+		else{
+			finished_potentials = true;
+		}
+		return finished_potentials;
+	}
 	void resetLocalExplorer(){
 		already_started = false;
 		start_of_potential = false;
@@ -114,6 +126,11 @@ public:
 		already_started = true;
 		pathPlanner = planner;
 	}
+	void addToQueue(vector< LineSegment > pairs){
+		for(int i = 0; i < potential_exploration.size(); i++){
+			potential_queue.push(PotentialPoints(potential_exploration[i], task));
+		}
+	}
 	void atStartOfPotential(CartesianPoint current){
 		if(current.get_distance(current_potential.start) < 0.75){
 			start_of_potential = true;
@@ -121,20 +138,14 @@ public:
 	}
 	bool atEndOfPotential(CartesianPoint current){
 		if(current.get_distance(current_potential.end) < 0.75){
-			if(potential_queue.size() > 0){
-				current_potential = potential_queue.top();
-				cout << "current_potential ";
-				current_potential.printDetails();
-				potential_queue.pop();
-			}
-			else{
-				finished_potentials = true;
-			}
 			return true;
 		}
 		else{
 			return false;
 		}
+	}
+	CartesianPoint getEndOfPotential(){
+		return current_potential.end;
 	}
 	vector<CartesianPoint> getPathToStart(CartesianPoint current){
 		vector<CartesianPoint> waypoints;
