@@ -131,6 +131,18 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   if(decisionMade == true){
     beliefs->getAgentState()->setRepositionTriggered(false);
   }
+  if(localExploration->getAlreadyStarted()){
+    CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+    vector< LineSegment > potential_exploration;
+    vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+    for(int i = 0; i < laserEndpoints.size(); i++){
+      LineSegment pair = LineSegment(current, laserEndpoints[i]);
+      if(distance(task, pair) < search_radius){
+        potential_exploration.push_back(pair);
+      }
+    }
+    localExploration->addToQueue(potential_exploration);
+  }
   return decisionMade;
 }
 
@@ -1123,22 +1135,24 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
 bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
   ROS_DEBUG("In advisor FindAWay");
   bool decisionMade = false;
-  double search_radius = 5.0;
+  double search_radius = 7.0;
   if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0 or !beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() or localExploration->getAlreadyStarted()){
     cout << "No active plan, try to do local exploration" << endl;
     if(localExploration->getAlreadyStarted()){
+      cout << "Exploration already started" << endl;
       CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
-      if(localExploration->atEndOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) or beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25)){
-        CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
-        vector< LineSegment > potential_exploration;
-        vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
-        for(int i = 0; i < laserEndpoints.size(); i++){
-          LineSegment pair = LineSegment(current, laserEndpoints[i]);
-          if(distance(task, pair) < search_radius){
-            potential_exploration.push_back(pair);
-          }
-        }
-        localExploration->addToQueue(potential_exploration);
+      if(localExploration->atEndOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) or !beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25)){
+        cout << "At end of current potential or cannot see end of potential" << endl;
+        // CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
+        // vector< LineSegment > potential_exploration;
+        // vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
+        // for(int i = 0; i < laserEndpoints.size(); i++){
+        //   LineSegment pair = LineSegment(current, laserEndpoints[i]);
+        //   if(distance(task, pair) < search_radius){
+        //     potential_exploration.push_back(pair);
+        //   }
+        // }
+        // localExploration->addToQueue(potential_exploration);
         if(!localExploration->getFinishedPotentials()){
           cout << "finished current potential, go to next" << endl;
           localExploration->atStartOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()));

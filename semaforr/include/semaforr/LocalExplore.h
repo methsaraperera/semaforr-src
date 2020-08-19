@@ -92,6 +92,7 @@ public:
 		already_started = false;
 		start_of_potential = false;
 		finished_potentials = false;
+		distance_threshold = 2;
 	};
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
@@ -99,17 +100,23 @@ public:
 	bool getFinishedPotentials() { 
 		if(potential_queue.size() > 0){
 			bool picked_new = false;
-			while(!picked_new){
+			while(!picked_new and potential_queue.size() > 0){
 				current_potential = potential_queue.top();
 				if(!alreadyInStack(current_potential)){
 					picked_new = true;
 				}
 				potential_exploration.push_back(current_potential);
+				potential_queue.pop();
 			}
-			cout << "current_potential ";
-			current_potential.printDetails();
-			potential_queue.pop();
-			finished_potentials = false;
+			if(picked_new == true){
+				cout << "current_potential ";
+				current_potential.printDetails();
+				potential_queue.pop();
+				finished_potentials = false;
+			}
+			else{
+				finished_potentials = true;
+			}
 		}
 		else{
 			finished_potentials = true;
@@ -128,7 +135,9 @@ public:
 	void setQueue(CartesianPoint goal, vector< LineSegment > pairs, PathPlanner *planner){
 		task = goal;
 		for(int i = 0; i < pairs.size(); i++){
-			potential_queue.push(PotentialPoints(pairs[i], task));
+			if(pairs[i].get_length() >= distance_threshold){
+				potential_queue.push(PotentialPoints(pairs[i], task));
+			}
 		}
 		current_potential = potential_queue.top();
 		potential_exploration.push_back(current_potential);
@@ -140,7 +149,9 @@ public:
 	}
 	void addToQueue(vector< LineSegment > pairs){
 		for(int i = 0; i < pairs.size(); i++){
-			potential_queue.push(PotentialPoints(pairs[i], task));
+			if(pairs[i].get_length() >= distance_threshold){
+				potential_queue.push(PotentialPoints(pairs[i], task));
+			}
 		}
 	}
 	void atStartOfPotential(CartesianPoint current){
@@ -253,6 +264,7 @@ public:
 	}
 
 private:
+	double distance_threshold;
 	bool already_started;
 	CartesianPoint task;
 	vector< PotentialPoints > potential_exploration;
