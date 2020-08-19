@@ -45,7 +45,12 @@ struct PotentialPoints{
 		cout << "start " << start.get_x() << " " << start.get_y() << " end " << end.get_x() << " " << end.get_y() << " dist_to_goal " << dist_to_goal << " start_dist_to_goal " << start_dist_to_goal << " end_dist_to_goal " << end_dist_to_goal << endl;
 	}
 	bool operator==(const PotentialPoints p) {
-		return (start == p.start and end == p.end);
+		if((start == p.start and end == p.end) or end.get_distance(p.end) < 0.75){
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 	bool operator < (const PotentialPoints p) const{
 		if(dist_to_goal < p.dist_to_goal){
@@ -93,7 +98,14 @@ public:
 	bool getAtStartOfPotential() { return start_of_potential; }
 	bool getFinishedPotentials() { 
 		if(potential_queue.size() > 0){
-			current_potential = potential_queue.top();
+			bool picked_new = false;
+			while(!picked_new){
+				current_potential = potential_queue.top();
+				if(!alreadyInStack(current_potential)){
+					picked_new = true;
+				}
+				potential_exploration.push_back(current_potential);
+			}
 			cout << "current_potential ";
 			current_potential.printDetails();
 			potential_queue.pop();
@@ -115,11 +127,11 @@ public:
 	}
 	void setQueue(CartesianPoint goal, vector< LineSegment > pairs, PathPlanner *planner){
 		task = goal;
-		potential_exploration = pairs;
-		for(int i = 0; i < potential_exploration.size(); i++){
-			potential_queue.push(PotentialPoints(potential_exploration[i], task));
+		for(int i = 0; i < pairs.size(); i++){
+			potential_queue.push(PotentialPoints(pairs[i], task));
 		}
 		current_potential = potential_queue.top();
+		potential_exploration.push_back(current_potential);
 		cout << "current_potential ";
 		current_potential.printDetails();
 		potential_queue.pop();
@@ -127,8 +139,8 @@ public:
 		pathPlanner = planner;
 	}
 	void addToQueue(vector< LineSegment > pairs){
-		for(int i = 0; i < potential_exploration.size(); i++){
-			potential_queue.push(PotentialPoints(potential_exploration[i], task));
+		for(int i = 0; i < pairs.size(); i++){
+			potential_queue.push(PotentialPoints(pairs[i], task));
 		}
 	}
 	void atStartOfPotential(CartesianPoint current){
@@ -149,6 +161,21 @@ public:
 	}
 	CartesianPoint getEndOfPotential(){
 		return current_potential.end;
+	}
+	bool alreadyInStack(PotentialPoints segment){
+		bool inCompleted = false;
+		for(int i = 0; i < potential_exploration.size(); i++){
+			if(segment == potential_exploration[i]){
+				inCompleted = true;
+				break;
+			}
+		}
+		if(inCompleted){
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 	vector<CartesianPoint> getPathToStart(CartesianPoint current){
 		vector<CartesianPoint> waypoints;
@@ -228,7 +255,7 @@ public:
 private:
 	bool already_started;
 	CartesianPoint task;
-	vector< LineSegment > potential_exploration;
+	vector< PotentialPoints > potential_exploration;
 	priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> > potential_queue;
 	PotentialPoints current_potential;
 	bool start_of_potential;
