@@ -52,7 +52,6 @@ public:
     desiredDirection = -1;
     directionEnd = false;
     repositionTriggered = false;
-    localExploreTriggered = false;
     repositionPoint = CartesianPoint(0.0,0.0);
 
     for(int i = 1; i < numRotates; i++){
@@ -353,15 +352,6 @@ public:
 
   CartesianPoint getRepositionPoint(){return repositionPoint;}
 
-  bool getLocalExploreTriggered(){
-    cout << "localExploreTriggered " << localExploreTriggered << endl;
-    return localExploreTriggered;
-  }
-  void setLocalExploreTriggered(bool status){
-    cout << "setLocalExploreTriggered " << status << endl;
-    localExploreTriggered = status;
-  }
-
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
@@ -564,9 +554,6 @@ public:
   // Doorway
   CartesianPoint repositionPoint;
   bool repositionTriggered;
-
-  // FindAWay
-  bool localExploreTriggered;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);

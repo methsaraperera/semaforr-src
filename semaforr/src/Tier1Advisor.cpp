@@ -1123,11 +1123,13 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
 bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
   ROS_DEBUG("In advisor FindAWay");
   bool decisionMade = false;
+  double search_radius = 5.0;
   if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0 or !beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() or localExploration->getAlreadyStarted()){
     cout << "No active plan, try to do local exploration" << endl;
     if(localExploration->getAlreadyStarted()){
       CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
       if(localExploration->atEndOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) or beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25)){
+        CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
         vector< LineSegment > potential_exploration;
         vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
         for(int i = 0; i < laserEndpoints.size(); i++){
@@ -1140,7 +1142,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         if(!localExploration->getFinishedPotentials()){
           cout << "finished current potential, go to next" << endl;
           localExploration->atStartOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()));
-          if(localExploration->getStartOfPotential()){
+          if(localExploration->getAtStartOfPotential()){
             cout << "go to end of current potential" << endl;
             vector<CartesianPoint> waypoints = localExploration->getPathToEnd();
             for(int i = waypoints.size()-1; i >= 0; i--){
@@ -1161,6 +1163,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               if(regions[i].inRegion(current))
                 currently_in_region = true;
             }
+            cout << "currently_in_region " << currently_in_region << endl;
             if(currently_in_region){
               vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
               for(int i = waypoints.size()-1; i >= 0; i--){
@@ -1171,20 +1174,53 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             else{
               vector<Position> *positionHis = beliefs->getAgentState()->getAllPositionTrace();
               bool found_recent_in_region = false;
-              CartesianPoint new_start;
-              int new_start_ind;
+              CartesianPoint new_start_region;
+              bool found_recent_nearby = false;
+              CartesianPoint new_start_nearby;
+              int new_start_region_ind = -1;
+              int new_start_nearby_ind = -1;
               for(int i = 1; i < positionHis->size(); i++){
-                for(int i = 0; i < regions.size(); i++){
-                  if(regions[i].inRegion(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()))){
-                    new_start = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
-                    new_start_ind = i;
-                    found_recent_in_region = true;
-                    break;
+                if(found_recent_in_region == false){
+                  for(int j = 0; j < regions.size(); j++){
+                    if(regions[j].inRegion(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()))){
+                      new_start_region = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
+                      new_start_region_ind = i;
+                      found_recent_in_region = true;
+                      break;
+                    }
                   }
                 }
-                if(found_recent_in_region == true){
+                if(found_recent_nearby == false){
+                  if(current.get_distance(localExploration->getStartOfPotential()) < 0.75){
+                    new_start_nearby = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
+                    new_start_nearby_ind = i;
+                    found_recent_nearby = true;
+                  }
+                }
+                if(found_recent_in_region == true or found_recent_nearby == true){
                   break;
                 }
+              }
+              cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
+              CartesianPoint new_start;
+              int new_start_ind;
+              if(found_recent_in_region == true and found_recent_nearby == true){
+                if(new_start_region_ind < new_start_nearby_ind){
+                  new_start = new_start_region;
+                  new_start_ind = new_start_region_ind;
+                }
+                else{
+                  new_start = new_start_nearby;
+                  new_start_ind = new_start_nearby_ind;
+                }
+              }
+              else if(found_recent_in_region == true){
+                new_start = new_start_region;
+                new_start_ind = new_start_region_ind;
+              }
+              else if(found_recent_nearby == true){
+                new_start = new_start_nearby;
+                new_start_ind = new_start_nearby_ind;
               }
               vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start);
               for(int i = waypoints.size()-1; i >= 0; i--){
@@ -1224,7 +1260,6 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
       cout << "Target = " << task.get_x() << " " << task.get_y() << endl;
       CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
-      double search_radius = 5.0;
       vector< vector<Position> > remaining_candidates = beliefs->getAgentState()->getRemainingCandidates();
       vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
       cout << "remaining_candidates " << remaining_candidates.size() << " regions " << regions.size() << endl;
@@ -1278,7 +1313,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       if(potential_exploration.size() > 0){
         localExploration->setQueue(task, potential_exploration, beliefs->getAgentState()->getCurrentTask()->getPathPlanner());
         localExploration->atStartOfPotential(current);
-        if(localExploration->getStartOfPotential()){
+        if(localExploration->getAtStartOfPotential()){
           cout << "go to end of current potential" << endl;
           vector<CartesianPoint> waypoints = localExploration->getPathToEnd();
           for(int i = waypoints.size()-1; i >= 0; i--){
@@ -1294,6 +1329,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], true);
           }
           //CHECK IF CURRENT IN REGION OTHERWISE FOLLOW PATH TRAIL BACK TO REGION
+          cout << "currently_in_region " << currently_in_region << endl;
           if(currently_in_region){
             vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
             for(int i = waypoints.size()-1; i >= 0; i--){
@@ -1304,20 +1340,53 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           else{
             vector<Position> *positionHis = beliefs->getAgentState()->getAllPositionTrace();
             bool found_recent_in_region = false;
-            CartesianPoint new_start;
-            int new_start_ind;
+            CartesianPoint new_start_region;
+            bool found_recent_nearby = false;
+            CartesianPoint new_start_nearby;
+            int new_start_region_ind = -1;
+            int new_start_nearby_ind = -1;
             for(int i = 1; i < positionHis->size(); i++){
-              for(int i = 0; i < regions.size(); i++){
-                if(regions[i].inRegion(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()))){
-                  new_start = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
-                  new_start_ind = i;
-                  found_recent_in_region = true;
-                  break;
+              if(found_recent_in_region == false){
+                for(int j = 0; j < regions.size(); j++){
+                  if(regions[j].inRegion(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()))){
+                    new_start_region = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
+                    new_start_region_ind = i;
+                    found_recent_in_region = true;
+                    break;
+                  }
                 }
               }
-              if(found_recent_in_region == true){
+              if(found_recent_nearby == false){
+                if(current.get_distance(localExploration->getStartOfPotential()) < 0.75){
+                  new_start_nearby = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
+                  new_start_nearby_ind = i;
+                  found_recent_nearby = true;
+                }
+              }
+              if(found_recent_in_region == true or found_recent_nearby == true){
                 break;
               }
+            }
+            cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
+            CartesianPoint new_start;
+            int new_start_ind;
+            if(found_recent_in_region == true and found_recent_nearby == true){
+              if(new_start_region_ind < new_start_nearby_ind){
+                new_start = new_start_region;
+                new_start_ind = new_start_region_ind;
+              }
+              else{
+                new_start = new_start_nearby;
+                new_start_ind = new_start_nearby_ind;
+              }
+            }
+            else if(found_recent_in_region == true){
+              new_start = new_start_region;
+              new_start_ind = new_start_region_ind;
+            }
+            else if(found_recent_nearby == true){
+              new_start = new_start_nearby;
+              new_start_ind = new_start_nearby_ind;
             }
             vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start);
             for(int i = waypoints.size()-1; i >= 0; i--){

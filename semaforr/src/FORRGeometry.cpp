@@ -218,11 +218,12 @@ double distance(CartesianPoint point, LineSegment segment){
   //   // In this case we can reuse distance between point and line function
   //   tmp_distance_1 = distance(point, static_cast<Line>(segment));
   // }
-  if(is_point_in_segment(get_perpendicular(point, static_cast<Line>(segment)), segment)){
-    tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  CartesianPoint perpendicular_point = get_perpendicular(point, static_cast<Line>(segment));
+  if(is_point_in_segment(perpendicular_point, segment)){
+    tmp_distance_1 = distance(point, static_cast<Line>(segment)) + distance(perpendicular_point, segment.end_point_1);
   }
   // else
-  tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2));
+  tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2)) + segment.get_length();
   if(tmp_distance_1 > -1 and tmp_distance_1 < tmp_distance_2)
     return tmp_distance_1;
   else

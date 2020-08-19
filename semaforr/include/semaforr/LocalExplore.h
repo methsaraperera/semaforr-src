@@ -90,7 +90,7 @@ public:
 	};
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
-	bool getStartOfPotential() { return start_of_potential; }
+	bool getAtStartOfPotential() { return start_of_potential; }
 	bool getFinishedPotentials() { 
 		if(potential_queue.size() > 0){
 			current_potential = potential_queue.top();
@@ -143,6 +143,9 @@ public:
 		else{
 			return false;
 		}
+	}
+	CartesianPoint getStartOfPotential(){
+		return current_potential.start;
 	}
 	CartesianPoint getEndOfPotential(){
 		return current_potential.end;
