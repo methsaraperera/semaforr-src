@@ -185,6 +185,8 @@ class LineSegment: public Line{
   */
   friend double distance(CartesianPoint point, LineSegment segment);
 
+  friend double distance_to_intersection(CartesianPoint point, LineSegment segment);
+
   friend CartesianPoint get_perpendicular(CartesianPoint point, Line line);
   
   friend bool is_point_in_segment(CartesianPoint point, LineSegment segment);

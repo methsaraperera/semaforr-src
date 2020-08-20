@@ -266,6 +266,9 @@ class Task {
   	skeleton_waypoints.clear();
   	tierTwoWaypoints.clear();
   	origWaypoints.clear();
+  	wx = x;
+  	wy = y;
+  	wr = sk_waypoint();
   }
 
   // list<int> getWaypointInds(){return waypointInd;}

@@ -1142,8 +1142,9 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
     if(localExploration->getAlreadyStarted()){
       cout << "Exploration already started" << endl;
       CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
-      if(localExploration->atEndOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) or !beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25)){
+      if(localExploration->atEndOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) or (!beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25) and !beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25))){
         cout << "At end of current potential or cannot see end of potential" << endl;
+        beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
         // CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
         // vector< LineSegment > potential_exploration;
         // vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
@@ -1258,11 +1259,6 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               for(int i = 0; i < trailPositions.size(); i++){
                 beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
               }
-            }
-            vector<CartesianPoint> waypoints = localExploration->getPathToStart(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY()));
-            for(int i = waypoints.size()-1; i >= 0; i--){
-              cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
-              beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], true);
             }
           }
         }
