@@ -167,6 +167,9 @@ public:
 		if(current.get_distance(current_potential.start) < 0.75){
 			start_of_potential = true;
 		}
+		else{
+			start_of_potential = false;
+		}
 	}
 	bool atEndOfPotential(CartesianPoint current){
 		if(current.get_distance(current_potential.end) < 0.75){
@@ -214,6 +217,7 @@ public:
 			CartesianPoint waypoint(r_x,r_y);
 			waypoints.push_back(waypoint);
 		}
+		planner->resetPath();
 		return waypoints;
 	}
 
