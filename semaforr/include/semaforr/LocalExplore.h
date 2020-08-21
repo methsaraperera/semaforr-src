@@ -100,13 +100,15 @@ public:
 	bool getFinishedPotentials() { 
 		if(potential_queue.size() > 0){
 			bool picked_new = false;
-			while(!picked_new and potential_queue.size() > 0){
+			int count = potential_queue.size()-1;
+			while(!picked_new and count > 0){
 				current_potential = potential_queue.top();
 				if(!alreadyInStack(current_potential)){
 					picked_new = true;
 				}
 				potential_exploration.push_back(current_potential);
 				potential_queue.pop();
+				count = count - 1;
 			}
 			if(picked_new == true){
 				cout << "current_potential ";
