@@ -941,6 +941,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
+      beliefs->getAgentState()->setFindAWayCount(0);
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
@@ -961,6 +962,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
+      beliefs->getAgentState()->setFindAWayCount(0);
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
@@ -1007,6 +1009,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
         beliefs->getAgentState()->setRepositionTriggered(false);
+        beliefs->getAgentState()->setFindAWayCount(0);
         tier1->resetLocalExploration();
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();

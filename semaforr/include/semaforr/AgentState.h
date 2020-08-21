@@ -53,7 +53,7 @@ public:
     directionEnd = false;
     repositionTriggered = false;
     repositionPoint = CartesianPoint(0.0,0.0);
-
+    findAWayCount = 0;
     for(int i = 1; i < numRotates; i++){
       action_set->insert(FORRAction(LEFT_TURN, i));
       action_set->insert(FORRAction(RIGHT_TURN, i));
@@ -352,6 +352,14 @@ public:
 
   CartesianPoint getRepositionPoint(){return repositionPoint;}
 
+  int getFindAWayCount() { return findAWayCount; }
+
+  void setFindAWayCount(int num){
+    findAWayCount = num;
+  }
+
+  void increaseFindAWayCount(){ findAWayCount++; }
+
   // Can a robot see a segment or a point using its laser scan data?
   bool canSeeSegment(CartesianPoint point1, CartesianPoint point2);
   bool canSeeSegment(vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point1, CartesianPoint point2);
@@ -554,6 +562,9 @@ public:
   // Doorway
   CartesianPoint repositionPoint;
   bool repositionTriggered;
+
+  // FindAWay
+  int findAWayCount;
 
   //after linear move
   Position afterLinearMove(Position initialPosition, double distance);
