@@ -1142,9 +1142,10 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
     if(localExploration->getAlreadyStarted()){
       cout << "Exploration already started" << endl;
       CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
-      if(localExploration->atEndOfPotential(CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY())) or (!beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25) and !beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25))){
-        cout << "At end of current potential or cannot see end of potential" << endl;
+      if(localExploration->atEndOfPotential(current) or (!beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25) and !beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25))){
+        cout << "At end of current potential " << localExploration->atEndOfPotential(current) << " cannot see end of potential " << beliefs->getAgentState()->canSeePoint(localExploration->getEndOfPotential(), 25) << " next waypoint " << beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25) << endl;
         beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
+        cout << "waypoints cleared" << endl;
         // CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
         // vector< LineSegment > potential_exploration;
         // vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
@@ -1320,8 +1321,8 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           potential_exploration.push_back(pair);
         }
       }
-      cout << "potential_exploration " << potential_exploration.size() << endl;
-      if(potential_exploration.size() > 0){
+      cout << "potential_exploration " << .size() << endl;
+      if(potential_exploration.size() > 0){potential_exploration
         localExploration->setQueue(task, potential_exploration, beliefs->getAgentState()->getCurrentTask()->getPathPlanner());
         localExploration->atStartOfPotential(current);
         if(localExploration->getAtStartOfPotential()){

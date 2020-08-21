@@ -191,6 +191,7 @@ double distance(CartesianPoint first, CartesianPoint second){
 
 
 CartesianPoint get_perpendicular(CartesianPoint point, Line line){
+  cout << "get_perpendicular " << line.get_value_a() << " " << line.get_value_b() << " " << line.get_value_c() << endl;
   if(line.get_value_b() != 0){
     double orig_slope = -line.get_value_a() / line.get_value_b();
     double orig_intercept = line.get_value_c() / line.get_value_b();
@@ -198,9 +199,11 @@ CartesianPoint get_perpendicular(CartesianPoint point, Line line){
     double perp_intercept = point.get_y() - perp_slope * point.get_x();
     double intersection_x = (perp_intercept - orig_intercept) / (orig_slope - perp_slope);
     double intersection_y = orig_slope * intersection_x + orig_intercept;
+    cout << orig_slope << " " << orig_intercept << " " << perp_slope << " " << perp_intercept << " " << intersection_x << " " << intersection_y << endl;
     return CartesianPoint(intersection_x, intersection_y);
   }
   else{
+    cout << line.get_value_c() / line.get_value_a() << " " << point.get_y() << endl;
     return CartesianPoint(line.get_value_c() / line.get_value_a(), point.get_y());
   }
 }
@@ -233,6 +236,7 @@ double distance(CartesianPoint point, LineSegment segment){
 }
 
 double distance_to_intersection(CartesianPoint point, LineSegment segment){
+  cout << "in distance_to_intersection" << endl;
   double tmp_distance_1 = -1;
   double tmp_distance_2 = -1;
   // if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) || (point.y > min(segment.end_point_1.y , segment.end_point_2.y) && point.y < max(segment.end_point_1.y , segment.end_point_2.y))){
@@ -241,10 +245,14 @@ double distance_to_intersection(CartesianPoint point, LineSegment segment){
   // }
   CartesianPoint perpendicular_point = get_perpendicular(point, static_cast<Line>(segment));
   if(is_point_in_segment(perpendicular_point, segment)){
+    cout << distance(point, static_cast<Line>(segment)) << " " << distance(perpendicular_point, segment.end_point_1) << endl;
     tmp_distance_1 = distance(point, static_cast<Line>(segment)) + distance(perpendicular_point, segment.end_point_1);
   }
+  cout << "tmp_distance_1 " << tmp_distance_1 << endl;
   // else
+  cout << distance(point, segment.end_point_1) << " " << distance(point, segment.end_point_2) << " " << segment.get_length() << endl;
   tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2)) + segment.get_length();
+  cout << "tmp_distance_2 " << tmp_distance_2 << endl;
   if(tmp_distance_1 > -1 and tmp_distance_1 < tmp_distance_2)
     return tmp_distance_1;
   else
@@ -261,6 +269,7 @@ bool is_point_on_line(CartesianPoint point, Line line){
 
 
 bool is_point_in_segment(CartesianPoint point, LineSegment segment){
+  cout << "is_point_in_segment " << distance(point, segment.end_point_1) << " " << distance(point, segment.end_point_2) << " " << distance(segment.end_point_1, segment.end_point_2) << " " << abs(distance(point, segment.end_point_1) + distance(point, segment.end_point_2) - distance(segment.end_point_1, segment.end_point_2)) << endl;
   // when all else failed I used triangular equation  
   return (abs(distance(point, segment.end_point_1) + distance(point, segment.end_point_2) - distance(segment.end_point_1, segment.end_point_2)) < ERROR);
 }
