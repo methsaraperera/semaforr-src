@@ -217,7 +217,7 @@ public:
 			CartesianPoint waypoint(r_x,r_y);
 			waypoints.push_back(waypoint);
 		}
-		planner->resetPath();
+		pathPlanner->resetPath();
 		return waypoints;
 	}
 
