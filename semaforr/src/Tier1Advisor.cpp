@@ -143,6 +143,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
       }
     }
     localExploration->addToQueue(potential_exploration);
+    localExploration->updateCoverage(current);
   }
   return decisionMade;
 }
@@ -1318,6 +1319,38 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         }
         else{
           cout << "no more potentials, randomly explore" << endl;
+          vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
+          vector< vector<int> > coverage_grid;
+          for(int i = 0; i < 200; i++){
+            vector<int> col;
+            for(int j = 0; j < 200; j++){
+              col.push_back(-1);
+            }
+            coverage_grid.push_back(col);
+          }
+          for(int i = 0; i < regions.size(); i++){
+            double cx = regions[i].getCenter().get_x();
+            double cy = regions[i].getCenter().get_y();
+            double cr = regions[i].getRadius();
+            for(double x = cx - cr; x <= cx + cr; x += cr/10){
+              for(double y = cy - cr; y <= cy + cr; y += cr/10){
+                coverage_grid[(int)(x)][(int)(y)] = i+1;
+              }
+            }
+            vector<FORRExit> exits = regions[i].getExits();
+            for(int j = 0; j < exits.size(); j++){
+              vector<CartesianPoint> path = exits[j].getConnectionPoints();
+              for(int k = 0; k < path.size()-1; k++){
+                double tx, ty;
+                for(double j = 0; j <= 1; j += 0.1){
+                  tx = (path[k+1].get_x() * j) + (path[k].get_x() * (1 - j));
+                  ty = (path[k+1].get_y() * j) + (path[k].get_y() * (1 - j));
+                  coverage_grid[(int)(tx)][(int)(ty)] = i+1;
+                }
+              }
+            }
+          }
+          localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
         }
       }
     }
@@ -1395,7 +1428,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           }
           //CHECK IF CURRENT IN REGION OTHERWISE FOLLOW PATH TRAIL BACK TO REGION
           cout << "currently_in_region " << currently_in_region << endl;
-          if(currently_in_region){
+          if(currently_in_region == true){
             vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
             for(int i = waypoints.size()-1; i >= 0; i--){
               cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1529,7 +1562,37 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       }
       else{
         cout << "no available potential places" << endl;
-        localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task);
+        vector< vector<int> > coverage_grid;
+        for(int i = 0; i < 200; i++){
+          vector<int> col;
+          for(int j = 0; j < 200; j++){
+            col.push_back(-1);
+          }
+          coverage_grid.push_back(col);
+        }
+        for(int i = 0; i < regions.size(); i++){
+          double cx = regions[i].getCenter().get_x();
+          double cy = regions[i].getCenter().get_y();
+          double cr = regions[i].getRadius();
+          for(double x = cx - cr; x <= cx + cr; x += cr/10){
+            for(double y = cy - cr; y <= cy + cr; y += cr/10){
+              coverage_grid[(int)(x)][(int)(y)] = i+1;
+            }
+          }
+          vector<FORRExit> exits = regions[i].getExits();
+          for(int j = 0; j < exits.size(); j++){
+            vector<CartesianPoint> path = exits[j].getConnectionPoints();
+            for(int k = 0; k < path.size()-1; k++){
+              double tx, ty;
+              for(double j = 0; j <= 1; j += 0.1){
+                tx = (path[k+1].get_x() * j) + (path[k].get_x() * (1 - j));
+                ty = (path[k+1].get_y() * j) + (path[k].get_y() * (1 - j));
+                coverage_grid[(int)(tx)][(int)(ty)] = i+1;
+              }
+            }
+          }
+        }
+        localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
       }
     }
   }

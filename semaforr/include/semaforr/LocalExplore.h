@@ -92,10 +92,13 @@ public:
 		already_started = false;
 		start_of_potential = false;
 		finished_potentials = false;
+		started_random = false;
+		found_new_potentials = false;
 		distance_threshold = 2;
 	};
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
+	bool getStartedRandom() { return started_random; }
 	bool getAtStartOfPotential() { return start_of_potential; }
 	bool getFinishedPotentials() {
 		cout << "potential_queue " << potential_queue.size() << endl;
@@ -132,6 +135,8 @@ public:
 		already_started = false;
 		start_of_potential = false;
 		finished_potentials = false;
+		started_random = false;
+		found_new_potentials = false;
 		task = CartesianPoint();
 		potential_exploration.clear();
 		potential_queue = priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> >();
@@ -156,11 +161,16 @@ public:
 	}
 	void addToQueue(vector< LineSegment > pairs){
 		cout << "inside addToQueue " << pairs.size() << endl;
+		int count_before = potential_queue.size();
 		for(int i = 0; i < pairs.size(); i++){
 			cout << "pair " << i << " " << pairs[i].get_length() << endl;
 			if(pairs[i].get_length() >= distance_threshold){
 				potential_queue.push(PotentialPoints(pairs[i], task));
 			}
+		}
+		int count_after = potential_queue.size();
+		if(count_before == 0 and count_after > 0 and started_random == true){
+			found_new_potentials = true;
 		}
 	}
 	void atStartOfPotential(CartesianPoint current){
@@ -172,7 +182,8 @@ public:
 		}
 	}
 	bool atEndOfPotential(CartesianPoint current){
-		if(current.get_distance(current_potential.end) < 0.75){
+		if(current.get_distance(current_potential.end) < 0.75 or found_new_potentials == true){
+			found_new_potentials = false;
 			return true;
 		}
 		else{
@@ -201,9 +212,12 @@ public:
 		}
 	}
 	vector<CartesianPoint> getPathToStart(CartesianPoint current){
+		cout << "in getPathToStart " << endl;
 		vector<CartesianPoint> waypoints;
+		cout << current.get_x() << " " << current.get_y() << endl;
 		Node s(1, current.get_x()*100, current.get_y()*100);
 		pathPlanner->setSource(s);
+		cout << current_potential.start.get_x() << " " << current_potential.start.get_y() << endl;
 		Node t(1, current_potential.start.get_x()*100, current_potential.start.get_y()*100);
 		pathPlanner->setTarget(t);
 		cout << "plan generation status" << pathPlanner->calcPath(true) << endl;
@@ -231,12 +245,15 @@ public:
 		}
 		return waypoints;
 	}
-	void randomExploration(CartesianPoint current, vector<CartesianPoint> laserEndpoints, CartesianPoint goal){
+	void randomExploration(CartesianPoint current, vector<CartesianPoint> laserEndpoints, CartesianPoint goal, vector< vector<int> > coverage_grid){
+		already_started = true;
+		started_random = true;
 		cout << "randomExploration " << current.get_x() << " " << current.get_y() << " " << goal.get_x() << " " << goal.get_y() << endl;
 		task = goal;
+		coverage = coverage_grid;
 		double dist_to_goal = task.get_distance(current);
 		double max_search_radius = (int)(dist_to_goal)+1.0;
-		double min_search_radius = 5.0;
+		double min_search_radius = 1.0;
 		cout << "dist_to_goal " << dist_to_goal << " min_search_radius " << min_search_radius << " max_search_radius " << max_search_radius << endl;
 		vector<double> search_radii;
 		if(max_search_radius >= min_search_radius){
@@ -268,11 +285,17 @@ public:
 				search_access.push_back(canAccessRegion);
 			}
 		}
-		for(int i = search_radii.size()-1; i >= 0; i--){
+		for(int i = 0; i < search_radii.size(); i++){
 			if(search_access[i]){
 				cout << "closest visible radii " << search_radii[i] << endl;
 				break;
 			}
+		}
+	}
+
+	void updateCoverage(CartesianPoint current){
+		if(started_random){
+			coverage[(int)(current.get_x())][(int)(current.get_y())] = 0;
 		}
 	}
 
@@ -286,6 +309,9 @@ private:
 	bool start_of_potential;
 	PathPlanner *pathPlanner;
 	bool finished_potentials;
+	bool started_random;
+	vector< vector<int> > coverage;
+	bool found_new_potentials;
 };
 
 #endif
