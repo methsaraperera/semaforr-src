@@ -1138,11 +1138,13 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
   ROS_DEBUG("In advisor FindAWay");
   bool decisionMade = false;
   double search_radius = 7.0;
+  localExploration->setPathPlanner(beliefs->getAgentState()->getCurrentTask()->getPathPlanner());
   if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0 or !beliefs->getAgentState()->getCurrentTask()->getIsPlanActive() or localExploration->getAlreadyStarted()){
     cout << "No active plan, try to do local exploration" << endl;
     if(localExploration->getAlreadyStarted()){
       cout << "Exploration already started" << endl;
       CartesianPoint current(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+      CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
       if(!beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25)){
         beliefs->getAgentState()->increaseFindAWayCount();
       }
@@ -1151,7 +1153,6 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
         cout << "waypoints cleared" << endl;
         beliefs->getAgentState()->setFindAWayCount(0);
-        // CartesianPoint task(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
         // vector< LineSegment > potential_exploration;
         // vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
         // for(int i = 0; i < laserEndpoints.size(); i++){
@@ -1270,50 +1271,6 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
                 }
               }
-              // CartesianPoint new_start;
-              // int new_start_ind;
-              // if(found_recent_in_region == true and found_recent_nearby == true){
-              //   if(new_start_region_ind < new_start_nearby_ind){
-              //     new_start = new_start_region;
-              //     new_start_ind = new_start_region_ind;
-              //   }
-              //   else{
-              //     new_start = new_start_nearby;
-              //     new_start_ind = new_start_nearby_ind;
-              //   }
-              // }
-              // else if(found_recent_in_region == true){
-              //   new_start = new_start_region;
-              //   new_start_ind = new_start_region_ind;
-              // }
-              // else if(found_recent_nearby == true){
-              //   new_start = new_start_nearby;
-              //   new_start_ind = new_start_nearby_ind;
-              // }
-              // cout << "new_start " << new_start.get_x() << " " << new_start.get_y() << " new_start_ind " << new_start_ind << endl;
-              // vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start);
-              // for(int i = waypoints.size()-1; i >= 0; i--){
-              //   cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
-              //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], true);
-              // }
-              // vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
-              // std::vector<CartesianPoint> trailPositions;
-              // trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_ind).getX(), positionHis->at(positionHis->size()-new_start_ind).getY()));
-              // // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-              // for(int i = new_start_ind; i >= 1; i--){
-              //   for(int j = 1; j < i; j++){
-              //     if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
-              //       trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
-              //       i = j+1;
-              //     }
-              //   }
-              //   // cout << i << endl;
-              // }
-              // cout << "trailPositions " << trailPositions.size() << endl;
-              // for(int i = 0; i < trailPositions.size(); i++){
-              //   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
-              //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
-              // }
             }
           }
         }
@@ -1350,7 +1307,11 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               }
             }
           }
-          localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
+          vector<CartesianPoint> end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
+          for(int i = end_waypoints.size()-1; i >= 0; i--){
+            cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
+            beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], true);
+          }
         }
       }
     }
@@ -1409,7 +1370,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       }
       cout << "potential_exploration " << potential_exploration.size() << endl;
       if(potential_exploration.size() > 0){
-        localExploration->setQueue(task, potential_exploration, beliefs->getAgentState()->getCurrentTask()->getPathPlanner());
+        localExploration->setQueue(task, potential_exploration);
         localExploration->atStartOfPotential(current);
         if(localExploration->getAtStartOfPotential()){
           cout << "go to end of current potential" << endl;
@@ -1512,50 +1473,6 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
               }
             }
-            // CartesianPoint new_start;
-            // int new_start_ind;
-            // if(found_recent_in_region == true and found_recent_nearby == true){
-            //   if(new_start_region_ind < new_start_nearby_ind){
-            //     new_start = new_start_region;
-            //     new_start_ind = new_start_region_ind;
-            //   }
-            //   else{
-            //     new_start = new_start_nearby;
-            //     new_start_ind = new_start_nearby_ind;
-            //   }
-            // }
-            // else if(found_recent_in_region == true){
-            //   new_start = new_start_region;
-            //   new_start_ind = new_start_region_ind;
-            // }
-            // else if(found_recent_nearby == true){
-            //   new_start = new_start_nearby;
-            //   new_start_ind = new_start_nearby_ind;
-            // }
-            // cout << "new_start " << new_start.get_x() << " " << new_start.get_y() << " new_start_ind " << new_start_ind << endl;
-            // vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start);
-            // for(int i = waypoints.size()-1; i >= 0; i--){
-            //   cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
-            //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(waypoints[i], true);
-            // }
-            // vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
-            // std::vector<CartesianPoint> trailPositions;
-            // trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_ind).getX(), positionHis->at(positionHis->size()-new_start_ind).getY()));
-            // // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-            // for(int i = new_start_ind; i >= 1; i--){
-            //   for(int j = 1; j < i; j++){
-            //     if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
-            //       trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
-            //       i = j+1;
-            //     }
-            //   }
-            //   // cout << i << endl;
-            // }
-            // cout << "trailPositions " << trailPositions.size() << endl;
-            // for(int i = 0; i < trailPositions.size(); i++){
-            //   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
-            //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
-            // }
           }
         }
         beliefs->getAgentState()->setFindAWayCount(0);
@@ -1592,7 +1509,11 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             }
           }
         }
-        localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
+        vector<CartesianPoint> end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
+        for(int i = end_waypoints.size()-1; i >= 0; i--){
+          cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
+          beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], true);
+        }
       }
     }
   }
