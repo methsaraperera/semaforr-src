@@ -225,15 +225,21 @@ public:
 		pathPlanner->setTarget(t);
 		cout << "plan generation status" << pathPlanner->calcPath(true) << endl;
 		list<int> waypointInd = pathPlanner->getPath();
-		list<int>::iterator it;
-		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
-			// cout << "node " << (*it) << endl;
-			double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
-			double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
-			// cout << r_x << " " << r_y << endl;
-			CartesianPoint waypoint(r_x,r_y);
-			waypoints.push_back(waypoint);
+		if(waypointInd.size() > 0){
+			list<int>::iterator it;
+			for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+				// cout << "node " << (*it) << endl;
+				double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
+				double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
+				// cout << r_x << " " << r_y << endl;
+				CartesianPoint waypoint(r_x,r_y);
+				waypoints.push_back(waypoint);
+			}
 		}
+		else{
+			waypoints.push_back(current);
+		}
+		waypoints.push_back(current_potential.start);
 		pathPlanner->resetPath();
 		return waypoints;
 	}
@@ -311,6 +317,7 @@ public:
 			}
 		}
 		if(found_closest == true){
+			cout << "found_closest " << found_closest << endl;
 			vector<CartesianPoint> waypoints;
 			double tx, ty;
 			for(double j = 0; j <= 1; j += 0.1){
@@ -321,6 +328,7 @@ public:
 			return waypoints;
 		}
 		else{
+			cout << "go to closest_coverage" << endl;
 			int min_distance = 10000;
 			int task_x = (int)(task.get_x());
 			int task_y = (int)(task.get_y());
@@ -335,6 +343,7 @@ public:
 					}
 				}
 			}
+			cout << "closest_x " << closest_x << " closest_y " << closest_y << endl;
 			PotentialPoints closest_coverage = PotentialPoints(LineSegment(CartesianPoint(closest_x, closest_y), CartesianPoint(closest_x, closest_y)), task);
 			pathPlanner->resetPath();
 			vector<CartesianPoint> waypoints;
@@ -346,15 +355,21 @@ public:
 			pathPlanner->setTarget(t);
 			cout << "plan generation status" << pathPlanner->calcPath(true) << endl;
 			list<int> waypointInd = pathPlanner->getPath();
-			list<int>::iterator it;
-			for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
-				// cout << "node " << (*it) << endl;
-				double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
-				double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
-				// cout << r_x << " " << r_y << endl;
-				CartesianPoint waypoint(r_x,r_y);
-				waypoints.push_back(waypoint);
+			if(waypointInd.size() > 0){
+				list<int>::iterator it;
+				for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
+					// cout << "node " << (*it) << endl;
+					double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
+					double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
+					// cout << r_x << " " << r_y << endl;
+					CartesianPoint waypoint(r_x,r_y);
+					waypoints.push_back(waypoint);
+				}
 			}
+			else{
+				waypoints.push_back(current);
+			}
+			waypoints.push_back(closest_coverage.start);
 			pathPlanner->resetPath();
 			return waypoints;
 		}
@@ -362,9 +377,12 @@ public:
 
 	void updateCoverage(CartesianPoint current){
 		if(started_random){
+			cout << "updated Coverage " << (int)(current.get_x()) << " " << (int)(current.get_y()) << endl;
 			coverage[(int)(current.get_x())][(int)(current.get_y())] = 0;
 		}
 	}
+
+	vector< vector<int> > getCoverage() { return coverage; }
 
 private:
 	double distance_threshold;

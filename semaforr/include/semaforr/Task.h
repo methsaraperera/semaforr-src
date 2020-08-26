@@ -320,6 +320,7 @@ class Task {
 	}
 	setupNextWaypoint(source);*/
 	planner->resetPath();
+	pathPlanner = planner;
 	cout << "plan generation complete" << endl;
   }
 
