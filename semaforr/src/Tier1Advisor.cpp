@@ -1226,7 +1226,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 }
               }
               cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
-              if(found_recent_in_region == true and new_start_region_ind <= new_start_nearby_ind){
+              if(found_recent_in_region == true and (new_start_region_ind <= new_start_nearby_ind or found_recent_nearby == false)){
                 vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start_region);
                 for(int i = waypoints.size()-1; i >= 0; i--){
                   cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1251,7 +1251,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
                 }
               }
-              else if(found_recent_nearby == true and new_start_region_ind >= new_start_nearby_ind){
+              else if(found_recent_nearby == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_in_region == false)){
                 vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
                 std::vector<CartesianPoint> trailPositions;
                 trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_nearby_ind).getX(), positionHis->at(positionHis->size()-new_start_nearby_ind).getY()));
@@ -1445,7 +1445,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               }
             }
             cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
-            if(found_recent_in_region == true and new_start_region_ind <= new_start_nearby_ind){
+            if(found_recent_in_region == true and (new_start_region_ind <= new_start_nearby_ind or found_recent_nearby == false)){
               vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start_region);
               for(int i = waypoints.size()-1; i >= 0; i--){
                 cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1470,7 +1470,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
               }
             }
-            else if(found_recent_nearby == true and new_start_region_ind >= new_start_nearby_ind){
+            else if(found_recent_nearby == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_in_region == false)){
               vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
               std::vector<CartesianPoint> trailPositions;
               trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_nearby_ind).getX(), positionHis->at(positionHis->size()-new_start_nearby_ind).getY()));

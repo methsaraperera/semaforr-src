@@ -206,7 +206,13 @@ public:
 				break;
 			}
 		}
-		if(inCompleted){
+		bool alreadyCovered = false;
+		if(started_random){
+			if(coverage[(int)(segment.end.get_x())][(int)(segment.end.get_y())] >= 0){
+				alreadyCovered = true;
+			}
+		}
+		if(inCompleted or alreadyCovered){
 			return true;
 		}
 		else{
