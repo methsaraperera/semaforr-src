@@ -1368,6 +1368,17 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           potential_exploration.push_back(pair);
         }
       }
+      vector<Position> *taskPositionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
+      vector< vector <CartesianPoint> > *taskLaserHis = beliefs->getAgentState()->getCurrentTask()->getLaserHistory();
+      for(int i = 1; i < taskPositionHis->size(); i++){
+        vector<CartesianPoint> taskLaserEndpoints = taskLaserHis->at(taskLaserHis->size()-i);
+        for(int j = 0; j < taskLaserEndpoints.size(); j++){
+          LineSegment pair = LineSegment(CartesianPoint(taskPositionHis->at(taskPositionHis->size()-i).getX(), taskPositionHis->at(taskPositionHis->size()-i).getY()), taskLaserEndpoints[j]);
+          if(distance(task, pair) < search_radius){
+            potential_exploration.push_back(pair);
+          }
+        }
+      }
       cout << "potential_exploration " << potential_exploration.size() << endl;
       if(potential_exploration.size() > 0){
         localExploration->setQueue(task, potential_exploration);

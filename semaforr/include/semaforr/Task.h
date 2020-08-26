@@ -662,7 +662,7 @@ class Task {
 			else{
 				// vector<CartesianPoint> addPoint;
 				// addPoint.push_back(new_point);
-				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(0, FORRRegion(new_point, 0.5), vector<CartesianPoint>(), vector< vector<int> >()));
+				skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(0, FORRRegion(new_point, 0.75), vector<CartesianPoint>(), vector< vector<int> >()));
 				// skeleton_waypoints.insert(skeleton_waypoints.begin(), sk_waypoint(1, FORRRegion(), addPoint, vector< vector<int> >()));
 				isPlanActive = true;
 				wr = skeleton_waypoints[0];
