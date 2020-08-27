@@ -1128,7 +1128,7 @@ public:
 	// ROS_DEBUG("After trails");
 	FORRActionType chosenActionType = decision.type;
 	int chosenActionParameter = decision.parameter;
-	int decisionTier = con->getCurrentDecisionStats()->decisionTier;
+	double decisionTier = con->getCurrentDecisionStats()->decisionTier;
 	string vetoedActions = con->getCurrentDecisionStats()->vetoedActions;
 	string advisors = con->getCurrentDecisionStats()->advisors;
 	string advisorComments = con->getCurrentDecisionStats()->advisorComments;

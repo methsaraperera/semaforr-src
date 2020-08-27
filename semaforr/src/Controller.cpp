@@ -1395,6 +1395,13 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
+    if(decisionMade == false){
+      if(tier1->advisorBehindYou(decision)){
+        ROS_INFO_STREAM("Advisor BehindYou has made a decision " << decision->type << " " << decision->parameter);
+        decisionStats->decisionTier = 1.4;
+        decisionMade = true;
+      }
+    }
     // if(circumnavigator->advisorCircumnavigate(decision)){
     //   ROS_INFO_STREAM("Advisor circumnavigate has made a decision " << decision->type << " " << decision->parameter);
     //   decisionStats->decisionTier = 2.5;
@@ -1404,14 +1411,14 @@ bool Controller::tierOneDecision(FORRAction *decision){
     if(outofhereOn and decisionMade == false){
       if(tier1->advisorGetOut(decision)){
         ROS_INFO_STREAM("Advisor GetOut has made a decision " << decision->type << " " << decision->parameter);
-        decisionStats->decisionTier = 1.4;
+        decisionStats->decisionTier = 1.5;
         decisionMade = true;
       }
     }
     if(findawayOn and decisionMade == false){
       if(tier1->advisorFindAWay(decision)){
         ROS_INFO_STREAM("Advisor FindAWay has made a decision " << decision->type << " " << decision->parameter);
-        decisionStats->decisionTier = 1.5;
+        decisionStats->decisionTier = 1.6;
         decisionMade = true;
       }
     }

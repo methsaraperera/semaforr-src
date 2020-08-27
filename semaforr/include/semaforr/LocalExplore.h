@@ -253,7 +253,7 @@ public:
 	vector<CartesianPoint> getPathToEnd(){
 		vector<CartesianPoint> waypoints;
 		double tx, ty;
-		for(double j = 0; j <= 1; j += 0.1){
+		for(double j = 0; j <= 1; j += 0.05){
 			tx = (current_potential.end.get_x() * j) + (current_potential.start.get_x() * (1 - j));
 			ty = (current_potential.end.get_y() * j) + (current_potential.start.get_y() * (1 - j));
 			waypoints.push_back(CartesianPoint(tx, ty));

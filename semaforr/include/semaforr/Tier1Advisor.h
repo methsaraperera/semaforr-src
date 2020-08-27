@@ -39,6 +39,8 @@ public:
 
 	bool advisorFindAWay(FORRAction *decision);
 
+	bool advisorBehindYou(FORRAction *decision);
+
 	void resetLocalExploration(){
 		localExploration->resetLocalExplorer();
 	}

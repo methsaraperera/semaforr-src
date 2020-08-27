@@ -797,6 +797,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
   }
   if(decisionMade == true){
     beliefs->getAgentState()->setRepositionTriggered(false);
+    beliefs->getAgentState()->setFindAWayCount(0);
   }
   return decisionMade;
 }
@@ -1134,6 +1135,42 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
   return decisionMade;
 }
 
+bool Tier1Advisor::advisorBehindYou(FORRAction *decision){
+  ROS_DEBUG("In advisor doorway");
+  bool decisionMade = false;
+  ROS_DEBUG("Check if waypoint can be spotted using laser scan");
+  CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
+  cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
+  bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
+  cout << "waypointInSight " << waypointInSight << endl;
+  CartesianPoint robotPos = CartesianPoint(beliefs->getAgentState()->getCurrentPosition().getX(), beliefs->getAgentState()->getCurrentPosition().getY());
+  vector<FORRAction> actions = beliefs->getAgentState()->getCurrentTask()->getPreviousDecisions();
+  set<FORRAction> *rotation_set = beliefs->getAgentState()->getRotationActionSet();
+  int size = actions.size();
+  FORRAction lastAction;
+  vector<Position> *positionHis = beliefs->getAgentState()->getAllPositionTrace();
+  vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
+  CartesianPoint last_position;
+  vector<CartesianPoint> last_endpoint;
+  if(size > 0){
+    lastAction = actions[size - 1];
+    last_position = CartesianPoint(positionHis->at(positionHis->size()-2).getX(), positionHis->at(positionHis->size()-2).getY());
+    last_endpoint = laserHis->at(laserHis->size()-2);
+  }
+  else{
+    lastAction = FORRAction(PAUSE, 0);
+    last_position = robotPos;
+    last_endpoint = beliefs->getAgentState()->getCurrentLaserEndpoints();
+  }
+  if(robotPos.get_distance(waypoint) <= 1.5 and !waypointInSight and lastAction != FORRAction(RIGHT_TURN, rotation_set->size()/2) and !canAccessPoint(last_endpoint, last_position, waypoint, 20)){
+    (*decision) = FORRAction(RIGHT_TURN, rotation_set->size()/2);
+    ROS_DEBUG("Waypoint not in sight but close, BehindYou advisor to turn around");
+    decisionMade = true;
+  }
+  return decisionMade;
+}
+
+
 bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
   ROS_DEBUG("In advisor FindAWay");
   bool decisionMade = false;
@@ -1148,7 +1185,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       if(!beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25)){
         beliefs->getAgentState()->increaseFindAWayCount();
       }
-      if(localExploration->atEndOfPotential(current) or beliefs->getAgentState()->getFindAWayCount() >= 10){
+      if(localExploration->atEndOfPotential(current) or beliefs->getAgentState()->getFindAWayCount() >= 10 or beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0){
         cout << "At end of current potential " << localExploration->atEndOfPotential(current) << " cannot see next waypoint of potential " << beliefs->getAgentState()->getFindAWayCount() << endl;
         beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
         cout << "waypoints cleared" << endl;
@@ -1182,12 +1219,20 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
             }
             vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
             bool currently_in_region = false;
+            bool start_in_region = false;
             for(int i = 0; i < regions.size(); i++){
-              if(regions[i].inRegion(current))
+              if(regions[i].inRegion(current)){
                 currently_in_region = true;
+              }
+              if(regions[i].inRegion(localExploration->getStartOfPotential())){
+                start_in_region = true;
+              }
+              if(currently_in_region and start_in_region){
+                break;
+              }
             }
-            cout << "currently_in_region " << currently_in_region << endl;
-            if(currently_in_region){
+            cout << "currently_in_region " << currently_in_region << " start_in_region " << start_in_region << endl;
+            if(currently_in_region and start_in_region){
               vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
               for(int i = waypoints.size()-1; i >= 0; i--){
                 cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1208,7 +1253,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                   for(int j = 0; j < regions.size(); j++){
                     if(regions[j].inRegion(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()))){
                       new_start_region = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
-                      new_start_region_ind = i;
+                      new_start_region_ind = positionHis->size()-i;
                       found_recent_in_region = true;
                       break;
                     }
@@ -1217,7 +1262,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 if(found_recent_nearby == false){
                   if(current.get_distance(localExploration->getStartOfPotential()) < 0.75){
                     new_start_nearby = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
-                    new_start_nearby_ind = i;
+                    new_start_nearby_ind = positionHis->size()-i;
                     found_recent_nearby = true;
                   }
                 }
@@ -1226,7 +1271,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 }
               }
               cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
-              if(found_recent_in_region == true and (new_start_region_ind <= new_start_nearby_ind or found_recent_nearby == false)){
+              if(found_recent_in_region == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_nearby == false)){
                 vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start_region);
                 for(int i = waypoints.size()-1; i >= 0; i--){
                   cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1234,42 +1279,76 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 }
                 vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
                 std::vector<CartesianPoint> trailPositions;
-                trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_region_ind).getX(), positionHis->at(positionHis->size()-new_start_region_ind).getY()));
+                trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY()));
                 // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-                for(int i = new_start_region_ind; i >= 1; i--){
-                  for(int j = 1; j < i; j++){
-                    if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
-                      trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
-                      i = j+1;
+                for(int i = new_start_region_ind; i < positionHis->size(); i++){
+                  for(int j = positionHis->size()-1; j > i; j--){
+                    if(canAccessPoint(laserHis->at(i), CartesianPoint(positionHis->at(i).getX(), positionHis->at(i).getY()), CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()), 2) or j == i+1){
+                      trailPositions.push_back(CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()));
+                      i = j;
                     }
                   }
                   // cout << i << endl;
                 }
                 cout << "trailPositions " << trailPositions.size() << endl;
-                for(int i = 0; i < trailPositions.size(); i++){
+                for(int i = trailPositions.size()-1; i >= 0; i--){
                   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
                   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
                 }
+                // std::vector<CartesianPoint> trailPositions;
+                // trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_region_ind).getX(), positionHis->at(positionHis->size()-new_start_region_ind).getY()));
+                // // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
+                // for(int i = new_start_region_ind; i >= 1; i--){
+                //   for(int j = 1; j < i; j++){
+                //     if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
+                //       trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
+                //       i = j+1;
+                //     }
+                //   }
+                //   // cout << i << endl;
+                // }
+                // cout << "trailPositions " << trailPositions.size() << endl;
+                // for(int i = 0; i < trailPositions.size(); i++){
+                //   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
+                //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
+                // }
               }
-              else if(found_recent_nearby == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_in_region == false)){
+              else if(found_recent_nearby == true and (new_start_region_ind <= new_start_nearby_ind or found_recent_in_region == false)){
                 vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
                 std::vector<CartesianPoint> trailPositions;
-                trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_nearby_ind).getX(), positionHis->at(positionHis->size()-new_start_nearby_ind).getY()));
+                trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY()));
                 // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-                for(int i = new_start_nearby_ind; i >= 1; i--){
-                  for(int j = 1; j < i; j++){
-                    if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
-                      trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
-                      i = j+1;
+                for(int i = new_start_nearby_ind; i < positionHis->size(); i++){
+                  for(int j = positionHis->size()-1; j > i; j--){
+                    if(canAccessPoint(laserHis->at(i), CartesianPoint(positionHis->at(i).getX(), positionHis->at(i).getY()), CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()), 2) or j == i+1){
+                      trailPositions.push_back(CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()));
+                      i = j;
                     }
                   }
                   // cout << i << endl;
                 }
                 cout << "trailPositions " << trailPositions.size() << endl;
-                for(int i = 0; i < trailPositions.size(); i++){
+                for(int i = trailPositions.size()-1; i >= 0; i--){
                   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
                   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
                 }
+                // std::vector<CartesianPoint> trailPositions;
+                // trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_nearby_ind).getX(), positionHis->at(positionHis->size()-new_start_nearby_ind).getY()));
+                // // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
+                // for(int i = new_start_nearby_ind; i >= 1; i--){
+                //   for(int j = 1; j < i; j++){
+                //     if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
+                //       trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
+                //       i = j+1;
+                //     }
+                //   }
+                //   // cout << i << endl;
+                // }
+                // cout << "trailPositions " << trailPositions.size() << endl;
+                // for(int i = 0; i < trailPositions.size(); i++){
+                //   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
+                //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
+                // }
               }
             }
           }
@@ -1333,6 +1412,9 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         LineSegment pair = LineSegment(CartesianPoint(remaining_candidates[i][0].getX(), remaining_candidates[i][0].getY()), CartesianPoint(remaining_candidates[i][1].getX(), remaining_candidates[i][1].getY()));
         if(distance(task, pair) < search_radius){
           potential_exploration.push_back(pair);
+          if(pair.get_length() > 25){
+            cout << "remaining_candidates " << i << " length " << pair.get_length();
+          }
         }
         // if(task.get_distance(remaining_candidates[i][0].getX(), remaining_candidates[i][0].gety()) < search_radius or task.get_distance(remaining_candidates[i][1].getX(), remaining_candidates[i][1].gety()) < search_radius or task.get_distance((remaining_candidates[i][0].getX() + remaining_candidates[i][1].getX())/2, (remaining_candidates[i][0].gety() + remaining_candidates[i][1].gety())/2) < search_radius){
         //   vector<CartesianPoint> potential;
@@ -1342,36 +1424,43 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         // }
       }
       bool currently_in_region = false;
+      bool start_in_region = false;
       for(int i = 0; i < regions.size(); i++){
         if(current.get_distance(regions[i].getCenter()) - regions[i].getRadius() <= 25){
           vector<LineSegment> vis_segments = regions[i].getVisibilityLineSegments();
-          double min_distance = search_radius;
-          LineSegment min_segment;
+          // double min_distance = search_radius;
+          // LineSegment min_segment;
           for(int j = 0; j < vis_segments.size(); j++){
             double dist_to_target = distance(task, vis_segments[j]);
-            if(dist_to_target < search_radius and dist_to_target < min_distance){
-              min_segment = vis_segments[j];
-              min_distance = dist_to_target;
+            // if(dist_to_target < search_radius and dist_to_target < min_distance){
+            if(dist_to_target < search_radius){
+              potential_exploration.push_back(vis_segments[j]);
+              // min_segment = vis_segments[j];
+              // min_distance = dist_to_target;
+              if(vis_segments[j].get_length() > 25){
+                cout << "region " << i << " vis_segments " << j << " length " << vis_segments[j].get_length();
+              }
             }
-            // if(task.get_distance(vis_endpoints[j]) < search_radius or task.get_distance((vis_endpoints[j].get_x() + regions[i].getCenter().get_x())/2, (vis_endpoints[j].get_y() + regions[i].getCenter().get_y())/2) < search_radius){
-            //   vector<CartesianPoint> potential;
-            //   potential.push_back(regions[i].getCenter());
-            //   potential.push_back(vis_endpoints[j]);
-            //   potential_exploration.push_back(potential);
-            // }
           }
-          if(min_distance < search_radius){
-            potential_exploration.push_back(min_segment);
-          }
+          // if(min_distance < search_radius){
+          //   potential_exploration.push_back(min_segment);
+          // }
         }
-        if(regions[i].inRegion(current))
+        if(regions[i].inRegion(current)){
           currently_in_region = true;
+        }
+        if(regions[i].inRegion(localExploration->getStartOfPotential())){
+          start_in_region = true;
+        }
       }
       vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
       for(int i = 0; i < laserEndpoints.size(); i++){
         LineSegment pair = LineSegment(current, laserEndpoints[i]);
         if(distance(task, pair) < search_radius){
           potential_exploration.push_back(pair);
+          if(pair.get_length() > 25){
+            cout << "laserEndpoints " << i << " length " << pair.get_length();
+          }
         }
       }
       vector<Position> *taskPositionHis = beliefs->getAgentState()->getCurrentTask()->getPositionHistory();
@@ -1382,6 +1471,9 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           LineSegment pair = LineSegment(CartesianPoint(taskPositionHis->at(taskPositionHis->size()-i).getX(), taskPositionHis->at(taskPositionHis->size()-i).getY()), taskLaserEndpoints[j]);
           if(distance(task, pair) < search_radius){
             potential_exploration.push_back(pair);
+            if(pair.get_length() > 25){
+              cout << "decisionpoint " << i << " laserEndpoints " << j << " length " << pair.get_length();
+            }
           }
         }
       }
@@ -1406,7 +1498,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
           }
           //CHECK IF CURRENT IN REGION OTHERWISE FOLLOW PATH TRAIL BACK TO REGION
           cout << "currently_in_region " << currently_in_region << endl;
-          if(currently_in_region == true){
+          if(currently_in_region == true and start_in_region == true){
             vector<CartesianPoint> waypoints = localExploration->getPathToStart(current);
             for(int i = waypoints.size()-1; i >= 0; i--){
               cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1427,7 +1519,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
                 for(int j = 0; j < regions.size(); j++){
                   if(regions[j].inRegion(CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()))){
                     new_start_region = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
-                    new_start_region_ind = i;
+                    new_start_region_ind = positionHis->size()-i;
                     found_recent_in_region = true;
                     break;
                   }
@@ -1436,7 +1528,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               if(found_recent_nearby == false){
                 if(current.get_distance(localExploration->getStartOfPotential()) < 0.75){
                   new_start_nearby = CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY());
-                  new_start_nearby_ind = i;
+                  new_start_nearby_ind = positionHis->size()-i;
                   found_recent_nearby = true;
                 }
               }
@@ -1445,7 +1537,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               }
             }
             cout << "found_recent_in_region " << found_recent_in_region << " found_recent_nearby " << found_recent_nearby << " new_start_region_ind " << new_start_region_ind << " new_start_nearby_ind "<< new_start_nearby_ind << endl;
-            if(found_recent_in_region == true and (new_start_region_ind <= new_start_nearby_ind or found_recent_nearby == false)){
+            if(found_recent_in_region == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_nearby == false)){
               vector<CartesianPoint> waypoints = localExploration->getPathToStart(new_start_region);
               for(int i = waypoints.size()-1; i >= 0; i--){
                 cout << "waypoint " << waypoints[i].get_x() << " " << waypoints[i].get_y() << endl;
@@ -1453,42 +1545,76 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
               }
               vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
               std::vector<CartesianPoint> trailPositions;
-              trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_region_ind).getX(), positionHis->at(positionHis->size()-new_start_region_ind).getY()));
+              trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY()));
               // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-              for(int i = new_start_region_ind; i >= 1; i--){
-                for(int j = 1; j < i; j++){
-                  if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
-                    trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
-                    i = j+1;
+              for(int i = new_start_region_ind; i < positionHis->size(); i++){
+                for(int j = positionHis->size()-1; j > i; j--){
+                  if(canAccessPoint(laserHis->at(i), CartesianPoint(positionHis->at(i).getX(), positionHis->at(i).getY()), CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()), 2) or j == i+1){
+                    trailPositions.push_back(CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()));
+                    i = j;
                   }
                 }
                 // cout << i << endl;
               }
               cout << "trailPositions " << trailPositions.size() << endl;
-              for(int i = 0; i < trailPositions.size(); i++){
+              for(int i = trailPositions.size()-1; i >= 0; i--){
                 cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
                 beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
               }
+              // std::vector<CartesianPoint> trailPositions;
+              // trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_region_ind).getX(), positionHis->at(positionHis->size()-new_start_region_ind).getY()));
+              // // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
+              // for(int i = new_start_region_ind; i >= 1; i--){
+              //   for(int j = 1; j < i; j++){
+              //     if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
+              //       trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
+              //       i = j+1;
+              //     }
+              //   }
+              //   // cout << i << endl;
+              // }
+              // cout << "trailPositions " << trailPositions.size() << endl;
+              // for(int i = 0; i < trailPositions.size(); i++){
+              //   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
+              //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
+              // }
             }
-            else if(found_recent_nearby == true and (new_start_region_ind >= new_start_nearby_ind or found_recent_in_region == false)){
+            else if(found_recent_nearby == true and (new_start_region_ind <= new_start_nearby_ind or found_recent_in_region == false)){
               vector< vector <CartesianPoint> > *laserHis = beliefs->getAgentState()->getAllLaserHistory();
               std::vector<CartesianPoint> trailPositions;
-              trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_nearby_ind).getX(), positionHis->at(positionHis->size()-new_start_nearby_ind).getY()));
+              trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-1).getX(), positionHis->at(positionHis->size()-1).getY()));
               // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-              for(int i = new_start_nearby_ind; i >= 1; i--){
-                for(int j = 1; j < i; j++){
-                  if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
-                    trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
-                    i = j+1;
+              for(int i = new_start_nearby_ind; i < positionHis->size(); i++){
+                for(int j = positionHis->size()-1; j > i; j--){
+                  if(canAccessPoint(laserHis->at(i), CartesianPoint(positionHis->at(i).getX(), positionHis->at(i).getY()), CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()), 2) or j == i+1){
+                    trailPositions.push_back(CartesianPoint(positionHis->at(j).getX(), positionHis->at(j).getY()));
+                    i = j;
                   }
                 }
                 // cout << i << endl;
               }
               cout << "trailPositions " << trailPositions.size() << endl;
-              for(int i = 0; i < trailPositions.size(); i++){
+              for(int i = trailPositions.size()-1; i >= 0; i--){
                 cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
                 beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
               }
+              // std::vector<CartesianPoint> trailPositions;
+              // trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-new_start_nearby_ind).getX(), positionHis->at(positionHis->size()-new_start_nearby_ind).getY()));
+              // // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
+              // for(int i = new_start_nearby_ind; i >= 1; i--){
+              //   for(int j = 1; j < i; j++){
+              //     if(canAccessPoint(laserHis->at(positionHis->size()-i), CartesianPoint(positionHis->at(positionHis->size()-i).getX(), positionHis->at(positionHis->size()-i).getY()), CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()), 3)){
+              //       trailPositions.push_back(CartesianPoint(positionHis->at(positionHis->size()-j).getX(), positionHis->at(positionHis->size()-j).getY()));
+              //       i = j+1;
+              //     }
+              //   }
+              //   // cout << i << endl;
+              // }
+              // cout << "trailPositions " << trailPositions.size() << endl;
+              // for(int i = 0; i < trailPositions.size(); i++){
+              //   cout << "waypoint " << trailPositions[i].get_x() << " " << trailPositions[i].get_y() << endl;
+              //   beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(trailPositions[i], true);
+              // }
             }
           }
         }
