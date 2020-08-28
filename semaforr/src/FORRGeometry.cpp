@@ -192,7 +192,7 @@ double distance(CartesianPoint first, CartesianPoint second){
 
 CartesianPoint get_perpendicular(CartesianPoint point, Line line){
   // cout << "get_perpendicular " << line.get_value_a() << " " << line.get_value_b() << " " << line.get_value_c() << endl;
-  if(line.get_value_b() != 0){
+  if(line.get_value_b() != 0 and line.get_value_a() != 0){
     double orig_slope = -line.get_value_a() / line.get_value_b();
     double orig_intercept = line.get_value_c() / line.get_value_b();
     double perp_slope = line.get_value_b() / line.get_value_a();
@@ -202,9 +202,12 @@ CartesianPoint get_perpendicular(CartesianPoint point, Line line){
     // cout << orig_slope << " " << orig_intercept << " " << perp_slope << " " << perp_intercept << " " << intersection_x << " " << intersection_y << endl;
     return CartesianPoint(intersection_x, intersection_y);
   }
-  else{
+  else if(line.get_value_b() == 0){
     // cout << line.get_value_c() / line.get_value_a() << " " << point.get_y() << endl;
     return CartesianPoint(line.get_value_c() / line.get_value_a(), point.get_y());
+  }
+  else if(line.get_value_a() == 0){
+    return CartesianPoint(point.get_x(), line.get_value_c() / line.get_value_b());
   }
 }
 
