@@ -1395,7 +1395,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    if(decisionMade == false){
+    if(findawayOn and decisionMade == false){
       if(tier1->advisorBehindYou(decision)){
         ROS_INFO_STREAM("Advisor BehindYou has made a decision " << decision->type << " " << decision->parameter);
         decisionStats->decisionTier = 1.4;
