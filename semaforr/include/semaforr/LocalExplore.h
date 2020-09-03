@@ -39,7 +39,7 @@ struct PotentialPoints{
 		dist_to_goal = distance(target, pair);
 		start_dist_to_goal = start.get_distance(target);
 		end_dist_to_goal = end.get_distance(target);
-		printDetails();
+		// printDetails();
 	}
 	void printDetails(){
 		cout << "start " << start.get_x() << " " << start.get_y() << " end " << end.get_x() << " " << end.get_y() << " dist_to_goal " << dist_to_goal << " start_dist_to_goal " << start_dist_to_goal << " end_dist_to_goal " << end_dist_to_goal << endl;
@@ -101,11 +101,11 @@ public:
 	bool getStartedRandom() { return started_random; }
 	bool getAtStartOfPotential() { return start_of_potential; }
 	bool getFinishedPotentials() {
-		cout << "potential_queue " << potential_queue.size() << endl;
+		// cout << "potential_queue " << potential_queue.size() << endl;
 		if(potential_queue.size() > 0){
 			bool picked_new = false;
 			int count = potential_queue.size()-1;
-			cout << "count " << count << endl;
+			// cout << "count " << count << endl;
 			while(!picked_new and count > 0){
 				current_potential = potential_queue.top();
 				if(!alreadyInStack(current_potential)){
@@ -114,11 +114,11 @@ public:
 				potential_exploration.push_back(current_potential);
 				potential_queue.pop();
 				count = count - 1;
-				cout << "potential_queue " << potential_queue.size() << " count " << count << " picked_new " << picked_new << endl;
+				// cout << "potential_queue " << potential_queue.size() << " count " << count << " picked_new " << picked_new << endl;
 			}
 			if(picked_new == true){
-				cout << "current_potential ";
-				current_potential.printDetails();
+				// cout << "current_potential ";
+				// current_potential.printDetails();
 				potential_queue.pop();
 				finished_potentials = false;
 			}
@@ -146,26 +146,26 @@ public:
 		pathPlanner = planner;
 	}
 	void setQueue(CartesianPoint goal, vector< LineSegment > pairs){
-		cout << "inside setQueue " << pairs.size() << endl;
+		// cout << "inside setQueue " << pairs.size() << endl;
 		task = goal;
 		for(int i = 0; i < pairs.size(); i++){
-			cout << "pair " << i << " " << pairs[i].get_length() << endl;
+			// cout << "pair " << i << " " << pairs[i].get_length() << endl;
 			if(pairs[i].get_length() >= distance_threshold){
 				potential_queue.push(PotentialPoints(pairs[i], task));
 			}
 		}
 		current_potential = potential_queue.top();
 		potential_exploration.push_back(current_potential);
-		cout << "current_potential ";
-		current_potential.printDetails();
+		// cout << "current_potential ";
+		// current_potential.printDetails();
 		potential_queue.pop();
 		already_started = true;
 	}
 	void addToQueue(vector< LineSegment > pairs){
-		cout << "inside addToQueue " << pairs.size() << endl;
+		// cout << "inside addToQueue " << pairs.size() << endl;
 		int count_before = potential_queue.size();
 		for(int i = 0; i < pairs.size(); i++){
-			cout << "pair " << i << " " << pairs[i].get_length() << endl;
+			// cout << "pair " << i << " " << pairs[i].get_length() << endl;
 			if(pairs[i].get_length() >= distance_threshold){
 				potential_queue.push(PotentialPoints(pairs[i], task));
 			}
@@ -220,13 +220,13 @@ public:
 		}
 	}
 	vector<CartesianPoint> getPathToStart(CartesianPoint current){
-		cout << "in getPathToStart " << endl;
+		// cout << "in getPathToStart " << endl;
 		pathPlanner->resetPath();
 		vector<CartesianPoint> waypoints;
-		cout << current.get_x() << " " << current.get_y() << endl;
+		// cout << current.get_x() << " " << current.get_y() << endl;
 		Node s(1, current.get_x()*100, current.get_y()*100);
 		pathPlanner->setSource(s);
-		cout << current_potential.start.get_x() << " " << current_potential.start.get_y() << endl;
+		// cout << current_potential.start.get_x() << " " << current_potential.start.get_y() << endl;
 		Node t(1, current_potential.start.get_x()*100, current_potential.start.get_y()*100);
 		pathPlanner->setTarget(t);
 		cout << "plan generation status" << pathPlanner->calcPath(true) << endl;
@@ -263,20 +263,20 @@ public:
 	vector<CartesianPoint> randomExploration(CartesianPoint current, vector<CartesianPoint> laserEndpoints, CartesianPoint goal, vector< vector<int> > coverage_grid){
 		already_started = true;
 		started_random = true;
-		cout << "randomExploration " << current.get_x() << " " << current.get_y() << " " << goal.get_x() << " " << goal.get_y() << endl;
+		// cout << "randomExploration " << current.get_x() << " " << current.get_y() << " " << goal.get_x() << " " << goal.get_y() << endl;
 		task = goal;
 		coverage = coverage_grid;
-		cout << "coverage" << endl;
-		for(int i = 0; i < coverage.size(); i++){
-			for(int j = 0; j < coverage[i].size(); j++){
-				cout << coverage[i][j] << " ";
-			}
-			cout << endl;
-		}
+		// cout << "coverage" << endl;
+		// for(int i = 0; i < coverage.size(); i++){
+		// 	for(int j = 0; j < coverage[i].size(); j++){
+		// 		cout << coverage[i][j] << " ";
+		// 	}
+		// 	cout << endl;
+		// }
 		double dist_to_goal = task.get_distance(current);
 		double max_search_radius = (int)(dist_to_goal)+1.0;
 		double min_search_radius = 1.0;
-		cout << "dist_to_goal " << dist_to_goal << " min_search_radius " << min_search_radius << " max_search_radius " << max_search_radius << endl;
+		// cout << "dist_to_goal " << dist_to_goal << " min_search_radius " << min_search_radius << " max_search_radius " << max_search_radius << endl;
 		vector<double> search_radii;
 		if(max_search_radius >= min_search_radius){
 			for(double i = min_search_radius; i <= max_search_radius; i += 1.0){
@@ -286,14 +286,14 @@ public:
 		else{
 			search_radii.push_back(min_search_radius);
 		}
-		cout << "search_radii " << search_radii.size() << endl;
+		// cout << "search_radii " << search_radii.size() << endl;
 		vector<bool> search_access;
 		vector<int> laser_index;
 		for(int i = 0; i < search_radii.size(); i++){
 			bool canAccessRegion = false;
 			double distLaserPosToPoint = current.get_distance(task);
 			if(distLaserPosToPoint - search_radii[i] > 20){
-				cout << search_radii[i] << " 0" << endl;
+				// cout << search_radii[i] << " 0" << endl;
 				search_access.push_back(false);
 				laser_index.push_back(-1);
 			}
@@ -307,7 +307,7 @@ public:
 						break;
 					}
 				}
-				cout << search_radii[i] << " " << canAccessRegion << endl;
+				// cout << search_radii[i] << " " << canAccessRegion << endl;
 				search_access.push_back(canAccessRegion);
 				laser_index.push_back(ind);
 			}
@@ -316,14 +316,14 @@ public:
 		bool found_closest = false;
 		for(int i = 0; i < search_radii.size(); i++){
 			if(search_access[i] and coverage[(int)(laserEndpoints[laser_index[i]].get_x())][(int)(laserEndpoints[laser_index[i]].get_y())] < 0){
-				cout << "closest visible radii " << search_radii[i] << endl;
+				// cout << "closest visible radii " << search_radii[i] << endl;
 				laser_to_explore = PotentialPoints(LineSegment(current, laserEndpoints[laser_index[i]]), task);
 				found_closest = true;
 				break;
 			}
 		}
 		if(found_closest == true){
-			cout << "found_closest " << found_closest << endl;
+			// cout << "found_closest " << found_closest << endl;
 			vector<CartesianPoint> waypoints;
 			double tx, ty;
 			for(double j = 0; j <= 1; j += 0.1){
@@ -334,7 +334,7 @@ public:
 			return waypoints;
 		}
 		else{
-			cout << "go to closest_coverage" << endl;
+			// cout << "go to closest_coverage" << endl;
 			int min_distance = 10000;
 			int task_x = (int)(task.get_x());
 			int task_y = (int)(task.get_y());
@@ -349,14 +349,14 @@ public:
 					}
 				}
 			}
-			cout << "closest_x " << closest_x << " closest_y " << closest_y << endl;
+			// cout << "closest_x " << closest_x << " closest_y " << closest_y << endl;
 			PotentialPoints closest_coverage = PotentialPoints(LineSegment(CartesianPoint(closest_x, closest_y), CartesianPoint(closest_x, closest_y)), task);
 			pathPlanner->resetPath();
 			vector<CartesianPoint> waypoints;
-			cout << current.get_x() << " " << current.get_y() << endl;
+			// cout << current.get_x() << " " << current.get_y() << endl;
 			Node s(1, current.get_x()*100, current.get_y()*100);
 			pathPlanner->setSource(s);
-			cout << closest_coverage.start.get_x() << " " << closest_coverage.start.get_y() << endl;
+			// cout << closest_coverage.start.get_x() << " " << closest_coverage.start.get_y() << endl;
 			Node t(1, closest_coverage.start.get_x()*100, closest_coverage.start.get_y()*100);
 			pathPlanner->setTarget(t);
 			cout << "plan generation status" << pathPlanner->calcPath(true) << endl;
@@ -383,7 +383,7 @@ public:
 
 	void updateCoverage(CartesianPoint current){
 		if(started_random){
-			cout << "updated Coverage " << (int)(current.get_x()) << " " << (int)(current.get_y()) << endl;
+			// cout << "updated Coverage " << (int)(current.get_x()) << " " << (int)(current.get_y()) << endl;
 			coverage[(int)(current.get_x())][(int)(current.get_y())] = 0;
 		}
 	}
