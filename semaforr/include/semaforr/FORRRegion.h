@@ -348,6 +348,42 @@ class FORRRegion{
     }
   }
 
+  LineSegment visibleLineSegmentFromRegion(CartesianPoint point, double distanceLimit){
+    CartesianPoint laserPos = center;
+    double distLaserPosToPoint = laserPos.get_distance(point);
+    if(distLaserPosToPoint > distanceLimit){
+      return LineSegment(point, point);
+    }
+    double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
+    double degrees = point_direction * (180.0/3.141592653589793238463);
+    if(degrees < 0) degrees = degrees + 360;
+    // cout << "point_direction " << point_direction << " degrees " << degrees << " distance " << distLaserPosToPoint << " current visibility " << max_visibility[(int)(degrees)] << endl;
+    int index = (int)(degrees);
+    while (index-2 < 0){
+      index = index + 1;
+    }
+    while (index+2 > max_visibility.size()-1){
+      index = index - 1;
+    }
+    int max_ind = 0;
+    double max_ind_val = 0;
+    for(int i = -2; i < 3; i++){
+      if(max_visibility[index+i] > max_ind_val){
+        max_ind_val = max_visibility[index+i];
+        max_ind = index+i;
+      }
+    }
+    double angle;
+    if(max_ind > 180){
+      angle = (max_ind - 360.0)/(180.0/3.141592653589793238463);
+    }
+    else{
+      angle = (max_ind - 0.0)/(180.0/3.141592653589793238463);
+    }
+    CartesianPoint end_point = CartesianPoint(center.get_x() + max_visibility[max_ind]*cos(angle), center.get_y() + max_visibility[max_ind]*sin(angle));
+    return LineSegment(start_max_visibility[max_ind], end_point);
+  }
+
   vector<FORRExit> getExtExits() { return ext_exits; }
 
   vector<FORRExit> getExits() { return exits;}

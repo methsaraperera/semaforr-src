@@ -275,6 +275,14 @@ void Controller::initialize_params(string filename){
       findawayOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("findawayOn " << findawayOn);
     }
+    else if (fileLine.find("behindOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      behindOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("behindOn " << behindOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -1395,7 +1403,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    if(findawayOn and decisionMade == false){
+    if(behindOn and decisionMade == false){
       if(tier1->advisorBehindYou(decision)){
         ROS_INFO_STREAM("Advisor BehindYou has made a decision " << decision->type << " " << decision->parameter);
         decisionStats->decisionTier = 1.4;
@@ -1581,7 +1589,7 @@ void Controller::tierTwoDecision(Position current){
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       if(planner->getName() == bestPlanNames.at(random_number)){
-        beliefs->getAgentState()->setCurrentWaypoints(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), planner, aStarOn, plans.at(bestPlanInds.at(random_number)));
+        beliefs->getAgentState()->setCurrentWaypoints(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), planner, aStarOn, plans.at(bestPlanInds.at(random_number)), beliefs->getSpatialModel()->getRegionList()->getRegions());
         break;
       }
     }

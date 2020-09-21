@@ -151,7 +151,19 @@ class Task {
   }
 
   sk_waypoint getSkeletonWaypoint(){
-	return wr;
+  	if(plannerName == "skeleton" or plannerName == "hallwayskel"){
+		return wr;
+  	}
+  	else{
+  		vector<CartesianPoint> path;
+  		if(isPlanActive == false){
+  			path.push_back(CartesianPoint(x,y));
+  		}
+  		else{
+  			path.push_back(CartesianPoint(wx,wy));
+  		}
+  		return sk_waypoint(1, FORRRegion(), path, vector< vector<int> >());
+  	}
   }
 
   vector<sk_waypoint> getSkeletonWaypoints(){
@@ -355,7 +367,7 @@ class Task {
 	cout << "plan generation complete" << endl;
   }
 
-  bool generateWaypointsFromInds(Position source, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, list<int> indices){
+  bool generateWaypointsFromInds(Position source, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, list<int> indices, vector<FORRRegion> regions){
   	// cout << "Inside generateWaypointsFromInds" << endl;
 	waypoints.clear();
 	tierTwoWaypoints.clear();
@@ -397,6 +409,64 @@ class Task {
 	else if(plannerName == "skeleton"){
 		int step = -1;
 		int max_step = waypointInd.size()-1;
+		double s_x = navGraph->getNode(waypointInd->at(0)).getX()/100.0;
+		double s_y = navGraph->getNode(waypointInd->at(0)).getY()/100.0;
+		double s_r = navGraph->getNode(waypointInd->at(0)).getRadius();
+		bool s_vis = false;
+		LineSegment s_lineseg;
+		if(FORRRegion(CartesianPoint(s_x,s_y), s_r).inRegion(source.getX(), source.getY()) == false){
+			int vRegion=-1;
+			double vDist=1000000;
+			for(int i = 0; i < regions.size() ; i++){
+				if(regions[i].visibleFromRegion(CartesianPoint(source.getX(), source.getY()), 20) and regions[i].getMinExits().size() > 0){
+					double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(source.getX(), source.getY()));
+					if(dist_to_region < vDist){
+						// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+						vRegion = i;
+						vDist = dist_to_region;
+					}
+				}
+			}
+			if(vRegion >= 0){
+				s_lineseg = regions[vRegion].visibleLineSegmentFromRegion(CartesianPoint(source.getX(), source.getY()), 20);
+				s_vis = true;
+			}
+		}
+		double e_x = navGraph->getNode(waypointInd->at(max_step)).getX()/100.0;
+		double e_y = navGraph->getNode(waypointInd->at(max_step)).getY()/100.0;
+		double e_r = navGraph->getNode(waypointInd->at(max_step)).getRadius();
+		bool e_vis = false;
+		LineSegment e_lineseg;
+		if(FORRRegion(CartesianPoint(e_x,e_y), e_r).inRegion(x, y) == false){
+			int vRegion=-1;
+			double vDist=1000000;
+			for(int i = 0; i < regions.size() ; i++){
+				if(regions[i].visibleFromRegion(CartesianPoint(x, y), 20) and regions[i].getMinExits().size() > 0){
+					double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(x, y));
+					if(dist_to_region < vDist){
+						// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+						vRegion = i;
+						vDist = dist_to_region;
+					}
+				}
+			}
+			if(vRegion >= 0){
+				e_lineseg = regions[vRegion].visibleLineSegmentFromRegion(CartesianPoint(x, y), 20);
+				e_vis = true;
+			}
+		}
+		if(s_vis){
+			vector<CartesianPoint> path_from_s;
+			CartesianPoint start = s_lineseg.get_endpoints().second;
+			CartesianPoint end = s_lineseg.get_endpoints().first;
+			double tx, ty;
+			for(double j = 0; j <= 1; j += 0.05){
+				tx = (end.get_x() * j) + (start.get_x() * (1 - j));
+				ty = (end.get_y() * j) + (start.get_y() * (1 - j));
+				path_from_s.push_back(CartesianPoint(tx, ty));
+			}
+			skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_s, vector< vector<int> >()));
+		}
 		list<int>::iterator it;
 		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 			step = step + 1;
@@ -428,6 +498,18 @@ class Task {
 				}
 			}
 			// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+		}
+		if(e_vis){
+			vector<CartesianPoint> path_from_e;
+			CartesianPoint start = e_lineseg.get_endpoints().first;
+			CartesianPoint end = e_lineseg.get_endpoints().second;
+			double tx, ty;
+			for(double j = 0; j <= 1; j += 0.05){
+				tx = (end.get_x() * j) + (start.get_x() * (1 - j));
+				ty = (end.get_y() * j) + (start.get_y() * (1 - j));
+				path_from_e.push_back(CartesianPoint(tx, ty));
+			}
+			skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_e, vector< vector<int> >()));
 		}
 		if(skeleton_waypoints.size() > 0){
 			cout << "Plan active is true" << endl;
