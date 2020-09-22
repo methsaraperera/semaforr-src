@@ -130,6 +130,7 @@ bool Tier1Advisor::advisorVictory(FORRAction *decision) {
   }
   if(decisionMade == true){
     beliefs->getAgentState()->setRepositionTriggered(false);
+    beliefs->getAgentState()->setRepositionCount(0);
   }
   if(localExploration->getAlreadyStarted()){
     double search_radius = 7.0;
@@ -154,6 +155,11 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
   bool decisionMade = false;
   ROS_DEBUG("Check if waypoint can be spotted using laser scan");
   cout << "PlannerName " << beliefs->getAgentState()->getCurrentTask()->getPlannerName() << " PlanSize " << beliefs->getAgentState()->getCurrentTask()->getPlanSize() << endl;
+  if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "skeleton" or beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "hallwayskel"){
+    if(beliefs->getAgentState()->getEnforcerCount() >= 4 and beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 1){
+      beliefs->getAgentState()->getCurrentTask()->skipWaypoint();
+    }
+  }
   if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "skeleton" and beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "hallwayskel"){
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
     cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
@@ -200,24 +206,22 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0){
       waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius(), waypointDistThreshold);
       regionID = 0;
-    }
-    else{
-      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 1){
-        if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getType() == 0){
-          waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius(), waypointDistThreshold);
-          regionID = 1;
+      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 2){
+        vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getPath();
+        for(int i = 0; i < pathBetween.size(); i++){
+          if(beliefs->getAgentState()->canSeePoint(pathBetween[i], waypointDistThreshold)){
+            waypointPathInSight = true;
+            pathID = 1;
+            break;
+          }
         }
       }
+      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
+        nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius(), waypointDistThreshold);
+        nextRegionID = 2;
+      }
     }
-    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0 and beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 3){
-      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[2].getRegion().getRadius(), waypointDistThreshold);
-      nextRegionID = 2;
-    }
-    else if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4 and !(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0)){
-      nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius(), waypointDistThreshold);
-      nextRegionID = 3;
-    }
-    if(!(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0)){
+    else{
       vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getPath();
       for(int i = 0; i < pathBetween.size(); i++){
         if(beliefs->getAgentState()->canSeePoint(pathBetween[i], waypointDistThreshold)){
@@ -226,19 +230,16 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
           break;
         }
       }
-    }
-    else{
-      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 1){
-        if(!(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getType() == 0)){
-          vector<CartesianPoint> pathBetween = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getPath();
-          for(int i = 0; i < pathBetween.size(); i++){
-            if(beliefs->getAgentState()->canSeePoint(pathBetween[i], waypointDistThreshold)){
-              waypointPathInSight = true;
-              pathID = 1;
-              break;
-            }
-          }
-        }
+      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 2){
+        waypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[1].getRegion().getRadius(), waypointDistThreshold);
+        regionID = 1;
+      }
+      if(beliefs->getAgentState()->getCurrentTask()->getPlanSize() >= 4){
+        nextWaypointRegionInSight = beliefs->getAgentState()->canSeeRegion(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getCenter(), beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[3].getRegion().getRadius(), waypointDistThreshold);
+        nextRegionID = 3;
+      }
+      if(waypointPathInSight == false){
+        beliefs->getAgentState()->increaseEnforcerCount();
       }
     }
     // cout << "waypointRegionInSight " << waypointRegionInSight << " regionID " << regionID << " nextWaypointRegionInSight " << nextWaypointRegionInSight << " nextRegionID " << nextRegionID << " waypointPathInSight " << waypointPathInSight << " pathID " << pathID << endl;
@@ -493,7 +494,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
       CartesianPoint farthestVisible;
       int farthest = -1;
       for(int i = pathBetweenWaypoints.size()-1; i >= 0; i--){
-        if(beliefs->getAgentState()->canSeePoint(pathBetweenWaypoints[i], 20)){
+        if(beliefs->getAgentState()->canSeePoint(pathBetweenWaypoints[i], waypointDistThreshold)){
           farthestVisible = pathBetweenWaypoints[i];
           // cout << "farthestVisible " << i << endl;
           farthest = i;
@@ -797,7 +798,9 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
   }
   if(decisionMade == true){
     beliefs->getAgentState()->setRepositionTriggered(false);
+    beliefs->getAgentState()->setRepositionCount(0);
     beliefs->getAgentState()->setFindAWayCount(0);
+    beliefs->getAgentState()->setEnforcerCount(0);
   }
   return decisionMade;
 }
@@ -1007,8 +1010,14 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
       Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
       if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
         if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
-          ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
-          decisionMade = true;
+          FORRAction forrAction = *decision;
+          if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+            ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+          }
+          else{
+            ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
+            decisionMade = true;
+          }
         }
         else{
           FORRAction forward = beliefs->getAgentState()->maxForwardAction();
@@ -1021,6 +1030,9 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
           }
         }
       }
+    }
+    if(decisionMade == false){
+      beliefs->getAgentState()->increaseRepositionCount();
     }
   }
   else{
@@ -1100,6 +1112,7 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
         }
         beliefs->getAgentState()->setRepositionPoint(CartesianPoint(tx, ty));
         beliefs->getAgentState()->setRepositionTriggered(true);
+        beliefs->getAgentState()->setRepositionCount(0);
       }
       else{
         double tx, ty;
@@ -1112,6 +1125,7 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
         }
         beliefs->getAgentState()->setRepositionPoint(CartesianPoint(tx, ty));
         beliefs->getAgentState()->setRepositionTriggered(true);
+        beliefs->getAgentState()->setRepositionCount(0);
       }
       if(beliefs->getAgentState()->getRepositionTriggered()){
         cout << "Reposition triggered, move towards point" << endl;
@@ -1120,8 +1134,14 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
           Position expectedPosition = beliefs->getAgentState()->getExpectedPositionAfterAction((*decision));
           if(expectedPosition.getDistance(beliefs->getAgentState()->getCurrentPosition()) >= 0.1){
             if(decision->type == RIGHT_TURN or decision->type == LEFT_TURN){
-              ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
-              decisionMade = true;
+              FORRAction forrAction = *decision;
+              if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+                ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+              }
+              else{
+                ROS_DEBUG("Reposition point in sight and no obstacles, Doorway advisor to take decision");
+                decisionMade = true;
+              }
             }
             else{
               FORRAction forward = beliefs->getAgentState()->maxForwardAction();
@@ -1170,12 +1190,29 @@ bool Tier1Advisor::advisorBehindYou(FORRAction *decision){
     last_endpoint = beliefs->getAgentState()->getCurrentLaserEndpoints();
   }
   if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0){
-    behind_radius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius();
+    if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius() > behind_radius){
+      behind_radius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius();
+    }
   }
   if(robotPos.get_distance(waypoint) <= behind_radius and !waypointInSight and !(lastAction == FORRAction(RIGHT_TURN, rotation_set->size()/2)) and !canAccessPoint(last_endpoint, last_position, waypoint, 20)){
-    (*decision) = FORRAction(RIGHT_TURN, rotation_set->size()/2);
-    ROS_DEBUG("Waypoint not in sight but close, BehindYou advisor to turn around");
-    decisionMade = true;
+    FORRAction forrAction = FORRAction(RIGHT_TURN, rotation_set->size()/2);
+    if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+      ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+      forrAction = FORRAction(LEFT_TURN, rotation_set->size()/2);
+      if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
+        ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
+      }
+      else{
+        (*decision) = FORRAction(LEFT_TURN, rotation_set->size()/2);
+        ROS_DEBUG("Waypoint not in sight but close, BehindYou advisor to turn around");
+        decisionMade = true;
+      }
+    }
+    else{
+      (*decision) = FORRAction(RIGHT_TURN, rotation_set->size()/2);
+      ROS_DEBUG("Waypoint not in sight but close, BehindYou advisor to turn around");
+      decisionMade = true;
+    }
   }
   return decisionMade;
 }
@@ -1195,7 +1232,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       if(!beliefs->getAgentState()->canSeePoint(CartesianPoint(beliefs->getAgentState()->getCurrentTask()->getX(), beliefs->getAgentState()->getCurrentTask()->getY()), 25)){
         beliefs->getAgentState()->increaseFindAWayCount();
       }
-      if(localExploration->atEndOfPotential(current) or beliefs->getAgentState()->getFindAWayCount() >= 3 or beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0){
+      if(localExploration->atEndOfPotential(current) or beliefs->getAgentState()->getFindAWayCount() >= 4 or beliefs->getAgentState()->getCurrentTask()->getPlanSize() == 0){
         // cout << "At end of current potential " << localExploration->atEndOfPotential(current) << " cannot see next waypoint of potential " << beliefs->getAgentState()->getFindAWayCount() << endl;
         beliefs->getAgentState()->getCurrentTask()->clearWaypoints();
         // cout << "waypoints cleared" << endl;

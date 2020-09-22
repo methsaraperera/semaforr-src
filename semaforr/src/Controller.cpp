@@ -949,7 +949,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
+      beliefs->getAgentState()->setRepositionCount(0);
       beliefs->getAgentState()->setFindAWayCount(0);
+      beliefs->getAgentState()->setEnforcerCount(0);
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
@@ -970,7 +972,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
+      beliefs->getAgentState()->setRepositionCount(0);
       beliefs->getAgentState()->setFindAWayCount(0);
+      beliefs->getAgentState()->setEnforcerCount(0);
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
@@ -1017,7 +1021,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG_STREAM("Controller.cpp decisionCount > " << taskDecisionLimit << " , skipping task");
         beliefs->getAgentState()->setGetOutTriggered(false);
         beliefs->getAgentState()->setRepositionTriggered(false);
+        beliefs->getAgentState()->setRepositionCount(0);
         beliefs->getAgentState()->setFindAWayCount(0);
+        beliefs->getAgentState()->setEnforcerCount(0);
         tier1->resetLocalExploration();
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
@@ -1376,8 +1382,9 @@ bool Controller::tierOneDecision(FORRAction *decision){
   if(current_position.get_distance(beliefs->getAgentState()->getFarthestPoint()) <= 0.75){
     beliefs->getAgentState()->setGetOutTriggered(false);
   }
-  if(current_position.get_distance(beliefs->getAgentState()->getRepositionPoint()) <= 0.75){
+  if(current_position.get_distance(beliefs->getAgentState()->getRepositionPoint()) <= 0.75 or beliefs->getAgentState()->getRepositionCount() >= 20){
     beliefs->getAgentState()->setRepositionTriggered(false);
+    beliefs->getAgentState()->setRepositionCount(0);
   }
   if(tier1->advisorVictory(decision)){ 
     ROS_INFO_STREAM("Advisor Victory has made a decision " << decision->type << " " << decision->parameter);

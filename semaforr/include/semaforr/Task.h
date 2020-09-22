@@ -409,9 +409,9 @@ class Task {
 	else if(plannerName == "skeleton"){
 		int step = -1;
 		int max_step = waypointInd.size()-1;
-		double s_x = navGraph->getNode(waypointInd->at(0)).getX()/100.0;
-		double s_y = navGraph->getNode(waypointInd->at(0)).getY()/100.0;
-		double s_r = navGraph->getNode(waypointInd->at(0)).getRadius();
+		double s_x = navGraph->getNode(waypointInd.front()).getX()/100.0;
+		double s_y = navGraph->getNode(waypointInd.front()).getY()/100.0;
+		double s_r = navGraph->getNode(waypointInd.front()).getRadius();
 		bool s_vis = false;
 		LineSegment s_lineseg;
 		if(FORRRegion(CartesianPoint(s_x,s_y), s_r).inRegion(source.getX(), source.getY()) == false){
@@ -432,9 +432,9 @@ class Task {
 				s_vis = true;
 			}
 		}
-		double e_x = navGraph->getNode(waypointInd->at(max_step)).getX()/100.0;
-		double e_y = navGraph->getNode(waypointInd->at(max_step)).getY()/100.0;
-		double e_r = navGraph->getNode(waypointInd->at(max_step)).getRadius();
+		double e_x = navGraph->getNode(waypointInd.back()).getX()/100.0;
+		double e_y = navGraph->getNode(waypointInd.back()).getY()/100.0;
+		double e_r = navGraph->getNode(waypointInd.back()).getRadius();
 		bool e_vis = false;
 		LineSegment e_lineseg;
 		if(FORRRegion(CartesianPoint(e_x,e_y), e_r).inRegion(x, y) == false){
@@ -1052,7 +1052,21 @@ class Task {
 	//cout << "end setup next waypoint" << endl;
    }
 
-  
+  void skipWaypoint(){
+  	if(plannerName == "skeleton" or plannerName == "hallwayskel"){
+  		finished_sk_waypoints.push_back(skeleton_waypoints[0]);
+		skeleton_waypoints.erase(skeleton_waypoints.begin());
+		if(skeleton_waypoints.size() > 0){
+			wr = skeleton_waypoints[0];
+			cout << "new current waypoint " << this->getX() << " " << this->getY() << endl;
+			isPlanActive = true;
+		}
+		else{
+			isPlanActive = false;
+		}
+  	}
+  }
+
   bool isTaskComplete(Position currentPosition){
 	bool status = false;
 	double dis = currentPosition.getDistance(x, y);
