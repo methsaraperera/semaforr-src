@@ -915,7 +915,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
       if(aStarOn and (!highwaysOn or (highwaysOn and highwayExploration->getHighwaysComplete()))){
-        tierTwoDecision(current);
+        tierTwoDecision(current, true);
       }
       else{
         beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
@@ -930,7 +930,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
     // cout << "waypointReached " <<   waypointReached << " taskCompleted " << taskCompleted << " isPlanActive " << isPlanActive << endl;
     if(highwayFinished == 1){
       if(highwaysOn){
-        learnSpatialModel(beliefs->getAgentState(), true);
+        learnSpatialModel(beliefs->getAgentState(), true, false);
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
@@ -940,7 +940,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
       if(aStarOn){
-        tierTwoDecision(current);
+        tierTwoDecision(current, true);
         ROS_DEBUG("Next Plan Generated!!");
       }
       else{
@@ -961,7 +961,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       ROS_DEBUG("Target Achieved, moving on to next target!!");
       //Learn spatial model only on tasks completed successfully
       if(beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size() <= 2000){
-        learnSpatialModel(beliefs->getAgentState(), true);
+        learnSpatialModel(beliefs->getAgentState(), true, false);
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
@@ -990,7 +990,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         }
         ROS_DEBUG("Selecting Next Task");
         if(aStarOn){
-          tierTwoDecision(current);
+          tierTwoDecision(current, true);
           ROS_DEBUG("Next Plan Generated!!");
         }
         else{
@@ -1005,6 +1005,16 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       //beliefs->getAgentState()->getCurrentTask()->setupNextWaypoint(current);
       beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
       //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
+    }
+    else if(tier1->localExplorationStarted() and beliefs->getAgentState()->getCurrentTask()->getDecisionCount() % 100 == 0 and beliefs->getAgentState()->getCurrentTask()->getDecisionCount() != taskDecisionLimit){
+      learnSpatialModel(beliefs->getAgentState(), false, true);
+      ROS_DEBUG("Finished Learning Spatial Model!!");
+      updateSkeletonGraph(beliefs->getAgentState());
+      ROS_DEBUG("Finished Updating Skeleton Graph!!");
+      if(aStarOn){
+        tierTwoDecision(current, false);
+        ROS_DEBUG("New Plan Generated!!");
+      }
     }
     // else if(isPlanActive == false and aStarOn){
     //   ROS_DEBUG("No active plan, setting up new plan!!");
@@ -1027,7 +1037,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         tier1->resetLocalExploration();
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
-        learnSpatialModel(beliefs->getAgentState(), false);
+        learnSpatialModel(beliefs->getAgentState(), false, false);
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
@@ -1046,7 +1056,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
             aStarOn = false;
           }
           if(aStarOn){
-            tierTwoDecision(current);
+            tierTwoDecision(current, true);
           }
           else{
             beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
@@ -1092,7 +1102,7 @@ FORRAction Controller::decide() {
 //
 //
 
-void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
+void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus, bool earlyLearning){
   double computationTimeSec=0.0;
   timeval cv;
   double start_timecv;
@@ -1121,7 +1131,7 @@ void Controller::learnSpatialModel(AgentState* agentState, bool taskStatus){
   }
   all_laser_trace.push_back(laser_trace);
 
-  if(trailsOn){
+  if(trailsOn and !earlyLearning){
     beliefs->getSpatialModel()->getTrails()->updateTrails(agentState);
     beliefs->getSpatialModel()->getTrails()->resetChosenTrail();
     ROS_DEBUG("Trails Learned");
@@ -1465,13 +1475,14 @@ bool Controller::tierOneDecision(FORRAction *decision){
 // Generate tier 2 decision
 //
 //
-void Controller::tierTwoDecision(Position current){
+void Controller::tierTwoDecision(Position current, bool selectNextTask){
   ROS_DEBUG_STREAM("Tier 2 Decision");
   vector< list<int> > plans;
   vector<string> plannerNames;
   typedef vector< list<int> >::iterator vecIT;
-
-  beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+  if(selectNextTask == true){
+    beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+  }
 
   double computationTimeSec=0.0;
   timeval cv;

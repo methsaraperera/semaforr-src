@@ -44,6 +44,10 @@ public:
 	void resetLocalExploration(){
 		localExploration->resetLocalExplorer();
 	}
+
+	bool localExplorationStarted(){
+		localExploration->getAlreadyStarted();
+	}
 	
 private:
 	Beliefs *beliefs;
