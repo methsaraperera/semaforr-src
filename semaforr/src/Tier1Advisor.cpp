@@ -1193,7 +1193,7 @@ bool Tier1Advisor::advisorBehindYou(FORRAction *decision){
   }
   if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 0){
     if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius() > behind_radius){
-      behind_radius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius();
+      behind_radius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius() + behind_radius;
     }
   }
   if(robotPos.get_distance(waypoint) <= behind_radius and !waypointInSight and !(lastAction == FORRAction(RIGHT_TURN, rotation_set->size()/2)) and !canAccessPoint(last_endpoint, last_position, waypoint, 20)){
@@ -1406,44 +1406,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         }
         else{
           // cout << "no more potentials, randomly explore" << endl;
-          vector<CartesianPoint> end_waypoints;
-          if(localExploration->getStartedRandom()){
-            end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, localExploration->getCoverage());
-          }
-          else{
-            vector<FORRRegion> regions = beliefs->getSpatialModel()->getRegionList()->getRegions();
-            vector< vector<int> > coverage_grid;
-            for(int i = 0; i < 200; i++){
-              vector<int> col;
-              for(int j = 0; j < 200; j++){
-                col.push_back(-1);
-              }
-              coverage_grid.push_back(col);
-            }
-            for(int i = 0; i < regions.size(); i++){
-              double cx = regions[i].getCenter().get_x();
-              double cy = regions[i].getCenter().get_y();
-              double cr = regions[i].getRadius();
-              for(double x = cx - cr; x <= cx + cr; x += cr/10){
-                for(double y = cy - cr; y <= cy + cr; y += cr/10){
-                  coverage_grid[(int)(x)][(int)(y)] = i+1;
-                }
-              }
-              vector<FORRExit> exits = regions[i].getExits();
-              for(int j = 0; j < exits.size(); j++){
-                vector<CartesianPoint> path = exits[j].getConnectionPoints();
-                for(int k = 0; k < path.size()-1; k++){
-                  double tx, ty;
-                  for(double j = 0; j <= 1; j += 0.1){
-                    tx = (path[k+1].get_x() * j) + (path[k].get_x() * (1 - j));
-                    ty = (path[k+1].get_y() * j) + (path[k].get_y() * (1 - j));
-                    coverage_grid[(int)(tx)][(int)(ty)] = i+1;
-                  }
-                }
-              }
-            }
-            end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
-          }
+          vector<CartesianPoint> end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task);
           for(int i = end_waypoints.size()-1; i >= 0; i--){
             // cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
             beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], 3);
@@ -1474,6 +1437,14 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         //   potential_exploration.push_back(potential);
         // }
       }
+      vector< vector<int> > coverage_grid;
+      for(int i = 0; i < 200; i++){
+        vector<int> col;
+        for(int j = 0; j < 200; j++){
+          col.push_back(-1);
+        }
+        coverage_grid.push_back(col);
+      }
       bool currently_in_region = false;
       bool start_in_region = false;
       for(int i = 0; i < regions.size(); i++){
@@ -1503,7 +1474,28 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         if(regions[i].inRegion(localExploration->getStartOfPotential())){
           start_in_region = true;
         }
+        double cx = regions[i].getCenter().get_x();
+        double cy = regions[i].getCenter().get_y();
+        double cr = regions[i].getRadius();
+        for(double x = cx - cr; x <= cx + cr; x += cr/10){
+          for(double y = cy - cr; y <= cy + cr; y += cr/10){
+            coverage_grid[(int)(x)][(int)(y)] = i+1;
+          }
+        }
+        vector<FORRExit> exits = regions[i].getExits();
+        for(int j = 0; j < exits.size(); j++){
+          vector<CartesianPoint> path = exits[j].getConnectionPoints();
+          for(int k = 0; k < path.size()-1; k++){
+            double tx, ty;
+            for(double j = 0; j <= 1; j += 0.1){
+              tx = (path[k+1].get_x() * j) + (path[k].get_x() * (1 - j));
+              ty = (path[k+1].get_y() * j) + (path[k].get_y() * (1 - j));
+              coverage_grid[(int)(tx)][(int)(ty)] = i+1;
+            }
+          }
+        }
       }
+      localExploration->setCoverage(coverage_grid);
       vector<CartesianPoint> laserEndpoints = beliefs->getAgentState()->getCurrentLaserEndpoints();
       for(int i = 0; i < laserEndpoints.size(); i++){
         LineSegment pair = LineSegment(current, laserEndpoints[i]);
@@ -1675,37 +1667,7 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
       }
       else{
         // cout << "no available potential places" << endl;
-        vector< vector<int> > coverage_grid;
-        for(int i = 0; i < 200; i++){
-          vector<int> col;
-          for(int j = 0; j < 200; j++){
-            col.push_back(-1);
-          }
-          coverage_grid.push_back(col);
-        }
-        for(int i = 0; i < regions.size(); i++){
-          double cx = regions[i].getCenter().get_x();
-          double cy = regions[i].getCenter().get_y();
-          double cr = regions[i].getRadius();
-          for(double x = cx - cr; x <= cx + cr; x += cr/10){
-            for(double y = cy - cr; y <= cy + cr; y += cr/10){
-              coverage_grid[(int)(x)][(int)(y)] = i+1;
-            }
-          }
-          vector<FORRExit> exits = regions[i].getExits();
-          for(int j = 0; j < exits.size(); j++){
-            vector<CartesianPoint> path = exits[j].getConnectionPoints();
-            for(int k = 0; k < path.size()-1; k++){
-              double tx, ty;
-              for(double j = 0; j <= 1; j += 0.1){
-                tx = (path[k+1].get_x() * j) + (path[k].get_x() * (1 - j));
-                ty = (path[k+1].get_y() * j) + (path[k].get_y() * (1 - j));
-                coverage_grid[(int)(tx)][(int)(ty)] = i+1;
-              }
-            }
-          }
-        }
-        vector<CartesianPoint> end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task, coverage_grid);
+        vector<CartesianPoint> end_waypoints = localExploration->randomExploration(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), task);
         for(int i = end_waypoints.size()-1; i >= 0; i--){
           // cout << "waypoint " << end_waypoints[i].get_x() << " " << end_waypoints[i].get_y() << endl;
           beliefs->getAgentState()->getCurrentTask()->createNewWaypoint(end_waypoints[i], 3);

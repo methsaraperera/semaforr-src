@@ -1006,7 +1006,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       beliefs->getAgentState()->getCurrentTask()->setupNearestWaypoint(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
       //beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getCurrentTask(),current,planner,aStarOn);
     }
-    else if(tier1->localExplorationStarted() and beliefs->getAgentState()->getCurrentTask()->getDecisionCount() % 100 == 0 and beliefs->getAgentState()->getCurrentTask()->getDecisionCount() != taskDecisionLimit){
+    else if(tier1->localExplorationTriggerLearning() and beliefs->getAgentState()->getCurrentTask()->getDecisionCount() != taskDecisionLimit){
       learnSpatialModel(beliefs->getAgentState(), false, true);
       ROS_DEBUG("Finished Learning Spatial Model!!");
       updateSkeletonGraph(beliefs->getAgentState());

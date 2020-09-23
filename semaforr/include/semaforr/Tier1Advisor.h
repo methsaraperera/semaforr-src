@@ -48,6 +48,15 @@ public:
 	bool localExplorationStarted(){
 		localExploration->getAlreadyStarted();
 	}
+
+	bool localExplorationTriggerLearning(){
+		if(localExploration->getAlreadyStarted()){
+			return localExploration->triggerLearning();
+		}
+		else{
+			return false;
+		}
+	}
 	
 private:
 	Beliefs *beliefs;

@@ -55,36 +55,86 @@ struct PotentialPoints{
 		}
 	}
 	bool operator < (const PotentialPoints p) const{
-		if(dist_to_goal <= p.dist_to_goal and index >= p.index){
-			return true;
-		}
-		else if(dist_to_goal >= p.dist_to_goal and index <= p.index){
-			return false;
-		}
-		else{
-			if((start_dist_to_goal >= p.start_dist_to_goal or end_dist_to_goal >= p.end_dist_to_goal) and index <= p.index){
-				return false;
-			}
-			else{
-				return false;
-			}
-		}
-	}
-	bool operator > (const PotentialPoints p) const{
-		if(dist_to_goal >= p.dist_to_goal and index <= p.index){
-			return true;
-		}
-		else if(dist_to_goal <= p.dist_to_goal and index >= p.index){
-			return false;
-		}
-		else{
-			if((start_dist_to_goal <= p.start_dist_to_goal or end_dist_to_goal <= p.end_dist_to_goal) and index >= p.index){
+		if(dist_to_goal < 3.5 and p.dist_to_goal < 3.5){
+			if(index < p.index){
 				return false;
 			}
 			else{
 				return true;
 			}
 		}
+		else if(dist_to_goal >= 3.5 and p.dist_to_goal >= 3.5){
+			if(index < p.index){
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		else if(dist_to_goal < 3.5 and p.dist_to_goal >= 3.5){
+			return true;
+		}
+		else if(dist_to_goal >= 3.5 and p.dist_to_goal < 3.5){
+			return false;
+		}
+		else{
+			return true;
+		}
+		// if(dist_to_goal <= p.dist_to_goal and index >= p.index){
+		// 	return true;
+		// }
+		// else if(dist_to_goal >= p.dist_to_goal and index <= p.index){
+		// 	return false;
+		// }
+		// else{
+		// 	if((start_dist_to_goal >= p.start_dist_to_goal or end_dist_to_goal >= p.end_dist_to_goal) and index <= p.index){
+		// 		return false;
+		// 	}
+		// 	else{
+		// 		return false;
+		// 	}
+		// }
+	}
+	bool operator > (const PotentialPoints p) const{
+		if(dist_to_goal < 3.5 and p.dist_to_goal < 3.5){
+			if(index < p.index){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		else if(dist_to_goal >= 3.5 and p.dist_to_goal >= 3.5){
+			if(index < p.index){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		else if(dist_to_goal < 3.5 and p.dist_to_goal >= 3.5){
+			return false;
+		}
+		else if(dist_to_goal >= 3.5 and p.dist_to_goal < 3.5){
+			return true;
+		}
+		else{
+			return false;
+		}
+		// if(dist_to_goal >= p.dist_to_goal and index <= p.index){
+		// 	return true;
+		// }
+		// else if(dist_to_goal <= p.dist_to_goal and index >= p.index){
+		// 	return false;
+		// }
+		// else{
+		// 	if((start_dist_to_goal <= p.start_dist_to_goal or end_dist_to_goal <= p.end_dist_to_goal) and index >= p.index){
+		// 		return false;
+		// 	}
+		// 	else{
+		// 		return true;
+		// 	}
+		// }
 	}
 };
 
@@ -98,6 +148,8 @@ public:
 		found_new_potentials = false;
 		distance_threshold = 2;
 		start_index = 0;
+		initial_coverage = 0;
+		current_coverage = 0;
 	};
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
@@ -147,6 +199,8 @@ public:
 		current_potential = PotentialPoints();
 		laser_to_explore = PotentialPoints();
 		start_index = 0;
+		initial_coverage = 0;
+		current_coverage = 0;
 	}
 	void setPathPlanner(PathPlanner *planner){
 		pathPlanner = planner;
@@ -214,10 +268,8 @@ public:
 			}
 		}
 		bool alreadyCovered = false;
-		if(started_random){
-			if(coverage[(int)(segment.end.get_x())][(int)(segment.end.get_y())] >= 0){
-				alreadyCovered = true;
-			}
+		if(coverage[(int)(segment.end.get_x())][(int)(segment.end.get_y())] == 0){
+			alreadyCovered = true;
 		}
 		if(inCompleted or alreadyCovered){
 			return true;
@@ -267,12 +319,11 @@ public:
 		}
 		return waypoints;
 	}
-	vector<CartesianPoint> randomExploration(CartesianPoint current, vector<CartesianPoint> laserEndpoints, CartesianPoint goal, vector< vector<int> > coverage_grid){
+	vector<CartesianPoint> randomExploration(CartesianPoint current, vector<CartesianPoint> laserEndpoints, CartesianPoint goal){
 		already_started = true;
 		started_random = true;
 		// cout << "randomExploration " << current.get_x() << " " << current.get_y() << " " << goal.get_x() << " " << goal.get_y() << endl;
 		task = goal;
-		coverage = coverage_grid;
 		// cout << "coverage" << endl;
 		// for(int i = 0; i < coverage.size(); i++){
 		// 	for(int j = 0; j < coverage[i].size(); j++){
@@ -427,13 +478,38 @@ public:
 	}
 
 	void updateCoverage(CartesianPoint current){
-		if(started_random){
-			// cout << "updated Coverage " << (int)(current.get_x()) << " " << (int)(current.get_y()) << endl;
-			coverage[(int)(current.get_x())][(int)(current.get_y())] = 0;
+		// cout << "updated Coverage " << (int)(current.get_x()) << " " << (int)(current.get_y()) << endl;
+		if(coverage[(int)(current.get_x())][(int)(current.get_y())] == -1){
+			current_coverage = current_coverage + 1;
 		}
+		coverage[(int)(current.get_x())][(int)(current.get_y())] = 0;
 	}
 
 	vector< vector<int> > getCoverage() { return coverage; }
+
+	void setCoverage(vector< vector<int> > coverage_grid){
+		coverage = coverage_grid;
+		double count = 0;
+		for(int i = 0; i < coverage.size(); i++){
+			for(int j = 0; j < coverage[i].size(); j++){
+				if(coverage[i][j] >= 0){
+					count = count + 1;
+				}
+			}
+		}
+		initial_coverage = count;
+		current_coverage = count;
+	}
+
+	bool triggerLearning(){
+		if(current_coverage / initial_coverage - 1 > 0.1){
+			initial_coverage = current_coverage;
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
 
 private:
 	double distance_threshold;
@@ -451,6 +527,7 @@ private:
 	vector< vector<int> > coverage;
 	bool found_new_potentials;
 	double start_index;
+	int initial_coverage, current_coverage;
 };
 
 #endif
