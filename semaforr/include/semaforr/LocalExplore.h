@@ -31,14 +31,16 @@ struct PotentialPoints{
 	double dist_to_goal;
 	double start_dist_to_goal;
 	double end_dist_to_goal;
-	PotentialPoints(): pair(LineSegment()), start(CartesianPoint()), end(CartesianPoint()), dist_to_goal(0), start_dist_to_goal(0), end_dist_to_goal(0) { }
-	PotentialPoints(LineSegment p, CartesianPoint target){
+	double index;
+	PotentialPoints(): pair(LineSegment()), start(CartesianPoint()), end(CartesianPoint()), dist_to_goal(0), start_dist_to_goal(0), end_dist_to_goal(0), index(-1) { }
+	PotentialPoints(LineSegment p, CartesianPoint target, double ind){
 		pair = p;
 		start = pair.get_endpoints().first;
 		end = pair.get_endpoints().second;
 		dist_to_goal = distance(target, pair);
 		start_dist_to_goal = start.get_distance(target);
 		end_dist_to_goal = end.get_distance(target);
+		index = ind;
 		// printDetails();
 	}
 	void printDetails(){
@@ -53,15 +55,15 @@ struct PotentialPoints{
 		}
 	}
 	bool operator < (const PotentialPoints p) const{
-		if(dist_to_goal < p.dist_to_goal){
+		if(dist_to_goal <= p.dist_to_goal and index >= p.index){
 			return true;
 		}
-		else if(dist_to_goal > p.dist_to_goal){
+		else if(dist_to_goal >= p.dist_to_goal and index <= p.index){
 			return false;
 		}
 		else{
-			if(start_dist_to_goal < p.start_dist_to_goal or end_dist_to_goal < p.end_dist_to_goal){
-				return true;
+			if((start_dist_to_goal >= p.start_dist_to_goal or end_dist_to_goal >= p.end_dist_to_goal) and index <= p.index){
+				return false;
 			}
 			else{
 				return false;
@@ -69,18 +71,18 @@ struct PotentialPoints{
 		}
 	}
 	bool operator > (const PotentialPoints p) const{
-		if(dist_to_goal > p.dist_to_goal){
+		if(dist_to_goal >= p.dist_to_goal and index <= p.index){
 			return true;
 		}
-		else if(dist_to_goal < p.dist_to_goal){
+		else if(dist_to_goal <= p.dist_to_goal and index >= p.index){
 			return false;
 		}
 		else{
-			if(start_dist_to_goal > p.start_dist_to_goal or end_dist_to_goal > p.end_dist_to_goal){
-				return true;
+			if((start_dist_to_goal <= p.start_dist_to_goal or end_dist_to_goal <= p.end_dist_to_goal) and index >= p.index){
+				return false;
 			}
 			else{
-				return false;
+				return true;
 			}
 		}
 	}
@@ -95,6 +97,7 @@ public:
 		started_random = false;
 		found_new_potentials = false;
 		distance_threshold = 2;
+		start_index = 0;
 	};
 	~LocalExplorer(){};
 	bool getAlreadyStarted() { return already_started; }
@@ -143,6 +146,7 @@ public:
 		random_queue = priority_queue<PotentialPoints, vector<PotentialPoints>, greater<PotentialPoints> >();
 		current_potential = PotentialPoints();
 		laser_to_explore = PotentialPoints();
+		start_index = 0;
 	}
 	void setPathPlanner(PathPlanner *planner){
 		pathPlanner = planner;
@@ -153,7 +157,7 @@ public:
 		for(int i = 0; i < pairs.size(); i++){
 			// cout << "pair " << i << " " << pairs[i].get_length() << endl;
 			if(pairs[i].get_length() >= distance_threshold){
-				potential_queue.push(PotentialPoints(pairs[i], task));
+				potential_queue.push(PotentialPoints(pairs[i], task, start_index));
 			}
 		}
 		current_potential = potential_queue.top();
@@ -165,11 +169,12 @@ public:
 	}
 	void addToQueue(vector< LineSegment > pairs){
 		// cout << "inside addToQueue " << pairs.size() << endl;
+		start_index++;
 		int count_before = potential_queue.size();
 		for(int i = 0; i < pairs.size(); i++){
 			// cout << "pair " << i << " " << pairs[i].get_length() << endl;
 			if(pairs[i].get_length() >= distance_threshold){
-				potential_queue.push(PotentialPoints(pairs[i], task));
+				potential_queue.push(PotentialPoints(pairs[i], task, start_index));
 			}
 		}
 		int count_after = potential_queue.size();
@@ -317,7 +322,7 @@ public:
 		for(int i = 0; i < search_radii.size(); i++){
 			if(search_access[i] and coverage[(int)(laserEndpoints[laser_index[i]].get_x())][(int)(laserEndpoints[laser_index[i]].get_y())] < 0){
 				// cout << "closest visible radii " << search_radii[i] << endl;
-				random_queue.push(PotentialPoints(LineSegment(current, laserEndpoints[laser_index[i]]), task));
+				random_queue.push(PotentialPoints(LineSegment(current, laserEndpoints[laser_index[i]]), task, 0));
 			}
 		}
 		if(random_queue.size() > 0){
@@ -391,7 +396,7 @@ public:
 			}
 		}
 		// cout << "closest_x " << closest_x << " closest_y " << closest_y << endl;
-		PotentialPoints closest_coverage = PotentialPoints(LineSegment(CartesianPoint(closest_x, closest_y), CartesianPoint(closest_x, closest_y)), task);
+		PotentialPoints closest_coverage = PotentialPoints(LineSegment(CartesianPoint(closest_x, closest_y), CartesianPoint(closest_x, closest_y)), task, 0);
 		pathPlanner->resetPath();
 		vector<CartesianPoint> waypoints;
 		// cout << current.get_x() << " " << current.get_y() << endl;
@@ -445,6 +450,7 @@ private:
 	bool started_random;
 	vector< vector<int> > coverage;
 	bool found_new_potentials;
+	double start_index;
 };
 
 #endif

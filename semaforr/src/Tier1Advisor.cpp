@@ -155,12 +155,12 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
   bool decisionMade = false;
   ROS_DEBUG("Check if waypoint can be spotted using laser scan");
   cout << "PlannerName " << beliefs->getAgentState()->getCurrentTask()->getPlannerName() << " PlanSize " << beliefs->getAgentState()->getCurrentTask()->getPlanSize() << endl;
-  if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "skeleton" or beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "hallwayskel"){
+  if((beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "skeleton" or beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "hallwayskel") and beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 0){
     if(beliefs->getAgentState()->getEnforcerCount() >= 4 and beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getType() == 1){
       beliefs->getAgentState()->getCurrentTask()->skipWaypoint();
     }
   }
-  if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "skeleton" and beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "hallwayskel"){
+  if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "skeleton" and beliefs->getAgentState()->getCurrentTask()->getPlannerName() != "hallwayskel" and beliefs->getAgentState()->getCurrentTask()->getPlanSize() > 0){
     CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
     cout << "Waypoint = " << waypoint.get_x() << " " << waypoint.get_y() << endl;
     bool waypointInSight = beliefs->getAgentState()->canSeePoint(waypoint, 20);
@@ -1003,6 +1003,7 @@ bool Tier1Advisor::advisorGetOut(FORRAction *decision) {
 bool Tier1Advisor::advisorDoorway(FORRAction *decision){
   ROS_DEBUG("In advisor doorway");
   bool decisionMade = false;
+  set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   if(beliefs->getAgentState()->getRepositionTriggered()){
     cout << "Reposition already triggered, move towards point" << endl;
     (*decision) = beliefs->getAgentState()->moveTowards(beliefs->getAgentState()->getRepositionPoint());
@@ -1164,6 +1165,7 @@ bool Tier1Advisor::advisorDoorway(FORRAction *decision){
 bool Tier1Advisor::advisorBehindYou(FORRAction *decision){
   ROS_DEBUG("In advisor BehindYou");
   bool decisionMade = false;
+  set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   double behind_radius = 1.5;
   ROS_DEBUG("Check if waypoint can be spotted using laser scan");
   CartesianPoint waypoint(beliefs->getAgentState()->getCurrentTask()->getX(),beliefs->getAgentState()->getCurrentTask()->getY());
