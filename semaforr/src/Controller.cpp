@@ -1015,6 +1015,11 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         tierTwoDecision(current, false);
         ROS_DEBUG("New Plan Generated!!");
       }
+      beliefs->getAgentState()->setGetOutTriggered(false);
+      beliefs->getAgentState()->setRepositionTriggered(false);
+      beliefs->getAgentState()->setRepositionCount(0);
+      beliefs->getAgentState()->setFindAWayCount(0);
+      beliefs->getAgentState()->setEnforcerCount(0);
     }
     // else if(isPlanActive == false and aStarOn){
     //   ROS_DEBUG("No active plan, setting up new plan!!");
@@ -1253,8 +1258,8 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     }
     if(skeleton){
       cout << "Finished updating skeleton planner" << endl;
-      // skeleton_planner->getGraph()->printGraph();
-      // cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
+      skeleton_planner->getGraph()->printGraph();
+      cout << "Connected Graph: " << skeleton_planner->getGraph()->isConnected() << endl;
     }
     if(hallwayskel){
       cout << "Finished updating skeleton graph for passage planner" << endl;

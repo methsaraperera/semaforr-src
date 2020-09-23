@@ -305,6 +305,7 @@ class Task {
   bool generateWaypoints(Position source, PathPlanner *planner){
 	waypoints.clear();
 	tierTwoWaypoints.clear();
+	skeleton_waypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
 	Node s(1, source.getX()*100, source.getY()*100);
@@ -386,6 +387,7 @@ class Task {
   	// cout << "Inside generateWaypointsFromInds" << endl;
 	waypoints.clear();
 	tierTwoWaypoints.clear();
+	skeleton_waypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
 	//Node s(1, source.getX()*100, source.getY()*100);

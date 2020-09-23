@@ -90,7 +90,7 @@ private:
   bool tierOneDecision(FORRAction *decision);
 
   //Tier 2 planners are called here
-  void tierTwoDecision(Position current);
+  void tierTwoDecision(Position current, bool selectNextTask);
 
   //Tier 3 advisors are called here
   void tierThreeDecision(FORRAction *decision);
@@ -99,7 +99,7 @@ private:
   void tierThreeAdvisorInfluence();
 
   // learns the spatial model and updates the beliefs
-  void learnSpatialModel(AgentState *agentState, bool taskStatus);
+  void learnSpatialModel(AgentState *agentState, bool taskStatus, bool earlyLearning);
   void updateSkeletonGraph(AgentState* agentState);
 
   void initialize_advisors(std::string);
