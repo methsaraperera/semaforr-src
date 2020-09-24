@@ -57,6 +57,15 @@ public:
 			return false;
 		}
 	}
+
+	vector< vector<int> > getLocalExploreCoverage(){
+		if(localExploration->getAlreadyStarted()){
+			return localExploration->getCoverage();
+		}
+		else{
+			return vector< vector<int> >();
+		}
+	}
 	
 private:
 	Beliefs *beliefs;

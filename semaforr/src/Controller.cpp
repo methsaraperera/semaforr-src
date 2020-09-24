@@ -1508,6 +1508,9 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
       beliefs->getAgentState()->getCurrentTask()->setPassageValues(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraphEdges(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage(), beliefs->getAgentState()->getGraphTrails(), beliefs->getAgentState()->getGraphThroughIntersections(), beliefs->getAgentState()->getGraphIntersectionTrails());
       // cout << "set task values" << endl;
     }
+    if(tier1->localExplorationStarted()){
+      planner->setCoverageGrid(tier1->getLocalExploreCoverage());
+    }
     //ROS_DEBUG_STREAM("Creating plans " << planner->getName());
     //gettimeofday(&cv,NULL);
     //start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);

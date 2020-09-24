@@ -50,7 +50,7 @@ int PathPlanner::calcPath(bool cautious){
       if(PATH_DEBUG)
         cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
       if(name == "skeleton"){
-        s = getClosestNode(source, target, true);
+        s = getClosestNode(source, target, false);
       }
       else if(name == "hallwayskel"){
         vector<Node> start_nodes = getClosestNodes(source, target, true);
@@ -1143,9 +1143,9 @@ double PathPlanner::getRemainingPathLength(double x, double y) {
   the robot is probably surrounded by obstacles, therefore this function returns an invalid node.
 
  */
-Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
+Node PathPlanner::getClosestNode(Node n, Node ref, bool isTarget){
   const string signature = "PathPlanner::getClosestNode()> ";
-  if(findAny and name == "skeleton"){
+  if(name == "skeleton"){
     Node temp;
     if(PATH_DEBUG)
       cout << signature << "Searching for any closest node " << endl;
@@ -1166,49 +1166,94 @@ Node PathPlanner::getClosestNode(Node n, Node ref, bool findAny){
       temp = navGraph->getNode(navGraph->getNodeID(x, y));
       return temp;
     }
-
-    int vRegion=-1;
-    double vDist=1000000;
-    for(int i = 0; i < regions.size() ; i++){
-      if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
-        double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
-        if(dist_to_region < vDist){
-          cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
-          vRegion = i;
-          vDist = dist_to_region;
+    if(isTarget and use_coverage_grid){
+      int vRegion=-1;
+      double vDist=1000000;
+      for(int i = 0; i < regions.size() ; i++){
+        if(coverage_grid[(int)(regions[i].getCenter().get_x())][(int)(regions[i].getCenter().get_y())] != 0 and regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+          double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+          if(dist_to_region < vDist){
+            cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+            vRegion = i;
+            vDist = dist_to_region;
+          }
         }
       }
-    }
-    if(vRegion >= 0){
-      int x = (int)(regions[vRegion].getCenter().get_x()*100);
-      int y = (int)(regions[vRegion].getCenter().get_y()*100);
-      cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
-      temp = navGraph->getNode(navGraph->getNodeID(x, y));
+      if(vRegion >= 0){
+        int x = (int)(regions[vRegion].getCenter().get_x()*100);
+        int y = (int)(regions[vRegion].getCenter().get_y()*100);
+        cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        return temp;
+      }
+      cout << "Not in region or visible to region, searching for close node" << endl;
+      vector<Node*> nodes = navGraph->getNodes();
+      vector<Node*>::iterator iter;
+      // double min_distance = 100000000.0;
+      double max_score = -100000000.0;
+      for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+        double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
+        double neighbors = (*iter)->numNeighbors();
+        double score = d + neighbors;
+        // if(d < min_distance){
+          // min_distance = d;
+        if(score > max_score and coverage_grid[(int)((*iter)->getX()/100.0)][(int)((*iter)->getY()/100.0)] != 0){
+          max_score = score;
+          temp = (*(*iter));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl;
+            cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+          }
+        }
+      }
       return temp;
     }
-    cout << "Not in region or visible to region, searching for close node" << endl;
-    vector<Node*> nodes = navGraph->getNodes();
-    vector<Node*>::iterator iter;
-    // double min_distance = 100000000.0;
-    double max_score = -100000000.0;
-    for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
-      double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
-      double neighbors = (*iter)->numNeighbors();
-      double score = d + neighbors;
-      // if(d < min_distance){
-        // min_distance = d;
-      if(score > max_score){
-        max_score = score;
-        temp = (*(*iter));
-        if(PATH_DEBUG) {
-          cout << "\tFound a new candidate!: ";
-          temp.printNode();
-          cout << endl;
-          cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+    else{
+      int vRegion=-1;
+      double vDist=1000000;
+      for(int i = 0; i < regions.size() ; i++){
+        if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+          double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+          if(dist_to_region < vDist){
+            cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+            vRegion = i;
+            vDist = dist_to_region;
+          }
         }
       }
+      if(vRegion >= 0){
+        int x = (int)(regions[vRegion].getCenter().get_x()*100);
+        int y = (int)(regions[vRegion].getCenter().get_y()*100);
+        cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        return temp;
+      }
+      cout << "Not in region or visible to region, searching for close node" << endl;
+      vector<Node*> nodes = navGraph->getNodes();
+      vector<Node*>::iterator iter;
+      // double min_distance = 100000000.0;
+      double max_score = -100000000.0;
+      for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+        double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
+        double neighbors = (*iter)->numNeighbors();
+        double score = d + neighbors;
+        // if(d < min_distance){
+          // min_distance = d;
+        if(score > max_score){
+          max_score = score;
+          temp = (*(*iter));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl;
+            cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+          }
+        }
+      }
+      return temp;
     }
-    return temp;
   }
   else{
     Node temp;

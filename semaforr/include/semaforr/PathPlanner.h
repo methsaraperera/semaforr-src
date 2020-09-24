@@ -68,6 +68,8 @@ private:
   vector< vector<int> > passage_graph;
   vector<Node> otherIntersection;
   vector<bool> usedOtherIntersection;
+  vector< vector<int> > coverage_grid;
+  bool use_coverage_grid;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -88,9 +90,9 @@ public:
     \param Node starting point (source)
     \param Node destination point (target)
   */
- PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false){}
+ PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
 
- PathPlanner(Graph * g, Node s, Node t, string n): navGraph(g), source(s), target(t), name(n), pathCalculated(false){}
+ PathPlanner(Graph * g, Node s, Node t, string n): navGraph(g), source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
 
   int calcPath(bool cautious = false);
   int calcOrigPath(bool cautious = false);
@@ -109,6 +111,7 @@ public:
     pathCalculated = false;
     otherIntersection.clear();
     usedOtherIntersection.clear();
+    use_coverage_grid = false;
   }
 
   void resetOrigPath() { 
@@ -116,6 +119,7 @@ public:
     origPaths.clear();
     origPathCompleted = true; 
     origPathCalculated = false;
+    use_coverage_grid = false;
   }
 
   void setCrowdModel(semaforr::CrowdModel c){ 
@@ -214,6 +218,11 @@ public:
     usedOtherIntersection.clear();
   }
 
+  void setCoverageGrid(vector< vector<int> > cg){
+    coverage_grid = cg;
+    use_coverage_grid = true;
+  }
+
   void updateNavGraph();
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
 
@@ -238,7 +247,7 @@ public:
 
   void setSource(Node s){ source = s; } 
 
-  Node getClosestNode(Node n, Node ref, bool findAny);
+  Node getClosestNode(Node n, Node ref, bool isTarget);
 
   vector<Node> getClosestNodes(Node n, Node ref, bool findAny);
 

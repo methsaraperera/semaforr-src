@@ -439,15 +439,17 @@ public:
 
 	bool getHighwaysComplete(){return highways_complete;}
 	void setHighwaysComplete(double time){
-		if(time >= time_threshold and time <= time_threshold+10){
+		if(time >= time_threshold){
 			highways_complete = true;
-			cout << "Highway grid" << endl;
-			for(int i = 0; i < highway_grid[0].size(); i++){
-				cout << "final_grid ";
-				for(int j = 0; j < highway_grid.size(); j++){
-					cout << highway_grid[j][i] << " ";
+			if(time <= time_threshold+10){
+				cout << "Highway grid" << endl;
+				for(int i = 0; i < highway_grid[0].size(); i++){
+					cout << "final_grid ";
+					for(int j = 0; j < highway_grid.size(); j++){
+						cout << highway_grid[j][i] << " ";
+					}
+					cout << endl;
 				}
-				cout << endl;
 			}
 		}
 	}
