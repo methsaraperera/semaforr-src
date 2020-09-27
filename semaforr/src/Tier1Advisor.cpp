@@ -1196,7 +1196,7 @@ bool Tier1Advisor::advisorBehindYou(FORRAction *decision){
       behind_radius = beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getRegion().getRadius() + behind_radius;
     }
   }
-  if(robotPos.get_distance(waypoint) <= behind_radius and !waypointInSight and !(lastAction == FORRAction(RIGHT_TURN, rotation_set->size()/2)) and !canAccessPoint(last_endpoint, last_position, waypoint, 20)){
+  if(robotPos.get_distance(waypoint) <= behind_radius and !waypointInSight and !(lastAction == FORRAction(RIGHT_TURN, rotation_set->size()/2)) and !(lastAction == FORRAction(LEFT_TURN, rotation_set->size()/2)) and !canAccessPoint(last_endpoint, last_position, waypoint, 20)){
     FORRAction forrAction = FORRAction(RIGHT_TURN, rotation_set->size()/2);
     if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
       ROS_DEBUG_STREAM("Vetoed action : " << forrAction.type << " " << forrAction.parameter);
