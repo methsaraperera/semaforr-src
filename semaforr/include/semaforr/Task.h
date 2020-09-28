@@ -544,6 +544,41 @@ class Task {
 			// cout << "prologue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[0].size()-1;
+			double s_x = origNavGraph->getNode(origPlansInds[0].front()).getX()/100.0;
+			double s_y = origNavGraph->getNode(origPlansInds[0].front()).getY()/100.0;
+			double s_r = origNavGraph->getNode(origPlansInds[0].front()).getRadius();
+			bool s_vis = false;
+			LineSegment s_lineseg;
+			if(FORRRegion(CartesianPoint(s_x,s_y), s_r).inRegion(source.getX(), source.getY()) == false){
+				int vRegion=-1;
+				double vDist=1000000;
+				for(int i = 0; i < regions.size() ; i++){
+					if(regions[i].visibleFromRegion(CartesianPoint(source.getX(), source.getY()), 20) and regions[i].getMinExits().size() > 0){
+						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(source.getX(), source.getY()));
+						if(dist_to_region < vDist){
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							vRegion = i;
+							vDist = dist_to_region;
+						}
+					}
+				}
+				if(vRegion >= 0){
+					s_lineseg = regions[vRegion].visibleLineSegmentFromRegion(CartesianPoint(source.getX(), source.getY()), 20);
+					s_vis = true;
+				}
+			}
+			if(s_vis){
+				vector<CartesianPoint> path_from_s;
+				CartesianPoint start = s_lineseg.get_endpoints().second;
+				CartesianPoint end = s_lineseg.get_endpoints().first;
+				double tx, ty;
+				for(double j = 0; j <= 1; j += 0.05){
+					tx = (end.get_x() * j) + (start.get_x() * (1 - j));
+					ty = (end.get_y() * j) + (start.get_y() * (1 - j));
+					path_from_s.push_back(CartesianPoint(tx, ty));
+				}
+				skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_s, vector< vector<int> >(), 1));
+			}
 			list<int>::iterator it;
 			for ( it = origPlansInds[0].begin(); it != origPlansInds[0].end(); it++ ){
 				step = step + 1;
@@ -572,8 +607,8 @@ class Task {
 			}
 			// if(waypointInd.size() > 0){
 			// 	if(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_distance(average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1]) > 5){
-			// 		double start_x = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y();
-			// 		double start_y = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x();
+			// 		double start_x = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x();
+			// 		double start_y = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y();
 			// 		double end_x = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_x();
 			// 		double end_y = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_y();
 			// 		double tx, ty;
@@ -586,6 +621,17 @@ class Task {
 			// }
 		}
 		// cout << "passage plan creation" << endl;
+		int nPassage = passage_grid[(int)(source.getX())][(int)(source.getY())];
+		if(origPlansInds[0].size() > 0){
+			nPassage = passage_grid[(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x())][(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y())];
+		}
+		if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0){
+			sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
+			new_passage.setPassageLabel(nPassage);
+			new_passage.setPassageCentroid(average_passage[nPassage-1]);
+			new_passage.setPassageOrientation(passage_graph_edges_orientation[nPassage]);
+			skeleton_waypoints.push_back(new_passage);
+		}
 		int step = -1;
 		int max_step = waypointInd.size()-1;
 		int start_passage = skeleton_waypoints.size();
@@ -600,8 +646,8 @@ class Task {
 			new_waypoint.setPassageCentroid(average_passage[intersection1-1]);
 			skeleton_waypoints.push_back(new_waypoint);
 			// cout << new_waypoint.getPassageCentroid().get_x() << " " << new_waypoint.getPassageCentroid().get_y() << endl;
-			list<int>::iterator itr1; 
-			itr1 = it; 
+			list<int>::iterator itr1;
+			itr1 = it;
 			advance(itr1, 1);
 			int forward_step = step + 1;
 			// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
@@ -651,6 +697,17 @@ class Task {
 				}
 			}
 		}
+		nPassage = passage_grid[(int)(x)][(int)(y)];
+		if(origPlansInds[1].size() > 0){
+			nPassage = passage_grid[(int)(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0)][(int)(origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0)];
+		}
+		if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0){
+			sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
+			new_passage.setPassageLabel(nPassage);
+			new_passage.setPassageCentroid(average_passage[nPassage-1]);
+			new_passage.setPassageOrientation(passage_graph_edges_orientation[nPassage]);
+			skeleton_waypoints.push_back(new_passage);
+		}
 		if(origPlansInds[1].size() > 0){
 			// if(waypointInd.size() > 0){
 			// 	if(CartesianPoint(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0,origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0).get_distance(skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid()) > 5){
@@ -694,6 +751,207 @@ class Task {
 					}
 				}
 				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+			}
+			double e_x = origNavGraph->getNode(origPlansInds[1].back()).getX()/100.0;
+			double e_y = origNavGraph->getNode(origPlansInds[1].back()).getY()/100.0;
+			double e_r = origNavGraph->getNode(origPlansInds[1].back()).getRadius();
+			bool e_vis = false;
+			LineSegment e_lineseg;
+			if(FORRRegion(CartesianPoint(e_x,e_y), e_r).inRegion(x, y) == false){
+				int vRegion=-1;
+				double vDist=1000000;
+				for(int i = 0; i < regions.size() ; i++){
+					if(regions[i].visibleFromRegion(CartesianPoint(x, y), 20) and regions[i].getMinExits().size() > 0){
+						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(x, y));
+						if(dist_to_region < vDist){
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							vRegion = i;
+							vDist = dist_to_region;
+						}
+					}
+				}
+				if(vRegion >= 0){
+					e_lineseg = regions[vRegion].visibleLineSegmentFromRegion(CartesianPoint(x, y), 20);
+					e_vis = true;
+				}
+			}
+			if(e_vis){
+				vector<CartesianPoint> path_from_e;
+				CartesianPoint start = e_lineseg.get_endpoints().first;
+				CartesianPoint end = e_lineseg.get_endpoints().second;
+				double tx, ty;
+				for(double j = 0; j <= 1; j += 0.05){
+					tx = (end.get_x() * j) + (start.get_x() * (1 - j));
+					ty = (end.get_y() * j) + (start.get_y() * (1 - j));
+					path_from_e.push_back(CartesianPoint(tx, ty));
+				}
+				skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_e, vector< vector<int> >(), 0));
+			}
+		}
+		vector<sk_waypoint> alternate_skeleton_waypoints;
+		if(origPlansInds[2].size() > 0){
+			int step = -1;
+			int max_step = origPlansInds[2].size()-1;
+			double s_x = origNavGraph->getNode(origPlansInds[2].front()).getX()/100.0;
+			double s_y = origNavGraph->getNode(origPlansInds[2].front()).getY()/100.0;
+			double s_r = origNavGraph->getNode(origPlansInds[2].front()).getRadius();
+			bool s_vis = false;
+			LineSegment s_lineseg;
+			if(FORRRegion(CartesianPoint(s_x,s_y), s_r).inRegion(source.getX(), source.getY()) == false){
+				int vRegion=-1;
+				double vDist=1000000;
+				for(int i = 0; i < regions.size() ; i++){
+					if(regions[i].visibleFromRegion(CartesianPoint(source.getX(), source.getY()), 20) and regions[i].getMinExits().size() > 0){
+						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(source.getX(), source.getY()));
+						if(dist_to_region < vDist){
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							vRegion = i;
+							vDist = dist_to_region;
+						}
+					}
+				}
+				if(vRegion >= 0){
+					s_lineseg = regions[vRegion].visibleLineSegmentFromRegion(CartesianPoint(source.getX(), source.getY()), 20);
+					s_vis = true;
+				}
+			}
+			double e_x = origNavGraph->getNode(origPlansInds[2].back()).getX()/100.0;
+			double e_y = origNavGraph->getNode(origPlansInds[2].back()).getY()/100.0;
+			double e_r = origNavGraph->getNode(origPlansInds[2].back()).getRadius();
+			bool e_vis = false;
+			LineSegment e_lineseg;
+			if(FORRRegion(CartesianPoint(e_x,e_y), e_r).inRegion(x, y) == false){
+				int vRegion=-1;
+				double vDist=1000000;
+				for(int i = 0; i < regions.size() ; i++){
+					if(regions[i].visibleFromRegion(CartesianPoint(x, y), 20) and regions[i].getMinExits().size() > 0){
+						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(x, y));
+						if(dist_to_region < vDist){
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							vRegion = i;
+							vDist = dist_to_region;
+						}
+					}
+				}
+				if(vRegion >= 0){
+					e_lineseg = regions[vRegion].visibleLineSegmentFromRegion(CartesianPoint(x, y), 20);
+					e_vis = true;
+				}
+			}
+			if(s_vis){
+				vector<CartesianPoint> path_from_s;
+				CartesianPoint start = s_lineseg.get_endpoints().second;
+				CartesianPoint end = s_lineseg.get_endpoints().first;
+				double tx, ty;
+				for(double j = 0; j <= 1; j += 0.05){
+					tx = (end.get_x() * j) + (start.get_x() * (1 - j));
+					ty = (end.get_y() * j) + (start.get_y() * (1 - j));
+					path_from_s.push_back(CartesianPoint(tx, ty));
+				}
+				alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_s, vector< vector<int> >(), 0));
+			}
+			list<int>::iterator it;
+			for ( it = origPlansInds[2].begin(); it != origPlansInds[2].end(); it++ ){
+				step = step + 1;
+				// cout << "node " << (*it) << " step " << step << endl;
+				double r_x = origNavGraph->getNode(*it).getX()/100.0;
+				double r_y = origNavGraph->getNode(*it).getY()/100.0;
+				double r = origNavGraph->getNode(*it).getRadius();
+				// cout << r_x << " " << r_y << " " << r << endl;
+				alternate_skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(r_x,r_y), r), vector<CartesianPoint>(), vector< vector<int> >(), 0));
+				list<int>::iterator itr1; 
+				itr1 = it; 
+				advance(itr1, 1);
+				int forward_step = step + 1;
+				// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+				if(forward_step <= max_step){
+					// if(origNavGraph->getEdge(*it, *itr1)->getFrom() == *it){
+					// 	alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), origNavGraph->getEdge(*it, *itr1)->getEdgePath(true)));
+					// }
+					// else if(origNavGraph->getEdge(*it, *itr1)->getFrom() == *itr1){
+					// 	alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), origNavGraph->getEdge(*it, *itr1)->getEdgePath(false)));
+					// }
+					vector<CartesianPoint> path_from_edge = origNavGraph->getEdge(*it, *itr1)->getEdgePath(true);
+					if(FORRRegion(CartesianPoint(r_x,r_y), r).inRegion(path_from_edge[0])){
+						alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 0));
+					}
+					else{
+						std::reverse(path_from_edge.begin(),path_from_edge.end());
+						alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 0));
+					}
+				}
+				// cout << "num of waypoints " << alternate_skeleton_waypoints.size() << endl;
+			}
+			if(e_vis){
+				vector<CartesianPoint> path_from_e;
+				CartesianPoint start = e_lineseg.get_endpoints().first;
+				CartesianPoint end = e_lineseg.get_endpoints().second;
+				double tx, ty;
+				for(double j = 0; j <= 1; j += 0.05){
+					tx = (end.get_x() * j) + (start.get_x() * (1 - j));
+					ty = (end.get_y() * j) + (start.get_y() * (1 - j));
+					path_from_e.push_back(CartesianPoint(tx, ty));
+				}
+				alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_e, vector< vector<int> >(), 0));
+			}
+		}
+		if(alternate_skeleton_waypoints.size() > 0){
+			double main_path_cost = 0;
+			for(int i = 0; i < skeleton_waypoints.size()-1; i++){
+				if(skeleton_waypoints[i].getType() == 1 and skeleton_waypoints[i+1].getType() == 0){
+					vector<CartesianPoint> sw_path = skeleton_waypoints[i].getPath();
+					for(j = 0; j < sw_path.size()-1; j++){
+						main_path_cost += sw_path[j].get_distance(sw_path[j+1]);
+					}
+					main_path_cost += sw_path[sw_path.size()-1].get_distance(skeleton_waypoints[i+1].getRegion().getCenter());
+				}
+				else if(skeleton_waypoints[i].getType() == 0 and skeleton_waypoints[i+1].getType() == 1){
+					vector<CartesianPoint> sw_path = skeleton_waypoints[i+1].getPath();
+					main_path_cost += sw_path[0].get_distance(skeleton_waypoints[i].getRegion().getCenter());
+					for(j = 0; j < sw_path.size()-1; j++){
+						main_path_cost += sw_path[j].get_distance(sw_path[j+1]);
+					}
+				}
+				else if(skeleton_waypoints[i].getType() == 0 and skeleton_waypoints[i+1].getType() == 2){
+					main_path_cost += skeleton_waypoints[i].getRegion().getCenter().get_distance(skeleton_waypoints[i+1].getPassageCentroid());
+				}
+				else if(skeleton_waypoints[i].getType() == 0 and skeleton_waypoints[i+1].getType() == 3){
+					main_path_cost += skeleton_waypoints[i].getRegion().getCenter().get_distance(skeleton_waypoints[i+1].getPassageCentroid());
+				}
+				else if(skeleton_waypoints[i].getType() == 2 and skeleton_waypoints[i+1].getType() == 0){
+					main_path_cost += skeleton_waypoints[i+1].getRegion().getCenter().get_distance(skeleton_waypoints[i].getPassageCentroid());
+				}
+				else if(skeleton_waypoints[i].getType() == 2 and skeleton_waypoints[i+1].getType() == 3){
+					main_path_cost += skeleton_waypoints[i].getPassageCentroid().get_distance(skeleton_waypoints[i+1].getPassageCentroid());
+				}
+				else if(skeleton_waypoints[i].getType() == 3 and skeleton_waypoints[i+1].getType() == 0){
+					main_path_cost += skeleton_waypoints[i+1].getRegion().getCenter().get_distance(skeleton_waypoints[i].getPassageCentroid());
+				}
+				else if(skeleton_waypoints[i].getType() == 3 and skeleton_waypoints[i+1].getType() == 2){
+					main_path_cost += skeleton_waypoints[i].getPassageCentroid().get_distance(skeleton_waypoints[i+1].getPassageCentroid());
+				}
+			}
+			cout << "skeleton_waypoints " << skeleton_waypoints.size() << " cost " << main_path_cost << endl;
+			double alternate_path_cost = 0;
+			for(int i = 0; i < alternate_skeleton_waypoints.size()-1; i++){
+				if(alternate_skeleton_waypoints[i].getType() == 1 and alternate_skeleton_waypoints[i+1].getType() == 0){
+					vector<CartesianPoint> asw_path = alternate_skeleton_waypoints[i].getPath();
+					for(j = 0; j < asw_path.size()-1; j++){
+						alternate_path_cost += asw_path[j].get_distance(asw_path[j+1]);
+					}
+					alternate_path_cost += asw_path[asw_path.size()-1].get_distance(alternate_skeleton_waypoints[i+1].getRegion().getCenter());
+				}
+				else if(alternate_skeleton_waypoints[i].getType() == 0 and alternate_skeleton_waypoints[i+1].getType() == 1){
+					vector<CartesianPoint> asw_path = alternate_skeleton_waypoints[i+1].getPath();
+					alternate_path_cost += asw_path[0].get_distance(alternate_skeleton_waypoints[i].getRegion().getCenter());
+					for(j = 0; j < asw_path.size()-1; j++){
+						alternate_path_cost += asw_path[j].get_distance(asw_path[j+1]);
+					}
+				}
+			}
+			cout << "alternate_skeleton_waypoints " << alternate_skeleton_waypoints.size() << " cost " << alternate_path_cost << endl;
+			if(alternate_path_cost < main_path_cost){
+				skeleton_waypoints = alternate_skeleton_waypoints;
 			}
 		}
 		if(skeleton_waypoints.size() > 0){

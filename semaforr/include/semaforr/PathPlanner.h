@@ -20,6 +20,7 @@
 #include "Aggregate.h"
 #include <map>
 #include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -42,6 +43,7 @@ private:
   list<int> origPath;
   list<int> origPath1;
   list<int> origPath2;
+  list<int> origPath3;
   vector< list<int> > origPaths;
   double origPathCost;
   vector <double> pathCosts;

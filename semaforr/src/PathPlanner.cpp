@@ -115,28 +115,28 @@ int PathPlanner::calcPath(bool cautious){
       objectiveSet = false;
       pathCompleted = false;
 
-      for(int i = 0; i < otherIntersection.size(); i++){
-        if(usedOtherIntersection[i] == true){
-          bool otherfound = false;
-          list<int>::iterator iter;
-          for ( iter = path.begin(); iter != path.end(); iter++ ){
-            if((*iter) == otherIntersection[i].getID()){
-              otherfound = true;
-              break;
-            }
-          }
-          if(otherfound == false){
-            if(i == 0){
-              path.insert(path.begin(), otherIntersection[i].getID());
-            }
-            else if(i == 1){
-              path.push_back(otherIntersection[i].getID());
-            }
-          }
-          paths.clear();
-          paths.push_back(path);
-        }
-      }
+      // for(int i = 0; i < otherIntersection.size(); i++){
+      //   if(usedOtherIntersection[i] == true){
+      //     bool otherfound = false;
+      //     list<int>::iterator iter;
+      //     for ( iter = path.begin(); iter != path.end(); iter++ ){
+      //       if((*iter) == otherIntersection[i].getID()){
+      //         otherfound = true;
+      //         break;
+      //       }
+      //     }
+      //     if(otherfound == false){
+      //       if(i == 0){
+      //         path.insert(path.begin(), otherIntersection[i].getID());
+      //       }
+      //       else if(i == 1){
+      //         path.push_back(otherIntersection[i].getID());
+      //       }
+      //     }
+      //     paths.clear();
+      //     paths.push_back(path);
+      //   }
+      // }
 
       if(!cautious)
         smoothPath(path, s, t);
@@ -148,7 +148,7 @@ int PathPlanner::calcPath(bool cautious){
       }
       if(name == "hallwayskel"){
         origPathCost = 0;
-        if(rs.getID() != Node::invalid_node_index or rt.getID() != Node::invalid_node_index){
+        if(rs.getID() != Node::invalid_node_index and rt.getID() != Node::invalid_node_index){
           if(PATH_DEBUG) {
             cout << signature << "rs:";
             rs.printNode();
@@ -179,7 +179,7 @@ int PathPlanner::calcPath(bool cautious){
         else{
           origPaths.push_back(list<int>());
         }
-        if(ts.getID() != Node::invalid_node_index or tt.getID() != Node::invalid_node_index){
+        if(ts.getID() != Node::invalid_node_index and tt.getID() != Node::invalid_node_index){
           if(PATH_DEBUG) {
             cout << signature << "ts:";
             ts.printNode();
@@ -201,6 +201,33 @@ int PathPlanner::calcPath(bool cautious){
 
             origPathCost += calcOrigPathCost(origPath2);
             origPathCalculated = true;
+            origPathCosts.push_back(calcOrigPathCost(origPath2));
+          }
+          else{
+            origPaths.push_back(list<int>());
+          }
+        }
+        else{
+          origPaths.push_back(list<int>());
+        }
+        if(rs.getID() != Node::invalid_node_index and tt.getID() != Node::invalid_node_index){
+          if(PATH_DEBUG) {
+            cout << signature << "rs:";
+            rs.printNode();
+            cout << endl;
+            cout << signature << "tt:";
+            tt.printNode();
+            cout << endl;
+          }
+          astar rtnewsearch(*originalNavGraph, rs, tt, name);
+          if ( rtnewsearch.isPathFound()) {
+            origPath3 = rtnewsearch.getPathToTarget();
+            origPaths.push_back(origPath3);
+            // cout << "epilogue path found " << origPath3.size() << " " << origPaths.size() << endl;
+
+            if(!cautious)
+              smoothPath(origPath3, rs, tt);
+
             origPathCosts.push_back(calcOrigPathCost(origPath2));
           }
           else{

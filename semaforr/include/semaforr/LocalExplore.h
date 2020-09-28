@@ -297,9 +297,9 @@ public:
 			for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 				step = step + 1;
 				// cout << "node " << (*it) << " step " << step << endl;
-				double r_x = navGraph->getNode(*it).getX()/100.0;
-				double r_y = navGraph->getNode(*it).getY()/100.0;
-				double r = navGraph->getNode(*it).getRadius();
+				double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
+				double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
+				double r = pathPlanner->getGraph()->getNode(*it).getRadius();
 				CartesianPoint waypoint(r_x,r_y);
 				waypoints.push_back(waypoint);
 				list<int>::iterator itr1; 
@@ -308,8 +308,8 @@ public:
 				int forward_step = step + 1;
 				// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 				if(forward_step <= max_step){
-					vector<CartesianPoint> path_from_edge = navGraph->getEdge(*it, *itr1)->getEdgePath(true);
-					if(distance(CartesianPoint(r_x,r_y),path_from_edge[0]) <= r){
+					vector<CartesianPoint> path_from_edge = pathPlanner->getGraph()->getEdge(*it, *itr1)->getEdgePath(true);
+					if(CartesianPoint(r_x,r_y).get_distance(path_from_edge[0]) <= r){
 						for(int i = 0; i < path_from_edge.size(); i++){
 							waypoints.push_back(path_from_edge[i]);
 						}
@@ -435,9 +435,9 @@ public:
 						for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 							step = step + 1;
 							// cout << "node " << (*it) << " step " << step << endl;
-							double r_x = navGraph->getNode(*it).getX()/100.0;
-							double r_y = navGraph->getNode(*it).getY()/100.0;
-							double r = navGraph->getNode(*it).getRadius();
+							double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
+							double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
+							double r = pathPlanner->getGraph()->getNode(*it).getRadius();
 							CartesianPoint waypoint(r_x,r_y);
 							waypoints.push_back(waypoint);
 							list<int>::iterator itr1; 
@@ -446,8 +446,8 @@ public:
 							int forward_step = step + 1;
 							// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 							if(forward_step <= max_step){
-								vector<CartesianPoint> path_from_edge = navGraph->getEdge(*it, *itr1)->getEdgePath(true);
-								if(distance(CartesianPoint(r_x,r_y),path_from_edge[0]) <= r){
+								vector<CartesianPoint> path_from_edge = pathPlanner->getGraph()->getEdge(*it, *itr1)->getEdgePath(true);
+								if(CartesianPoint(r_x,r_y).get_distance(path_from_edge[0]) <= r){
 									for(int i = 0; i < path_from_edge.size(); i++){
 										waypoints.push_back(path_from_edge[i]);
 									}
@@ -511,9 +511,9 @@ public:
 			for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 				step = step + 1;
 				// cout << "node " << (*it) << " step " << step << endl;
-				double r_x = navGraph->getNode(*it).getX()/100.0;
-				double r_y = navGraph->getNode(*it).getY()/100.0;
-				double r = navGraph->getNode(*it).getRadius();
+				double r_x = pathPlanner->getGraph()->getNode(*it).getX()/100.0;
+				double r_y = pathPlanner->getGraph()->getNode(*it).getY()/100.0;
+				double r = pathPlanner->getGraph()->getNode(*it).getRadius();
 				CartesianPoint waypoint(r_x,r_y);
 				waypoints.push_back(waypoint);
 				list<int>::iterator itr1; 
@@ -522,8 +522,8 @@ public:
 				int forward_step = step + 1;
 				// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 				if(forward_step <= max_step){
-					vector<CartesianPoint> path_from_edge = navGraph->getEdge(*it, *itr1)->getEdgePath(true);
-					if(distance(CartesianPoint(r_x,r_y),path_from_edge[0]) <= r){
+					vector<CartesianPoint> path_from_edge = pathPlanner->getGraph()->getEdge(*it, *itr1)->getEdgePath(true);
+					if(CartesianPoint(r_x,r_y).get_distance(path_from_edge[0]) <= r){
 						for(int i = 0; i < path_from_edge.size(); i++){
 							waypoints.push_back(path_from_edge[i]);
 						}
