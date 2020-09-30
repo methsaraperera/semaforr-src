@@ -1369,20 +1369,20 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
     int y = passage_average_values[nPassage - 1][1];
     // cout << "x " << x << " y " << y << endl;
     temp = navGraph->getNode(navGraph->getNodeID(x, y));
-    Node placeHolder;
+    // Node placeHolder;
     if(PATH_DEBUG) {
       cout << "\tFound a new candidate!: ";
       temp.printNode();
-      placeHolder.printNode();
-      placeHolder.printNode();
+      // placeHolder.printNode();
+      // placeHolder.printNode();
       cout << endl << endl;
     }
     nodes_for_point.push_back(temp);
-    nodes_for_point.push_back(placeHolder);
-    nodes_for_point.push_back(placeHolder);
-    otherIntersection.push_back(otemp);
-    usedOtherIntersection.push_back(otemp_created);
-    return nodes_for_point;
+    // nodes_for_point.push_back(placeHolder);
+    // nodes_for_point.push_back(placeHolder);
+    // otherIntersection.push_back(otemp);
+    // usedOtherIntersection.push_back(otemp_created);
+    // return nodes_for_point;
   }
   else if(nPassage > 0){
     // cout << "Point on passage" << endl;
@@ -1413,101 +1413,103 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
     int y = passage_average_values[closest_intersection][1];
     // cout << "x " << x << " y " << y << endl;
     temp = navGraph->getNode(navGraph->getNodeID(x, y));
-    Node placeHolder;
+    // Node placeHolder;
     if(PATH_DEBUG) {
       cout << "\tFound a new candidate!: ";
       temp.printNode();
-      placeHolder.printNode();
-      placeHolder.printNode();
+      // placeHolder.printNode();
+      // placeHolder.printNode();
       cout << endl << endl;
     }
     nodes_for_point.push_back(temp);
-    nodes_for_point.push_back(placeHolder);
-    nodes_for_point.push_back(placeHolder);
-    for(int i = 0; i < nearby_intersections.size(); i++){
-      if(nearby_intersections[i] - 1 != closest_intersection){
-        int cx = passage_average_values[nearby_intersections[i] - 1][0];
-        int cy = passage_average_values[nearby_intersections[i] - 1][1];
-        // cout << "cx " << cx << " cy " << cy << endl;
-        otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
-        otemp_created = true;
-        break;
-      }
-    }
-    otherIntersection.push_back(otemp);
-    usedOtherIntersection.push_back(otemp_created);
-    return nodes_for_point;
+    // nodes_for_point.push_back(placeHolder);
+    // nodes_for_point.push_back(placeHolder);
+    // for(int i = 0; i < nearby_intersections.size(); i++){
+    //   if(nearby_intersections[i] - 1 != closest_intersection){
+    //     int cx = passage_average_values[nearby_intersections[i] - 1][0];
+    //     int cy = passage_average_values[nearby_intersections[i] - 1][1];
+    //     // cout << "cx " << cx << " cy " << cy << endl;
+    //     otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
+    //     otemp_created = true;
+    //     break;
+    //   }
+    // }
+    // otherIntersection.push_back(otemp);
+    // usedOtherIntersection.push_back(otemp_created);
+    // return nodes_for_point;
   }
-  else{
-    // cout << "Point on neither intersection nor passage" << endl;
-    int nRegion = -1;
-    for(int i = 0; i < regions.size() ; i++){
-      if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0) and regions[i].getMinExits().size() > 0){
-        // cout << "nRegion " << i << endl;
-        nRegion = i;
-      }
-      if(nRegion >= 0){
-        break;
-      }
-    }
-    if(nRegion == -1){
-      int vRegion = -1;
-      double vDist=1000000;
-      for(int i = 0; i < regions.size() ; i++){
-        if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
-          double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
-          if(dist_to_region < vDist){
-            // cout << "vRegion " << i << " visible to point and distance " << dist_to_region << endl;
-            vRegion = i;
-            vDist = dist_to_region;
-          }
-        }
-      }
-      nRegion = vRegion;
-    }
-    if(nRegion == -1){
-      int cRegion = -1;
-      double max_score = -100000000.0;
-      for(int i = 0; i < regions.size() ; i++){
-        double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0)) - regions[i].getRadius());
-        double neighbors = regions[i].getMinExits().size();
-        double score = d + neighbors;
-        if(score > max_score){
-          // cout << "cRegion " << i << " with score " << score << endl;
-          cRegion = i;
-          max_score = score;
-        }
-      }
-      nRegion = cRegion;
+  // cout << "Point on neither intersection nor passage" << endl;
+  int nRegion = -1;
+  for(int i = 0; i < regions.size() ; i++){
+    if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0) and regions[i].getMinExits().size() > 0){
+      // cout << "nRegion " << i << endl;
+      nRegion = i;
     }
     if(nRegion >= 0){
-      int rx = (int)(regions[nRegion].getCenter().get_x()*100);
-      int ry = (int)(regions[nRegion].getCenter().get_y()*100);
-      // cout << "Point in region " << nRegion << " rx " << rx << " ry " << ry << " ID " << originalNavGraph->getNodeID(rx, ry) << endl;
-      region_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(rx, ry));
-      vector<int> passage_values = regions[nRegion].getPassageValues();
-      for(int i = 0; i < passage_values.size(); i++){
-        // cout << "passage_values " << passage_values[i] << endl;
-        if(passage_graph_nodes.count(passage_values[i]) != 0){
-          // cout << "nRegion on intersection " << passage_values[i] - 1 << endl;
-          int x = passage_average_values[passage_values[i] - 1][0];
-          int y = passage_average_values[passage_values[i] - 1][1];
-          // cout << "x " << x << " y " << y << endl;
-          temp = navGraph->getNode(navGraph->getNodeID(x, y));
-          if(PATH_DEBUG) {
-            cout << "\tFound a new candidate!: ";
-            temp.printNode();
-            region_temp.printNode();
-            cout << endl << endl;
-          }
-          nodes_for_point.push_back(temp);
-          nodes_for_point.push_back(region_temp);
-          nodes_for_point.push_back(region_temp);
-          otherIntersection.push_back(otemp);
-          usedOtherIntersection.push_back(otemp_created);
-          return nodes_for_point;
+      break;
+    }
+  }
+  if(nRegion == -1){
+    int vRegion = -1;
+    double vDist=1000000;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+        double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+        if(dist_to_region < vDist){
+          // cout << "vRegion " << i << " visible to point and distance " << dist_to_region << endl;
+          vRegion = i;
+          vDist = dist_to_region;
         }
       }
+    }
+    nRegion = vRegion;
+  }
+  if(nRegion == -1){
+    int cRegion = -1;
+    double max_score = -100000000.0;
+    for(int i = 0; i < regions.size() ; i++){
+      double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0)) - regions[i].getRadius());
+      double neighbors = regions[i].getMinExits().size();
+      double score = d + neighbors;
+      if(score > max_score){
+        // cout << "cRegion " << i << " with score " << score << endl;
+        cRegion = i;
+        max_score = score;
+      }
+    }
+    nRegion = cRegion;
+  }
+  if(nRegion >= 0){
+    int rx = (int)(regions[nRegion].getCenter().get_x()*100);
+    int ry = (int)(regions[nRegion].getCenter().get_y()*100);
+    // cout << "Point in region " << nRegion << " rx " << rx << " ry " << ry << " ID " << originalNavGraph->getNodeID(rx, ry) << endl;
+    region_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(rx, ry));
+    vector<int> passage_values = regions[nRegion].getPassageValues();
+    for(int i = 0; i < passage_values.size(); i++){
+      // cout << "passage_values " << passage_values[i] << endl;
+      if(passage_graph_nodes.count(passage_values[i]) != 0){
+        // cout << "nRegion on intersection " << passage_values[i] - 1 << endl;
+        int x = passage_average_values[passage_values[i] - 1][0];
+        int y = passage_average_values[passage_values[i] - 1][1];
+        // cout << "x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        if(PATH_DEBUG) {
+          cout << "\tFound a new candidate!: ";
+          temp.printNode();
+          region_temp.printNode();
+          cout << endl << endl;
+        }
+        if(nodes_for_point.size() == 0){
+          nodes_for_point.push_back(temp);
+        }
+        nodes_for_point.push_back(region_temp);
+        nodes_for_point.push_back(region_temp);
+        // otherIntersection.push_back(otemp);
+        // usedOtherIntersection.push_back(otemp_created);
+        // return nodes_for_point;
+      }
+    }
+    if(nodes_for_point.size() < 3){
       if(passage_values.size() > 0){
         // cout << "nRegion on passage" << endl;
         vector<int> nearby_intersections;
@@ -1549,59 +1551,65 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
           region_temp.printNode();
           cout << endl << endl;
         }
-        nodes_for_point.push_back(temp);
-        nodes_for_point.push_back(region_temp);
-        nodes_for_point.push_back(region_temp);
-        for(int i = 0; i < nearby_intersections.size(); i++){
-          if(nearby_intersections[i] - 1 != closest_intersection){
-            int cx = passage_average_values[nearby_intersections[i] - 1][0];
-            int cy = passage_average_values[nearby_intersections[i] - 1][1];
-            // cout << "cx " << cx << " cy " << cy << endl;
-            otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
-            otemp_created = true;
-            break;
-          }
+        if(nodes_for_point.size() == 0){
+          nodes_for_point.push_back(temp);
         }
-        otherIntersection.push_back(otemp);
-        usedOtherIntersection.push_back(otemp_created);
-        return nodes_for_point;
+        nodes_for_point.push_back(region_temp);
+        nodes_for_point.push_back(region_temp);
+        // for(int i = 0; i < nearby_intersections.size(); i++){
+        //   if(nearby_intersections[i] - 1 != closest_intersection){
+        //     int cx = passage_average_values[nearby_intersections[i] - 1][0];
+        //     int cy = passage_average_values[nearby_intersections[i] - 1][1];
+        //     // cout << "cx " << cx << " cy " << cy << endl;
+        //     otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
+        //     otemp_created = true;
+        //     break;
+        //   }
+        // }
+        // otherIntersection.push_back(otemp);
+        // usedOtherIntersection.push_back(otemp_created);
+        // return nodes_for_point;
       }
       else{
         // cout << "nRegion on neither intersection nor passage" << endl;
-        int lRegion = -1;
-        vector<int> neighbors_to_search;
+        priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
+        RegionNode start_rn = RegionNode(regions[nRegion], nRegion, 0);
         for(int i = 0; i < regions[nRegion].getMinExits().size(); i++){
-          neighbors_to_search.push_back(regions[nRegion].getMinExits()[i].getExitRegion());
+          RegionNode neighbor = RegionNode(regions[regions[nRegion].getMinExits()[i].getExitRegion()], regions[nRegion].getMinExits()[i].getExitRegion(), regions[nRegion].getMinExits()[i].getExitDistance());
+          // neighbor.regionSequence.push_back(start_rn);
+          rn_queue.push(neighbor);
         }
-        vector<int> already_searched;
-        already_searched.push_back(nRegion);
-        // cout << "lRegion " << lRegion << " neighbors_to_search " << neighbors_to_search.size() << " already_searched " << already_searched.size() << endl;
-        while(lRegion == -1 and neighbors_to_search.size() > 0){
-          int current_neighbor = neighbors_to_search[0];
+        vector<RegionNode> already_searched;
+        already_searched.push_back(start_rn);
+        // cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+        RegionNode final_rn;
+        while(rn_queue.size() > 0){
+          bool startFound = false;
+          RegionNode current_neighbor = rn_queue.top();
           // cout << "current_neighbor " << current_neighbor << endl;
-          neighbors_to_search.erase(neighbors_to_search.begin());
           already_searched.push_back(current_neighbor);
-          if(regions[current_neighbor].getPassageValues().size() > 0){
-            lRegion = current_neighbor;
+          rn_queue.pop();
+          if(current_neighbor.region.getPassageValues().size() > 0){
+            final_rn = current_neighbor;
+            startFound = true;
+            break;
           }
-          else{
-            for(int i = 0; i < regions[current_neighbor].getMinExits().size(); i++){
-              int eRegion = regions[current_neighbor].getMinExits()[i].getExitRegion();
-              if(find(neighbors_to_search.begin(), neighbors_to_search.end(), eRegion) != neighbors_to_search.end() or find(already_searched.begin(), already_searched.end(), eRegion) != already_searched.end()){
-                continue;
-              }
-              else{
-                neighbors_to_search.push_back(eRegion);
-              }
+          if(startFound == true){
+            break;
+          }
+          for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
+            RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
+            eRegion.regionSequence.push_back(current_neighbor);
+            if(find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+              rn_queue.push(eRegion);
             }
           }
-          // cout << "lRegion " << lRegion << " neighbors_to_search " << neighbors_to_search.size() << " already_searched " << already_searched.size() << endl;
         }
-        int lx = (int)(regions[lRegion].getCenter().get_x()*100);
-        int ly = (int)(regions[lRegion].getCenter().get_y()*100);
+        int lx = (int)(regions[final_rn.regionID].getCenter().get_x()*100);
+        int ly = (int)(regions[final_rn.regionID].getCenter().get_y()*100);
         // cout << "Point in lregion " << lRegion << " lx " << lx << " ly " << ly << " ID " << originalNavGraph->getNodeID(lx, ly) << endl;
         lregion_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(lx, ly));
-        vector<int> lpassage_values = regions[lRegion].getPassageValues();
+        vector<int> lpassage_values = regions[final_rn.regionID].getPassageValues();
         for(int i = 0; i < lpassage_values.size(); i++){
           if(passage_graph_nodes.count(lpassage_values[i]) != 0){
             // cout << "lRegion on intersection " << lpassage_values[i] - 1 << endl;
@@ -1618,15 +1626,17 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
               lregion_temp.printNode();
               cout << endl << endl;
             }
-            nodes_for_point.push_back(temp);
+            if(nodes_for_point.size() == 0){
+              nodes_for_point.push_back(temp);
+            }
             nodes_for_point.push_back(region_temp);
             nodes_for_point.push_back(lregion_temp);
-            otherIntersection.push_back(otemp);
-            usedOtherIntersection.push_back(otemp_created);
-            return nodes_for_point;
+            // otherIntersection.push_back(otemp);
+            // usedOtherIntersection.push_back(otemp_created);
+            // return nodes_for_point;
           }
         }
-        if(lpassage_values.size() > 0){
+        if(lpassage_values.size() > 0 and nodes_for_point.size() < 3){
           // cout << "Region on passage" << endl;
           vector<int> nearby_intersections;
           for(int i = 0; i < passage_graph.size(); i++){
@@ -1666,34 +1676,39 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
             lregion_temp.printNode();
             cout << endl << endl;
           }
-          nodes_for_point.push_back(temp);
+          if(nodes_for_point.size() == 0){
+            nodes_for_point.push_back(temp);
+          }
           nodes_for_point.push_back(region_temp);
           nodes_for_point.push_back(lregion_temp);
-          for(int i = 0; i < nearby_intersections.size(); i++){
-            if(nearby_intersections[i] - 1 != closest_intersection){
-              int cx = passage_average_values[nearby_intersections[i] - 1][0];
-              int cy = passage_average_values[nearby_intersections[i] - 1][1];
-              // cout << "cx " << cx << " cy " << cy << endl;
-              otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
-              otemp_created = true;
-              break;
-            }
-          }
-          otherIntersection.push_back(otemp);
-          usedOtherIntersection.push_back(otemp_created);
-          return nodes_for_point;
+          // for(int i = 0; i < nearby_intersections.size(); i++){
+          //   if(nearby_intersections[i] - 1 != closest_intersection){
+          //     int cx = passage_average_values[nearby_intersections[i] - 1][0];
+          //     int cy = passage_average_values[nearby_intersections[i] - 1][1];
+          //     // cout << "cx " << cx << " cy " << cy << endl;
+          //     otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
+          //     otemp_created = true;
+          //     break;
+          //   }
+          // }
+          // otherIntersection.push_back(otemp);
+          // usedOtherIntersection.push_back(otemp_created);
+          // return nodes_for_point;
         }
       }
     }
-    else{
-      nodes_for_point.push_back(temp);
-      nodes_for_point.push_back(region_temp);
-      nodes_for_point.push_back(lregion_temp);
-      otherIntersection.push_back(otemp);
-      usedOtherIntersection.push_back(otemp_created);
-      return nodes_for_point;
-    }
   }
+  else{
+    if(nodes_for_point.size() == 0){
+      nodes_for_point.push_back(temp);
+    }
+    nodes_for_point.push_back(region_temp);
+    nodes_for_point.push_back(lregion_temp);
+    // otherIntersection.push_back(otemp);
+    // usedOtherIntersection.push_back(otemp_created);
+    // return nodes_for_point;
+  }
+  return nodes_for_point;
 }
 
 /*!
