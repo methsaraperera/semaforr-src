@@ -680,7 +680,7 @@ class Task {
 					double dist_to_start = average_passage[start_intersection-1].get_distance(regions[i].getCenter());
 					double dist_to_region = regions[regionID].getCenter().get_distance(regions[i].getCenter());
 					bool edge_into_passage = false;
-					for(int j = 0; j < regions[i].getMinExits(); j++){
+					for(int j = 0; j < regions[i].getMinExits().size(); j++){
 						if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), nPassage) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
 							edge_into_passage = true;
 							break;
@@ -725,7 +725,7 @@ class Task {
 				for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
 					RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
 					eRegion.regionSequence.push_back(current_neighbor);
-					if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), start_intersection) != eRegion.region.getPassageValues().end() or find(startregionIDs.begin(), startregionIDs.end(), eRegion.regionID) != startregionIDs.end()) and find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+					if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), start_intersection) != eRegion.region.getPassageValues().end() or find(startregionIDs.begin(), startregionIDs.end(), eRegion.regionID) != startregionIDs.end()) and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
 						rn_queue.push(eRegion);
 					}
 				}
@@ -827,7 +827,7 @@ class Task {
 						double dist_to_start = average_passage[intersection1-1].get_distance(regions[i].getCenter());
 						double dist_to_second = average_passage[intersection2-1].get_distance(regions[i].getCenter());
 						bool edge_into_passage = false;
-						for(int j = 0; j < regions[i].getMinExits(); j++){
+						for(int j = 0; j < regions[i].getMinExits().size(); j++){
 							if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), passage12) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
 								edge_into_passage = true;
 								break;
@@ -847,7 +847,7 @@ class Task {
 						double dist_to_start = average_passage[intersection2-1].get_distance(regions[i].getCenter());
 						double dist_to_second = average_passage[intersection1-1].get_distance(regions[i].getCenter());
 						bool edge_into_passage = false;
-						for(int j = 0; j < regions[i].getMinExits(); j++){
+						for(int j = 0; j < regions[i].getMinExits().size(); j++){
 							if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), passage12) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
 								edge_into_passage = true;
 								break;
@@ -867,7 +867,7 @@ class Task {
 					for(int i = 0; i < regions[regionID1[j]].getMinExits().size(); i++){
 						RegionNode neighbor = RegionNode(regions[regions[regionID1[j]].getMinExits()[i].getExitRegion()], regions[regionID1[j]].getMinExits()[i].getExitRegion(), regions[regionID1[j]].getMinExits()[i].getExitDistance());
 						neighbor.regionSequence.push_back(start_rn);
-						if((find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), passage12) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), intersection1) != neighbor.region.getPassageValues().end() or find(regionID2.begin(), regionID2.end(), neighbor.regionID) != regionID2.end()) and find(rn_queue.begin(), rn_queue.end(), neighbor) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), neighbor) == already_searched.end()){
+						if((find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), passage12) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), intersection1) != neighbor.region.getPassageValues().end() or find(regionID2.begin(), regionID2.end(), neighbor.regionID) != regionID2.end()) and find(already_searched.begin(), already_searched.end(), neighbor) == already_searched.end()){
 							rn_queue.push(neighbor);
 						}
 					}
@@ -894,7 +894,7 @@ class Task {
 					for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
 						RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
 						eRegion.regionSequence.push_back(current_neighbor);
-						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), passage12) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), intersection1) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), intersection2) != eRegion.region.getPassageValues().end() or find(regionID1.begin(), regionID1.end(), eRegion.regionID) != regionID1.end() or find(regionID2.begin(), regionID2.end(), eRegion.regionID) != regionID2.end()) and find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), passage12) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), intersection1) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), intersection2) != eRegion.region.getPassageValues().end() or find(regionID1.begin(), regionID1.end(), eRegion.regionID) != regionID1.end() or find(regionID2.begin(), regionID2.end(), eRegion.regionID) != regionID2.end()) and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
 							rn_queue.push(eRegion);
 						}
 					}
@@ -1038,7 +1038,7 @@ class Task {
 					double dist_to_end = average_passage[end_intersection-1].get_distance(regions[i].getCenter());
 					double dist_to_region = regions[regionID].getCenter().get_distance(regions[i].getCenter());
 					bool edge_into_passage = false;
-					for(int j = 0; j < regions[i].getMinExits(); j++){
+					for(int j = 0; j < regions[i].getMinExits().size(); j++){
 						if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), nPassage) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
 							edge_into_passage = true;
 							break;
@@ -1083,7 +1083,7 @@ class Task {
 				for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
 					RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
 					eRegion.regionSequence.push_back(current_neighbor);
-					if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), end_intersection) != eRegion.region.getPassageValues().end() or find(endregionIDs.begin(), endregionIDs.end(), eRegion.regionID) != endregionIDs.end()) and find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+					if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), end_intersection) != eRegion.region.getPassageValues().end() or find(endregionIDs.begin(), endregionIDs.end(), eRegion.regionID) != endregionIDs.end()) and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
 						rn_queue.push(eRegion);
 					}
 				}

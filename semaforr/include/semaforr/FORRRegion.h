@@ -493,7 +493,7 @@ class FORRRegion{
   vector<FORRExit> min_exits;
 };
 
-stuct RegionNode{
+struct RegionNode{
   FORRRegion region;
   int regionID;
   double nodeCost;
@@ -528,6 +528,6 @@ stuct RegionNode{
       return false;
     }
   }
-}
+};
 
 #endif

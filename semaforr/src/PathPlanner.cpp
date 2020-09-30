@@ -1600,7 +1600,7 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
           for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
             RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
             eRegion.regionSequence.push_back(current_neighbor);
-            if(find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+            if(find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
               rn_queue.push(eRegion);
             }
           }
