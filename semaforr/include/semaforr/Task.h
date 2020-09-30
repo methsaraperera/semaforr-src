@@ -833,8 +833,8 @@ class Task {
 								break;
 							}
 						}
-						if(10*dist_to_start + dist_to_region < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), passage12) != regions[i].getPassageValues().end() or edge_into_passage == true)){
-							min_dist = 10*dist_to_start + dist_to_region;
+						if(10*dist_to_start + dist_to_second < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), passage12) != regions[i].getPassageValues().end() or edge_into_passage == true)){
+							min_dist = 10*dist_to_start + dist_to_second;
 							startid = i;
 						}
 					}
@@ -853,8 +853,8 @@ class Task {
 								break;
 							}
 						}
-						if(10*dist_to_start + dist_to_region < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), passage12) != regions[i].getPassageValues().end() or edge_into_passage == true)){
-							min_dist = 10*dist_to_start + dist_to_region;
+						if(10*dist_to_start + dist_to_second < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), passage12) != regions[i].getPassageValues().end() or edge_into_passage == true)){
+							min_dist = 10*dist_to_start + dist_to_second;
 							startid = i;
 						}
 					}
@@ -1017,7 +1017,7 @@ class Task {
 			}
 			regionID = nRegion;
 		}
-		int nPassage = passage_grid[(int)(x)][(int)(y)];
+		nPassage = passage_grid[(int)(x)][(int)(y)];
 		if(origPlansInds[1].size() > 0){
 			nPassage = passage_grid[(int)(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0)][(int)(origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0)];
 		}
