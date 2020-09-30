@@ -1334,7 +1334,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     // cout << "finished creating edges" << endl;
     // hwskeleton_planner->getGraph()->printGraph();
     // cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
-    passages.learnPassageTrails(stepped_history, stepped_laser_history);
+    // passages.learnPassageTrails(stepped_history, stepped_laser_history);
     agentState->setPassageValues(passages.getPassages(), graph_nodes, passages.getGraphEdges(), graph, average_passage, passages.getGraphTrails(), passages.getGraphThroughIntersections(), passages.getGraphIntersectionTrails());
     beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(passages.getPassages());
     cout << "Finished updating passage planner" << endl;

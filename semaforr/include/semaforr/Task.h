@@ -605,32 +605,169 @@ class Task {
 				}
 				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
-			// if(waypointInd.size() > 0){
-			// 	if(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_distance(average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1]) > 5){
-			// 		double start_x = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x();
-			// 		double start_y = skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y();
-			// 		double end_x = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_x();
-			// 		double end_y = average_passage[navGraph->getNode(waypointInd.front()).getIntersectionID()-1].get_y();
-			// 		double tx, ty;
-			// 		for(double j = 0; j <= 1; j += 0.1){
-			// 			tx = (end_x * j) + (start_x * (1 - j));
-			// 			ty = (end_y * j) + (start_y * (1 - j));
-			// 			skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >(), 1));
-			// 		}
-			// 	}
-			// }
 		}
 		// cout << "passage plan creation" << endl;
+		int regionID = -1;
+		for(int i = 0; i < regions.size() ; i++){
+			if(origPlansInds[0].size() > 0){
+				if(regions[i].inRegion(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter())){
+					regionID = i;
+					break;
+				}
+			}
+		}
+		if(regionID == -1){
+			int nRegion = -1;
+			for(int i = 0; i < regions.size() ; i++){
+				if(regions[i].inRegion(CartesianPoint(source.getX(),source.getY())) and regions[i].getMinExits().size() > 0){
+					// cout << "nRegion " << i << endl;
+					nRegion = i;
+				}
+				if(nRegion >= 0){
+					break;
+				}
+			}
+			if(nRegion == -1){
+				int vRegion = -1;
+				double vDist=1000000;
+				for(int i = 0; i < regions.size() ; i++){
+					if(regions[i].visibleFromRegion(CartesianPoint(source.getX(),source.getY()), 20) and regions[i].getMinExits().size() > 0){
+						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(source.getX(),source.getY()));
+						if(dist_to_region < vDist){
+							// cout << "vRegion " << i << " visible to point and distance " << dist_to_region << endl;
+							vRegion = i;
+							vDist = dist_to_region;
+						}
+					}
+				}
+				nRegion = vRegion;
+			}
+			if(nRegion == -1){
+				int cRegion = -1;
+				double max_score = -100000000.0;
+				for(int i = 0; i < regions.size() ; i++){
+					double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(source.getX(),source.getY())) - regions[i].getRadius());
+					double neighbors = regions[i].getMinExits().size();
+					double score = d + neighbors;
+					if(score > max_score){
+						// cout << "cRegion " << i << " with score " << score << endl;
+						cRegion = i;
+						max_score = score;
+					}
+				}
+				nRegion = cRegion;
+			}
+			regionID = nRegion;
+		}
 		int nPassage = passage_grid[(int)(source.getX())][(int)(source.getY())];
 		if(origPlansInds[0].size() > 0){
 			nPassage = passage_grid[(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x())][(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y())];
 		}
 		if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0){
-			sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
-			new_passage.setPassageLabel(nPassage);
-			new_passage.setPassageCentroid(average_passage[nPassage-1]);
-			new_passage.setPassageOrientation(passage_graph_edges_orientation[nPassage]);
-			skeleton_waypoints.push_back(new_passage);
+			int start_intersection = navGraph->getNode(waypointInd.front()).getIntersectionID();
+			vector<int> startregionIDs;
+			for(int i = 0; i < regions.size(); i++){
+				for(int j = 0; j < regions[i].getPassageValues().size(); j++){
+					if(regions[i].getPassageValues()[j] == start_intersection){
+						startregionIDs.push_back(i);
+					}
+				}
+			}
+			if(startregionIDs.size() == 0){
+				double min_dist = 10000000;
+				int startid = -1;
+				for(int i = 0; i < regions.size(); i++){
+					double dist_to_start = average_passage[start_intersection-1].get_distance(regions[i].getCenter());
+					double dist_to_region = regions[regionID].getCenter().get_distance(regions[i].getCenter());
+					bool edge_into_passage = false;
+					for(int j = 0; j < regions[i].getMinExits(); j++){
+						if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), nPassage) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
+							edge_into_passage = true;
+							break;
+						}
+					}
+					if(10*dist_to_start + dist_to_region < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), nPassage) != regions[i].getPassageValues().end() or edge_into_passage == true)){
+						min_dist = 10*dist_to_start + dist_to_region;
+						startid = i;
+					}
+				}
+				startregionIDs.push_back(startid);
+			}
+			priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
+			RegionNode start_rn = RegionNode(regions[regionID], regionID, 0);
+			for(int i = 0; i < regions[regionID].getMinExits().size(); i++){
+				RegionNode neighbor = RegionNode(regions[regions[regionID].getMinExits()[i].getExitRegion()], regions[regionID].getMinExits()[i].getExitRegion(), regions[regionID].getMinExits()[i].getExitDistance());
+				neighbor.regionSequence.push_back(start_rn);
+				if(find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), nPassage) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), start_intersection) != neighbor.region.getPassageValues().end() or find(startregionIDs.begin(), startregionIDs.end(), neighbor.regionID) != startregionIDs.end()){
+					rn_queue.push(neighbor);
+				}
+			}
+			vector<RegionNode> already_searched;
+			already_searched.push_back(start_rn);
+			// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+			RegionNode final_rn;
+			while(rn_queue.size() > 0){
+				bool startFound = false;
+				RegionNode current_neighbor = rn_queue.top();
+				// cout << "current_neighbor " << current_neighbor << endl;
+				already_searched.push_back(current_neighbor);
+				rn_queue.pop();
+				for(int i = 0; i < startregionIDs.size(); i++){
+					if(current_neighbor.regionID == startregionIDs[i]){
+						final_rn = current_neighbor;
+						startFound = true;
+						break;
+					}
+				}
+				if(startFound == true){
+					break;
+				}
+				for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
+					RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
+					eRegion.regionSequence.push_back(current_neighbor);
+					if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), start_intersection) != eRegion.region.getPassageValues().end() or find(startregionIDs.begin(), startregionIDs.end(), eRegion.regionID) != startregionIDs.end()) and find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+						rn_queue.push(eRegion);
+					}
+				}
+			}
+			// cout << "lRegion " << lRegion << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+			vector<RegionNode> region_sequence = final_rn.regionSequence;
+			for(int i = 0; i < region_sequence.size()-1; i++){
+				skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[i].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+				for(int j = 0; j < region_sequence[i].region.getMinExits().size(); j++){
+					if(region_sequence[i].region.getMinExits()[j].getExitRegion() == region_sequence[i+1].regionID){
+						if(region_sequence[i].region.inRegion(region_sequence[i].region.getMinExits()[j].getConnectionPoints()[0])){
+							skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[i].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
+						}
+						else{
+							vector<CartesianPoint> path_from_edge = region_sequence[i].region.getMinExits()[j].getConnectionPoints();
+							std::reverse(path_from_edge.begin(),path_from_edge.end());
+							skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
+						}
+						break;
+					}
+				}
+			}
+			skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[region_sequence.size()-1].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+			for(int j = 0; j < region_sequence[region_sequence.size()-1].region.getMinExits().size(); j++){
+				if(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getExitRegion() == final_rn.regionID){
+					if(region_sequence[region_sequence.size()-1].region.inRegion(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints()[0])){
+						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
+					}
+					else{
+						vector<CartesianPoint> path_from_edge = region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints();
+						std::reverse(path_from_edge.begin(),path_from_edge.end());
+						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
+					}
+					break;
+				}
+			}
+			skeleton_waypoints.push_back(sk_waypoint(0, final_rn.region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+			// sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
+			// new_passage.setPassageLabel(nPassage);
+			// new_passage.setPassageCentroid(average_passage[nPassage-1]);
+			// new_passage.setPassageOrientation(passage_graph_edges_orientation[nPassage]);
+			// skeleton_waypoints.push_back(new_passage);
 		}
 		int step = -1;
 		int max_step = waypointInd.size()-1;
@@ -655,74 +792,338 @@ class Task {
 				int intersection2 = navGraph->getNode(*itr1).getIntersectionID();
 				// cout << "intersection2 " << intersection2 << endl;
 				int passage12;
-				vector<CartesianPoint> passage_path;
+				// vector<CartesianPoint> passage_path;
 				for(int i = 0; i < passage_graph.size(); i++){
 					// cout << "passage_graph " << passage_graph[i][0] << " " << passage_graph[i][1] << " " << passage_graph[i][2] << endl;
 					if(passage_graph[i][0] == intersection1 and passage_graph[i][2] == intersection2){
 						passage12 = passage_graph[i][1];
-						passage_path = graph_trails[i];
+						// passage_path = graph_trails[i];
 						break;
 					}
 					else if(passage_graph[i][0] == intersection2 and passage_graph[i][2] == intersection1){
 						passage12 = passage_graph[i][1];
-						passage_path = graph_trails[i];
-						std::reverse(passage_path.begin(), passage_path.end());
+						// passage_path = graph_trails[i];
+						// std::reverse(passage_path.begin(), passage_path.end());
 						break;
 					}
 				}
 				// cout << "passage12 " << passage12 << endl;
-				sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), passage_path, passage_graph_edges[passage12], 1);
-				new_passage.setPassageLabel(passage12);
-				new_passage.setPassageCentroid(average_passage[passage12-1]);
-				new_passage.setPassageOrientation(passage_graph_edges_orientation[passage12]);
-				skeleton_waypoints.push_back(new_passage);
+				vector<int> regionID1;
+				vector<int> regionID2;
+				for(int i = 0; i < regions.size(); i++){
+					for(int j = 0; j < regions[i].getPassageValues().size(); j++){
+						if(regions[i].getPassageValues()[j] == intersection1){
+							regionID1.push_back(i);
+						}
+						if(regions[i].getPassageValues()[j] == intersection2){
+							regionID2.push_back(i);
+						}
+					}
+				}
+				if(regionID1.size() == 0){
+					double min_dist = 10000000;
+					int startid = -1;
+					for(int i = 0; i < regions.size(); i++){
+						double dist_to_start = average_passage[intersection1-1].get_distance(regions[i].getCenter());
+						double dist_to_second = average_passage[intersection2-1].get_distance(regions[i].getCenter());
+						bool edge_into_passage = false;
+						for(int j = 0; j < regions[i].getMinExits(); j++){
+							if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), passage12) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
+								edge_into_passage = true;
+								break;
+							}
+						}
+						if(10*dist_to_start + dist_to_region < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), passage12) != regions[i].getPassageValues().end() or edge_into_passage == true)){
+							min_dist = 10*dist_to_start + dist_to_region;
+							startid = i;
+						}
+					}
+					regionID1.push_back(startid);
+				}
+				if(regionID2.size() == 0){
+					double min_dist = 10000000;
+					int startid = -1;
+					for(int i = 0; i < regions.size(); i++){
+						double dist_to_start = average_passage[intersection2-1].get_distance(regions[i].getCenter());
+						double dist_to_second = average_passage[intersection1-1].get_distance(regions[i].getCenter());
+						bool edge_into_passage = false;
+						for(int j = 0; j < regions[i].getMinExits(); j++){
+							if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), passage12) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
+								edge_into_passage = true;
+								break;
+							}
+						}
+						if(10*dist_to_start + dist_to_region < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), passage12) != regions[i].getPassageValues().end() or edge_into_passage == true)){
+							min_dist = 10*dist_to_start + dist_to_region;
+							startid = i;
+						}
+					}
+					regionID2.push_back(startid);
+				}
+				priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
+				vector<RegionNode> already_searched;
+				for(int j = 0; j < regionID1.size(); j++){
+					RegionNode start_rn = RegionNode(regions[regionID1[j]], regionID1[j], 0);
+					for(int i = 0; i < regions[regionID1[j]].getMinExits().size(); i++){
+						RegionNode neighbor = RegionNode(regions[regions[regionID1[j]].getMinExits()[i].getExitRegion()], regions[regionID1[j]].getMinExits()[i].getExitRegion(), regions[regionID1[j]].getMinExits()[i].getExitDistance());
+						neighbor.regionSequence.push_back(start_rn);
+						if((find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), passage12) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), intersection1) != neighbor.region.getPassageValues().end() or find(regionID2.begin(), regionID2.end(), neighbor.regionID) != regionID2.end()) and find(rn_queue.begin(), rn_queue.end(), neighbor) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), neighbor) == already_searched.end()){
+							rn_queue.push(neighbor);
+						}
+					}
+					already_searched.push_back(start_rn);
+				}
+				// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+				RegionNode final_rn;
+				while(rn_queue.size() > 0){
+					bool startFound = false;
+					RegionNode current_neighbor = rn_queue.top();
+					// cout << "current_neighbor " << current_neighbor << endl;
+					already_searched.push_back(current_neighbor);
+					rn_queue.pop();
+					for(int i = 0; i < regionID2.size(); i++){
+						if(current_neighbor.regionID == regionID2[i]){
+							final_rn = current_neighbor;
+							startFound = true;
+							break;
+						}
+					}
+					if(startFound == true){
+						break;
+					}
+					for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
+						RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
+						eRegion.regionSequence.push_back(current_neighbor);
+						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), passage12) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), intersection1) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), intersection2) != eRegion.region.getPassageValues().end() or find(regionID1.begin(), regionID1.end(), eRegion.regionID) != regionID1.end() or find(regionID2.begin(), regionID2.end(), eRegion.regionID) != regionID2.end()) and find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+							rn_queue.push(eRegion);
+						}
+					}
+				}
+				// cout << "lRegion " << lRegion << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+				vector<RegionNode> region_sequence = final_rn.regionSequence;
+				for(int i = 0; i < region_sequence.size()-1; i++){
+					skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[i].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+					for(int j = 0; j < region_sequence[i].region.getMinExits().size(); j++){
+						if(region_sequence[i].region.getMinExits()[j].getExitRegion() == region_sequence[i+1].regionID){
+							if(region_sequence[i].region.inRegion(region_sequence[i].region.getMinExits()[j].getConnectionPoints()[0])){
+								skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[i].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
+							}
+							else{
+								vector<CartesianPoint> path_from_edge = region_sequence[i].region.getMinExits()[j].getConnectionPoints();
+								std::reverse(path_from_edge.begin(),path_from_edge.end());
+								skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
+							}
+							break;
+						}
+					}
+				}
+				skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[region_sequence.size()-1].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+				for(int j = 0; j < region_sequence[region_sequence.size()-1].region.getMinExits().size(); j++){
+					if(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getExitRegion() == final_rn.regionID){
+						if(region_sequence[region_sequence.size()-1].region.inRegion(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints()[0])){
+							skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
+						}
+						else{
+							vector<CartesianPoint> path_from_edge = region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints();
+							std::reverse(path_from_edge.begin(),path_from_edge.end());
+							skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
+						}
+						break;
+					}
+				}
+				skeleton_waypoints.push_back(sk_waypoint(0, final_rn.region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+				// sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[passage12], 1);
+				// new_passage.setPassageLabel(passage12);
+				// new_passage.setPassageCentroid(average_passage[passage12-1]);
+				// new_passage.setPassageOrientation(passage_graph_edges_orientation[passage12]);
+				// skeleton_waypoints.push_back(new_passage);
 				// cout << new_passage.getPassageCentroid().get_x() << " " << new_passage.getPassageCentroid().get_y() << endl;
 			}
 			// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 		}
-		int end_passage = skeleton_waypoints.size();
-		for(int i = start_passage+1; i < end_passage-1; i+=3){
-			for(int j = 0; j < graph_through_intersections.size(); j++){
-				if(graph_through_intersections[j][0] == skeleton_waypoints[i].getPassageLabel() and graph_through_intersections[j][1] == skeleton_waypoints[i+1].getPassageLabel() and graph_through_intersections[j][2] == skeleton_waypoints[i+2].getPassageLabel()){
-					for(int k = 0; k < graph_intersection_trails[j].size(); k++){
-						skeleton_waypoints[i].getPath().push_back(graph_intersection_trails[j][k]);
-					}
-					break;
-				}
-				else if(graph_through_intersections[j][2] == skeleton_waypoints[i].getPassageLabel() and graph_through_intersections[j][1] == skeleton_waypoints[i+1].getPassageLabel() and graph_through_intersections[j][0] == skeleton_waypoints[i+2].getPassageLabel()){
-					for(int k = graph_intersection_trails[j].size()-1; k >= 0; k--){
-						skeleton_waypoints[i].getPath().push_back(graph_intersection_trails[j][k]);
-					}
+		// int end_passage = skeleton_waypoints.size();
+		// for(int i = start_passage+1; i < end_passage-1; i+=3){
+		// 	for(int j = 0; j < graph_through_intersections.size(); j++){
+		// 		if(graph_through_intersections[j][0] == skeleton_waypoints[i].getPassageLabel() and graph_through_intersections[j][1] == skeleton_waypoints[i+1].getPassageLabel() and graph_through_intersections[j][2] == skeleton_waypoints[i+2].getPassageLabel()){
+		// 			for(int k = 0; k < graph_intersection_trails[j].size(); k++){
+		// 				skeleton_waypoints[i].getPath().push_back(graph_intersection_trails[j][k]);
+		// 			}
+		// 			break;
+		// 		}
+		// 		else if(graph_through_intersections[j][2] == skeleton_waypoints[i].getPassageLabel() and graph_through_intersections[j][1] == skeleton_waypoints[i+1].getPassageLabel() and graph_through_intersections[j][0] == skeleton_waypoints[i+2].getPassageLabel()){
+		// 			for(int k = graph_intersection_trails[j].size()-1; k >= 0; k--){
+		// 				skeleton_waypoints[i].getPath().push_back(graph_intersection_trails[j][k]);
+		// 			}
+		// 			break;
+		// 		}
+		// 	}
+		// }
+		// if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0){
+		// 	sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
+		// 	new_passage.setPassageLabel(nPassage);
+		// 	new_passage.setPassageCentroid(average_passage[nPassage-1]);
+		// 	new_passage.setPassageOrientation(passage_graph_edges_orientation[nPassage]);
+		// 	skeleton_waypoints.push_back(new_passage);
+		// }
+		regionID = -1;
+		for(int i = 0; i < regions.size() ; i++){
+			if(origPlansInds[1].size() > 0){
+				if(regions[i].inRegion(CartesianPoint(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0, origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0))){
+					regionID = i;
 					break;
 				}
 			}
 		}
-		nPassage = passage_grid[(int)(x)][(int)(y)];
+		if(regionID == -1){
+			int nRegion = -1;
+			for(int i = 0; i < regions.size() ; i++){
+				if(regions[i].inRegion(CartesianPoint(x,y)) and regions[i].getMinExits().size() > 0){
+					// cout << "nRegion " << i << endl;
+					nRegion = i;
+				}
+				if(nRegion >= 0){
+					break;
+				}
+			}
+			if(nRegion == -1){
+				int vRegion = -1;
+				double vDist=1000000;
+				for(int i = 0; i < regions.size() ; i++){
+					if(regions[i].visibleFromRegion(CartesianPoint(x,y), 20) and regions[i].getMinExits().size() > 0){
+						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(x,y));
+						if(dist_to_region < vDist){
+							// cout << "vRegion " << i << " visible to point and distance " << dist_to_region << endl;
+							vRegion = i;
+							vDist = dist_to_region;
+						}
+					}
+				}
+				nRegion = vRegion;
+			}
+			if(nRegion == -1){
+				int cRegion = -1;
+				double max_score = -100000000.0;
+				for(int i = 0; i < regions.size() ; i++){
+					double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(x,y)) - regions[i].getRadius());
+					double neighbors = regions[i].getMinExits().size();
+					double score = d + neighbors;
+					if(score > max_score){
+						// cout << "cRegion " << i << " with score " << score << endl;
+						cRegion = i;
+						max_score = score;
+					}
+				}
+				nRegion = cRegion;
+			}
+			regionID = nRegion;
+		}
+		int nPassage = passage_grid[(int)(x)][(int)(y)];
 		if(origPlansInds[1].size() > 0){
 			nPassage = passage_grid[(int)(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0)][(int)(origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0)];
 		}
 		if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0){
-			sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
-			new_passage.setPassageLabel(nPassage);
-			new_passage.setPassageCentroid(average_passage[nPassage-1]);
-			new_passage.setPassageOrientation(passage_graph_edges_orientation[nPassage]);
-			skeleton_waypoints.push_back(new_passage);
+			int end_intersection = navGraph->getNode(waypointInd.back()).getIntersectionID();
+			vector<int> endregionIDs;
+			for(int i = 0; i < regions.size(); i++){
+				for(int j = 0; j < regions[i].getPassageValues().size(); j++){
+					if(regions[i].getPassageValues()[j] == end_intersection){
+						endregionIDs.push_back(i);
+					}
+				}
+			}
+			if(endregionIDs.size() == 0){
+				double min_dist = 10000000;
+				int endid = -1;
+				for(int i = 0; i < regions.size(); i++){
+					double dist_to_end = average_passage[end_intersection-1].get_distance(regions[i].getCenter());
+					double dist_to_region = regions[regionID].getCenter().get_distance(regions[i].getCenter());
+					bool edge_into_passage = false;
+					for(int j = 0; j < regions[i].getMinExits(); j++){
+						if(find(regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().begin(), regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end(), nPassage) != regions[regions[i].getMinExits()[j].getExitRegion()].getPassageValues().end()){
+							edge_into_passage = true;
+							break;
+						}
+					}
+					if(10*dist_to_end + dist_to_region < min_dist and (find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), nPassage) != regions[i].getPassageValues().end() or edge_into_passage == true)){
+						min_dist = 10*dist_to_end + dist_to_region;
+						endid = i;
+					}
+				}
+				endregionIDs.push_back(endid);
+			}
+			priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
+			RegionNode start_rn = RegionNode(regions[regionID], regionID, 0);
+			for(int i = 0; i < regions[regionID].getMinExits().size(); i++){
+				RegionNode neighbor = RegionNode(regions[regions[regionID].getMinExits()[i].getExitRegion()], regions[regionID].getMinExits()[i].getExitRegion(), regions[regionID].getMinExits()[i].getExitDistance());
+				neighbor.regionSequence.push_back(start_rn);
+				if(find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), nPassage) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), end_intersection) != neighbor.region.getPassageValues().end() or find(endregionIDs.begin(), endregionIDs.end(), neighbor.regionID) != endregionIDs.end()){
+					rn_queue.push(neighbor);
+				}
+			}
+			vector<RegionNode> already_searched;
+			already_searched.push_back(start_rn);
+			// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+			RegionNode final_rn;
+			while(rn_queue.size() > 0){
+				bool endFound = false;
+				RegionNode current_neighbor = rn_queue.top();
+				// cout << "current_neighbor " << current_neighbor << endl;
+				already_searched.push_back(current_neighbor);
+				rn_queue.pop();
+				for(int i = 0; i < endregionIDs.size(); i++){
+					if(current_neighbor.regionID == endregionIDs[i]){
+						final_rn = current_neighbor;
+						endFound = true;
+						break;
+					}
+				}
+				if(endFound == true){
+					break;
+				}
+				for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
+					RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
+					eRegion.regionSequence.push_back(current_neighbor);
+					if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), end_intersection) != eRegion.region.getPassageValues().end() or find(endregionIDs.begin(), endregionIDs.end(), eRegion.regionID) != endregionIDs.end()) and find(rn_queue.begin(), rn_queue.end(), eRegion) == rn_queue.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+						rn_queue.push(eRegion);
+					}
+				}
+			}
+			// cout << "lRegion " << lRegion << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+			skeleton_waypoints.push_back(sk_waypoint(0, final_rn.region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+			vector<RegionNode> region_sequence = final_rn.regionSequence;
+			std::reverse(region_sequence.begin(),region_sequence.end());
+			for(int j = 0; j < region_sequence[0].region.getMinExits().size(); j++){
+				if(region_sequence[0].region.getMinExits()[j].getExitRegion() == final_rn.regionID){
+					if(final_rn.region.inRegion(region_sequence[0].region.getMinExits()[j].getConnectionPoints()[0])){
+						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[0].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
+					}
+					else{
+						vector<CartesianPoint> path_from_edge = region_sequence[0].region.getMinExits()[j].getConnectionPoints();
+						std::reverse(path_from_edge.begin(),path_from_edge.end());
+						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
+					}
+					break;
+				}
+			}
+			for(int i = 0; i < region_sequence.size()-1; i++){
+				skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[i].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
+				for(int j = 0; j < region_sequence[i].region.getMinExits().size(); j++){
+					if(region_sequence[i].region.getMinExits()[j].getExitRegion() == region_sequence[i+1].regionID){
+						if(region_sequence[i].region.inRegion(region_sequence[i].region.getMinExits()[j].getConnectionPoints()[0])){
+							skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[i].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
+						}
+						else{
+							vector<CartesianPoint> path_from_edge = region_sequence[i].region.getMinExits()[j].getConnectionPoints();
+							std::reverse(path_from_edge.begin(),path_from_edge.end());
+							skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
+						}
+						break;
+					}
+				}
+			}
+			skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[region_sequence.size()-1].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
 		}
 		if(origPlansInds[1].size() > 0){
-			// if(waypointInd.size() > 0){
-			// 	if(CartesianPoint(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0,origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0).get_distance(skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid()) > 5){
-			// 		double start_x = origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0;
-			// 		double start_y = origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0;
-			// 		double end_x = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_x();
-			// 		double end_y = skeleton_waypoints[skeleton_waypoints.size()-1].getPassageCentroid().get_y();
-			// 		double tx, ty;
-			// 		for(double j = 0; j <= 1; j += 0.1){
-			// 			tx = (end_x * j) + (start_x * (1 - j));
-			// 			ty = (end_y * j) + (start_y * (1 - j));
-			// 			skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(tx,ty), 0.5), vector<CartesianPoint>(), vector< vector<int> >(), 1));
-			// 		}
-			// 	}
-			// }
 			// cout << "epilogue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[1].size()-1;
@@ -900,7 +1301,7 @@ class Task {
 			for(int i = 0; i < skeleton_waypoints.size()-1; i++){
 				if(skeleton_waypoints[i].getType() == 1 and skeleton_waypoints[i+1].getType() == 0){
 					vector<CartesianPoint> sw_path = skeleton_waypoints[i].getPath();
-					for(j = 0; j < sw_path.size()-1; j++){
+					for(int j = 0; j < sw_path.size()-1; j++){
 						main_path_cost += sw_path[j].get_distance(sw_path[j+1]);
 					}
 					main_path_cost += sw_path[sw_path.size()-1].get_distance(skeleton_waypoints[i+1].getRegion().getCenter());
@@ -908,9 +1309,12 @@ class Task {
 				else if(skeleton_waypoints[i].getType() == 0 and skeleton_waypoints[i+1].getType() == 1){
 					vector<CartesianPoint> sw_path = skeleton_waypoints[i+1].getPath();
 					main_path_cost += sw_path[0].get_distance(skeleton_waypoints[i].getRegion().getCenter());
-					for(j = 0; j < sw_path.size()-1; j++){
+					for(int j = 0; j < sw_path.size()-1; j++){
 						main_path_cost += sw_path[j].get_distance(sw_path[j+1]);
 					}
+				}
+				else if(skeleton_waypoints[i].getType() == 0 and skeleton_waypoints[i+1].getType() == 0){
+					main_path_cost += skeleton_waypoints[i].getRegion().getCenter().get_distance(skeleton_waypoints[i+1].getRegion().getCenter());
 				}
 				else if(skeleton_waypoints[i].getType() == 0 and skeleton_waypoints[i+1].getType() == 2){
 					main_path_cost += skeleton_waypoints[i].getRegion().getCenter().get_distance(skeleton_waypoints[i+1].getPassageCentroid());
@@ -936,7 +1340,7 @@ class Task {
 			for(int i = 0; i < alternate_skeleton_waypoints.size()-1; i++){
 				if(alternate_skeleton_waypoints[i].getType() == 1 and alternate_skeleton_waypoints[i+1].getType() == 0){
 					vector<CartesianPoint> asw_path = alternate_skeleton_waypoints[i].getPath();
-					for(j = 0; j < asw_path.size()-1; j++){
+					for(int j = 0; j < asw_path.size()-1; j++){
 						alternate_path_cost += asw_path[j].get_distance(asw_path[j+1]);
 					}
 					alternate_path_cost += asw_path[asw_path.size()-1].get_distance(alternate_skeleton_waypoints[i+1].getRegion().getCenter());
@@ -944,7 +1348,7 @@ class Task {
 				else if(alternate_skeleton_waypoints[i].getType() == 0 and alternate_skeleton_waypoints[i+1].getType() == 1){
 					vector<CartesianPoint> asw_path = alternate_skeleton_waypoints[i+1].getPath();
 					alternate_path_cost += asw_path[0].get_distance(alternate_skeleton_waypoints[i].getRegion().getCenter());
-					for(j = 0; j < asw_path.size()-1; j++){
+					for(int j = 0; j < asw_path.size()-1; j++){
 						alternate_path_cost += asw_path[j].get_distance(asw_path[j+1]);
 					}
 				}

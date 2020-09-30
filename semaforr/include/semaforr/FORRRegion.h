@@ -493,5 +493,41 @@ class FORRRegion{
   vector<FORRExit> min_exits;
 };
 
+stuct RegionNode{
+  FORRRegion region;
+  int regionID;
+  double nodeCost;
+  vector<RegionNode> regionSequence;
+  RegionNode(): region(FORRRegion()), regionID(-1), nodeCost(0) { }
+  RegionNode(FORRRegion r, int id, double c){
+    region = r;
+    regionID = id;
+    nodeCost = c;
+  }
+  bool operator==(const RegionNode rn) {
+    if(regionID == rn.regionID and nodeCost == rn.nodeCost){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  bool operator < (const RegionNode rn) const{
+    if(nodeCost < rn.nodeCost){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  bool operator > (const RegionNode rn) const{
+    if(nodeCost > rn.nodeCost){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+}
 
 #endif
