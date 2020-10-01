@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <Experiment version="2.0">
-    <SpatialQuery type="kd-tree" test_visibility="false" />
+	<SpatialQuery type="kd-tree" test_visibility="false" />
     <OpenSteer max_force="8" leak_through="0.1" reaction_time="0.5" />
     <Common time_step="0.2" />
     <GCF reaction_time="0.5" max_agent_dist="2" max_agent_force="3" agent_interp_width="0.1" nu_agent="0.35" />
@@ -9,7 +9,7 @@
     <Johansson agent_scale="25" obstacle_scale="35" reaction_time="0.5" force_distance="0.15" stride_time="0.5" />
     <Karamouzas orient_weight="0.8" fov="200" reaction_time="0.4" wall_steepness="2" wall_distance="2" colliding_count="5" d_min="1" d_mid="8" d_max="10" agent_force="4" />
     <Zanlungo agent_scale="2000" obstacle_scale="4000" reaction_time="0.5" force_distance="0.005" />
-    <Dummy stddev="0.05" />
+	<Dummy stddev="0.05" />
 
     <AgentProfile name="group1" >
 		<OpenSteer tau="3" tauObst="6" />
@@ -24,25 +24,23 @@
 	</AgentProfile>
 
 	<AgentProfile name="group2" inherits="group1" >
-		<Common class="2" r="0.39" external="0"/>
+		<Common class="2" r="0.18" external="0" pref_speed="0.8" max_speed="2" max_accel="5" robot_attraction="0.0"/>
 		<Helbing mass="320"/>
 	</AgentProfile>
+
+	<AgentProfile name="group3" inherits="group1" >
+		<Common class="3" r="0.18" external="0" pref_speed="0.8" max_speed="2" max_accel="3" robot_attraction="0.0"/>
+		<Helbing mass="320"/>
+	</AgentProfile>
+
 
 	<AgentGroup>
         <ProfileSelector type="const" name="group1" />
 		<StateSelector type="const" name="Walk1" />
-		<Generator type="explicit" displace_dist="u" displace_min="0.0" displace_max="1.0" >
-			<Agent p_x="157" p_y="170"/>
+		<Generator type="explicit" displace_dist="u" displace_min="0.0" displace_max="0.1" >
+			<Agent p_x="152" p_y="162"/>
 		</Generator>
-    </AgentGroup>
-
-    <AgentGroup>
-        <StateSelector type="const" name="Walk2" />
-		<ProfileSelector type="const" name="group2" />
-		<Generator type="explicit">
-			<Agent p_x="157" p_y="170" />
-		</Generator>
-    </AgentGroup>
+    	</AgentGroup>
 
 
 <ObstacleSet type="explicit" class="1">
