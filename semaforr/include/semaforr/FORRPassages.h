@@ -1161,7 +1161,7 @@ public:
             }
             trailPositions.push_back(stepped_history[end_ind[j]]);
             // cout << "trailPositions " << trailPositions.size() << endl;
-            if(need_to_reverse){
+            if(need_to_reverse[j]){
               // cout << "reversing order of trailPositions" << endl;
               reverse(trailPositions.begin(),trailPositions.end());
             }
@@ -1214,7 +1214,7 @@ public:
                 }
                 if(abs(passagePath.size() - match_x_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
-                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                  if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
                   }
                   graph_trails.push_back(passagePath);
@@ -1233,7 +1233,7 @@ public:
                 }
                 if(abs(passagePath.size() - match_y_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
-                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                  if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
                   }
                   graph_trails.push_back(passagePath);
@@ -1252,7 +1252,7 @@ public:
                 }
                 if(abs(passagePath.size() - match_x_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
-                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                  if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
                   }
                   graph_trails.push_back(passagePath);
@@ -1269,7 +1269,7 @@ public:
                 }
                 if(abs(passagePath.size() - match_y_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
-                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                  if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
                   }
                   graph_trails.push_back(passagePath);
@@ -1458,17 +1458,17 @@ public:
         //   } 
         // }
         // cout << "find trail between intersection points" << endl;
-        // vector< vector<int> > graph_by_edges;
-        // for(int i = 0; i < reduced_graph.size(); i++){
-        //   vector<int> pair;
-        //   pair.push_back(reduced_graph[i][1]);
-        //   pair.push_back(reduced_graph[i][0]);
-        //   graph_by_edges.push_back(pair);
-        //   pair.clear();
-        //   pair.push_back(reduced_graph[i][1]);
-        //   pair.push_back(reduced_graph[i][2]);
-        //   graph_by_edges.push_back(pair);
-        // }
+        vector< vector<int> > graph_by_edges;
+        for(int i = 0; i < reduced_graph.size(); i++){
+          vector<int> pair;
+          pair.push_back(reduced_graph[i][1]);
+          pair.push_back(reduced_graph[i][0]);
+          graph_by_edges.push_back(pair);
+          pair.clear();
+          pair.push_back(reduced_graph[i][1]);
+          pair.push_back(reduced_graph[i][2]);
+          graph_by_edges.push_back(pair);
+        }
         
         for(int i = 0; i < graph_by_edges.size(); i++){
           for(int j = 0; j < reduced_graph.size(); j++){

@@ -724,7 +724,7 @@ class Task {
 			}
 			else{
 				cout << "could not find region close to intersection" << endl;
-				continue;
+				// continue;
 			}
 			priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
 			RegionNode start_rn = RegionNode(regions[regionID], regionID, 0);
@@ -959,7 +959,6 @@ class Task {
 							rn_queue.pop();
 							if(current_neighbor.regionID == endid){
 								final_rn = current_neighbor;
-								startFound = true;
 								break;
 							}
 							for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
@@ -1171,7 +1170,7 @@ class Task {
 			}
 			else{
 				cout << "could not find region close to intersection" << endl;
-				continue;
+				// continue;
 			}
 			
 			priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
@@ -1436,7 +1435,7 @@ class Task {
 		if(alternate_skeleton_waypoints.size() > 0){
 			double main_path_cost = 0;
 			for(int i = 0; i < skeleton_waypoints.size()-1; i++){
-				cout << "type1 " << skeleton_waypoints[i].getType() " type2 " << skeleton_waypoints[i+1].getType() << endl;
+				cout << "type1 " << skeleton_waypoints[i].getType() << " type2 " << skeleton_waypoints[i+1].getType() << endl;
 				if(skeleton_waypoints[i].getType() == 1 and skeleton_waypoints[i+1].getType() == 0){
 					vector<CartesianPoint> sw_path = skeleton_waypoints[i].getPath();
 					for(int j = 0; j < sw_path.size()-1; j++){

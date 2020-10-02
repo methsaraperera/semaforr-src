@@ -1612,7 +1612,7 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
         cout << "final_rn " << final_rn.regionID << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
         int lx = (int)(regions[final_rn.regionID].getCenter().get_x()*100);
         int ly = (int)(regions[final_rn.regionID].getCenter().get_y()*100);
-        cout << "Point in lregion " << lRegion << " lx " << lx << " ly " << ly << " ID " << originalNavGraph->getNodeID(lx, ly) << endl;
+        cout << "Point in lregion " << final_rn.regionID << " lx " << lx << " ly " << ly << " ID " << originalNavGraph->getNodeID(lx, ly) << endl;
         lregion_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(lx, ly));
         vector<int> lpassage_values = regions[final_rn.regionID].getPassageValues();
         for(int i = 0; i < lpassage_values.size(); i++){
