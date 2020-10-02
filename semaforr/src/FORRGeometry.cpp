@@ -49,6 +49,34 @@ bool CartesianPoint::operator==(const CartesianPoint& lhs) const{
   return (abs(this->x - lhs.x) < ERROR && abs(this->y - lhs.y) < ERROR);
 }
 
+/********************************************************************
+                   other operators
+********************************************************************/
+bool CartesianPoint::operator<(const CartesianPoint& lhs) const{
+  if(this->x < lhs.x){
+    return true;
+  }
+  else if(this->y < lhs.y){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+
+bool CartesianPoint::operator>(const CartesianPoint& lhs) const{
+  if(this->x > lhs.x){
+    return true;
+  }
+  else if(this->y > lhs.y){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
 
 /***********************************************************************
                 Line class implementation

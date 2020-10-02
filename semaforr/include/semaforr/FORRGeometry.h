@@ -57,6 +57,12 @@ class CartesianPoint{
   bool operator==(const CartesianPoint& lhs) const;
 
   /********************************************************************
+                     other operators
+  ********************************************************************/
+  bool operator<(const CartesianPoint& lhs) const;
+  bool operator>(const CartesianPoint& lhs) const;
+
+  /********************************************************************
                        accessors and mutators
   ********************************************************************/
   void set_x(double new_x);

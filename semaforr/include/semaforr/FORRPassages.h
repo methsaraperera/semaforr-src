@@ -178,11 +178,19 @@ public:
         //   }
         //   cout << endl;
         // }
+        for(int i = 0; i < highway_grid.size(); i++){
+          vector<int> col;
+          for(int j = 0; j < highway_grid[i].size(); j ++){
+            col.push_back(0);
+          }
+          lasers_only_grid.push_back(col);
+        }
         // cout << "After decisions_grid + lasers_grid" << endl;
         for(int i = 0; i < decisions_grid.size(); i++){
           for(int j = 0; j < decisions_grid[0].size(); j++){
             if(lasers_grid[i][j] > 0 and decisions_grid[i][j] == 0){
               decisions_grid[i][j] = 1;
+              lasers_only_grid[i][j] = 1;
             }
             // cout << decisions_grid[i][j] << " ";
           }
@@ -1115,208 +1123,333 @@ public:
           // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
           vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
           vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
+          vector< vector<int> > passage12_points = graph_edges_map[reduced_graph[i][1]];
           // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
-          int start_ind = -1;
-          int end_ind = -1;
-          int length_path = 10000000;
-          bool need_to_reverse = false;
+          vector<int> start_ind;
+          vector<int> end_ind;
+          vector<int> length_path;
+          vector<bool> need_to_reverse;
           for(int j = 0; j < intersection1_points.size(); j++){
             for(int k = 0; k < intersection2_points.size(); k++){
               if(intersection1_points[j] < intersection2_points[k]){
-                if(intersection2_points[k] - intersection1_points[j] < length_path){
-                  length_path = intersection2_points[k] - intersection1_points[j];
-                  start_ind = intersection1_points[j];
-                  end_ind = intersection2_points[k];
-                  need_to_reverse = false;
-                }
+                length_path.push_back(intersection2_points[k] - intersection1_points[j]);
+                start_ind.push_back(intersection1_points[j]);
+                end_ind.push_back(intersection2_points[k]);
+                need_to_reverse.push_back(false);
               }
               else{
-                if(intersection1_points[j] - intersection2_points[k] < length_path){
-                  length_path = intersection1_points[j] - intersection2_points[k];
-                  start_ind = intersection2_points[k];
-                  end_ind = intersection1_points[j];
-                  need_to_reverse = true;
-                }
+                length_path.push_back(intersection1_points[j] - intersection2_points[k]);
+                start_ind.push_back(intersection2_points[k]);
+                end_ind.push_back(intersection1_points[j]);
+                need_to_reverse.push_back(true);
               }
             }
           }
           // cout << "length_path " << length_path << " start_ind " << start_ind << " end_ind " << end_ind << " need_to_reverse " << need_to_reverse << endl;
-          vector<CartesianPoint> trailPositions;
-          trailPositions.push_back(stepped_history[start_ind]);
-          for(int i = start_ind; i < end_ind; i++){
-            for(int n = end_ind; n > i; n--){
-              if(canAccessPoint(stepped_laser_history[i], stepped_history[i], stepped_history[n], 3.5)) {
-                trailPositions.push_back(stepped_history[n]);
-                i = n-1;
+          vector<CartesianPoint> finalTrail;
+          double min_length = 1000000;
+          for(int j = 0; j < start_ind.size(); j++){
+            vector<CartesianPoint> trailPositions;
+            trailPositions.push_back(stepped_history[start_ind[j]]);
+            for(int k = start_ind[j]; k < end_ind[j]; k++){
+              for(int n = end_ind[j]; n > k; n--){
+                if(canAccessPoint(stepped_laser_history[k], stepped_history[k], stepped_history[n], 3.5)) {
+                  trailPositions.push_back(stepped_history[n]);
+                  k = n-1;
+                }
               }
             }
-          }
-          trailPositions.push_back(stepped_history[end_ind]);
-          // cout << "trailPositions " << trailPositions.size() << endl;
-          if(need_to_reverse){
-            // cout << "reversing order of trailPositions" << endl;
-            reverse(trailPositions.begin(),trailPositions.end());
-          }
-          graph_trails.push_back(trailPositions);
-        }
-        // cout << "found trails between intersections, check if trail follows passage" << endl;
-        for(int i = 0; i < reduced_graph.size(); i++){
-          // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
-          vector<CartesianPoint> trailPositions = graph_trails[i];
-          vector< vector<int> > points = graph_edges_map[reduced_graph[i][1]];
-          // cout << "trailPositions " << trailPositions.size() << " passage points " << points.size() << endl;
-          bool overlap = false;
-          for(int j = 0; j < trailPositions.size(); j++){
-            for(int k = 0; k < points.size(); k++){
-              if(points[k][0] == (int)(trailPositions[j].get_x()) and points[k][1] == (int)(trailPositions[j].get_y())){
-                overlap = true;
-                break;
+            trailPositions.push_back(stepped_history[end_ind[j]]);
+            // cout << "trailPositions " << trailPositions.size() << endl;
+            if(need_to_reverse){
+              // cout << "reversing order of trailPositions" << endl;
+              reverse(trailPositions.begin(),trailPositions.end());
+            }
+            double trailLength = 0;
+            for(int k = 0; k < trailPositions.size()-1; k++){
+              trailLength += trailPositions[k].get_distance(trailPositions[k+1]);
+            }
+            double count_overlap = 0;
+            for(int j = 0; j < trailPositions.size(); j++){
+              for(int k = 0; k < passage12_points.size(); k++){
+                if(passage12_points[k][0] == (int)(trailPositions[j].get_x()) and passage12_points[k][1] == (int)(trailPositions[j].get_y())){
+                  count_overlap = count_overlap + 1;
+                }
               }
             }
-            if(overlap == true){
-              break;
+            if(trailLength < min_length and count_overlap / trailPositions.size() >= 0.75){
+              min_length = trailLength;
+              finalTrail = trailPositions;
             }
           }
-          // cout << "overlap " << overlap << endl;
-          if(overlap == false){
-            vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
-            vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
-            // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
-            bool new_path_found = false;
-            double min_start_x, min_start_y, min_end_x, min_end_y;
-            double min_start_end_dist = 1000000;
+          bool addedTrail = false;
+          if(finalTrail.size() > 0){
+            graph_trails.push_back(finalTrail);
+            addedTrail = true;
+          }
+          else{
+            vector<int> match_x;
+            vector<int> match_x_dist;
+            vector<int> match_y;
+            vector<int> match_y_dist;
             for(int j = 0; j < intersection1_points.size(); j++){
               for(int k = 0; k < intersection2_points.size(); k++){
-                double start_x = stepped_history[intersection1_points[j]].get_x();
-                if(int(start_x) < 0)
-                  start_x = 0;
-                if(int(start_x) >= decisions_grid.size())
-                  start_x = decisions_grid.size()-1;
-                double start_y = stepped_history[intersection1_points[j]].get_y();
-                if(int(start_y) < 0)
-                  start_y = 0;
-                if(int(start_y) >= decisions_grid[0].size())
-                  start_y = decisions_grid[0].size()-1;
-                double end_x = stepped_history[intersection2_points[k]].get_x();
-                if(int(end_x) < 0)
-                  end_x = 0;
-                if(int(end_x) >= decisions_grid.size())
-                  end_x = decisions_grid.size()-1;
-                double end_y = stepped_history[intersection2_points[k]].get_y();
-                if(int(end_y) < 0)
-                  end_y = 0;
-                if(int(end_y) >= decisions_grid[0].size())
-                  end_y = decisions_grid[0].size()-1;
-                // cout << start_x << " " << start_y << " " << end_x << " " << end_y << endl;
-                double start_end_dist = stepped_history[intersection1_points[j]].get_distance(stepped_history[intersection2_points[k]]);
-                if((int)(start_x) == (int)(end_x) or (int)(start_y) == (int)(end_y)){
-                  if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], stepped_history[intersection2_points[k]], 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], stepped_history[intersection1_points[j]], 25)){
-                    // cout << "found laser that connects" << endl;
-                    vector<CartesianPoint> new_trailPositions;
-                    if(((int)(start_x)) == ((int)(end_x))){
-                      // cout << "x values same, iterate over y values " << ((int)(start_y)) << " " << ((int)(end_y)) << endl;
-                      int start_val, end_val;
-                      bool reverse = false;
-                      if(((int)(start_y)) < ((int)(end_y))){
-                        start_val = ((int)(start_y));
-                        end_val = ((int)(end_y));
-                      }
-                      else{
-                        end_val = ((int)(start_y));
-                        start_val = ((int)(end_y));
-                        reverse = true;
-                      }
-                      if(reverse == false){
-                        new_trailPositions.push_back(CartesianPoint(start_x, start_y));
-                        for(int l = start_val; l <= end_val; l++){
-                          if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(start_x, l), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(start_x, l), 25)){
-                            new_trailPositions.push_back(CartesianPoint(start_x, l));
-                          }
-                        }
-                        new_trailPositions.push_back(CartesianPoint(end_x, end_y));
-                      }
-                      else{
-                        new_trailPositions.push_back(CartesianPoint(end_x, end_y));
-                        for(int l = start_val; l <= end_val; l++){
-                          if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(start_x, l), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(start_x, l), 25)){
-                            new_trailPositions.push_back(CartesianPoint(start_x, l));
-                          }
-                        }
-                        new_trailPositions.push_back(CartesianPoint(start_x, start_y));
-                        std::reverse(new_trailPositions.begin(), new_trailPositions.end());
-                      }
-                    }
-                    else if(((int)(start_y)) == ((int)(end_y))){
-                      // cout << "y values same, iterate over x values " << ((int)(start_x)) << " " << ((int)(end_x)) << endl;
-                      int start_val, end_val;
-                      bool reverse = false;
-                      if(((int)(start_x)) < ((int)(end_x))){
-                        start_val = ((int)(start_x));
-                        end_val = ((int)(end_x));
-                      }
-                      else{
-                        end_val = ((int)(start_x));
-                        start_val = ((int)(end_x));
-                        reverse = true;
-                      }
-                      if(reverse == false){
-                        new_trailPositions.push_back(CartesianPoint(start_x, start_y));
-                        for(int l = start_val; l <= end_val; l++){
-                          if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(l, start_y), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(l, start_y), 25)){
-                            new_trailPositions.push_back(CartesianPoint(l, start_y));
-                          }
-                        }
-                        new_trailPositions.push_back(CartesianPoint(end_x, end_y));
-                      }
-                      else{
-                        new_trailPositions.push_back(CartesianPoint(end_x, end_y));
-                        for(int l = start_val; l <= end_val; l++){
-                          if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(l, start_y), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(l, start_y), 25)){
-                            new_trailPositions.push_back(CartesianPoint(l, start_y));
-                          }
-                        }
-                        new_trailPositions.push_back(CartesianPoint(start_x, start_y));
-                        std::reverse(new_trailPositions.begin(), new_trailPositions.end());
-                      }
-                    }
-                    graph_trails[i] = new_trailPositions;
-                    new_path_found = true;
-                    break;
-                  }
-                  else if(start_end_dist > 25 and start_end_dist < min_start_end_dist){
-                    min_start_end_dist = start_end_dist;
-                    min_start_x = start_x;
-                    min_start_y = start_y;
-                    min_end_x = end_x;
-                    min_end_y = end_y;
-                  }
+                if((int)(stepped_history[intersection1_points[j]].get_x()) == (int)(stepped_history[intersection2_points[k]].get_x())){
+                  match_x.push_back((int)(stepped_history[intersection1_points[j]].get_x()));
+                  match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())));
                 }
-              }
-              if(new_path_found == true){
-                break;
+                if((int)(stepped_history[intersection1_points[j]].get_y()) == (int)(stepped_history[intersection2_points[k]].get_y())){
+                  match_y.push_back((int)(stepped_history[intersection1_points[j]].get_y()));
+                  match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())));
+                }
               }
             }
-            if(new_path_found == false and min_start_end_dist < 1000000){
-              // cout << "no direct path found, follow closest path between" << endl;
-              vector<CartesianPoint> new_trailPositions;
-              new_trailPositions.push_back(CartesianPoint(min_start_x, min_start_y));
-              if(((int)(min_start_x)) == ((int)(min_end_x))){
-                for(int l = ((int)(min_start_y)); l <= ((int)(min_end_y)); l++){
-                  new_trailPositions.push_back(CartesianPoint(min_start_x, l));
+            if(match_x.size() > 0 and match_y.size() == 0){
+              for(int j = 0; j < match_x.size(); j++){
+                vector<CartesianPoint> passagePath;
+                for(int k = 0; k < passage12_points.size(); k++){
+                  if(passage12_points[k][0] == match_x[j]){
+                    passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
+                  }
                 }
-                new_trailPositions.push_back(CartesianPoint(min_end_x, min_end_y));
-              }
-              else{
-                for(int l = ((int)(min_start_x)); l <= ((int)(min_end_x)); l++){
-                  new_trailPositions.push_back(CartesianPoint(l, min_start_y));
+                if(abs(passagePath.size() - match_x_dist[j]) <= 4){
+                  sort(passagePath.begin(), passagePath.end());
+                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                    reverse(passagePath.begin(),passagePath.end());
+                  }
+                  graph_trails.push_back(passagePath);
+                  addedTrail = true;
+                  break;
                 }
-                new_trailPositions.push_back(CartesianPoint(min_end_x, min_end_y));
               }
-              graph_trails[i] = new_trailPositions;
             }
-            // cout << "new_path_found " << new_path_found << " trail size " << graph_trails[i].size() << endl;
+            else if(match_x.size() == 0 and match_y.size() > 0){
+              for(int j = 0; j < match_y.size(); j++){
+                vector<CartesianPoint> passagePath;
+                for(int k = 0; k < passage12_points.size(); k++){
+                  if(passage12_points[k][0] == match_y[j]){
+                    passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
+                  }
+                }
+                if(abs(passagePath.size() - match_y_dist[j]) <= 4){
+                  sort(passagePath.begin(), passagePath.end());
+                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                    reverse(passagePath.begin(),passagePath.end());
+                  }
+                  graph_trails.push_back(passagePath);
+                  addedTrail = true;
+                  break;
+                }
+              }
+            }
+            else if(match_x.size() > 0 and match_y.size() > 0){
+              for(int j = 0; j < match_x.size(); j++){
+                vector<CartesianPoint> passagePath;
+                for(int k = 0; k < passage12_points.size(); k++){
+                  if(passage12_points[k][0] == match_x[j]){
+                    passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
+                  }
+                }
+                if(abs(passagePath.size() - match_x_dist[j]) <= 4){
+                  sort(passagePath.begin(), passagePath.end());
+                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                    reverse(passagePath.begin(),passagePath.end());
+                  }
+                  graph_trails.push_back(passagePath);
+                  addedTrail = true;
+                  break;
+                }
+              }
+              for(int j = 0; j < match_y.size(); j++){
+                vector<CartesianPoint> passagePath;
+                for(int k = 0; k < passage12_points.size(); k++){
+                  if(passage12_points[k][0] == match_y[j]){
+                    passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
+                  }
+                }
+                if(abs(passagePath.size() - match_y_dist[j]) <= 4){
+                  sort(passagePath.begin(), passagePath.end());
+                  if(stepped_history[intersection1_points[j]][0].get_distance(passagePath[0]) > stepped_history[intersection1_points[j]][0].get_distance(passagePath[passagePath.size()-1])){
+                    reverse(passagePath.begin(),passagePath.end());
+                  }
+                  graph_trails.push_back(passagePath);
+                  addedTrail = true;
+                  break;
+                }
+              }
+            }
+          }
+          if(addedTrail == false){
+            vector<CartesianPoint> closestPoints;
+            double minDistBetween = 1000000;
+            for(int j = 0; j < intersection1_points.size(); j++){
+              for(int k = 0; k < intersection2_points.size(); k++){
+                double distBetween = stepped_history[intersection1_points[j]].get_distance(stepped_history[intersection2_points[k]]);
+                if(distBetween < minDistBetween){
+                  minDistBetween = distBetween;
+                  closestPoints.clear();
+                  closestPoints.push_back(stepped_history[intersection1_points[j]]);
+                  closestPoints.push_back(stepped_history[intersection2_points[k]]);
+                }
+              }
+            }
+            graph_trails.push_back(closestPoints);
           }
         }
+        // cout << "found trails between intersections, check if trail follows passage" << endl;
+        // for(int i = 0; i < reduced_graph.size(); i++){
+        //   // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
+        //   vector<CartesianPoint> trailPositions = graph_trails[i];
+        //   vector< vector<int> > points = graph_edges_map[reduced_graph[i][1]];
+        //   // cout << "trailPositions " << trailPositions.size() << " passage points " << points.size() << endl;
+        //   double count_overlap = 0;
+        //   for(int j = 0; j < trailPositions.size(); j++){
+        //     for(int k = 0; k < points.size(); k++){
+        //       if(points[k][0] == (int)(trailPositions[j].get_x()) and points[k][1] == (int)(trailPositions[j].get_y())){
+        //         count_overlap = count_overlap + 1;
+        //       }
+        //     }
+        //   }
+        //   // cout << "overlap " << overlap << endl;
+        //   if(count_overlap / trailPositions.size() < 0.75){
+        //     vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
+        //     vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
+        //     // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
+        //     bool new_path_found = false;
+        //     double min_start_x, min_start_y, min_end_x, min_end_y;
+        //     double min_start_end_dist = 1000000;
+        //     for(int j = 0; j < intersection1_points.size(); j++){
+        //       for(int k = 0; k < intersection2_points.size(); k++){
+        //         double start_x = stepped_history[intersection1_points[j]].get_x();
+        //         if(int(start_x) < 0)
+        //           start_x = 0;
+        //         if(int(start_x) >= decisions_grid.size())
+        //           start_x = decisions_grid.size()-1;
+        //         double start_y = stepped_history[intersection1_points[j]].get_y();
+        //         if(int(start_y) < 0)
+        //           start_y = 0;
+        //         if(int(start_y) >= decisions_grid[0].size())
+        //           start_y = decisions_grid[0].size()-1;
+        //         double end_x = stepped_history[intersection2_points[k]].get_x();
+        //         if(int(end_x) < 0)
+        //           end_x = 0;
+        //         if(int(end_x) >= decisions_grid.size())
+        //           end_x = decisions_grid.size()-1;
+        //         double end_y = stepped_history[intersection2_points[k]].get_y();
+        //         if(int(end_y) < 0)
+        //           end_y = 0;
+        //         if(int(end_y) >= decisions_grid[0].size())
+        //           end_y = decisions_grid[0].size()-1;
+        //         // cout << start_x << " " << start_y << " " << end_x << " " << end_y << endl;
+        //         double start_end_dist = stepped_history[intersection1_points[j]].get_distance(stepped_history[intersection2_points[k]]);
+        //         if((int)(start_x) == (int)(end_x) or (int)(start_y) == (int)(end_y)){
+        //           if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], stepped_history[intersection2_points[k]], 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], stepped_history[intersection1_points[j]], 25)){
+        //             // cout << "found laser that connects" << endl;
+        //             vector<CartesianPoint> new_trailPositions;
+        //             if(((int)(start_x)) == ((int)(end_x))){
+        //               // cout << "x values same, iterate over y values " << ((int)(start_y)) << " " << ((int)(end_y)) << endl;
+        //               int start_val, end_val;
+        //               bool reverse = false;
+        //               if(((int)(start_y)) < ((int)(end_y))){
+        //                 start_val = ((int)(start_y));
+        //                 end_val = ((int)(end_y));
+        //               }
+        //               else{
+        //                 end_val = ((int)(start_y));
+        //                 start_val = ((int)(end_y));
+        //                 reverse = true;
+        //               }
+        //               if(reverse == false){
+        //                 new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+        //                 for(int l = start_val; l <= end_val; l++){
+        //                   if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(start_x, l), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(start_x, l), 25)){
+        //                     new_trailPositions.push_back(CartesianPoint(start_x, l));
+        //                   }
+        //                 }
+        //                 new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+        //               }
+        //               else{
+        //                 new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+        //                 for(int l = start_val; l <= end_val; l++){
+        //                   if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(start_x, l), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(start_x, l), 25)){
+        //                     new_trailPositions.push_back(CartesianPoint(start_x, l));
+        //                   }
+        //                 }
+        //                 new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+        //                 std::reverse(new_trailPositions.begin(), new_trailPositions.end());
+        //               }
+        //             }
+        //             else if(((int)(start_y)) == ((int)(end_y))){
+        //               // cout << "y values same, iterate over x values " << ((int)(start_x)) << " " << ((int)(end_x)) << endl;
+        //               int start_val, end_val;
+        //               bool reverse = false;
+        //               if(((int)(start_x)) < ((int)(end_x))){
+        //                 start_val = ((int)(start_x));
+        //                 end_val = ((int)(end_x));
+        //               }
+        //               else{
+        //                 end_val = ((int)(start_x));
+        //                 start_val = ((int)(end_x));
+        //                 reverse = true;
+        //               }
+        //               if(reverse == false){
+        //                 new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+        //                 for(int l = start_val; l <= end_val; l++){
+        //                   if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(l, start_y), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(l, start_y), 25)){
+        //                     new_trailPositions.push_back(CartesianPoint(l, start_y));
+        //                   }
+        //                 }
+        //                 new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+        //               }
+        //               else{
+        //                 new_trailPositions.push_back(CartesianPoint(end_x, end_y));
+        //                 for(int l = start_val; l <= end_val; l++){
+        //                   if(canAccessPoint(stepped_laser_history[intersection1_points[j]], stepped_history[intersection1_points[j]], CartesianPoint(l, start_y), 25) or canAccessPoint(stepped_laser_history[intersection2_points[k]], stepped_history[intersection2_points[k]], CartesianPoint(l, start_y), 25)){
+        //                     new_trailPositions.push_back(CartesianPoint(l, start_y));
+        //                   }
+        //                 }
+        //                 new_trailPositions.push_back(CartesianPoint(start_x, start_y));
+        //                 std::reverse(new_trailPositions.begin(), new_trailPositions.end());
+        //               }
+        //             }
+        //             graph_trails[i] = new_trailPositions;
+        //             new_path_found = true;
+        //             break;
+        //           }
+        //           else if(start_end_dist > 25 and start_end_dist < min_start_end_dist){
+        //             min_start_end_dist = start_end_dist;
+        //             min_start_x = start_x;
+        //             min_start_y = start_y;
+        //             min_end_x = end_x;
+        //             min_end_y = end_y;
+        //           }
+        //         }
+        //       }
+        //       if(new_path_found == true){
+        //         break;
+        //       }
+        //     }
+        //     if(new_path_found == false and min_start_end_dist < 1000000){
+        //       // cout << "no direct path found, follow closest path between" << endl;
+        //       vector<CartesianPoint> new_trailPositions;
+        //       new_trailPositions.push_back(CartesianPoint(min_start_x, min_start_y));
+        //       if(((int)(min_start_x)) == ((int)(min_end_x))){
+        //         for(int l = ((int)(min_start_y)); l <= ((int)(min_end_y)); l++){
+        //           new_trailPositions.push_back(CartesianPoint(min_start_x, l));
+        //         }
+        //         new_trailPositions.push_back(CartesianPoint(min_end_x, min_end_y));
+        //       }
+        //       else{
+        //         for(int l = ((int)(min_start_x)); l <= ((int)(min_end_x)); l++){
+        //           new_trailPositions.push_back(CartesianPoint(l, min_start_y));
+        //         }
+        //         new_trailPositions.push_back(CartesianPoint(min_end_x, min_end_y));
+        //       }
+        //       graph_trails[i] = new_trailPositions;
+        //     }
+        //     // cout << "new_path_found " << new_path_found << " trail size " << graph_trails[i].size() << endl;
+        //   }
+        // }
         // cout << "graph_trails " << graph_trails.size() << endl;
         // for(int i = 0; i < graph_trails.size(); i++){
         //   cout << "  " << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
@@ -1325,17 +1458,17 @@ public:
         //   } 
         // }
         // cout << "find trail between intersection points" << endl;
-        vector< vector<int> > graph_by_edges;
-        for(int i = 0; i < reduced_graph.size(); i++){
-          vector<int> pair;
-          pair.push_back(reduced_graph[i][1]);
-          pair.push_back(reduced_graph[i][0]);
-          graph_by_edges.push_back(pair);
-          pair.clear();
-          pair.push_back(reduced_graph[i][1]);
-          pair.push_back(reduced_graph[i][2]);
-          graph_by_edges.push_back(pair);
-        }
+        // vector< vector<int> > graph_by_edges;
+        // for(int i = 0; i < reduced_graph.size(); i++){
+        //   vector<int> pair;
+        //   pair.push_back(reduced_graph[i][1]);
+        //   pair.push_back(reduced_graph[i][0]);
+        //   graph_by_edges.push_back(pair);
+        //   pair.clear();
+        //   pair.push_back(reduced_graph[i][1]);
+        //   pair.push_back(reduced_graph[i][2]);
+        //   graph_by_edges.push_back(pair);
+        // }
         
         for(int i = 0; i < graph_by_edges.size(); i++){
           for(int j = 0; j < reduced_graph.size(); j++){
@@ -1352,116 +1485,116 @@ public:
           }
         }
         
-        for(int i = 0; i < graph_through_intersections.size(); i++){
-          // cout << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
-          CartesianPoint start;
-          CartesianPoint end;
-          bool found_start = false;
-          bool found_end = false;
-          for(int k = 0; k < graph_trails.size(); k++){
-            // cout << k << " " << reduced_graph[k][0] << " " << reduced_graph[k][1] << " " << reduced_graph[k][2] << endl;
-            if(graph_through_intersections[i][0] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][0]){
-              start = graph_trails[k][0];
-              // cout << "found start " << start.get_x() << " " << start.get_y() << endl;
-              found_start = true;
-            }
-            else if(graph_through_intersections[i][0] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][2]){
-              start = graph_trails[k][graph_trails[k].size()-1];
-              // cout << "found start " << start.get_x() << " " << start.get_y() << endl;
-              found_start = true;
-            }
-            if(graph_through_intersections[i][2] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][0]){
-              end = graph_trails[k][0];
-              // cout << "found end " << end.get_x() << " " << end.get_y() << endl;
-              found_end = true;
-            }
-            else if(graph_through_intersections[i][2] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][2]){
-              end = graph_trails[k][graph_trails[k].size()-1];
-              // cout << "found end " << end.get_x() << " " << end.get_y() << endl;
-              found_end = true;
-            }
-            if(found_start and found_end){
-              break;
-            }
-          }
-          vector<CartesianPoint> trailPositions;
-          if(start == end){
-            // cout << "start and end the same, add one" << endl;
-            trailPositions.push_back(start);
-            graph_intersection_trails.push_back(trailPositions);
-          }
-          else{
-            // cout << "start and end different" << endl;
-            vector<int> intersection_points = node_steps[graph_through_intersections[i][1]];
-            // cout << "intersection_points " << intersection_points.size() << endl;
-            int start_ind = -1;
-            int end_ind = -1;
-            for(int j = 0; j < intersection_points.size(); j++){
-              if(stepped_history[intersection_points[j]] == start){
-                start_ind = intersection_points[j];
-              }
-              if(stepped_history[intersection_points[j]] == end){
-                end_ind = intersection_points[j];
-              }
-              if(start_ind != -1 and end_ind != -1){
-                break;
-              }
-            }
-            // cout << "start_ind " << start_ind << " end_ind " << end_ind << endl;
-            if(canAccessPoint(stepped_laser_history[start_ind], stepped_history[start_ind], stepped_history[end_ind], 25) or canAccessPoint(stepped_laser_history[end_ind], stepped_history[end_ind], stepped_history[start_ind], 25)){
-              // cout << "points can see each other, add both" << endl;
-              trailPositions.push_back(start);
-              trailPositions.push_back(end);
-              graph_intersection_trails.push_back(trailPositions);
-            }
-            else{
-              // cout << "points cannot see each other, find in sequence between" << endl;
-              vector<int> in_between_inds;
-              bool found_each_other = false;
-              vector<int> all_sees_start;
-              for(int j = 0; j < intersection_points.size(); j++){
-                if(canAccessPoint(stepped_laser_history[intersection_points[j]], stepped_history[intersection_points[j]], stepped_history[start_ind], 25) or canAccessPoint(stepped_laser_history[start_ind], stepped_history[start_ind], stepped_history[intersection_points[j]], 25)){
-                  all_sees_start.push_back(intersection_points[j]);
-                }
-              }
-              // cout << "all_sees_start " << all_sees_start.size() << endl;
-              while(found_each_other == false){
-                double min_dist_to_end = 1000000;
-                int between_ind = -1;
-                for(int j = 0; j < all_sees_start.size(); j++){
-                  if(canAccessPoint(stepped_laser_history[all_sees_start[j]], stepped_history[all_sees_start[j]], stepped_history[end_ind], 25) or canAccessPoint(stepped_laser_history[end_ind], stepped_history[end_ind], stepped_history[all_sees_start[j]], 25)){
-                    // cout << "found something that sees end " << all_sees_start[j] << endl;
-                    in_between_inds.push_back(all_sees_start[j]);
-                    found_each_other = true;
-                    break;
-                  }
-                  double dist_to_end = stepped_history[end_ind].get_distance(stepped_history[all_sees_start[j]]);
-                  if(dist_to_end < min_dist_to_end and find(in_between_inds.begin(), in_between_inds.end(), all_sees_start[j]) == in_between_inds.end()){
-                    min_dist_to_end = dist_to_end;
-                    between_ind = all_sees_start[j];
-                  }
-                }
-                if(!found_each_other){
-                  // cout << "added closest to end " << between_ind << " min_dist_to_end " << min_dist_to_end << endl;
-                  in_between_inds.push_back(between_ind);
-                  all_sees_start.clear();
-                  for(int j = 0; j < intersection_points.size(); j++){
-                    if(canAccessPoint(stepped_laser_history[intersection_points[j]], stepped_history[intersection_points[j]], stepped_history[between_ind], 25) or canAccessPoint(stepped_laser_history[between_ind], stepped_history[between_ind], stepped_history[intersection_points[j]], 25)){
-                      all_sees_start.push_back(intersection_points[j]);
-                    }
-                  }
-                }
-              }
-              // cout << "finished finding in between points" << endl;
-              trailPositions.push_back(start);
-              for(int j = 0; j < in_between_inds.size(); j++){
-                trailPositions.push_back(stepped_history[in_between_inds[j]]);
-              }
-              trailPositions.push_back(end);
-              graph_intersection_trails.push_back(trailPositions);
-            }
-          }
-        }
+        // for(int i = 0; i < graph_through_intersections.size(); i++){
+        //   // cout << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
+        //   CartesianPoint start;
+        //   CartesianPoint end;
+        //   bool found_start = false;
+        //   bool found_end = false;
+        //   for(int k = 0; k < graph_trails.size(); k++){
+        //     // cout << k << " " << reduced_graph[k][0] << " " << reduced_graph[k][1] << " " << reduced_graph[k][2] << endl;
+        //     if(graph_through_intersections[i][0] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][0]){
+        //       start = graph_trails[k][0];
+        //       // cout << "found start " << start.get_x() << " " << start.get_y() << endl;
+        //       found_start = true;
+        //     }
+        //     else if(graph_through_intersections[i][0] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][2]){
+        //       start = graph_trails[k][graph_trails[k].size()-1];
+        //       // cout << "found start " << start.get_x() << " " << start.get_y() << endl;
+        //       found_start = true;
+        //     }
+        //     if(graph_through_intersections[i][2] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][0]){
+        //       end = graph_trails[k][0];
+        //       // cout << "found end " << end.get_x() << " " << end.get_y() << endl;
+        //       found_end = true;
+        //     }
+        //     else if(graph_through_intersections[i][2] == reduced_graph[k][1] and graph_through_intersections[i][1] == reduced_graph[k][2]){
+        //       end = graph_trails[k][graph_trails[k].size()-1];
+        //       // cout << "found end " << end.get_x() << " " << end.get_y() << endl;
+        //       found_end = true;
+        //     }
+        //     if(found_start and found_end){
+        //       break;
+        //     }
+        //   }
+        //   vector<CartesianPoint> trailPositions;
+        //   if(start == end){
+        //     // cout << "start and end the same, add one" << endl;
+        //     trailPositions.push_back(start);
+        //     graph_intersection_trails.push_back(trailPositions);
+        //   }
+        //   else{
+        //     // cout << "start and end different" << endl;
+        //     vector<int> intersection_points = node_steps[graph_through_intersections[i][1]];
+        //     // cout << "intersection_points " << intersection_points.size() << endl;
+        //     int start_ind = -1;
+        //     int end_ind = -1;
+        //     for(int j = 0; j < intersection_points.size(); j++){
+        //       if(stepped_history[intersection_points[j]] == start){
+        //         start_ind = intersection_points[j];
+        //       }
+        //       if(stepped_history[intersection_points[j]] == end){
+        //         end_ind = intersection_points[j];
+        //       }
+        //       if(start_ind != -1 and end_ind != -1){
+        //         break;
+        //       }
+        //     }
+        //     // cout << "start_ind " << start_ind << " end_ind " << end_ind << endl;
+        //     if(canAccessPoint(stepped_laser_history[start_ind], stepped_history[start_ind], stepped_history[end_ind], 25) or canAccessPoint(stepped_laser_history[end_ind], stepped_history[end_ind], stepped_history[start_ind], 25)){
+        //       // cout << "points can see each other, add both" << endl;
+        //       trailPositions.push_back(start);
+        //       trailPositions.push_back(end);
+        //       graph_intersection_trails.push_back(trailPositions);
+        //     }
+        //     else{
+        //       // cout << "points cannot see each other, find in sequence between" << endl;
+        //       vector<int> in_between_inds;
+        //       bool found_each_other = false;
+        //       vector<int> all_sees_start;
+        //       for(int j = 0; j < intersection_points.size(); j++){
+        //         if(canAccessPoint(stepped_laser_history[intersection_points[j]], stepped_history[intersection_points[j]], stepped_history[start_ind], 25) or canAccessPoint(stepped_laser_history[start_ind], stepped_history[start_ind], stepped_history[intersection_points[j]], 25)){
+        //           all_sees_start.push_back(intersection_points[j]);
+        //         }
+        //       }
+        //       // cout << "all_sees_start " << all_sees_start.size() << endl;
+        //       while(found_each_other == false){
+        //         double min_dist_to_end = 1000000;
+        //         int between_ind = -1;
+        //         for(int j = 0; j < all_sees_start.size(); j++){
+        //           if(canAccessPoint(stepped_laser_history[all_sees_start[j]], stepped_history[all_sees_start[j]], stepped_history[end_ind], 25) or canAccessPoint(stepped_laser_history[end_ind], stepped_history[end_ind], stepped_history[all_sees_start[j]], 25)){
+        //             // cout << "found something that sees end " << all_sees_start[j] << endl;
+        //             in_between_inds.push_back(all_sees_start[j]);
+        //             found_each_other = true;
+        //             break;
+        //           }
+        //           double dist_to_end = stepped_history[end_ind].get_distance(stepped_history[all_sees_start[j]]);
+        //           if(dist_to_end < min_dist_to_end and find(in_between_inds.begin(), in_between_inds.end(), all_sees_start[j]) == in_between_inds.end()){
+        //             min_dist_to_end = dist_to_end;
+        //             between_ind = all_sees_start[j];
+        //           }
+        //         }
+        //         if(!found_each_other){
+        //           // cout << "added closest to end " << between_ind << " min_dist_to_end " << min_dist_to_end << endl;
+        //           in_between_inds.push_back(between_ind);
+        //           all_sees_start.clear();
+        //           for(int j = 0; j < intersection_points.size(); j++){
+        //             if(canAccessPoint(stepped_laser_history[intersection_points[j]], stepped_history[intersection_points[j]], stepped_history[between_ind], 25) or canAccessPoint(stepped_laser_history[between_ind], stepped_history[between_ind], stepped_history[intersection_points[j]], 25)){
+        //               all_sees_start.push_back(intersection_points[j]);
+        //             }
+        //           }
+        //         }
+        //       }
+        //       // cout << "finished finding in between points" << endl;
+        //       trailPositions.push_back(start);
+        //       for(int j = 0; j < in_between_inds.size(); j++){
+        //         trailPositions.push_back(stepped_history[in_between_inds[j]]);
+        //       }
+        //       trailPositions.push_back(end);
+        //       graph_intersection_trails.push_back(trailPositions);
+        //     }
+        //   }
+        // }
         // cout << "graph_intersection_trails " << graph_intersection_trails.size() << endl;
         // for(int i = 0; i < graph_intersection_trails.size(); i++){
         //   cout << "  " << i << " " << graph_through_intersections[i][0] << " " << graph_through_intersections[i][1] << " " << graph_through_intersections[i][2] << endl;
@@ -1476,6 +1609,7 @@ private:
     AgentState* agentState;
     vector< vector<int> > passages_grid;
     vector< vector<int> > decisions_grid;
+    vector< vector<int> > lasers_only_grid;
     map<int, vector< vector<int> > > graph_nodes;
     map<int, vector< vector<int> > > graph_edges_map;
     map<int, vector<int> > node_steps;
