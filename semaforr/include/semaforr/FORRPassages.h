@@ -1079,7 +1079,7 @@ public:
     }
 
     void learnPassageTrails(vector<CartesianPoint> stepped_history, vector < vector<CartesianPoint> > stepped_laser_history) {
-        // cout << "creating trails between intersections" << endl;
+        cout << "creating trails between intersections" << endl;
         for(int k = 0; k < stepped_history.size(); k++){
           double start_x = stepped_history[k].get_x();
           if(int(start_x) < 0)
@@ -1116,15 +1116,15 @@ public:
             }
           }
         }
-        // cout << "found points associated with each intersection" << endl;
+        cout << "found points associated with each intersection" << endl;
         
         vector<bool> reverse_order;
         for(int i = 0; i < reduced_graph.size(); i++){
-          // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
+          cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
           vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
           vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
           vector< vector<int> > passage12_points = graph_edges_map[reduced_graph[i][1]];
-          // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
+          cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
           vector<int> start_ind;
           vector<int> end_ind;
           vector<int> length_path;
@@ -1145,7 +1145,7 @@ public:
               }
             }
           }
-          // cout << "length_path " << length_path << " start_ind " << start_ind << " end_ind " << end_ind << " need_to_reverse " << need_to_reverse << endl;
+          cout << "length_path " << length_path.size() << " start_ind " << start_ind.size() << " end_ind " << end_ind.size() << " need_to_reverse " << need_to_reverse.size() << endl;
           vector<CartesianPoint> finalTrail;
           double min_length = 1000000;
           for(int j = 0; j < start_ind.size(); j++){
@@ -1160,7 +1160,7 @@ public:
               }
             }
             trailPositions.push_back(stepped_history[end_ind[j]]);
-            // cout << "trailPositions " << trailPositions.size() << endl;
+            cout << "trailPositions " << trailPositions.size() << endl;
             if(need_to_reverse[j]){
               // cout << "reversing order of trailPositions" << endl;
               reverse(trailPositions.begin(),trailPositions.end());
@@ -1177,11 +1177,13 @@ public:
                 }
               }
             }
+            cout << "trailLength " << trailLength << " count_overlap / trailPositions.size() " << count_overlap / trailPositions.size() << endl;
             if(trailLength < min_length and count_overlap / trailPositions.size() >= 0.75){
               min_length = trailLength;
               finalTrail = trailPositions;
             }
           }
+          cout << "finalTrail " << finalTrail.size() << endl;
           bool addedTrail = false;
           if(finalTrail.size() > 0){
             graph_trails.push_back(finalTrail);
@@ -1195,15 +1197,18 @@ public:
             for(int j = 0; j < intersection1_points.size(); j++){
               for(int k = 0; k < intersection2_points.size(); k++){
                 if((int)(stepped_history[intersection1_points[j]].get_x()) == (int)(stepped_history[intersection2_points[k]].get_x())){
+                  cout << "match_x " << (int)(stepped_history[intersection1_points[j]].get_x()) << endl;
                   match_x.push_back((int)(stepped_history[intersection1_points[j]].get_x()));
                   match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())));
                 }
                 if((int)(stepped_history[intersection1_points[j]].get_y()) == (int)(stepped_history[intersection2_points[k]].get_y())){
+                  cout << "match_y " << (int)(stepped_history[intersection1_points[j]].get_y()) << endl;
                   match_y.push_back((int)(stepped_history[intersection1_points[j]].get_y()));
                   match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())));
                 }
               }
             }
+            cout << "match_x " << match_x.size() << " match_y " << match_y.size() << endl;
             if(match_x.size() > 0 and match_y.size() == 0){
               for(int j = 0; j < match_x.size(); j++){
                 vector<CartesianPoint> passagePath;
@@ -1212,6 +1217,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
                 if(abs(passagePath.size() - match_x_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1231,6 +1237,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
                 if(abs(passagePath.size() - match_y_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1250,6 +1257,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
                 if(abs(passagePath.size() - match_x_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1260,25 +1268,29 @@ public:
                   break;
                 }
               }
-              for(int j = 0; j < match_y.size(); j++){
-                vector<CartesianPoint> passagePath;
-                for(int k = 0; k < passage12_points.size(); k++){
-                  if(passage12_points[k][0] == match_y[j]){
-                    passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
+              if(addedTrail == false){
+                for(int j = 0; j < match_y.size(); j++){
+                  vector<CartesianPoint> passagePath;
+                  for(int k = 0; k < passage12_points.size(); k++){
+                    if(passage12_points[k][0] == match_y[j]){
+                      passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
+                    }
                   }
-                }
-                if(abs(passagePath.size() - match_y_dist[j]) <= 4){
-                  sort(passagePath.begin(), passagePath.end());
-                  if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
-                    reverse(passagePath.begin(),passagePath.end());
+                  cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
+                  if(abs(passagePath.size() - match_y_dist[j]) <= 4){
+                    sort(passagePath.begin(), passagePath.end());
+                    if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
+                      reverse(passagePath.begin(),passagePath.end());
+                    }
+                    graph_trails.push_back(passagePath);
+                    addedTrail = true;
+                    break;
                   }
-                  graph_trails.push_back(passagePath);
-                  addedTrail = true;
-                  break;
                 }
               }
             }
           }
+          cout << "addedTrail " << addedTrail << endl;
           if(addedTrail == false){
             vector<CartesianPoint> closestPoints;
             double minDistBetween = 1000000;
@@ -1293,6 +1305,7 @@ public:
                 }
               }
             }
+            cout << "closestPoints " << closestPoints.size() << endl;
             graph_trails.push_back(closestPoints);
           }
         }

@@ -1304,6 +1304,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
     }
     // cout << "stepped_history " << stepped_history.size() << " stepped_laser_history " << stepped_laser_history.size() << endl;
     passages.learnPassages(stepped_history, stepped_laser_history);
+    cout << "finished learning passages" << endl;
     int index_val = 0;
     map<int, vector< vector<int> > > graph_nodes = passages.getGraphNodes();
     vector< vector<int> > average_passage = passages.getAveragePassage();
@@ -1315,7 +1316,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         index_val++;
       }
     }
-    // cout << "finished creating nodes" << endl;
+    cout << "finished creating nodes" << endl;
     vector< vector<int> > graph = passages.getGraph();
     for(int i = 0; i < graph.size(); i++){
       int node_a_id = hwskeleton_planner->getGraph()->getNodeID(average_passage[graph[i][0]-1][0], average_passage[graph[i][0]-1][1]);
@@ -1331,10 +1332,11 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
         hwskeleton_planner->getGraph()->addEdge(node_a_id, node_b_id, distance_ab, path);
       }
     }
-    // cout << "finished creating edges" << endl;
-    // hwskeleton_planner->getGraph()->printGraph();
+    cout << "finished creating edges" << endl;
+    hwskeleton_planner->getGraph()->printGraph();
     // cout << "Connected Graph: " << hwskeleton_planner->getGraph()->isConnected() << endl;
     passages.learnPassageTrails(stepped_history, stepped_laser_history);
+    cout << "finished learning passage trails" << endl;
     agentState->setPassageValues(passages.getPassages(), graph_nodes, passages.getGraphEdges(), graph, average_passage, passages.getGraphTrails(), passages.getGraphThroughIntersections(), passages.getGraphIntersectionTrails());
     beliefs->getSpatialModel()->getRegionList()->setRegionPassageValues(passages.getPassages());
     cout << "Finished updating passage planner" << endl;
