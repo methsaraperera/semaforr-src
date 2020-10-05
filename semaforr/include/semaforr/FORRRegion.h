@@ -505,7 +505,7 @@ struct RegionNode{
     nodeCost = c;
   }
   bool operator==(const RegionNode rn) {
-    if(regionID == rn.regionID and nodeCost == rn.nodeCost){
+    if(regionID == rn.regionID){
       return true;
     }
     else{

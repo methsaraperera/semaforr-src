@@ -1197,14 +1197,14 @@ public:
             for(int j = 0; j < intersection1_points.size(); j++){
               for(int k = 0; k < intersection2_points.size(); k++){
                 if((int)(stepped_history[intersection1_points[j]].get_x()) == (int)(stepped_history[intersection2_points[k]].get_x())){
-                  cout << "match_x " << (int)(stepped_history[intersection1_points[j]].get_x()) << endl;
+                  cout << "match_x " << (int)(stepped_history[intersection1_points[j]].get_x()) << " match_x_dist " << abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())) << endl;
                   match_x.push_back((int)(stepped_history[intersection1_points[j]].get_x()));
                   match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())));
                 }
                 if((int)(stepped_history[intersection1_points[j]].get_y()) == (int)(stepped_history[intersection2_points[k]].get_y())){
-                  cout << "match_y " << (int)(stepped_history[intersection1_points[j]].get_y()) << endl;
+                  cout << "match_y " << (int)(stepped_history[intersection1_points[j]].get_y()) << " match_y_dist " << abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())) << endl;
                   match_y.push_back((int)(stepped_history[intersection1_points[j]].get_y()));
-                  match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())));
+                  match_y_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())));
                 }
               }
             }
@@ -1218,7 +1218,7 @@ public:
                   }
                 }
                 cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
-                if(abs(passagePath.size() - match_x_dist[j]) <= 4){
+                if(abs(passagePath.size() - match_x_dist[j]) <= 1){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1233,12 +1233,12 @@ public:
               for(int j = 0; j < match_y.size(); j++){
                 vector<CartesianPoint> passagePath;
                 for(int k = 0; k < passage12_points.size(); k++){
-                  if(passage12_points[k][0] == match_y[j]){
+                  if(passage12_points[k][1] == match_y[j]){
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
                 cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
-                if(abs(passagePath.size() - match_y_dist[j]) <= 4){
+                if(abs(passagePath.size() - match_y_dist[j]) <= 1){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1258,7 +1258,7 @@ public:
                   }
                 }
                 cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
-                if(abs(passagePath.size() - match_x_dist[j]) <= 4){
+                if(abs(passagePath.size() - match_x_dist[j]) <= 1){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1272,12 +1272,12 @@ public:
                 for(int j = 0; j < match_y.size(); j++){
                   vector<CartesianPoint> passagePath;
                   for(int k = 0; k < passage12_points.size(); k++){
-                    if(passage12_points[k][0] == match_y[j]){
+                    if(passage12_points[k][1] == match_y[j]){
                       passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                     }
                   }
                   cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
-                  if(abs(passagePath.size() - match_y_dist[j]) <= 4){
+                  if(abs(passagePath.size() - match_y_dist[j]) <= 1){
                     sort(passagePath.begin(), passagePath.end());
                     if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                       reverse(passagePath.begin(),passagePath.end());
