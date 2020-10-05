@@ -1178,7 +1178,7 @@ public:
               }
             }
             cout << "trailLength " << trailLength << " count_overlap / trailPositions.size() " << count_overlap / trailPositions.size() << endl;
-            if(trailLength < min_length and count_overlap / trailPositions.size() >= 0.75){
+            if(trailLength < min_length and count_overlap / trailPositions.size() >= 0.6){
               min_length = trailLength;
               finalTrail = trailPositions;
             }
@@ -1237,7 +1237,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
+                cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
                 if(abs(passagePath.size() - match_y_dist[j]) <= 4){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1276,7 +1276,7 @@ public:
                       passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                     }
                   }
-                  cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
+                  cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
                   if(abs(passagePath.size() - match_y_dist[j]) <= 4){
                     sort(passagePath.begin(), passagePath.end());
                     if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
