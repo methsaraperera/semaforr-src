@@ -1218,7 +1218,7 @@ public:
                   }
                 }
                 cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
-                if(abs(passagePath.size() - match_x_dist[j]) <= 1){
+                if(abs(passagePath.size() - match_x_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1238,7 +1238,7 @@ public:
                   }
                 }
                 cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
-                if(abs(passagePath.size() - match_y_dist[j]) <= 1){
+                if(abs(passagePath.size() - match_y_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1258,7 +1258,7 @@ public:
                   }
                 }
                 cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
-                if(abs(passagePath.size() - match_x_dist[j]) <= 1){
+                if(abs(passagePath.size() - match_x_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1277,7 +1277,7 @@ public:
                     }
                   }
                   cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
-                  if(abs(passagePath.size() - match_y_dist[j]) <= 1){
+                  if(abs(passagePath.size() - match_y_dist[j]) <= 2){
                     sort(passagePath.begin(), passagePath.end());
                     if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                       reverse(passagePath.begin(),passagePath.end());

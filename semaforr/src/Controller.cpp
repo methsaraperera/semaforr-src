@@ -1625,6 +1625,7 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
     planner->resetPath();
+    planner->resetOrigPath();
   }
   gettimeofday(&cv,NULL);
   end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);

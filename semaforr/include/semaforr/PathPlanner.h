@@ -118,6 +118,9 @@ public:
 
   void resetOrigPath() { 
     origPath.clear();
+    origPath1.clear();
+    origPath2.clear();
+    origPath3.clear();
     origPaths.clear();
     origPathCompleted = true; 
     origPathCalculated = false;
