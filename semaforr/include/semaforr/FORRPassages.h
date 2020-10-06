@@ -1217,7 +1217,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs(passagePath.size() - match_x_dist[j]) << endl;
                 if(abs(passagePath.size() - match_x_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1237,7 +1237,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
+                cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs(passagePath.size() - match_y_dist[j]) << endl;
                 if(abs(passagePath.size() - match_y_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1257,7 +1257,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << endl;
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs(passagePath.size() - match_x_dist[j]) << endl;
                 if(abs(passagePath.size() - match_x_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1276,7 +1276,7 @@ public:
                       passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                     }
                   }
-                  cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << endl;
+                  cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs(passagePath.size() - match_y_dist[j]) << endl;
                   if(abs(passagePath.size() - match_y_dist[j]) <= 2){
                     sort(passagePath.begin(), passagePath.end());
                     if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){

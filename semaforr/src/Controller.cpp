@@ -934,7 +934,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
-        beliefs->getAgentState()->setPassageGrid(highwayExploration->getHighwayGrid());
+        // beliefs->getAgentState()->setPassageGrid(highwayExploration->getHighwayGrid());
         beliefs->getAgentState()->setRemainingCandidates(highwayExploration->getRemainingHighwayStack());
       }
       beliefs->getAgentState()->finishTask();
