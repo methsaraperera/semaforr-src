@@ -1447,7 +1447,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    if(findawayOn and decisionMade == false){
+    if(findawayOn and decisionMade == false and highwayFinished > 1){
       if(tier1->advisorFindAWay(decision)){
         ROS_INFO_STREAM("Advisor FindAWay has made a decision " << decision->type << " " << decision->parameter);
         decisionStats->decisionTier = 1.6;
