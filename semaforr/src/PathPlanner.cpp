@@ -100,7 +100,7 @@ int PathPlanner::calcPath(bool cautious){
       t.printNode();
       cout << endl;
     }
-    if(s.getID() == t.getID())
+    if(s.getID() == t.getID() and name != "hallwayskel")
       return 4;
     //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights

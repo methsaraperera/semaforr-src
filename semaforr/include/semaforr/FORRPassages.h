@@ -52,6 +52,7 @@ public:
 
 
     void learnPassages(vector<CartesianPoint> stepped_history, vector < vector<CartesianPoint> > stepped_laser_history) {
+        int min_passage_length = 5;
         for(int i = 0; i < highway_grid.size(); i++){
           vector<int> col;
           for(int j = 0; j < highway_grid[i].size(); j ++){
@@ -111,20 +112,33 @@ public:
             }
           }
         }
-        // cout << "After decisions_grid" << endl;
-        // for(int i = 0; i < decisions_grid.size(); i++){
-        //   for(int j = 0; j < decisions_grid[0].size(); j++){
-        //     cout << decisions_grid[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "After decisions_grid" << endl;
+        for(int i = 0; i < decisions_grid.size(); i++){
+          for(int j = 0; j < decisions_grid[0].size(); j++){
+            cout << decisions_grid[i][j] << " ";
+          }
+          cout << endl;
+        }
         vector< vector<int> > lasers_grid;
+        vector< vector< vector<int> > > laser_grid_connections;
         for(int i = 0; i < highway_grid.size(); i++){
           vector<int> col;
+          vector< vector<int> > col_connect;
           for(int j = 0; j < highway_grid[i].size(); j ++){
             col.push_back(0);
+            vector<int> connections;
+            connections.push_back(0);
+            connections.push_back(0);
+            connections.push_back(0);
+            connections.push_back(0);
+            connections.push_back(0);
+            connections.push_back(0);
+            connections.push_back(0);
+            connections.push_back(0);
+            col_connect.push_back(connections); // N Incoming, S Incoming, E Incoming, W Incoming, N Outgoing, S Outgoing, E Outgoing, W Outgoing
           }
           lasers_grid.push_back(col);
+          laser_grid_connections.push_back(col_connect);
         }
         for(int k = 0; k < stepped_laser_history.size(); k++){
           double start_x = stepped_history[k].get_x();
@@ -137,6 +151,27 @@ public:
             start_y = 0;
           if(int(start_y) >= decisions_grid[0].size())
             start_y = decisions_grid[0].size()-1;
+          vector< vector<int> > decision_lasers_grid;
+          vector< vector< vector<int> > > decision_laser_grid_connections;
+          for(int i = 0; i < highway_grid.size(); i++){
+            vector<int> col;
+            vector< vector<int> > col_connect;
+            for(int j = 0; j < highway_grid[i].size(); j ++){
+              col.push_back(0);
+              vector<int> connections;
+              connections.push_back(0);
+              connections.push_back(0);
+              connections.push_back(0);
+              connections.push_back(0);
+              connections.push_back(0);
+              connections.push_back(0);
+              connections.push_back(0);
+              connections.push_back(0);
+              col_connect.push_back(connections); // N Incoming, S Incoming, E Incoming, W Incoming, N Outgoing, S Outgoing, E Outgoing, W Outgoing
+            }
+            decision_lasers_grid.push_back(col);
+            decision_laser_grid_connections.push_back(col_connect);
+          }
           for(int j = 0; j < stepped_laser_history[k].size(); j++){
             double end_x = stepped_laser_history[k][j].get_x();
             if(int(end_x) < 0)
@@ -155,46 +190,128 @@ public:
                 double step_size = step_length / length;
                 double tx, ty;
                 // cout << "step_size " << step_size << endl;
-                for(double j = 0; j <= 1; j += step_size){
-                  tx = (end_x * j) + (start_x * (1 - j));
-                  ty = (end_y * j) + (start_y * (1 - j));
-                  if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                    // cout << tx << " " << ty << endl;
-                    lasers_grid[int(tx)][int(ty)] = 1;
+                // for(double i = 0; i <= 1; i += step_size){
+                //   tx = (end_x * i) + (start_x * (1 - i));
+                //   ty = (end_y * i) + (start_y * (1 - i));
+                //   if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+                //     // cout << tx << " " << ty << endl;
+                //     decision_lasers_grid[int(tx)][int(ty)] = 1;
+                //   }
+                //   // decisions_grid[floor(ty)][floor(tx)] = 1
+                //   // decisions_grid[ceil(ty)][ceil(tx)] = 1
+                //   // decisions_grid[floor(ty)][ceil(tx)] = 1
+                //   // decisions_grid[ceil(ty)][floor(tx)] = 1
+                // }
+                if(int(start_x) > int(end_x) and int(start_y) == int(end_y)){
+                  for(double i = 0; i <= 1; i += step_size){
+                    tx = (end_x * i) + (start_x * (1 - i));
+                    ty = (end_y * i) + (start_y * (1 - i));
+                    if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+                      // cout << tx << " " << ty << endl;
+                      decision_lasers_grid[int(tx)][int(ty)] = 1;
+                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][2] = 1;
+                      }
+                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][7] = 1;
+                      }
+                    }
                   }
-                  // decisions_grid[floor(ty)][floor(tx)] = 1
-                  // decisions_grid[ceil(ty)][ceil(tx)] = 1
-                  // decisions_grid[floor(ty)][ceil(tx)] = 1
-                  // decisions_grid[ceil(ty)][floor(tx)] = 1
+                }
+                else if(int(start_x) == int(end_x) and int(start_y) > int(end_y)){
+                  for(double i = 0; i <= 1; i += step_size){
+                    tx = (end_x * i) + (start_x * (1 - i));
+                    ty = (end_y * i) + (start_y * (1 - i));
+                    if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+                      // cout << tx << " " << ty << endl;
+                      decision_lasers_grid[int(tx)][int(ty)] = 1;
+                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][0] = 1;
+                      }
+                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][5] = 1;
+                      }
+                    }
+                  }
+                }
+                else if(int(start_x) < int(end_x) and int(start_y) == int(end_y)){
+                  for(double i = 0; i <= 1; i += step_size){
+                    tx = (end_x * i) + (start_x * (1 - i));
+                    ty = (end_y * i) + (start_y * (1 - i));
+                    if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+                      // cout << tx << " " << ty << endl;
+                      decision_lasers_grid[int(tx)][int(ty)] = 1;
+                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][3] = 1;
+                      }
+                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][6] = 1;
+                      }
+                    }
+                  }
+                }
+                else if(int(start_x) == int(end_x) and int(start_y) < int(end_y)){
+                  for(double i = 0; i <= 1; i += step_size){
+                    tx = (end_x * i) + (start_x * (1 - i));
+                    ty = (end_y * i) + (start_y * (1 - i));
+                    if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
+                      // cout << tx << " " << ty << endl;
+                      decision_lasers_grid[int(tx)][int(ty)] = 1;
+                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][1] = 1;
+                      }
+                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                        decision_laser_grid_connections[int(tx)][int(ty)][4] = 1;
+                      }
+                    }
+                  }
                 }
               }
             }
           }
-        }
-        // cout << "After lasers_grid" << endl;
-        // for(int i = 0; i < lasers_grid.size(); i++){
-        //   for(int j = 0; j < lasers_grid[0].size(); j++){
-        //     cout << lasers_grid[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
-        for(int i = 0; i < highway_grid.size(); i++){
-          vector<int> col;
-          for(int j = 0; j < highway_grid[i].size(); j ++){
-            col.push_back(0);
+          for(int i = 0; i < decision_lasers_grid.size(); i++){
+            for(int j = 0; j < decision_lasers_grid[i].size(); j ++){
+              lasers_grid[i][j] += decision_lasers_grid[i][j];
+              for(int l = 0; l < decision_laser_grid_connections[i][j].size(); l++){
+                laser_grid_connections[i][j][l] += decision_laser_grid_connections[i][j][l];
+              }
+            }
           }
-          lasers_only_grid.push_back(col);
         }
-        // cout << "After decisions_grid + lasers_grid" << endl;
+        cout << "After lasers_grid" << endl;
+        for(int i = 0; i < lasers_grid.size(); i++){
+          for(int j = 0; j < lasers_grid[0].size(); j++){
+            cout << lasers_grid[i][j] << " ";
+          }
+          cout << endl;
+        }
+        cout << "After laser_grid_connections" << endl;
+        for(int i = 0; i < laser_grid_connections.size(); i++){
+          for(int j = 0; j < laser_grid_connections[0].size(); j++){
+            for(int k = 0; k < laser_grid_connections[0][0]].size(); k++){
+              cout << laser_grid_connections[i][j][k] << ",";
+            }
+            cout << " ";
+          }
+          cout << endl;
+        }
+        // for(int i = 0; i < highway_grid.size(); i++){
+        //   vector<int> col;
+        //   for(int j = 0; j < highway_grid[i].size(); j ++){
+        //     col.push_back(0);
+        //   }
+        //   lasers_only_grid.push_back(col);
+        // }
+        cout << "After decisions_grid + lasers_grid" << endl;
         for(int i = 0; i < decisions_grid.size(); i++){
           for(int j = 0; j < decisions_grid[0].size(); j++){
-            if(lasers_grid[i][j] > 0 and decisions_grid[i][j] == 0){
+            if(lasers_grid[i][j] > 1 and decisions_grid[i][j] == 0){
               decisions_grid[i][j] = 1;
-              lasers_only_grid[i][j] = 1;
+              // lasers_only_grid[i][j] = 1;
             }
-            // cout << decisions_grid[i][j] << " ";
+            cout << decisions_grid[i][j] << " ";
           }
-          // cout << endl;
+          cout << endl;
         }
         vector< vector<int> > passage_grid;
         for(int i = 0; i < highway_grid.size(); i++){
@@ -265,13 +382,13 @@ public:
           }
           passage_grid.push_back(col);
         }
-        // cout << "After passage_grid" << endl;
-        // for(int i = 0; i < passage_grid.size(); i++){
-        //   for(int j = 0; j < passage_grid[0].size(); j++){
-        //     cout << passage_grid[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "After passage_grid" << endl;
+        for(int i = 0; i < passage_grid.size(); i++){
+          for(int j = 0; j < passage_grid[0].size(); j++){
+            cout << passage_grid[i][j] << " ";
+          }
+          cout << endl;
+        }
         vector < vector < pair<int, int> > > horizontals;
         vector < vector <int> > horizontal_lengths;
         for(int i = 0; i < passage_grid.size(); i++){
@@ -310,7 +427,7 @@ public:
         }
         for(int i = 0; i < horizontals.size(); i++){
           for(int j = 0; j < horizontals[i].size(); j++){
-            if(horizontal_lengths[i][j] >= 10){
+            if(horizontal_lengths[i][j] >= min_passage_length){
               for(int k = horizontals[i][j].first; k <= horizontals[i][j].second; k++){
                 horizontal_passages[i][k] = 1;
                 horizontal_passages_filled[i][k] = 1;
@@ -437,7 +554,29 @@ public:
           }
         }
         // cout << "After horizontal_ends " << horizontal_ends.size() << endl;
-
+        cout << "Before horizontal_unconnected" << endl;
+        vector < vector<int> > horizontal_unconnected;
+        for(int j = 0; j < final_horizontal.size(); j++){
+          for(int k = 0; k < final_horizontal[j].size()-1; k++){
+            if(final_horizontal[j][k] > 0 and laser_grid_connections[j][k][2] <= 1 and laser_grid_connections[j][k][6] <= 1 and final_horizontal[j][k+1] > 0){
+              vector<int> point;
+              point.push_back(j);
+              point.push_back(k);
+              cout << j << " " << k << endl;
+              horizontal_unconnected.push_back(point);
+            }
+          }
+          for(int k = 1; k < final_horizontal[j].size(); k++){
+            if(final_horizontal[j][k] > 0 and laser_grid_connections[j][k][3] <= 1 and laser_grid_connections[j][k][7] <= 1 and final_horizontal[j][k-1] > 0){
+              vector<int> point;
+              point.push_back(j);
+              point.push_back(k);
+              cout << j << " " << k << endl;
+              horizontal_unconnected.push_back(point);
+            }
+          }
+        }
+        cout << "After horizontal_unconnected " << horizontal_unconnected.size() << endl;
         vector < vector < pair<int, int> > > verticals;
         vector < vector <int> > vertical_lengths;
         for(int j = 0; j < passage_grid[0].size(); j++){
@@ -477,7 +616,7 @@ public:
 
         for(int i = 0; i < verticals.size(); i++){
           for(int j = 0; j < verticals[i].size(); j++){
-            if(vertical_lengths[i][j] >= 10){
+            if(vertical_lengths[i][j] >= min_passage_length){
               for(int k = verticals[i][j].first; k <= verticals[i][j].second; k++){
                 vertical_passages[k][i] = 1;
                 vertical_passages_filled[k][i] = 1;
@@ -583,7 +722,29 @@ public:
           }
         }
         // cout << "After vertical_ends " << vertical_ends.size() << endl;
-
+        cout << "Before vertical_unconnected" << endl;
+        vector < vector<int> > vertical_unconnected;
+        for(int k = 0; k < final_vertical[0].size(); k++){
+          for(int j = 0; j < final_vertical.size()-1; j++){
+            if(final_vertical[j][k] > 0 and laser_grid_connections[j][k][1] <= 1 and laser_grid_connections[j][k][5] <= 1 and final_vertical[j+1][k] > 0){
+              vector<int> point;
+              point.push_back(j);
+              point.push_back(k);
+              cout << j << " " << k << endl;
+              vertical_unconnected.push_back(point);
+            }
+          }
+          for(int j = 1; j < final_vertical.size(); j++){
+            if(final_vertical[j][k] > 0 and laser_grid_connections[j][k][0] <= 1 and laser_grid_connections[j][k][4] <= 1 and final_vertical[j][k-1] > 0){
+              vector<int> point;
+              point.push_back(j);
+              point.push_back(k);
+              cout << j << " " << k << endl;
+              vertical_unconnected.push_back(point);
+            }
+          }
+        }
+        cout << "After vertical_unconnected " << vertical_unconnected.size() << endl;
         vector < vector<int> > final_combined;
         for(int i = 0; i < final_horizontal.size(); i++){
           vector<int> row;
@@ -610,13 +771,26 @@ public:
         for(int i = 0; i < vertical_ends.size(); i++){
           final_combined[vertical_ends[i][0]][vertical_ends[i][1]] = 1;
         }
-        // cout << "After ends" << endl;
-        // for(int i = 0; i < final_combined.size(); i++){
-        //   for(int j = 0; j < final_combined[0].size(); j++){
-        //     cout << final_combined[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "After ends" << endl;
+        for(int i = 0; i < final_combined.size(); i++){
+          for(int j = 0; j < final_combined[0].size(); j++){
+            cout << final_combined[i][j] << " ";
+          }
+          cout << endl;
+        }
+        for(int i = 0; i < horizontal_unconnected.size(); i++){
+          final_combined[horizontal_unconnected[i][0]][horizontal_unconnected[i][1]] = 1;
+        }
+        for(int i = 0; i < vertical_unconnected.size(); i++){
+          final_combined[vertical_unconnected[i][0]][vertical_unconnected[i][1]] = 1;
+        }
+        cout << "After unconnected" << endl;
+        for(int i = 0; i < final_combined.size(); i++){
+          for(int j = 0; j < final_combined[0].size(); j++){
+            cout << final_combined[i][j] << " ";
+          }
+          cout << endl;
+        }
         dx.clear();
         dx.push_back(1);
         dx.push_back(0);
@@ -645,14 +819,14 @@ public:
             }
           }
         }
-        // cout << "final intersection_component " << intersection_component << endl;
-        // cout << "After intersections" << endl;
-        // for(int i = 0; i < intersections.size(); i++){
-        //   for(int j = 0; j < intersections[0].size(); j++){
-        //     cout << intersections[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "final intersection_component " << intersection_component << endl;
+        cout << "After intersections" << endl;
+        for(int i = 0; i < intersections.size(); i++){
+          for(int j = 0; j < intersections[0].size(); j++){
+            cout << intersections[i][j] << " ";
+          }
+          cout << endl;
+        }
 
         vector < vector<int> > passages_without_intersections;
         for(int i = 0; i < final_horizontal.size(); i++){
@@ -692,14 +866,14 @@ public:
             }
           }
         }
-        // cout << "final passage_component " << passage_component << endl;
-        // cout << "After pass_wo_int" << endl;
-        // for(int i = 0; i < pass_wo_int.size(); i++){
-        //   for(int j = 0; j < pass_wo_int[0].size(); j++){
-        //     cout << pass_wo_int[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "final passage_component " << passage_component << endl;
+        cout << "After pass_wo_int" << endl;
+        for(int i = 0; i < pass_wo_int.size(); i++){
+          for(int j = 0; j < pass_wo_int[0].size(); j++){
+            cout << pass_wo_int[i][j] << " ";
+          }
+          cout << endl;
+        }
         // for(int k = 1; k <= passage_component; k++){
         //   int minx = 100000;
         //   int maxx = -1;
@@ -730,13 +904,13 @@ public:
             }
           }
         }
-        // cout << "After intersections + pass_wo_int" << endl;
-        // for(int i = 0; i < intersections.size(); i++){
-        //   for(int j = 0; j < intersections[0].size(); j++){
-        //     cout << intersections[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "After intersections + pass_wo_int" << endl;
+        for(int i = 0; i < intersections.size(); i++){
+          for(int j = 0; j < intersections[0].size(); j++){
+            cout << intersections[i][j] << " ";
+          }
+          cout << endl;
+        }
         vector< vector<int> > edges;
         for(int i = 0; i < intersections.size(); i++){
           int start = -1;
@@ -1217,8 +1391,8 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs(passagePath.size() - match_x_dist[j]) << endl;
-                if(abs(passagePath.size() - match_x_dist[j]) <= 2){
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs((int)(passagePath.size()) - match_x_dist[j]) << endl;
+                if(abs((int)(passagePath.size()) - match_x_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1237,8 +1411,8 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs(passagePath.size() - match_y_dist[j]) << endl;
-                if(abs(passagePath.size() - match_y_dist[j]) <= 2){
+                cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs((int)(passagePath.size()) - match_y_dist[j]) << endl;
+                if(abs((int)(passagePath.size()) - match_y_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1257,8 +1431,8 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs(passagePath.size() - match_x_dist[j]) << endl;
-                if(abs(passagePath.size() - match_x_dist[j]) <= 2){
+                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs((int)(passagePath.size()) - match_x_dist[j]) << endl;
+                if(abs((int)(passagePath.size()) - match_x_dist[j]) <= 2){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                     reverse(passagePath.begin(),passagePath.end());
@@ -1276,8 +1450,8 @@ public:
                       passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                     }
                   }
-                  cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs(passagePath.size() - match_y_dist[j]) << endl;
-                  if(abs(passagePath.size() - match_y_dist[j]) <= 2){
+                  cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs((int)(passagePath.size()) - match_y_dist[j]) << endl;
+                  if(abs((int)(passagePath.size()) - match_y_dist[j]) <= 2){
                     sort(passagePath.begin(), passagePath.end());
                     if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
                       reverse(passagePath.begin(),passagePath.end());

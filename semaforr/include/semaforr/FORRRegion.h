@@ -503,6 +503,7 @@ struct RegionNode{
     region = r;
     regionID = id;
     nodeCost = c;
+    regionSequence = vector<RegionNode>();
   }
   bool operator==(const RegionNode rn) {
     if(regionID == rn.regionID){
