@@ -185,7 +185,7 @@ public:
               end_y = decisions_grid[0].size()-1;
             if(decisions_grid[int(start_x)][int(start_y)] == 1 and decisions_grid[int(end_x)][int(end_y)] == 1 and ((int(start_y) == int(end_y)) or (int(start_x) == int(end_x)))){
               double length = sqrt((start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y));
-              // cout << k << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
+              cout << k << " " << start_x << " " << start_y << " " << end_x << " " << end_y << " length " << length << endl;
               if(length >= step_length){
                 double step_size = step_length / length;
                 double tx, ty;
@@ -207,7 +207,7 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      // cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
                       if(int(tx) != int(start_x) and int(ty) != int(start_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][2] = 1;
@@ -215,6 +215,10 @@ public:
                       if(int(tx) != int(end_x) and int(ty) != int(end_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][7] = 1;
                       }
+                      for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
+                        cout << decision_laser_grid_connections[int(tx)][int(ty)][l] << ",";
+                      }
+                      cout << endl;
                     }
                   }
                 }
@@ -223,7 +227,7 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      // cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
                       if(int(tx) != int(start_x) and int(ty) != int(start_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][0] = 1;
@@ -231,6 +235,10 @@ public:
                       if(int(tx) != int(end_x) and int(ty) != int(end_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][5] = 1;
                       }
+                      for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
+                        cout << decision_laser_grid_connections[int(tx)][int(ty)][l] << ",";
+                      }
+                      cout << endl;
                     }
                   }
                 }
@@ -239,7 +247,7 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      // cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
                       if(int(tx) != int(start_x) and int(ty) != int(start_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][3] = 1;
@@ -247,6 +255,10 @@ public:
                       if(int(tx) != int(end_x) and int(ty) != int(end_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][6] = 1;
                       }
+                      for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
+                        cout << decision_laser_grid_connections[int(tx)][int(ty)][l] << ",";
+                      }
+                      cout << endl;
                     }
                   }
                 }
@@ -255,7 +267,7 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      // cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
                       if(int(tx) != int(start_x) and int(ty) != int(start_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][1] = 1;
@@ -263,6 +275,10 @@ public:
                       if(int(tx) != int(end_x) and int(ty) != int(end_y)){
                         decision_laser_grid_connections[int(tx)][int(ty)][4] = 1;
                       }
+                      for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
+                        cout << decision_laser_grid_connections[int(tx)][int(ty)][l] << ",";
+                      }
+                      cout << endl;
                     }
                   }
                 }
@@ -270,9 +286,9 @@ public:
             }
           }
           for(int i = 0; i < decision_lasers_grid.size(); i++){
-            for(int j = 0; j < decision_lasers_grid[i].size(); j ++){
+            for(int j = 0; j < decision_lasers_grid[0].size(); j ++){
               lasers_grid[i][j] += decision_lasers_grid[i][j];
-              for(int l = 0; l < decision_laser_grid_connections[i][j].size(); l++){
+              for(int l = 0; l < decision_laser_grid_connections[0][0].size(); l++){
                 laser_grid_connections[i][j][l] += decision_laser_grid_connections[i][j][l];
               }
             }
@@ -288,7 +304,7 @@ public:
         cout << "After laser_grid_connections" << endl;
         for(int i = 0; i < laser_grid_connections.size(); i++){
           for(int j = 0; j < laser_grid_connections[0].size(); j++){
-            for(int k = 0; k < laser_grid_connections[0][0]].size(); k++){
+            for(int k = 0; k < laser_grid_connections[0][0].size(); k++){
               cout << laser_grid_connections[i][j][k] << ",";
             }
             cout << " ";
