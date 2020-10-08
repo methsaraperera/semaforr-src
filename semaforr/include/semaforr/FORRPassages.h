@@ -207,12 +207,15 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << " " << int(tx) << " " << int(ty) << " " << int(start_x) << " " << int(start_y) << " " << int(end_x) << " " << int(end_y) << endl;
+                      cout << (int(tx) != int(start_x)) << " " << (int(ty) != int(start_y)) << " " << (int(tx) != int(end_x)) << " " << (int(ty) != int(end_y)) << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
-                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                      if(int(tx) != int(start_x)){
+                        cout << "update 2" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][2] = 1;
                       }
-                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                      if(int(tx) != int(end_x)){
+                        cout << "update 7" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][7] = 1;
                       }
                       for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
@@ -227,12 +230,15 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << " " << int(tx) << " " << int(ty) << " " << int(start_x) << " " << int(start_y) << " " << int(end_x) << " " << int(end_y) << endl;
+                      cout << (int(tx) != int(start_x)) << " " << (int(ty) != int(start_y)) << " " << (int(tx) != int(end_x)) << " " << (int(ty) != int(end_y)) << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
-                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                      if(int(ty) != int(start_y)){
+                        cout << "update 0" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][0] = 1;
                       }
-                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                      if(int(ty) != int(end_y)){
+                        cout << "update 5" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][5] = 1;
                       }
                       for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
@@ -247,12 +253,15 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << " " << int(tx) << " " << int(ty) << " " << int(start_x) << " " << int(start_y) << " " << int(end_x) << " " << int(end_y) << endl;
+                      cout << (int(tx) != int(start_x)) << " " << (int(ty) != int(start_y)) << " " << (int(tx) != int(end_x)) << " " << (int(ty) != int(end_y)) << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
-                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                      if(int(tx) != int(start_x)){
+                        cout << "update 3" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][3] = 1;
                       }
-                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                      if(int(tx) != int(end_x)){
+                        cout << "update 6" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][6] = 1;
                       }
                       for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
@@ -267,12 +276,15 @@ public:
                     tx = (end_x * i) + (start_x * (1 - i));
                     ty = (end_y * i) + (start_y * (1 - i));
                     if(int(tx) >= 0 and int(ty) >= 0 and int(tx) < decisions_grid.size() and int(ty) < decisions_grid[0].size()){
-                      cout << tx << " " << ty << endl;
+                      cout << tx << " " << ty << " " << int(tx) << " " << int(ty) << " " << int(start_x) << " " << int(start_y) << " " << int(end_x) << " " << int(end_y) << endl;
+                      cout << (int(tx) != int(start_x)) << " " << (int(ty) != int(start_y)) << " " << (int(tx) != int(end_x)) << " " << (int(ty) != int(end_y)) << endl;
                       decision_lasers_grid[int(tx)][int(ty)] = 1;
-                      if(int(tx) != int(start_x) and int(ty) != int(start_y)){
+                      if(int(ty) != int(start_y)){
+                        cout << "update 1" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][1] = 1;
                       }
-                      if(int(tx) != int(end_x) and int(ty) != int(end_y)){
+                      if(int(ty) != int(end_y)){
+                        cout << "update 4" << endl;
                         decision_laser_grid_connections[int(tx)][int(ty)][4] = 1;
                       }
                       for(int l = 0; l < decision_laser_grid_connections[int(tx)][int(ty)].size(); l++){
@@ -525,14 +537,21 @@ public:
             }
           }
         }
-        // cout << "final horizontal_component " << horizontal_component << endl;
-        // cout << "After final_horizontal" << endl;
-        // for(int i = 0; i < final_horizontal.size(); i++){
-        //   for(int j = 0; j < final_horizontal[0].size(); j++){
-        //     cout << final_horizontal[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "final horizontal_component " << horizontal_component << endl;
+        cout << "After final_horizontal" << endl;
+        for(int i = 0; i < final_horizontal.size(); i++){
+          for(int j = 0; j < final_horizontal[0].size(); j++){
+            cout << final_horizontal[i][j] << " ";
+          }
+          cout << endl;
+        }
+        for(int i = 0; i < final_horizontal.size(); i++){
+          for(int j = 0; j < final_horizontal[0].size(); j++){
+            if(final_horizontal[i][j] > 0){
+              cout << i << " " << j << endl;
+            }
+          }
+        }
         vector < vector<int> > horizontal_ends;
         for(int i = 1; i <= horizontal_component; i++){
           // cout << "horizontal_component " << i << endl;
@@ -572,9 +591,9 @@ public:
         // cout << "After horizontal_ends " << horizontal_ends.size() << endl;
         cout << "Before horizontal_unconnected" << endl;
         vector < vector<int> > horizontal_unconnected;
-        for(int j = 0; j < final_horizontal.size(); j++){
-          for(int k = 0; k < final_horizontal[j].size()-1; k++){
-            if(final_horizontal[j][k] > 0 and laser_grid_connections[j][k][2] <= 1 and laser_grid_connections[j][k][6] <= 1 and final_horizontal[j][k+1] > 0){
+        for(int k = 0; k < final_horizontal[0].size(); k++){
+          for(int j = 0; j < final_horizontal.size()-1; j++){
+            if(final_horizontal[j][k] > 0 and (laser_grid_connections[j][k][4] <= 1 or laser_grid_connections[j+1][k][1] <= 1) and final_horizontal[j+1][k] > 0){
               vector<int> point;
               point.push_back(j);
               point.push_back(k);
@@ -582,8 +601,8 @@ public:
               horizontal_unconnected.push_back(point);
             }
           }
-          for(int k = 1; k < final_horizontal[j].size(); k++){
-            if(final_horizontal[j][k] > 0 and laser_grid_connections[j][k][3] <= 1 and laser_grid_connections[j][k][7] <= 1 and final_horizontal[j][k-1] > 0){
+          for(int j = 1; j < final_horizontal.size(); j++){
+            if(final_horizontal[j][k] > 0 and (laser_grid_connections[j][k][5] <= 1 or laser_grid_connections[j-1][k][0] <= 1) and final_horizontal[j-1][k] > 0){
               vector<int> point;
               point.push_back(j);
               point.push_back(k);
@@ -693,14 +712,21 @@ public:
             }
           }
         }
-        // cout << "final vertical_component " << vertical_component << endl;
-        // cout << "After final_vertical" << endl;
-        // for(int i = 0; i < final_vertical.size(); i++){
-        //   for(int j = 0; j < final_vertical[0].size(); j++){
-        //     cout << final_vertical[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
+        cout << "final vertical_component " << vertical_component << endl;
+        cout << "After final_vertical" << endl;
+        for(int i = 0; i < final_vertical.size(); i++){
+          for(int j = 0; j < final_vertical[0].size(); j++){
+            cout << final_vertical[i][j] << " ";
+          }
+          cout << endl;
+        }
+        for(int i = 0; i < final_vertical.size(); i++){
+          for(int j = 0; j < final_vertical[0].size(); j++){
+            if(final_vertical[i][j] > 0){
+              cout << i << " " << j << endl;
+            }
+          }
+        }
         vector < vector<int> > vertical_ends;
         for(int i = 1; i <= vertical_component; i++){
           // cout << "vertical_component " << i << endl;
@@ -740,9 +766,9 @@ public:
         // cout << "After vertical_ends " << vertical_ends.size() << endl;
         cout << "Before vertical_unconnected" << endl;
         vector < vector<int> > vertical_unconnected;
-        for(int k = 0; k < final_vertical[0].size(); k++){
-          for(int j = 0; j < final_vertical.size()-1; j++){
-            if(final_vertical[j][k] > 0 and laser_grid_connections[j][k][1] <= 1 and laser_grid_connections[j][k][5] <= 1 and final_vertical[j+1][k] > 0){
+        for(int j = 0; j < final_vertical.size(); j++){
+          for(int k = 0; k < final_vertical[j].size()-1; k++){
+            if(final_vertical[j][k] > 0 and (laser_grid_connections[j][k][7] <= 1 or laser_grid_connections[j][k+1][2] <= 1) and final_vertical[j][k+1] > 0){
               vector<int> point;
               point.push_back(j);
               point.push_back(k);
@@ -750,8 +776,8 @@ public:
               vertical_unconnected.push_back(point);
             }
           }
-          for(int j = 1; j < final_vertical.size(); j++){
-            if(final_vertical[j][k] > 0 and laser_grid_connections[j][k][0] <= 1 and laser_grid_connections[j][k][4] <= 1 and final_vertical[j][k-1] > 0){
+          for(int k = 1; k < final_vertical[j].size(); k++){
+            if(final_vertical[j][k] > 0 and (laser_grid_connections[j][k][6] <= 1 or laser_grid_connections[j][k-1][3] <= 1) and final_vertical[j][k-1] > 0){
               vector<int> point;
               point.push_back(j);
               point.push_back(k);
