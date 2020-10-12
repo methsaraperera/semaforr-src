@@ -1616,6 +1616,7 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
         lregion_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(lx, ly));
         vector<int> lpassage_values = regions[final_rn.regionID].getPassageValues();
         for(int i = 0; i < lpassage_values.size(); i++){
+          cout << "lpassage_values " << lpassage_values[i] << endl;
           if(passage_graph_nodes.count(lpassage_values[i]) != 0){
             cout << "lRegion on intersection " << lpassage_values[i] - 1 << endl;
             int x = passage_average_values[lpassage_values[i] - 1][0];
