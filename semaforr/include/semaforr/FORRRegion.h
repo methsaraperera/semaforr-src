@@ -509,6 +509,9 @@ struct RegionNode{
   void addToRegionSequence(RegionNode rn){
     regionSequence.push_back(rn);
   }
+  void setRegionSequence(vector<RegionNode> rs){
+    regionSequence = rs;
+  }
   bool operator==(const RegionNode rn) {
     if(regionID == rn.regionID){
       return true;
