@@ -742,14 +742,14 @@ class Task {
 						rn_queue.push(neighbor);
 					}
 				}
-				vector<RegionNode> already_searched;
-				already_searched.push_back(start_rn);
+				vector<int> already_searched;
+				already_searched.push_back(start_rn.regionID);
 				cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				RegionNode final_rn;
 				while(rn_queue.size() > 0){
 					RegionNode current_neighbor = rn_queue.top();
 					cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
-					already_searched.push_back(current_neighbor);
+					already_searched.push_back(current_neighbor.regionID);
 					rn_queue.pop();
 					if(current_neighbor.regionID == startid){
 						final_rn = current_neighbor;
@@ -760,7 +760,7 @@ class Task {
 						eRegion.setRegionSequence(current_neighbor.regionSequence);
 						eRegion.addToRegionSequence(current_neighbor);
 						cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
-						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), start_intersection) != eRegion.region.getPassageValues().end() or eRegion.regionID == startid) and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), start_intersection) != eRegion.region.getPassageValues().end() or eRegion.regionID == startid) and find(already_searched.begin(), already_searched.end(), eRegion.regionID) == already_searched.end()){
 							rn_queue.push(eRegion);
 						}
 					}
@@ -952,24 +952,24 @@ class Task {
 					}
 					else{
 						priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
-						vector<RegionNode> already_searched;
+						vector<int> already_searched;
 						RegionNode start_rn = RegionNode(regions[startid], startid, 0);
 						cout << "startid exits " << regions[startid].getMinExits().size() << endl;
 						for(int i = 0; i < regions[startid].getMinExits().size(); i++){
 							RegionNode neighbor = RegionNode(regions[regions[startid].getMinExits()[i].getExitRegion()], regions[startid].getMinExits()[i].getExitRegion(), regions[startid].getMinExits()[i].getExitDistance());
 							neighbor.addToRegionSequence(start_rn);
 							cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
-							if(find(regionP12.begin(), regionP12.end(), neighbor.regionID) != regionP12.end() and find(already_searched.begin(), already_searched.end(), neighbor) == already_searched.end()){
+							if(find(regionP12.begin(), regionP12.end(), neighbor.regionID) != regionP12.end()){
 								rn_queue.push(neighbor);
 							}
 						}
-						already_searched.push_back(start_rn);
+						already_searched.push_back(start_rn.regionID);
 						cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 						RegionNode final_rn;
 						while(rn_queue.size() > 0){
 							RegionNode current_neighbor = rn_queue.top();
 							cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
-							already_searched.push_back(current_neighbor);
+							already_searched.push_back(current_neighbor.regionID);
 							rn_queue.pop();
 							if(current_neighbor.regionID == endid){
 								final_rn = current_neighbor;
@@ -980,7 +980,7 @@ class Task {
 								eRegion.setRegionSequence(current_neighbor.regionSequence);
 								eRegion.addToRegionSequence(current_neighbor);
 								cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
-								if(find(regionP12.begin(), regionP12.end(), eRegion.regionID) != regionP12.end() and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+								if(find(regionP12.begin(), regionP12.end(), eRegion.regionID) != regionP12.end() and find(already_searched.begin(), already_searched.end(), eRegion.regionID) == already_searched.end()){
 									rn_queue.push(eRegion);
 								}
 							}
@@ -1203,14 +1203,14 @@ class Task {
 						rn_queue.push(neighbor);
 					}
 				}
-				vector<RegionNode> already_searched;
-				already_searched.push_back(start_rn);
+				vector<int> already_searched;
+				already_searched.push_back(start_rn.regionID);
 				cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				RegionNode final_rn;
 				while(rn_queue.size() > 0){
 					RegionNode current_neighbor = rn_queue.top();
 					cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
-					already_searched.push_back(current_neighbor);
+					already_searched.push_back(current_neighbor.regionID);
 					rn_queue.pop();
 					if(current_neighbor.regionID == endid){
 						final_rn = current_neighbor;
@@ -1221,7 +1221,7 @@ class Task {
 						eRegion.setRegionSequence(current_neighbor.regionSequence);
 						eRegion.addToRegionSequence(current_neighbor);
 						cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
-						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), end_intersection) != eRegion.region.getPassageValues().end() or eRegion.regionID == endid) and find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), end_intersection) != eRegion.region.getPassageValues().end() or eRegion.regionID == endid) and find(already_searched.begin(), already_searched.end(), eRegion.regionID) == already_searched.end()){
 							rn_queue.push(eRegion);
 						}
 					}

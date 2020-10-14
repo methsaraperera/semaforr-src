@@ -1638,7 +1638,7 @@ public:
               trailLength = trailLength + dist_between_steps[k];
             }
             cout << "trailLength " << trailLength << " count_overlap " << count_overlap << " passage12_points.size() " << passage12_points.size() << endl;
-            if(trailLength < min_length and count_overlap / passage12_points.size() > max_overlap and count_overlap / passage12_points.size() >= 0.6){
+            if(trailLength < min_length and count_overlap / passage12_points.size() >= max_overlap and count_overlap / passage12_points.size() >= 0.6){
               min_length = trailLength;
               max_overlap = count_overlap / passage12_points.size();
               pathID = j;
