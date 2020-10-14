@@ -498,12 +498,16 @@ struct RegionNode{
   int regionID;
   double nodeCost;
   vector<RegionNode> regionSequence;
-  RegionNode(): region(FORRRegion()), regionID(-1), nodeCost(0) { }
+  RegionNode(): region(FORRRegion()), regionID(-1), nodeCost(0), regionSequence(vector<RegionNode>()) { }
   RegionNode(FORRRegion r, int id, double c){
     region = r;
     regionID = id;
     nodeCost = c;
-    regionSequence = vector<RegionNode>();
+    vector<RegionNode> regions;
+    regionSequence = regions;
+  }
+  void addToRegionSequence(RegionNode rn){
+    regionSequence.push_back(rn);
   }
   bool operator==(const RegionNode rn) {
     if(regionID == rn.regionID){

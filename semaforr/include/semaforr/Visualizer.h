@@ -1361,7 +1361,7 @@ public:
 	//ROS_DEBUG("After situation assignments");
 
 	std::stringstream passageStream;
-	if(decisionCount == 1){
+	if(currentTask > 0 and decisionCount == 1){
 		vector< vector<int> > highways;
 		if(con->getHighwayFinished()){
 			highways = beliefs->getAgentState()->getPassageGrid();
@@ -1369,11 +1369,16 @@ public:
 		else{
 			highways = con->gethighwayExploration()->getHighwayGrid();
 		}
-		for(int j = 0; j < highways.size()-1; j++){
-			for(int i = 0; i < highways[j].size(); i++){
-				passageStream << highways[j][i] << " ";
+		if(highways.size() > 0){
+			for(int j = 0; j < highways.size()-1; j++){
+				for(int i = 0; i < highways[j].size(); i++){
+					passageStream << highways[j][i] << " ";
+				}
+				passageStream << ";";
 			}
-			passageStream << ";";
+		}
+		else{
+			passageStream << " ";
 		}
 	}
 	else{
