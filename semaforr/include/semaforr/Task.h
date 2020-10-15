@@ -668,13 +668,14 @@ class Task {
 		cout << "nPassage " << nPassage << " start_intersection " << start_intersection << endl;
 		if(origPlansInds[0].size() > 0){
 			// nPassage = passage_grid[(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x())][(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y())];
-			for(int i = 0; i < regions[regionID].getPassageValues().size(); i++){
-				if(regions[regionID].getPassageValues()[i] == start_intersection){
+			vector<int> passageValues = regions[regionID].getPassageValues();
+			for(int i = 0; i < passageValues.size(); i++){
+				if(passageValues[i] == start_intersection){
 					nPassage = start_intersection;
 					break;
 				}
 				else{
-					nPassage = regions[regionID].getPassageValues()[i];
+					nPassage = passageValues[i];
 				}
 			}
 		}
@@ -713,7 +714,15 @@ class Task {
 			int startid = -1;
 			for(int i = 0; i < regions.size(); i++){
 				double dist_to_start = average_passage[start_intersection-1].get_distance(regions[i].getCenter());
-				if(dist_to_start < min_dist and find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), nPassage) != regions[i].getPassageValues().end() and regions[i].getMinExits().size() > 0){
+				bool foundPassage = false;
+				vector<int> passageValues = regions[i].getPassageValues();
+				for(int p = 0; p < passageValues.size(); p++){
+					if(passageValues[p] == nPassage){
+						foundPassage == true;
+						break;
+					}
+				}
+				if(dist_to_start < min_dist and foundPassage == true and regions[i].getMinExits().size() > 0){
 					min_dist = dist_to_start;
 					startid = i;
 				}
@@ -738,7 +747,21 @@ class Task {
 					RegionNode neighbor = RegionNode(regions[regions[regionID].getMinExits()[i].getExitRegion()], regions[regionID].getMinExits()[i].getExitRegion(), regions[regionID].getMinExits()[i].getExitDistance());
 					neighbor.addToRegionSequence(start_rn);
 					cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
-					if(find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), nPassage) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), start_intersection) != neighbor.region.getPassageValues().end() or neighbor.regionID == startid){
+					bool foundPassage = false;
+					bool foundIntersection = false;
+					vector<int> passageValues = neighbor.region.getPassageValues();
+					for(int p = 0; p < passageValues.size(); p++){
+						if(passageValues[p] == nPassage){
+							foundPassage = true;
+						}
+						if(passageValues[p] == start_intersection){
+							foundIntersection = true;
+						}
+						if(foundPassage and foundIntersection){
+							break;
+						}
+					}
+					if(foundPassage == true or foundIntersection == true or neighbor.regionID == startid){
 						rn_queue.push(neighbor);
 					}
 				}
@@ -760,7 +783,28 @@ class Task {
 						eRegion.setRegionSequence(current_neighbor.regionSequence);
 						eRegion.addToRegionSequence(current_neighbor);
 						cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
-						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), start_intersection) != eRegion.region.getPassageValues().end() or eRegion.regionID == startid) and find(already_searched.begin(), already_searched.end(), eRegion.regionID) == already_searched.end()){
+						bool foundPassage = false;
+						bool foundIntersection = false;
+						vector<int> passageValues = eRegion.region.getPassageValues();
+						for(int p = 0; p < passageValues.size(); p++){
+							if(passageValues[p] == nPassage){
+								foundPassage = true;
+							}
+							if(passageValues[p] == start_intersection){
+								foundIntersection = true;
+							}
+							if(foundPassage and foundIntersection){
+								break;
+							}
+						}
+						bool foundAlreadySearched = false;
+						for(int a = 0; a < already_searched.size(); a++){
+							if(already_searched[a] == eRegion.regionID){
+								foundAlreadySearched = true;
+								break;
+							}
+						}
+						if((foundPassage == true or foundIntersection == true or eRegion.regionID == startid) and foundAlreadySearched == false){
 							rn_queue.push(eRegion);
 						}
 					}
@@ -866,16 +910,18 @@ class Task {
 				// vector<int> regionID2;
 				vector<int> regionP12;
 				for(int i = 0; i < regions.size(); i++){
-					for(int j = 0; j < regions[i].getPassageValues().size(); j++){
+					vector<int> passageValues = regions[i].getPassageValues();
+					for(int j = 0; j < passageValues.size(); j++){
 						// if(regions[i].getPassageValues()[j] == intersection1){
 						// 	regionID1.push_back(i);
 						// }
 						// if(regions[i].getPassageValues()[j] == intersection2){
 						// 	regionID2.push_back(i);
 						// }
-						if(regions[i].getPassageValues()[j] == passage12){
+						if(passageValues[j] == passage12){
 							regionP12.push_back(i);
 							cout << i << endl;
+							break;
 						}
 					}
 				}
@@ -959,7 +1005,14 @@ class Task {
 							RegionNode neighbor = RegionNode(regions[regions[startid].getMinExits()[i].getExitRegion()], regions[startid].getMinExits()[i].getExitRegion(), regions[startid].getMinExits()[i].getExitDistance());
 							neighbor.addToRegionSequence(start_rn);
 							cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
-							if(find(regionP12.begin(), regionP12.end(), neighbor.regionID) != regionP12.end()){
+							bool inPassage = false;
+							for(int p = 0; p < regionP12.size(); p++){
+								if(regionP12[p] == neighbor.regionID){
+									inPassage = true;
+									break;
+								}
+							}
+							if(inPassage == true){
 								rn_queue.push(neighbor);
 							}
 						}
@@ -980,7 +1033,21 @@ class Task {
 								eRegion.setRegionSequence(current_neighbor.regionSequence);
 								eRegion.addToRegionSequence(current_neighbor);
 								cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
-								if(find(regionP12.begin(), regionP12.end(), eRegion.regionID) != regionP12.end() and find(already_searched.begin(), already_searched.end(), eRegion.regionID) == already_searched.end()){
+								bool inPassage = false;
+								for(int p = 0; p < regionP12.size(); p++){
+									if(regionP12[p] == eRegion.regionID){
+										inPassage = true;
+										break;
+									}
+								}
+								bool foundAlreadySearched = false;
+								for(int a = 0; a < already_searched.size(); a++){
+									if(already_searched[a] == eRegion.regionID){
+										foundAlreadySearched = true;
+										break;
+									}
+								}
+								if(inPassage == true and foundAlreadySearched == false){
 									rn_queue.push(eRegion);
 								}
 							}
@@ -1129,13 +1196,14 @@ class Task {
 		cout << "nPassage " << nPassage << " end_intersection " << end_intersection << endl;
 		if(origPlansInds[1].size() > 0){
 			// nPassage = passage_grid[(int)(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0)][(int)(origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0)];
-			for(int i = 0; i < regions[regionID].getPassageValues().size(); i++){
-				if(regions[regionID].getPassageValues()[i] == end_intersection){
+			vector<int> passageValues = regions[regionID].getPassageValues();
+			for(int i = 0; i < passageValues.size(); i++){
+				if(passageValues[i] == end_intersection){
 					nPassage = end_intersection;
 					break;
 				}
 				else{
-					nPassage = regions[regionID].getPassageValues()[i];
+					nPassage = passageValues[i];
 				}
 			}
 		}
@@ -1174,7 +1242,15 @@ class Task {
 			int endid = -1;
 			for(int i = 0; i < regions.size(); i++){
 				double dist_to_end = average_passage[end_intersection-1].get_distance(regions[i].getCenter());
-				if(dist_to_end < min_dist and find(regions[i].getPassageValues().begin(), regions[i].getPassageValues().end(), nPassage) != regions[i].getPassageValues().end() and regions[i].getMinExits().size() > 0){
+				bool foundPassage = false;
+				vector<int> passageValues = regions[i].getPassageValues();
+				for(int p = 0; p < passageValues.size(); p++){
+					if(passageValues[p] == nPassage){
+						foundPassage == true;
+						break;
+					}
+				}
+				if(dist_to_end < min_dist and foundPassage == true and regions[i].getMinExits().size() > 0){
 					min_dist = dist_to_end;
 					endid = i;
 				}
@@ -1199,7 +1275,21 @@ class Task {
 					RegionNode neighbor = RegionNode(regions[regions[regionID].getMinExits()[i].getExitRegion()], regions[regionID].getMinExits()[i].getExitRegion(), regions[regionID].getMinExits()[i].getExitDistance());
 					neighbor.addToRegionSequence(start_rn);
 					cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
-					if(find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), nPassage) != neighbor.region.getPassageValues().end() or find(neighbor.region.getPassageValues().begin(), neighbor.region.getPassageValues().end(), end_intersection) != neighbor.region.getPassageValues().end() or neighbor.regionID == endid){
+					bool foundPassage = false;
+					bool foundIntersection = false;
+					vector<int> passageValues = neighbor.region.getPassageValues();
+					for(int p = 0; p < passageValues.size(); p++){
+						if(passageValues[p] == nPassage){
+							foundPassage = true;
+						}
+						if(passageValues[p] == end_intersection){
+							foundIntersection = true;
+						}
+						if(foundPassage and foundIntersection){
+							break;
+						}
+					}
+					if(foundPassage == true or foundIntersection == true or neighbor.regionID == endid){
 						rn_queue.push(neighbor);
 					}
 				}
@@ -1221,7 +1311,28 @@ class Task {
 						eRegion.setRegionSequence(current_neighbor.regionSequence);
 						eRegion.addToRegionSequence(current_neighbor);
 						cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
-						if((find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), nPassage) != eRegion.region.getPassageValues().end() or find(eRegion.region.getPassageValues().begin(), eRegion.region.getPassageValues().end(), end_intersection) != eRegion.region.getPassageValues().end() or eRegion.regionID == endid) and find(already_searched.begin(), already_searched.end(), eRegion.regionID) == already_searched.end()){
+						bool foundPassage = false;
+						bool foundIntersection = false;
+						vector<int> passageValues = eRegion.region.getPassageValues();
+						for(int p = 0; p < passageValues.size(); p++){
+							if(passageValues[p] == nPassage){
+								foundPassage = true;
+							}
+							if(passageValues[p] == end_intersection){
+								foundIntersection = true;
+							}
+							if(foundPassage and foundIntersection){
+								break;
+							}
+						}
+						bool foundAlreadySearched = false;
+						for(int a = 0; a < already_searched.size(); a++){
+							if(already_searched[a] == eRegion.regionID){
+								foundAlreadySearched = true;
+								break;
+							}
+						}
+						if((foundPassage == true or foundIntersection == true or eRegion.regionID == endid) and foundAlreadySearched == false){
 							rn_queue.push(eRegion);
 						}
 					}
