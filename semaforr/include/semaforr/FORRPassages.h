@@ -1243,8 +1243,9 @@ public:
         // }
         vector< vector<int> > graph;
         vector<int> graph_edges;
+        vector<int> one_sided_edges;
         // cout << "graph_edges" << endl;
-        for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
+        for(int i = new_ind+1; i < max_component+1; i++){
           graph_edges.push_back(i);
           // cout << i << endl;
         }
@@ -1255,21 +1256,44 @@ public:
               matches.push_back(edges[j]);
             }
           }
-          for(int j = 0; j < matches.size()-1; j++){
-            for(int k = j+1; k < matches.size(); k++){
-              vector<int> seq;
-              seq.push_back(matches[j][0]);
-              seq.push_back(matches[j][1]);
-              seq.push_back(matches[k][0]);
-              graph.push_back(seq);
+          if(matches.size() < 2){
+            one_sided_edges.push_back(graph_edges[i]);
+          }
+          else{
+            for(int j = 0; j < matches.size()-1; j++){
+              for(int k = j+1; k < matches.size(); k++){
+                vector<int> seq;
+                seq.push_back(matches[j][0]);
+                seq.push_back(matches[j][1]);
+                seq.push_back(matches[k][0]);
+                graph.push_back(seq);
+              }
             }
           }
         }
-        // cout << "after graph" << endl;
-        // for(int i = 0; i < graph.size(); i++){
-        //   cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
-        // }
-        // cout << "checking if graph is connected" << endl;
+        cout << "after graph" << endl;
+        for(int i = 0; i < graph.size(); i++){
+          cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+        }
+        cout << "one_sided_edges " << one_sided_edges.size() << endl;
+        for(int i = 0; i < one_sided_edges.size(); i++){
+          cout << one_sided_edges[i] << endl;
+          for(int j = 0; j < intersections.size(); j++){
+            for(int k = 0; k < intersections[0].size(); k++){
+              if(intersections[j][k] == one_sided_edges[i]){
+                intersections[j][k] = 0;
+              }
+            }
+          }
+        }
+        cout << "After removed one sided edges" << endl;
+        for(int i = 0; i < intersections.size(); i++){
+          for(int j = 0; j < intersections[0].size(); j++){
+            cout << intersections[i][j] << " ";
+          }
+          cout << endl;
+        }
+        cout << "checking if graph is connected" << endl;
         vector< set<int> > components;
         for(int j = 0; j < graph.size(); j++){
           // cout << j << " " << graph[j][0] << " " << graph[j][1] << " " << graph[j][2] << endl;
@@ -1368,28 +1392,6 @@ public:
           }
           // cout << "smallest_component_edges " << smallest_component_edges.size() << endl;
         }
-        
-        // cout << "graph_nodes" << endl;
-        for(int i = 1; i < new_ind+1; i++){
-          if(smallest_component.find(i) != smallest_component.end()){
-            continue;
-          }
-          else{
-            graph_nodes.insert(make_pair(i, vector< vector<int> >()));
-            node_steps.insert(make_pair(i, vector<int>()));
-            // cout << i << endl;
-          }
-        }
-        // cout << "graph_edges_map" << endl;
-        for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
-          if(smallest_component_edges.find(i) != smallest_component_edges.end()){
-            continue;
-          }
-          else{
-            graph_edges_map.insert(make_pair(i, vector< vector<int> >()));
-            // cout << i << endl;
-          }
-        }
 
         for(int i = 0; i < intersections.size(); i++){
           for(int j = 0; j < intersections[0].size(); j++){
@@ -1397,25 +1399,109 @@ public:
               if(smallest_component.find(intersections[i][j]) != smallest_component.end()){
                 intersections[i][j] = 0;
               }
-              else{
-                vector<int> current_grid;
-                current_grid.push_back(i);
-                current_grid.push_back(j);
-                graph_nodes[intersections[i][j]].push_back(current_grid);
-                // cout << "node " << intersections[i][j] << " point " << i << " " << j << endl;
-              }
             }
             else if(intersections[i][j] >= new_ind+1){
               if(smallest_component_edges.find(intersections[i][j]) != smallest_component_edges.end()){
                 intersections[i][j] = 0;
               }
-              else{
-                vector<int> current_grid;
-                current_grid.push_back(i);
-                current_grid.push_back(j);
-                graph_edges_map[intersections[i][j]].push_back(current_grid);
-                // cout << "edge " << intersections[i][j] << " point " << i << " " << j << endl;
+            }
+          }
+        }
+        cout << "After removed smallest components" << endl;
+        for(int i = 0; i < intersections.size(); i++){
+          for(int j = 0; j < intersections[0].size(); j++){
+            cout << intersections[i][j] << " ";
+          }
+          cout << endl;
+        }
+
+        cout << "before missing_labels" << endl;
+        vector<int> missing_labels;
+        for(int i = 1; i <= max_component; i++){
+          bool found = false;
+          for(int j = 0; j < intersections.size(); j++){
+            for(int k = 0; k < intersections[0].size(); k++){
+              if(intersections[j][k] == i){
+                found = true;
+                break;
               }
+            }
+            if(found == true){
+              break;
+            }
+          }
+          if(found == false){
+            cout << "missing " << i << endl;
+            missing_labels.push_back(i);
+          }
+        }
+        cout << "missing_labels " << missing_labels.size() << " new_ind " << new_ind << endl;
+        for(int i = 0; i < missing_labels.size(); i++){
+          int current_ind = missing_labels[i];
+          cout << "current_ind " << current_ind << endl;
+          for(int j = 0; j < intersections.size(); j++){
+            for(int k = 0; k < intersections[0].size(); k++){
+              if(intersections[j][k] > current_ind){
+                intersections[j][k] = intersections[j][k] - 1;
+              }
+            }
+          }
+          if(current_ind <= new_ind){
+            new_ind = new_ind - 1;
+          }
+          max_component = max_component - 1;
+          for(int j = 0; j < graph.size(); j++){
+            if(graph[j][0] > current_ind){
+              graph[j][0] = graph[j][0] - 1;
+            }
+            if(graph[j][1] > current_ind){
+              graph[j][1] = graph[j][1] - 1;
+            }
+            if(graph[j][2] > current_ind){
+              graph[j][2] = graph[j][2] - 1;
+            }
+          }
+        }
+        cout << "new_ind " << new_ind << endl;
+        cout << "After fixed missing_labels" << endl;
+        for(int i = 0; i < intersections.size(); i++){
+          for(int j = 0; j < intersections[0].size(); j++){
+            cout << intersections[i][j] << " ";
+          }
+          cout << endl;
+        }
+        cout << "after fixed graph" << endl;
+        for(int i = 0; i < graph.size(); i++){
+          cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+        }
+
+        // cout << "graph_nodes" << endl;
+        for(int i = 1; i < new_ind+1; i++){
+          graph_nodes.insert(make_pair(i, vector< vector<int> >()));
+          node_steps.insert(make_pair(i, vector<int>()));
+          // cout << i << endl;
+        }
+        // cout << "graph_edges_map" << endl;
+        for(int i = new_ind+1; i < max_component+1; i++){
+          graph_edges_map.insert(make_pair(i, vector< vector<int> >()));
+          // cout << i << endl;
+        }
+
+        for(int i = 0; i < intersections.size(); i++){
+          for(int j = 0; j < intersections[0].size(); j++){
+            if(intersections[i][j] < new_ind+1 and intersections[i][j] > 0){
+              vector<int> current_grid;
+              current_grid.push_back(i);
+              current_grid.push_back(j);
+              graph_nodes[intersections[i][j]].push_back(current_grid);
+              // cout << "node " << intersections[i][j] << " point " << i << " " << j << endl;
+            }
+            else if(intersections[i][j] >= new_ind+1){
+              vector<int> current_grid;
+              current_grid.push_back(i);
+              current_grid.push_back(j);
+              graph_edges_map[intersections[i][j]].push_back(current_grid);
+              // cout << "edge " << intersections[i][j] << " point " << i << " " << j << endl;
             }
           }
         }
@@ -1431,53 +1517,39 @@ public:
         
         int index_val = 0;
         for(int i = 1; i < new_ind+1; i++){
-          if(smallest_component.find(i) != smallest_component.end()){
-            vector<int> avg_psg;
-            average_passage.push_back(avg_psg);
-            continue;
+          vector< vector<int> > points = graph_nodes[i];
+          double x = 0, y = 0;
+          for(int j = 0; j < points.size(); j++){
+            x += points[j][0]*2;
+            y += points[j][1]*2;
+            x += (points[j][0]+1)*2;
+            y += (points[j][1]+1)*2;
           }
-          else{
-            vector< vector<int> > points = graph_nodes[i];
-            double x = 0, y = 0;
-            for(int j = 0; j < points.size(); j++){
-              x += points[j][0]*2;
-              y += points[j][1]*2;
-              x += (points[j][0]+1)*2;
-              y += (points[j][1]+1)*2;
-            }
-            x = x / (points.size()*4);
-            y = y / (points.size()*4);
-            // cout << "node " << i << " index_val " << index_val << " x " << x << " y " << y << " node_x " << (int)(x*100) << " node_y " << (int)(y*100) << endl;
-            vector<int> avg_psg;
-            avg_psg.push_back((int)(x*100));
-            avg_psg.push_back((int)(y*100));
-            average_passage.push_back(avg_psg);
-          }
+          x = x / (points.size()*4);
+          y = y / (points.size()*4);
+          // cout << "node " << i << " index_val " << index_val << " x " << x << " y " << y << " node_x " << (int)(x*100) << " node_y " << (int)(y*100) << endl;
+          vector<int> avg_psg;
+          avg_psg.push_back((int)(x*100));
+          avg_psg.push_back((int)(y*100));
+          average_passage.push_back(avg_psg);
         }
-        for(int i = new_ind+1; i < new_ind+passage_component+1; i++){
-          if(smallest_component_edges.find(i) != smallest_component_edges.end()){
-            vector<int> avg_psg;
-            average_passage.push_back(avg_psg);
-            continue;
+        for(int i = new_ind+1; i < max_component+1; i++){
+          vector< vector<int> > points = graph_edges_map[i];
+          double x = 0, y = 0;
+          for(int j = 0; j < points.size(); j++){
+            x += points[j][0]*2;
+            y += points[j][1]*2;
+            x += (points[j][0]+1)*2;
+            y += (points[j][1]+1)*2;
           }
-          else{
-            vector< vector<int> > points = graph_edges_map[i];
-            double x = 0, y = 0;
-            for(int j = 0; j < points.size(); j++){
-              x += points[j][0]*2;
-              y += points[j][1]*2;
-              x += (points[j][0]+1)*2;
-              y += (points[j][1]+1)*2;
-            }
-            x = x / (points.size()*4);
-            y = y / (points.size()*4);
-            // cout << "edge " << i << " index_val " << index_val << " x " << x << " y " << y << " edge_x " << (int)(x*100) << " edge_y " << (int)(y*100) << endl;
-            vector<int> avg_psg;
-            avg_psg.push_back((int)(x*100));
-            avg_psg.push_back((int)(y*100));
-            average_passage.push_back(avg_psg);
-            index_val++;
-          }
+          x = x / (points.size()*4);
+          y = y / (points.size()*4);
+          // cout << "edge " << i << " index_val " << index_val << " x " << x << " y " << y << " edge_x " << (int)(x*100) << " edge_y " << (int)(y*100) << endl;
+          vector<int> avg_psg;
+          avg_psg.push_back((int)(x*100));
+          avg_psg.push_back((int)(y*100));
+          average_passage.push_back(avg_psg);
+          index_val++;
         }
         // cout << "graph_nodes " << graph_nodes.size() << " graph_edges_map " << graph_edges_map.size() << endl;
         // for(int k = 0; k < graph.size(); k++){
@@ -1503,14 +1575,7 @@ public:
         //   // }
         // }
         // cout << "graph_nodes " << graph_nodes.size() << " graph_edges_map " << graph_edges_map.size() << endl;
-        for(int i = 0; i < graph.size(); i++){
-          if(smallest_component_edges.find(graph[i][1]) != smallest_component_edges.end() or smallest_component.find(graph[i][0]) != smallest_component.end() or smallest_component.find(graph[i][0]) != smallest_component.end()){
-            continue;
-          }
-          else{
-            reduced_graph.push_back(graph[i]);
-          }
-        }
+        reduced_graph = graph;
     }
 
     void learnPassageTrails(vector<CartesianPoint> stepped_history, vector < vector<CartesianPoint> > stepped_laser_history) {

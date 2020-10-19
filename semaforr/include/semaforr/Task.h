@@ -735,7 +735,7 @@ class Task {
 				cout << "could not find region close to intersection" << endl;
 				// continue;
 			}
-			if(regionID == startid){
+			if(regionID == startid or startid == -1){
 				cout << "same region, just add that one " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << endl;
 				skeleton_waypoints.push_back(sk_waypoint(0, regions[regionID], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 			}
@@ -1263,7 +1263,7 @@ class Task {
 				cout << "could not find region close to intersection" << endl;
 				// continue;
 			}
-			if(regionID == endid){
+			if(regionID == endid or endid == -1){
 				cout << "same region, just add that one " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << endl;
 				skeleton_waypoints.push_back(sk_waypoint(0, regions[regionID], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 			}
