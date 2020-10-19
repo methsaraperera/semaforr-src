@@ -1436,7 +1436,7 @@ public:
           }
         }
         cout << "missing_labels " << missing_labels.size() << " new_ind " << new_ind << endl;
-        for(int i = 0; i < missing_labels.size(); i++){
+        for(int i = missing_labels.size()-1; i > 0; i--){
           int current_ind = missing_labels[i];
           cout << "current_ind " << current_ind << endl;
           for(int j = 0; j < intersections.size(); j++){
