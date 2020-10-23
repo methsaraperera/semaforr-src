@@ -109,9 +109,12 @@ int PathPlanner::calcPath(bool cautious){
       updateNavGraph();
     }
     astar newsearch(*navGraph, s, t, name);
+    cout << "finished search" << endl;
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
+      cout << "got path" << endl;
       paths = newsearch.getPathsToTarget();
+      cout << "got paths" << endl;
       objectiveSet = false;
       pathCompleted = false;
 
@@ -142,6 +145,7 @@ int PathPlanner::calcPath(bool cautious){
         smoothPath(path, s, t);
 
       pathCost = calcPathCost(path);
+      cout << "calculated path cost" << endl;
       pathCalculated = true;
       for (int i=0; i<paths.size(); i++){
         pathCosts.push_back(calcPathCost(paths[i]));

@@ -52,7 +52,7 @@ public:
 
 
     void learnPassages(vector<CartesianPoint> stepped_history, vector < vector<CartesianPoint> > stepped_laser_history) {
-        int min_passage_length = 5;
+        int min_passage_length = 7;
         for(int i = 0; i < highway_grid.size(); i++){
           vector<int> col;
           for(int j = 0; j < highway_grid[i].size(); j ++){
@@ -423,7 +423,7 @@ public:
         for(int i = 0; i < decisions_grid.size(); i++){
           for(int j = 0; j < decisions_grid[0].size(); j++){
             // if(lasers_grid[i][j] > 1 and ((laser_grid_connections[i][j][0] > 1 and laser_grid_connections[i][j][5] > 1) or (laser_grid_connections[i][j][1] > 1 and laser_grid_connections[i][j][4] > 1) or (laser_grid_connections[i][j][2] > 1 and laser_grid_connections[i][j][7] > 1) or (laser_grid_connections[i][j][3] > 1 and laser_grid_connections[i][j][6] > 1)) and decisions_grid[i][j] == 0){
-            if(lasers_grid[i][j] > 1 and decisions_grid[i][j] == 0){
+            if(lasers_grid[i][j] > 4 and decisions_grid[i][j] == 0){
               decisions_grid[i][j] = 1;
             }
             cout << decisions_grid[i][j] << " ";
@@ -1436,7 +1436,7 @@ public:
           }
         }
         cout << "missing_labels " << missing_labels.size() << " new_ind " << new_ind << endl;
-        for(int i = missing_labels.size()-1; i > 0; i--){
+        for(int i = missing_labels.size()-1; i >= 0; i--){
           int current_ind = missing_labels[i];
           cout << "current_ind " << current_ind << endl;
           for(int j = 0; j < intersections.size(); j++){
