@@ -1470,6 +1470,13 @@ public:
           }
           cout << endl;
         }
+        vector< vector<int> > fixed_graph;
+        for(int i = 0; i < graph.size(); i++){
+          if(graph[i][0] != graph[i][2]){
+            fixed_graph.push_back(graph[i]);
+          }
+        }
+        graph = fixed_graph;
         cout << "after fixed graph" << endl;
         for(int i = 0; i < graph.size(); i++){
           cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;

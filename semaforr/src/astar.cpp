@@ -359,7 +359,8 @@ void astar::construct_path(_VNode* s, _VNode* g)
   path.push_front(tmp->id);
   cout << "Path size = " << path.size() << endl;
   // cout << "tmp->prev.empty() = " << tmp->prev.empty() << " tmp->id " << tmp->id << " s->id " << s->id << endl;
-  while(!tmp->prev.empty())
+  int count = 0;
+  while(!tmp->prev.empty() and count < 1000)
   {
     // cout << "tmp->prev.size() = " << tmp->prev.size() << endl;
     if(tmp->prev.size()>1)
@@ -379,6 +380,7 @@ void astar::construct_path(_VNode* s, _VNode* g)
     if(tmp->id == s->id){
       break;
     }
+    count = count + 1;
   }
   cout << "Path size = " << path.size() << endl;
   paths.push_back(path);
