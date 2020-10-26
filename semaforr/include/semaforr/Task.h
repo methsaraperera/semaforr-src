@@ -539,10 +539,10 @@ class Task {
 	else if(plannerName == "hallwayskel"){
 		// origNavGraph = planner->getOrigGraph();
 		// origPlansInds = planner->getOrigPaths();
-		cout << "Generate hallwayskel plan " << waypointInd.size() << endl;
+		// cout << "Generate hallwayskel plan " << waypointInd.size() << endl;
 		cout << "origPlansInds " << origPlansInds.size() << " " << origPlansInds[0].size() << " " << origPlansInds[1].size() << " " << origPlansInds[2].size() << endl;
 		if(origPlansInds[0].size() > 0){
-			cout << "prologue creation" << endl;
+			// cout << "prologue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[0].size()-1;
 			double s_x = origNavGraph->getNode(origPlansInds[0].front()).getX()/100.0;
@@ -557,7 +557,7 @@ class Task {
 					if(regions[i].visibleFromRegion(CartesianPoint(source.getX(), source.getY()), 20) and regions[i].getMinExits().size() > 0){
 						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(source.getX(), source.getY()));
 						if(dist_to_region < vDist){
-							cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
 							vRegion = i;
 							vDist = dist_to_region;
 						}
@@ -568,7 +568,7 @@ class Task {
 					s_vis = true;
 				}
 			}
-			cout << "s_vis " << s_vis << endl;
+			// cout << "s_vis " << s_vis << endl;
 			if(s_vis){
 				vector<CartesianPoint> path_from_s;
 				CartesianPoint start = s_lineseg.get_endpoints().second;
@@ -580,22 +580,22 @@ class Task {
 					path_from_s.push_back(CartesianPoint(tx, ty));
 				}
 				skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_s, vector< vector<int> >(), 1));
-				cout << "added s_vis " << path_from_s.size() << endl;
+				// cout << "added s_vis " << path_from_s.size() << endl;
 			}
 			list<int>::iterator it;
 			for ( it = origPlansInds[0].begin(); it != origPlansInds[0].end(); it++ ){
 				step = step + 1;
-				cout << "node " << (*it) << " step " << step << endl;
+				// cout << "node " << (*it) << " step " << step << endl;
 				double r_x = origNavGraph->getNode(*it).getX()/100.0;
 				double r_y = origNavGraph->getNode(*it).getY()/100.0;
 				double r = origNavGraph->getNode(*it).getRadius();
-				cout << r_x << " " << r_y << " " << r << endl;
+				// cout << r_x << " " << r_y << " " << r << endl;
 				skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(r_x,r_y), r), vector<CartesianPoint>(), vector< vector<int> >(), 1));
 				list<int>::iterator itr1; 
 				itr1 = it; 
 				advance(itr1, 1);
 				int forward_step = step + 1;
-				cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+				// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 				if(forward_step <= max_step){
 					vector<CartesianPoint> path_from_edge = origNavGraph->getEdge(*it, *itr1)->getEdgePath(true);
 					if(FORRRegion(CartesianPoint(r_x,r_y), r).inRegion(path_from_edge[0])){
@@ -606,10 +606,10 @@ class Task {
 						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
 					}
 				}
-				cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
 		}
-		cout << "passage plan creation" << endl;
+		// cout << "passage plan creation" << endl;
 		int regionID = -1;
 		for(int i = 0; i < regions.size() ; i++){
 			if(origPlansInds[0].size() > 0){
@@ -619,7 +619,7 @@ class Task {
 				}
 			}
 		}
-		cout << "final region in prologue " << regionID << endl;
+		// cout << "final region in prologue " << regionID << endl;
 		// if(regionID == -1){
 		// 	int nRegion = -1;
 		// 	for(int i = 0; i < regions.size() ; i++){
@@ -665,7 +665,7 @@ class Task {
 		// }
 		int nPassage = passage_grid[(int)(source.getX())][(int)(source.getY())];
 		int start_intersection = navGraph->getNode(waypointInd.front()).getIntersectionID();
-		cout << "nPassage " << nPassage << " start_intersection " << start_intersection << endl;
+		// cout << "nPassage " << nPassage << " start_intersection " << start_intersection << endl;
 		if(origPlansInds[0].size() > 0){
 			// nPassage = passage_grid[(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_x())][(int)(skeleton_waypoints[skeleton_waypoints.size()-1].getRegion().getCenter().get_y())];
 			vector<int> passageValues = regions[regionID].getPassageValues();
@@ -679,9 +679,9 @@ class Task {
 				}
 			}
 		}
-		cout << "nPassage " << nPassage << " start_intersection " << start_intersection << endl;
+		// cout << "nPassage " << nPassage << " start_intersection " << start_intersection << endl;
 		if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0 and nPassage != start_intersection){
-			cout << "final region in passage, create sequence of regions" << endl;
+			// cout << "final region in passage, create sequence of regions" << endl;
 			// vector<int> startregionIDs;
 			// for(int i = 0; i < regions.size(); i++){
 			// 	for(int j = 0; j < regions[i].getPassageValues().size(); j++){
@@ -727,26 +727,26 @@ class Task {
 					startid = i;
 				}
 			}
-			if(startid > -1){
-				// startregionIDs.push_back(startid);
-				cout << "startid " << startid << endl;
-			}
-			else{
-				cout << "could not find region close to intersection" << endl;
-				// continue;
-			}
+			// if(startid > -1){
+			// 	// startregionIDs.push_back(startid);
+			// 	cout << "startid " << startid << endl;
+			// }
+			// else{
+			// 	cout << "could not find region close to intersection" << endl;
+			// 	// continue;
+			// }
 			if(regionID == startid or startid == -1){
-				cout << "same region, just add that one " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << endl;
+				// cout << "same region, just add that one " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << endl;
 				skeleton_waypoints.push_back(sk_waypoint(0, regions[regionID], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 			}
 			else{
 				priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
 				RegionNode start_rn = RegionNode(regions[regionID], regionID, 0);
-				cout << "regionID exits " << regions[regionID].getMinExits().size() << endl;
+				// cout << "regionID exits " << regions[regionID].getMinExits().size() << endl;
 				for(int i = 0; i < regions[regionID].getMinExits().size(); i++){
 					RegionNode neighbor = RegionNode(regions[regions[regionID].getMinExits()[i].getExitRegion()], regions[regionID].getMinExits()[i].getExitRegion(), regions[regionID].getMinExits()[i].getExitDistance());
 					neighbor.addToRegionSequence(start_rn);
-					cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
+					// cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
 					bool foundPassage = false;
 					bool foundIntersection = false;
 					vector<int> passageValues = neighbor.region.getPassageValues();
@@ -767,11 +767,11 @@ class Task {
 				}
 				vector<int> already_searched;
 				already_searched.push_back(start_rn.regionID);
-				cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+				// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				RegionNode final_rn;
 				while(rn_queue.size() > 0){
 					RegionNode current_neighbor = rn_queue.top();
-					cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
+					// cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
 					already_searched.push_back(current_neighbor.regionID);
 					rn_queue.pop();
 					if(current_neighbor.regionID == startid){
@@ -782,7 +782,7 @@ class Task {
 						RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
 						eRegion.setRegionSequence(current_neighbor.regionSequence);
 						eRegion.addToRegionSequence(current_neighbor);
-						cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
+						// cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
 						bool foundPassage = false;
 						bool foundIntersection = false;
 						vector<int> passageValues = eRegion.region.getPassageValues();
@@ -808,11 +808,11 @@ class Task {
 							rn_queue.push(eRegion);
 						}
 					}
-					cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+					// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				}
-				cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+				// cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				if(final_rn.regionID == -1){
-					cout << "cannot find connection, just add regionid and startid " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << " " << regions[startid].getCenter().get_x() << " " << regions[startid].getCenter().get_y() << " " << regions[startid].getRadius() << endl;
+					// cout << "cannot find connection, just add regionid and startid " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << " " << regions[startid].getCenter().get_x() << " " << regions[startid].getCenter().get_y() << " " << regions[startid].getRadius() << endl;
 					skeleton_waypoints.push_back(sk_waypoint(0, regions[regionID], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 					skeleton_waypoints.push_back(sk_waypoint(0, regions[startid], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 				}
@@ -820,15 +820,15 @@ class Task {
 					vector<RegionNode> region_sequence = final_rn.regionSequence;
 					for(int i = 0; i < region_sequence.size()-1; i++){
 						skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[i].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-						cout << region_sequence[i].region.getCenter().get_x() << " " << region_sequence[i].region.getCenter().get_y() << " " << region_sequence[i].region.getRadius() << endl;
+						// cout << region_sequence[i].region.getCenter().get_x() << " " << region_sequence[i].region.getCenter().get_y() << " " << region_sequence[i].region.getRadius() << endl;
 						for(int j = 0; j < region_sequence[i].region.getMinExits().size(); j++){
 							if(region_sequence[i].region.getMinExits()[j].getExitRegion() == region_sequence[i+1].regionID){
 								if(region_sequence[i].region.inRegion(region_sequence[i].region.getMinExits()[j].getConnectionPoints()[0])){
-									cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
+									// cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
 									skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[i].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
 								}
 								else{
-									cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
+									// cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
 									vector<CartesianPoint> path_from_edge = region_sequence[i].region.getMinExits()[j].getConnectionPoints();
 									std::reverse(path_from_edge.begin(),path_from_edge.end());
 									skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
@@ -837,17 +837,17 @@ class Task {
 							}
 						}
 					}
-					cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+					// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 					skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[region_sequence.size()-1].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-					cout << region_sequence[region_sequence.size()-1].region.getCenter().get_x() << " " << region_sequence[region_sequence.size()-1].region.getCenter().get_y() << " " << region_sequence[region_sequence.size()-1].region.getRadius() << endl;
+					// cout << region_sequence[region_sequence.size()-1].region.getCenter().get_x() << " " << region_sequence[region_sequence.size()-1].region.getCenter().get_y() << " " << region_sequence[region_sequence.size()-1].region.getRadius() << endl;
 					for(int j = 0; j < region_sequence[region_sequence.size()-1].region.getMinExits().size(); j++){
 						if(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getExitRegion() == final_rn.regionID){
 							if(region_sequence[region_sequence.size()-1].region.inRegion(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints()[0])){
-								cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
+								// cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
 								skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
 							}
 							else{
-								cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
+								// cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
 								vector<CartesianPoint> path_from_edge = region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints();
 								std::reverse(path_from_edge.begin(),path_from_edge.end());
 								skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
@@ -856,8 +856,8 @@ class Task {
 						}
 					}
 					skeleton_waypoints.push_back(sk_waypoint(0, final_rn.region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-					cout << final_rn.region.getCenter().get_x() << " " << final_rn.region.getCenter().get_y() << " " << final_rn.region.getRadius() << endl;
-					cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+					// cout << final_rn.region.getCenter().get_x() << " " << final_rn.region.getCenter().get_y() << " " << final_rn.region.getRadius() << endl;
+					// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 					// sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), vector<CartesianPoint>(), passage_graph_edges[nPassage], 1);
 					// new_passage.setPassageLabel(nPassage);
 					// new_passage.setPassageCentroid(average_passage[nPassage-1]);
@@ -866,29 +866,29 @@ class Task {
 				}
 			}
 		}
-		cout << "create plan in passage graph" << endl;
+		// cout << "create plan in passage graph" << endl;
 		int step = -1;
 		int max_step = waypointInd.size()-1;
 		int start_passage = skeleton_waypoints.size();
 		list<int>::iterator it;
 		for ( it = waypointInd.begin(); it != waypointInd.end(); it++ ){
 			step = step + 1;
-			cout << "node " << (*it) << " step " << step << endl;
+			// cout << "node " << (*it) << " step " << step << endl;
 			int intersection1 = navGraph->getNode(*it).getIntersectionID();
-			cout << "intersection1 " << intersection1 << endl;
+			// cout << "intersection1 " << intersection1 << endl;
 			sk_waypoint new_waypoint = sk_waypoint(2, FORRRegion(), vector<CartesianPoint>(), passage_graph_nodes[intersection1], 1);
 			new_waypoint.setPassageLabel(intersection1);
 			new_waypoint.setPassageCentroid(average_passage[intersection1-1]);
 			skeleton_waypoints.push_back(new_waypoint);
-			cout << new_waypoint.getPassageCentroid().get_x() << " " << new_waypoint.getPassageCentroid().get_y() << endl;
+			// cout << new_waypoint.getPassageCentroid().get_x() << " " << new_waypoint.getPassageCentroid().get_y() << endl;
 			list<int>::iterator itr1;
 			itr1 = it;
 			advance(itr1, 1);
 			int forward_step = step + 1;
-			cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+			// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 			if(forward_step <= max_step){
 				int intersection2 = navGraph->getNode(*itr1).getIntersectionID();
-				cout << "intersection2 " << intersection2 << endl;
+				// cout << "intersection2 " << intersection2 << endl;
 				int passage12;
 				vector<CartesianPoint> passage_path;
 				for(int i = 0; i < passage_graph.size(); i++){
@@ -905,7 +905,7 @@ class Task {
 						break;
 					}
 				}
-				cout << "passage12 " << passage12 << endl;
+				// cout << "passage12 " << passage12 << endl;
 				// vector<int> regionID1;
 				// vector<int> regionID2;
 				vector<int> regionP12;
@@ -920,12 +920,12 @@ class Task {
 						// }
 						if(passageValues[j] == passage12){
 							regionP12.push_back(i);
-							cout << i << endl;
+							// cout << i << endl;
 							break;
 						}
 					}
 				}
-				cout << "regionP12 " << regionP12.size() << endl;
+				// cout << "regionP12 " << regionP12.size() << endl;
 				// if(regionID1.size() == 0){
 				// 	double min_dist = 10000000;
 				// 	int startid = -1;
@@ -967,7 +967,7 @@ class Task {
 				// 	regionID2.push_back(startid);
 				// }
 				if(regionP12.size() == 0){
-					cout << "no available regions in passage, use trail instead " << passage_path.size() << endl;
+					// cout << "no available regions in passage, use trail instead " << passage_path.size() << endl;
 					sk_waypoint new_passage = sk_waypoint(3, FORRRegion(), passage_path, passage_graph_edges[passage12], 1);
 					new_passage.setPassageLabel(passage12);
 					new_passage.setPassageCentroid(average_passage[passage12-1]);
@@ -991,20 +991,20 @@ class Task {
 							endid = regionP12[i];
 						}
 					}
-					cout << "startid " << startid << " endid " << endid << endl;
+					// cout << "startid " << startid << " endid " << endid << endl;
 					if(startid == endid){
-						cout << "same region, just add that one " << regions[startid].getCenter().get_x() << " " << regions[startid].getCenter().get_y() << " " << regions[startid].getRadius() << endl;
+						// cout << "same region, just add that one " << regions[startid].getCenter().get_x() << " " << regions[startid].getCenter().get_y() << " " << regions[startid].getRadius() << endl;
 						skeleton_waypoints.push_back(sk_waypoint(0, regions[startid], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 					}
 					else{
 						priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
 						vector<int> already_searched;
 						RegionNode start_rn = RegionNode(regions[startid], startid, 0);
-						cout << "startid exits " << regions[startid].getMinExits().size() << endl;
+						// cout << "startid exits " << regions[startid].getMinExits().size() << endl;
 						for(int i = 0; i < regions[startid].getMinExits().size(); i++){
 							RegionNode neighbor = RegionNode(regions[regions[startid].getMinExits()[i].getExitRegion()], regions[startid].getMinExits()[i].getExitRegion(), regions[startid].getMinExits()[i].getExitDistance());
 							neighbor.addToRegionSequence(start_rn);
-							cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
+							// cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
 							bool inPassage = false;
 							for(int p = 0; p < regionP12.size(); p++){
 								if(regionP12[p] == neighbor.regionID){
@@ -1017,11 +1017,11 @@ class Task {
 							}
 						}
 						already_searched.push_back(start_rn.regionID);
-						cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+						// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 						RegionNode final_rn;
 						while(rn_queue.size() > 0){
 							RegionNode current_neighbor = rn_queue.top();
-							cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
+							// cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
 							already_searched.push_back(current_neighbor.regionID);
 							rn_queue.pop();
 							if(current_neighbor.regionID == endid){
@@ -1032,7 +1032,7 @@ class Task {
 								RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
 								eRegion.setRegionSequence(current_neighbor.regionSequence);
 								eRegion.addToRegionSequence(current_neighbor);
-								cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
+								// cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
 								bool inPassage = false;
 								for(int p = 0; p < regionP12.size(); p++){
 									if(regionP12[p] == eRegion.regionID){
@@ -1051,11 +1051,11 @@ class Task {
 									rn_queue.push(eRegion);
 								}
 							}
-							cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+							// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 						}
-						cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+						// cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 						if(final_rn.regionID == -1){
-							cout << "cannot find connection, just add start and end " << regions[startid].getCenter().get_x() << " " << regions[startid].getCenter().get_y() << " " << regions[startid].getRadius() << " " << regions[endid].getCenter().get_x() << " " << regions[endid].getCenter().get_y() << " " << regions[endid].getRadius() << endl;
+							// cout << "cannot find connection, just add start and end " << regions[startid].getCenter().get_x() << " " << regions[startid].getCenter().get_y() << " " << regions[startid].getRadius() << " " << regions[endid].getCenter().get_x() << " " << regions[endid].getCenter().get_y() << " " << regions[endid].getRadius() << endl;
 							skeleton_waypoints.push_back(sk_waypoint(0, regions[startid], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 							skeleton_waypoints.push_back(sk_waypoint(0, regions[endid], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 						}
@@ -1063,15 +1063,15 @@ class Task {
 							vector<RegionNode> region_sequence = final_rn.regionSequence;
 							for(int i = 0; i < region_sequence.size()-1; i++){
 								skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[i].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-								cout << region_sequence[i].region.getCenter().get_x() << " " << region_sequence[i].region.getCenter().get_y() << " " << region_sequence[i].region.getRadius() << endl;
+								// cout << region_sequence[i].region.getCenter().get_x() << " " << region_sequence[i].region.getCenter().get_y() << " " << region_sequence[i].region.getRadius() << endl;
 								for(int j = 0; j < region_sequence[i].region.getMinExits().size(); j++){
 									if(region_sequence[i].region.getMinExits()[j].getExitRegion() == region_sequence[i+1].regionID){
 										if(region_sequence[i].region.inRegion(region_sequence[i].region.getMinExits()[j].getConnectionPoints()[0])){
-											cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
+											// cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
 											skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[i].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
 										}
 										else{
-											cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
+											// cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
 											vector<CartesianPoint> path_from_edge = region_sequence[i].region.getMinExits()[j].getConnectionPoints();
 											std::reverse(path_from_edge.begin(),path_from_edge.end());
 											skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
@@ -1080,17 +1080,17 @@ class Task {
 									}
 								}
 							}
-							cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+							// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 							skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[region_sequence.size()-1].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-							cout << region_sequence[region_sequence.size()-1].region.getCenter().get_x() << " " << region_sequence[region_sequence.size()-1].region.getCenter().get_y() << " " << region_sequence[region_sequence.size()-1].region.getRadius() << endl;
+							// cout << region_sequence[region_sequence.size()-1].region.getCenter().get_x() << " " << region_sequence[region_sequence.size()-1].region.getCenter().get_y() << " " << region_sequence[region_sequence.size()-1].region.getRadius() << endl;
 							for(int j = 0; j < region_sequence[region_sequence.size()-1].region.getMinExits().size(); j++){
 								if(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getExitRegion() == final_rn.regionID){
 									if(region_sequence[region_sequence.size()-1].region.inRegion(region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints()[0])){
-										cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
+										// cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
 										skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
 									}
 									else{
-										cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
+										// cout << region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints().size() << endl;
 										vector<CartesianPoint> path_from_edge = region_sequence[region_sequence.size()-1].region.getMinExits()[j].getConnectionPoints();
 										std::reverse(path_from_edge.begin(),path_from_edge.end());
 										skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
@@ -1099,8 +1099,8 @@ class Task {
 								}
 							}
 							skeleton_waypoints.push_back(sk_waypoint(0, final_rn.region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-							cout << final_rn.region.getCenter().get_x() << " " << final_rn.region.getCenter().get_y() << " " << final_rn.region.getRadius() << endl;
-							cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+							// cout << final_rn.region.getCenter().get_x() << " " << final_rn.region.getCenter().get_y() << " " << final_rn.region.getRadius() << endl;
+							// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 						}
 					}
 				}
@@ -1111,9 +1111,9 @@ class Task {
 				// skeleton_waypoints.push_back(new_passage);
 				// cout << new_passage.getPassageCentroid().get_x() << " " << new_passage.getPassageCentroid().get_y() << endl;
 			}
-			cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+			// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 		}
-		cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+		// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 		// int end_passage = skeleton_waypoints.size();
 		// for(int i = start_passage+1; i < end_passage-1; i+=3){
 		// 	for(int j = 0; j < graph_through_intersections.size(); j++){
@@ -1147,7 +1147,7 @@ class Task {
 				}
 			}
 		}
-		cout << "first region in epilogue " << regionID << endl;
+		// cout << "first region in epilogue " << regionID << endl;
 		// if(regionID == -1){
 		// 	int nRegion = -1;
 		// 	for(int i = 0; i < regions.size() ; i++){
@@ -1193,7 +1193,7 @@ class Task {
 		// }
 		nPassage = passage_grid[(int)(x)][(int)(y)];
 		int end_intersection = navGraph->getNode(waypointInd.back()).getIntersectionID();
-		cout << "nPassage " << nPassage << " end_intersection " << end_intersection << endl;
+		// cout << "nPassage " << nPassage << " end_intersection " << end_intersection << endl;
 		if(origPlansInds[1].size() > 0){
 			// nPassage = passage_grid[(int)(origNavGraph->getNode(origPlansInds[1].front()).getX()/100.0)][(int)(origNavGraph->getNode(origPlansInds[1].front()).getY()/100.0)];
 			vector<int> passageValues = regions[regionID].getPassageValues();
@@ -1207,9 +1207,9 @@ class Task {
 				}
 			}
 		}
-		cout << "nPassage " << nPassage << " end_intersection " << end_intersection << endl;
+		// cout << "nPassage " << nPassage << " end_intersection " << end_intersection << endl;
 		if(passage_graph_nodes.count(nPassage) == 0 and nPassage > 0 and nPassage != end_intersection){
-			cout << "first region in passage, create sequence of regions" << endl;
+			// cout << "first region in passage, create sequence of regions" << endl;
 			// vector<int> endregionIDs;
 			// for(int i = 0; i < regions.size(); i++){
 			// 	for(int j = 0; j < regions[i].getPassageValues().size(); j++){
@@ -1255,26 +1255,26 @@ class Task {
 					endid = i;
 				}
 			}
-			if(endid > -1){
-				// endregionIDs.push_back(endid);
-				cout << "endid " << endid << endl;
-			}
-			else{
-				cout << "could not find region close to intersection" << endl;
-				// continue;
-			}
+			// if(endid > -1){
+			// 	// endregionIDs.push_back(endid);
+			// 	cout << "endid " << endid << endl;
+			// }
+			// else{
+			// 	cout << "could not find region close to intersection" << endl;
+			// 	// continue;
+			// }
 			if(regionID == endid or endid == -1){
-				cout << "same region, just add that one " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << endl;
+				// cout << "same region, just add that one " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << endl;
 				skeleton_waypoints.push_back(sk_waypoint(0, regions[regionID], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 			}
 			else{
 				priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
 				RegionNode start_rn = RegionNode(regions[regionID], regionID, 0);
-				cout << "regionID exits " << regions[regionID].getMinExits().size() << endl;
+				// cout << "regionID exits " << regions[regionID].getMinExits().size() << endl;
 				for(int i = 0; i < regions[regionID].getMinExits().size(); i++){
 					RegionNode neighbor = RegionNode(regions[regions[regionID].getMinExits()[i].getExitRegion()], regions[regionID].getMinExits()[i].getExitRegion(), regions[regionID].getMinExits()[i].getExitDistance());
 					neighbor.addToRegionSequence(start_rn);
-					cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
+					// cout << "neighbor " << i << " ID " << neighbor.regionID << " regionSequence " << neighbor.regionSequence.size() << endl;
 					bool foundPassage = false;
 					bool foundIntersection = false;
 					vector<int> passageValues = neighbor.region.getPassageValues();
@@ -1295,11 +1295,11 @@ class Task {
 				}
 				vector<int> already_searched;
 				already_searched.push_back(start_rn.regionID);
-				cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+				// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				RegionNode final_rn;
 				while(rn_queue.size() > 0){
 					RegionNode current_neighbor = rn_queue.top();
-					cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
+					// cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
 					already_searched.push_back(current_neighbor.regionID);
 					rn_queue.pop();
 					if(current_neighbor.regionID == endid){
@@ -1310,7 +1310,7 @@ class Task {
 						RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
 						eRegion.setRegionSequence(current_neighbor.regionSequence);
 						eRegion.addToRegionSequence(current_neighbor);
-						cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
+						// cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << " regionSequence " << eRegion.regionSequence.size() << endl;
 						bool foundPassage = false;
 						bool foundIntersection = false;
 						vector<int> passageValues = eRegion.region.getPassageValues();
@@ -1336,27 +1336,27 @@ class Task {
 							rn_queue.push(eRegion);
 						}
 					}
-					cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+					// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				}
-				cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+				// cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				if(final_rn.regionID == -1){
-					cout << "cannot find connection, just add regionid and endid " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << " " << regions[endid].getCenter().get_x() << " " << regions[endid].getCenter().get_y() << " " << regions[endid].getRadius() << endl;
+					// cout << "cannot find connection, just add regionid and endid " << regions[regionID].getCenter().get_x() << " " << regions[regionID].getCenter().get_y() << " " << regions[regionID].getRadius() << " " << regions[endid].getCenter().get_x() << " " << regions[endid].getCenter().get_y() << " " << regions[endid].getRadius() << endl;
 					skeleton_waypoints.push_back(sk_waypoint(0, regions[endid], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 					skeleton_waypoints.push_back(sk_waypoint(0, regions[regionID], vector<CartesianPoint>(), vector< vector<int> >(), 1));
 				}
 				else{
 					skeleton_waypoints.push_back(sk_waypoint(0, final_rn.region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-					cout << final_rn.region.getCenter().get_x() << " " << final_rn.region.getCenter().get_y() << " " << final_rn.region.getRadius() << endl;
+					// cout << final_rn.region.getCenter().get_x() << " " << final_rn.region.getCenter().get_y() << " " << final_rn.region.getRadius() << endl;
 					vector<RegionNode> region_sequence = final_rn.regionSequence;
 					std::reverse(region_sequence.begin(),region_sequence.end());
 					for(int j = 0; j < region_sequence[0].region.getMinExits().size(); j++){
 						if(region_sequence[0].region.getMinExits()[j].getExitRegion() == final_rn.regionID){
 							if(final_rn.region.inRegion(region_sequence[0].region.getMinExits()[j].getConnectionPoints()[0])){
-								cout << region_sequence[0].region.getMinExits()[j].getConnectionPoints().size() << endl;
+								// cout << region_sequence[0].region.getMinExits()[j].getConnectionPoints().size() << endl;
 								skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[0].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
 							}
 							else{
-								cout << region_sequence[0].region.getMinExits()[j].getConnectionPoints().size() << endl;
+								// cout << region_sequence[0].region.getMinExits()[j].getConnectionPoints().size() << endl;
 								vector<CartesianPoint> path_from_edge = region_sequence[0].region.getMinExits()[j].getConnectionPoints();
 								std::reverse(path_from_edge.begin(),path_from_edge.end());
 								skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
@@ -1366,15 +1366,15 @@ class Task {
 					}
 					for(int i = 0; i < region_sequence.size()-1; i++){
 						skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[i].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-						cout << region_sequence[i].region.getCenter().get_x() << " " << region_sequence[i].region.getCenter().get_y() << " " << region_sequence[i].region.getRadius() << endl;
+						// cout << region_sequence[i].region.getCenter().get_x() << " " << region_sequence[i].region.getCenter().get_y() << " " << region_sequence[i].region.getRadius() << endl;
 						for(int j = 0; j < region_sequence[i].region.getMinExits().size(); j++){
 							if(region_sequence[i].region.getMinExits()[j].getExitRegion() == region_sequence[i+1].regionID){
 								if(region_sequence[i].region.inRegion(region_sequence[i].region.getMinExits()[j].getConnectionPoints()[0])){
-									cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
+									// cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
 									skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), region_sequence[i].region.getMinExits()[j].getConnectionPoints(), vector< vector<int> >(), 1));
 								}
 								else{
-									cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
+									// cout << region_sequence[i].region.getMinExits()[j].getConnectionPoints().size() << endl;
 									vector<CartesianPoint> path_from_edge = region_sequence[i].region.getMinExits()[j].getConnectionPoints();
 									std::reverse(path_from_edge.begin(),path_from_edge.end());
 									skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
@@ -1383,31 +1383,31 @@ class Task {
 							}
 						}
 					}
-					cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+					// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 					skeleton_waypoints.push_back(sk_waypoint(0, region_sequence[region_sequence.size()-1].region, vector<CartesianPoint>(), vector< vector<int> >(), 1));
-					cout << region_sequence[region_sequence.size()-1].region.getCenter().get_x() << " " << region_sequence[region_sequence.size()-1].region.getCenter().get_y() << " " << region_sequence[region_sequence.size()-1].region.getRadius() << endl;
-					cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+					// cout << region_sequence[region_sequence.size()-1].region.getCenter().get_x() << " " << region_sequence[region_sequence.size()-1].region.getCenter().get_y() << " " << region_sequence[region_sequence.size()-1].region.getRadius() << endl;
+					// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 				}
 			}
 		}
 		if(origPlansInds[1].size() > 0){
-			cout << "epilogue creation" << endl;
+			// cout << "epilogue creation" << endl;
 			int step = -1;
 			int max_step = origPlansInds[1].size()-1;
 			list<int>::iterator it;
 			for ( it = origPlansInds[1].begin(); it != origPlansInds[1].end(); it++ ){
 				step = step + 1;
-				cout << "node " << (*it) << " step " << step << endl;
+				// cout << "node " << (*it) << " step " << step << endl;
 				double r_x = origNavGraph->getNode(*it).getX()/100.0;
 				double r_y = origNavGraph->getNode(*it).getY()/100.0;
 				double r = origNavGraph->getNode(*it).getRadius();
-				cout << r_x << " " << r_y << " " << r << endl;
+				// cout << r_x << " " << r_y << " " << r << endl;
 				skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(r_x,r_y), r), vector<CartesianPoint>(), vector< vector<int> >(), 1));
 				list<int>::iterator itr1; 
 				itr1 = it; 
 				advance(itr1, 1);
 				int forward_step = step + 1;
-				cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+				// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 				if(forward_step <= max_step){
 					vector<CartesianPoint> path_from_edge = origNavGraph->getEdge(*it, *itr1)->getEdgePath(true);
 					if(FORRRegion(CartesianPoint(r_x,r_y), r).inRegion(path_from_edge[0])){
@@ -1418,7 +1418,7 @@ class Task {
 						skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 1));
 					}
 				}
-				cout << "num of waypoints " << skeleton_waypoints.size() << endl;
+				// cout << "num of waypoints " << skeleton_waypoints.size() << endl;
 			}
 			double e_x = origNavGraph->getNode(origPlansInds[1].back()).getX()/100.0;
 			double e_y = origNavGraph->getNode(origPlansInds[1].back()).getY()/100.0;
@@ -1432,7 +1432,7 @@ class Task {
 					if(regions[i].visibleFromRegion(CartesianPoint(x, y), 20) and regions[i].getMinExits().size() > 0){
 						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(x, y));
 						if(dist_to_region < vDist){
-							cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
 							vRegion = i;
 							vDist = dist_to_region;
 						}
@@ -1443,7 +1443,7 @@ class Task {
 					e_vis = true;
 				}
 			}
-			cout << "e_vis " << e_vis << endl;
+			// cout << "e_vis " << e_vis << endl;
 			if(e_vis){
 				vector<CartesianPoint> path_from_e;
 				CartesianPoint start = e_lineseg.get_endpoints().first;
@@ -1455,7 +1455,7 @@ class Task {
 					path_from_e.push_back(CartesianPoint(tx, ty));
 				}
 				skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_e, vector< vector<int> >(), 0));
-				cout << "added e_vis " << path_from_e.size() << endl;
+				// cout << "added e_vis " << path_from_e.size() << endl;
 			}
 		}
 		cout << "final passage num of waypoints " << skeleton_waypoints.size() << endl;
@@ -1476,7 +1476,7 @@ class Task {
 					if(regions[i].visibleFromRegion(CartesianPoint(source.getX(), source.getY()), 20) and regions[i].getMinExits().size() > 0){
 						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(source.getX(), source.getY()));
 						if(dist_to_region < vDist){
-							cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
 							vRegion = i;
 							vDist = dist_to_region;
 						}
@@ -1499,7 +1499,7 @@ class Task {
 					if(regions[i].visibleFromRegion(CartesianPoint(x, y), 20) and regions[i].getMinExits().size() > 0){
 						double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(x, y));
 						if(dist_to_region < vDist){
-							cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+							// cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
 							vRegion = i;
 							vDist = dist_to_region;
 						}
@@ -1510,7 +1510,7 @@ class Task {
 					e_vis = true;
 				}
 			}
-			cout << "s_vis " << s_vis << " e_vis " << e_vis << endl;
+			// cout << "s_vis " << s_vis << " e_vis " << e_vis << endl;
 			if(s_vis){
 				vector<CartesianPoint> path_from_s;
 				CartesianPoint start = s_lineseg.get_endpoints().second;
@@ -1522,22 +1522,22 @@ class Task {
 					path_from_s.push_back(CartesianPoint(tx, ty));
 				}
 				alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_s, vector< vector<int> >(), 0));
-				cout << "added s_vis " << path_from_s.size() << endl;
+				// cout << "added s_vis " << path_from_s.size() << endl;
 			}
 			list<int>::iterator it;
 			for ( it = origPlansInds[2].begin(); it != origPlansInds[2].end(); it++ ){
 				step = step + 1;
-				cout << "node " << (*it) << " step " << step << endl;
+				// cout << "node " << (*it) << " step " << step << endl;
 				double r_x = origNavGraph->getNode(*it).getX()/100.0;
 				double r_y = origNavGraph->getNode(*it).getY()/100.0;
 				double r = origNavGraph->getNode(*it).getRadius();
-				cout << r_x << " " << r_y << " " << r << endl;
+				// cout << r_x << " " << r_y << " " << r << endl;
 				alternate_skeleton_waypoints.push_back(sk_waypoint(0, FORRRegion(CartesianPoint(r_x,r_y), r), vector<CartesianPoint>(), vector< vector<int> >(), 0));
 				list<int>::iterator itr1; 
 				itr1 = it; 
 				advance(itr1, 1);
 				int forward_step = step + 1;
-				cout << "max_step " << max_step << " forward_step " << forward_step << endl;
+				// cout << "max_step " << max_step << " forward_step " << forward_step << endl;
 				if(forward_step <= max_step){
 					// if(origNavGraph->getEdge(*it, *itr1)->getFrom() == *it){
 					// 	alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), origNavGraph->getEdge(*it, *itr1)->getEdgePath(true)));
@@ -1554,7 +1554,7 @@ class Task {
 						alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_edge, vector< vector<int> >(), 0));
 					}
 				}
-				cout << "final skeleton num of waypoints " << alternate_skeleton_waypoints.size() << endl;
+				// cout << "final skeleton num of waypoints " << alternate_skeleton_waypoints.size() << endl;
 			}
 			if(e_vis){
 				vector<CartesianPoint> path_from_e;
@@ -1567,14 +1567,14 @@ class Task {
 					path_from_e.push_back(CartesianPoint(tx, ty));
 				}
 				alternate_skeleton_waypoints.push_back(sk_waypoint(1, FORRRegion(), path_from_e, vector< vector<int> >(), 0));
-				cout << "added e_vis " << path_from_e.size() << endl;
+				// cout << "added e_vis " << path_from_e.size() << endl;
 			}
-			cout << "num of waypoints " << alternate_skeleton_waypoints.size() << endl;
+			// cout << "num of waypoints " << alternate_skeleton_waypoints.size() << endl;
 		}
 		if(alternate_skeleton_waypoints.size() > 0){
 			double main_path_cost = 0;
 			for(int i = 0; i < skeleton_waypoints.size()-1; i++){
-				cout << "type1 " << skeleton_waypoints[i].getType() << " type2 " << skeleton_waypoints[i+1].getType() << endl;
+				// cout << "type1 " << skeleton_waypoints[i].getType() << " type2 " << skeleton_waypoints[i+1].getType() << endl;
 				if(skeleton_waypoints[i].getType() == 1 and skeleton_waypoints[i+1].getType() == 0){
 					vector<CartesianPoint> sw_path = skeleton_waypoints[i].getPath();
 					for(int j = 0; j < sw_path.size()-1; j++){

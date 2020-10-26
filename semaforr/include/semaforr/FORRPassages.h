@@ -206,13 +206,13 @@ public:
           //   }
           // }
         }
-        cout << "After decisions_grid" << endl;
-        for(int i = 0; i < decisions_grid.size(); i++){
-          for(int j = 0; j < decisions_grid[0].size(); j++){
-            cout << decisions_grid[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "After decisions_grid" << endl;
+        // for(int i = 0; i < decisions_grid.size(); i++){
+        //   for(int j = 0; j < decisions_grid[0].size(); j++){
+        //     cout << decisions_grid[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         vector< vector<int> > lasers_grid;
         for(int i = 0; i < highway_grid.size(); i++){
           vector<int> col;
@@ -402,13 +402,13 @@ public:
             }
           }
         }
-        cout << "After lasers_grid" << endl;
-        for(int i = 0; i < lasers_grid.size(); i++){
-          for(int j = 0; j < lasers_grid[0].size(); j++){
-            cout << lasers_grid[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "After lasers_grid" << endl;
+        // for(int i = 0; i < lasers_grid.size(); i++){
+        //   for(int j = 0; j < lasers_grid[0].size(); j++){
+        //     cout << lasers_grid[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         // cout << "After laser_grid_connections" << endl;
         // for(int i = 0; i < laser_grid_connections.size(); i++){
         //   for(int j = 0; j < laser_grid_connections[0].size(); j++){
@@ -419,16 +419,16 @@ public:
         //   }
         //   cout << endl;
         // }
-        cout << "After decisions_grid + lasers_grid" << endl;
+        // cout << "After decisions_grid + lasers_grid" << endl;
         for(int i = 0; i < decisions_grid.size(); i++){
           for(int j = 0; j < decisions_grid[0].size(); j++){
             // if(lasers_grid[i][j] > 1 and ((laser_grid_connections[i][j][0] > 1 and laser_grid_connections[i][j][5] > 1) or (laser_grid_connections[i][j][1] > 1 and laser_grid_connections[i][j][4] > 1) or (laser_grid_connections[i][j][2] > 1 and laser_grid_connections[i][j][7] > 1) or (laser_grid_connections[i][j][3] > 1 and laser_grid_connections[i][j][6] > 1)) and decisions_grid[i][j] == 0){
             if(lasers_grid[i][j] > 4 and decisions_grid[i][j] == 0){
               decisions_grid[i][j] = 1;
             }
-            cout << decisions_grid[i][j] << " ";
+            // cout << decisions_grid[i][j] << " ";
           }
-          cout << endl;
+          // cout << endl;
         }
         vector< vector<int> > passage_grid;
         for(int i = 0; i < highway_grid.size(); i++){
@@ -525,13 +525,13 @@ public:
           }
           passage_grid.push_back(col);
         }
-        cout << "After passage_grid" << endl;
-        for(int i = 0; i < passage_grid.size(); i++){
-          for(int j = 0; j < passage_grid[0].size(); j++){
-            cout << passage_grid[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "After passage_grid" << endl;
+        // for(int i = 0; i < passage_grid.size(); i++){
+        //   for(int j = 0; j < passage_grid[0].size(); j++){
+        //     cout << passage_grid[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         // cout << "Before disconnected_cells" << endl;
         // vector < vector<int> > disconnected_cells;
         // for(int i = 0; i < highway_grid.size(); i++){
@@ -737,21 +737,21 @@ public:
             }
           }
         }
-        cout << "final horizontal_component " << horizontal_component << endl;
-        cout << "After final_horizontal" << endl;
-        for(int i = 0; i < final_horizontal.size(); i++){
-          for(int j = 0; j < final_horizontal[0].size(); j++){
-            cout << final_horizontal[i][j] << " ";
-          }
-          cout << endl;
-        }
-        for(int i = 0; i < final_horizontal.size(); i++){
-          for(int j = 0; j < final_horizontal[0].size(); j++){
-            if(final_horizontal[i][j] > 0){
-              cout << i << " " << j << endl;
-            }
-          }
-        }
+        // cout << "final horizontal_component " << horizontal_component << endl;
+        // cout << "After final_horizontal" << endl;
+        // for(int i = 0; i < final_horizontal.size(); i++){
+        //   for(int j = 0; j < final_horizontal[0].size(); j++){
+        //     cout << final_horizontal[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
+        // for(int i = 0; i < final_horizontal.size(); i++){
+        //   for(int j = 0; j < final_horizontal[0].size(); j++){
+        //     if(final_horizontal[i][j] > 0){
+        //       cout << i << " " << j << endl;
+        //     }
+        //   }
+        // }
         vector < vector<int> > horizontal_ends;
         for(int i = 1; i <= horizontal_component; i++){
           // cout << "horizontal_component " << i << endl;
@@ -920,21 +920,21 @@ public:
             }
           }
         }
-        cout << "final vertical_component " << vertical_component << endl;
-        cout << "After final_vertical" << endl;
-        for(int i = 0; i < final_vertical.size(); i++){
-          for(int j = 0; j < final_vertical[0].size(); j++){
-            cout << final_vertical[i][j] << " ";
-          }
-          cout << endl;
-        }
-        for(int i = 0; i < final_vertical.size(); i++){
-          for(int j = 0; j < final_vertical[0].size(); j++){
-            if(final_vertical[i][j] > 0){
-              cout << i << " " << j << endl;
-            }
-          }
-        }
+        // cout << "final vertical_component " << vertical_component << endl;
+        // cout << "After final_vertical" << endl;
+        // for(int i = 0; i < final_vertical.size(); i++){
+        //   for(int j = 0; j < final_vertical[0].size(); j++){
+        //     cout << final_vertical[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
+        // for(int i = 0; i < final_vertical.size(); i++){
+        //   for(int j = 0; j < final_vertical[0].size(); j++){
+        //     if(final_vertical[i][j] > 0){
+        //       cout << i << " " << j << endl;
+        //     }
+        //   }
+        // }
         vector < vector<int> > vertical_ends;
         for(int i = 1; i <= vertical_component; i++){
           // cout << "vertical_component " << i << endl;
@@ -1029,13 +1029,13 @@ public:
         for(int i = 0; i < vertical_ends.size(); i++){
           final_combined[vertical_ends[i][0]][vertical_ends[i][1]] = 1;
         }
-        cout << "After ends" << endl;
-        for(int i = 0; i < final_combined.size(); i++){
-          for(int j = 0; j < final_combined[0].size(); j++){
-            cout << final_combined[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "After ends" << endl;
+        // for(int i = 0; i < final_combined.size(); i++){
+        //   for(int j = 0; j < final_combined[0].size(); j++){
+        //     cout << final_combined[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         // for(int i = 0; i < horizontal_unconnected.size(); i++){
         //   final_combined[horizontal_unconnected[i][0]][horizontal_unconnected[i][1]] = 1;
         // }
@@ -1077,14 +1077,14 @@ public:
             }
           }
         }
-        cout << "final intersection_component " << intersection_component << endl;
-        cout << "After intersections" << endl;
-        for(int i = 0; i < intersections.size(); i++){
-          for(int j = 0; j < intersections[0].size(); j++){
-            cout << intersections[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "final intersection_component " << intersection_component << endl;
+        // cout << "After intersections" << endl;
+        // for(int i = 0; i < intersections.size(); i++){
+        //   for(int j = 0; j < intersections[0].size(); j++){
+        //     cout << intersections[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
 
         vector < vector<int> > passages_without_intersections;
         for(int i = 0; i < final_horizontal.size(); i++){
@@ -1124,14 +1124,14 @@ public:
             }
           }
         }
-        cout << "final passage_component " << passage_component << endl;
-        cout << "After pass_wo_int" << endl;
-        for(int i = 0; i < pass_wo_int.size(); i++){
-          for(int j = 0; j < pass_wo_int[0].size(); j++){
-            cout << pass_wo_int[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "final passage_component " << passage_component << endl;
+        // cout << "After pass_wo_int" << endl;
+        // for(int i = 0; i < pass_wo_int.size(); i++){
+        //   for(int j = 0; j < pass_wo_int[0].size(); j++){
+        //     cout << pass_wo_int[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         // for(int k = 1; k <= passage_component; k++){
         //   int minx = 100000;
         //   int maxx = -1;
@@ -1162,15 +1162,15 @@ public:
             }
           }
         }
-        cout << "After intersections + pass_wo_int" << endl;
-        for(int i = 0; i < intersections.size(); i++){
-          for(int j = 0; j < intersections[0].size(); j++){
-            cout << intersections[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "After intersections + pass_wo_int" << endl;
+        // for(int i = 0; i < intersections.size(); i++){
+        //   for(int j = 0; j < intersections[0].size(); j++){
+        //     cout << intersections[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         int max_component = intersection_component + passage_component;
-        cout << "max_component " << max_component << endl;
+        // cout << "max_component " << max_component << endl;
 
         vector< vector<int> > edges;
         for(int i = 0; i < intersections.size(); i++){
@@ -1271,13 +1271,13 @@ public:
             }
           }
         }
-        cout << "after graph" << endl;
-        for(int i = 0; i < graph.size(); i++){
-          cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
-        }
-        cout << "one_sided_edges " << one_sided_edges.size() << endl;
+        // cout << "after graph" << endl;
+        // for(int i = 0; i < graph.size(); i++){
+        //   cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+        // }
+        // cout << "one_sided_edges " << one_sided_edges.size() << endl;
         for(int i = 0; i < one_sided_edges.size(); i++){
-          cout << one_sided_edges[i] << endl;
+          // cout << one_sided_edges[i] << endl;
           for(int j = 0; j < intersections.size(); j++){
             for(int k = 0; k < intersections[0].size(); k++){
               if(intersections[j][k] == one_sided_edges[i]){
@@ -1286,14 +1286,14 @@ public:
             }
           }
         }
-        cout << "After removed one sided edges" << endl;
-        for(int i = 0; i < intersections.size(); i++){
-          for(int j = 0; j < intersections[0].size(); j++){
-            cout << intersections[i][j] << " ";
-          }
-          cout << endl;
-        }
-        cout << "checking if graph is connected" << endl;
+        // cout << "After removed one sided edges" << endl;
+        // for(int i = 0; i < intersections.size(); i++){
+        //   for(int j = 0; j < intersections[0].size(); j++){
+        //     cout << intersections[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
+        // cout << "checking if graph is connected" << endl;
         vector< set<int> > components;
         for(int j = 0; j < graph.size(); j++){
           // cout << j << " " << graph[j][0] << " " << graph[j][1] << " " << graph[j][2] << endl;
@@ -1407,15 +1407,15 @@ public:
             }
           }
         }
-        cout << "After removed smallest components" << endl;
-        for(int i = 0; i < intersections.size(); i++){
-          for(int j = 0; j < intersections[0].size(); j++){
-            cout << intersections[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "After removed smallest components" << endl;
+        // for(int i = 0; i < intersections.size(); i++){
+        //   for(int j = 0; j < intersections[0].size(); j++){
+        //     cout << intersections[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
 
-        cout << "before missing_labels" << endl;
+        // cout << "before missing_labels" << endl;
         vector<int> missing_labels;
         for(int i = 1; i <= max_component; i++){
           bool found = false;
@@ -1431,14 +1431,14 @@ public:
             }
           }
           if(found == false){
-            cout << "missing " << i << endl;
+            // cout << "missing " << i << endl;
             missing_labels.push_back(i);
           }
         }
-        cout << "missing_labels " << missing_labels.size() << " new_ind " << new_ind << endl;
+        // cout << "missing_labels " << missing_labels.size() << " new_ind " << new_ind << endl;
         for(int i = missing_labels.size()-1; i >= 0; i--){
           int current_ind = missing_labels[i];
-          cout << "current_ind " << current_ind << endl;
+          // cout << "current_ind " << current_ind << endl;
           for(int j = 0; j < intersections.size(); j++){
             for(int k = 0; k < intersections[0].size(); k++){
               if(intersections[j][k] > current_ind){
@@ -1462,14 +1462,14 @@ public:
             }
           }
         }
-        cout << "new_ind " << new_ind << endl;
-        cout << "After fixed missing_labels" << endl;
-        for(int i = 0; i < intersections.size(); i++){
-          for(int j = 0; j < intersections[0].size(); j++){
-            cout << intersections[i][j] << " ";
-          }
-          cout << endl;
-        }
+        // cout << "new_ind " << new_ind << endl;
+        // cout << "After fixed missing_labels" << endl;
+        // for(int i = 0; i < intersections.size(); i++){
+        //   for(int j = 0; j < intersections[0].size(); j++){
+        //     cout << intersections[i][j] << " ";
+        //   }
+        //   cout << endl;
+        // }
         vector< vector<int> > fixed_graph;
         for(int i = 0; i < graph.size(); i++){
           if(graph[i][0] != graph[i][2]){
@@ -1477,10 +1477,10 @@ public:
           }
         }
         graph = fixed_graph;
-        cout << "after fixed graph" << endl;
-        for(int i = 0; i < graph.size(); i++){
-          cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
-        }
+        // cout << "after fixed graph" << endl;
+        // for(int i = 0; i < graph.size(); i++){
+        //   cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+        // }
 
         // cout << "graph_nodes" << endl;
         for(int i = 1; i < new_ind+1; i++){
@@ -1586,7 +1586,7 @@ public:
     }
 
     void learnPassageTrails(vector<CartesianPoint> stepped_history, vector < vector<CartesianPoint> > stepped_laser_history) {
-        cout << "creating trails between intersections" << endl;
+        // cout << "creating trails between intersections" << endl;
         vector<double> dist_between_steps;
         for(int k = 0; k < stepped_history.size(); k++){
           double start_x = stepped_history[k].get_x();
@@ -1628,15 +1628,15 @@ public:
             }
           }
         }
-        cout << "found points associated with each intersection" << endl;
+        // cout << "found points associated with each intersection" << endl;
         
         // vector<bool> reverse_order;
         for(int i = 0; i < reduced_graph.size(); i++){
-          cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
+          // cout << i << " " << reduced_graph[i][0] << " " << reduced_graph[i][1] << " " << reduced_graph[i][2] << endl;
           vector<int> intersection1_points = node_steps[reduced_graph[i][0]];
           vector<int> intersection2_points = node_steps[reduced_graph[i][2]];
           vector< vector<int> > passage12_points = graph_edges_map[reduced_graph[i][1]];
-          cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
+          // cout << "intersection1_points " << intersection1_points.size() << " intersection2_points " << intersection2_points.size() << endl;
           vector<int> start_ind;
           vector<int> end_ind;
           vector<int> length_path;
@@ -1657,7 +1657,7 @@ public:
               }
             }
           }
-          cout << "length_path " << length_path.size() << " start_ind " << start_ind.size() << " end_ind " << end_ind.size() << " need_to_reverse " << need_to_reverse.size() << endl;
+          // cout << "length_path " << length_path.size() << " start_ind " << start_ind.size() << " end_ind " << end_ind.size() << " need_to_reverse " << need_to_reverse.size() << endl;
           vector<CartesianPoint> finalTrail;
           int pathID = -1;
           double min_length = 1000000;
@@ -1709,14 +1709,14 @@ public:
             for(int k = start_ind[j]; k < end_ind[j]; k++){
               trailLength = trailLength + dist_between_steps[k];
             }
-            cout << "trailLength " << trailLength << " count_overlap " << count_overlap << " passage12_points.size() " << passage12_points.size() << endl;
+            // cout << "trailLength " << trailLength << " count_overlap " << count_overlap << " passage12_points.size() " << passage12_points.size() << endl;
             if(trailLength < min_length and count_overlap / passage12_points.size() >= max_overlap and count_overlap / passage12_points.size() >= 0.6){
               min_length = trailLength;
               max_overlap = count_overlap / passage12_points.size();
               pathID = j;
             }
           }
-          cout << "pathID " << pathID << endl;
+          // cout << "pathID " << pathID << endl;
           if(pathID > -1){
             finalTrail.push_back(stepped_history[start_ind[pathID]]);
             for(int k = start_ind[pathID]; k < end_ind[pathID]; k++){
@@ -1732,7 +1732,7 @@ public:
               // cout << "reversing order of finalTrail" << endl;
               reverse(finalTrail.begin(),finalTrail.end());
             }
-            cout << "finalTrail " << finalTrail.size() << endl;
+            // cout << "finalTrail " << finalTrail.size() << endl;
           }
           bool addedTrail = false;
           if(finalTrail.size() > 0){
@@ -1747,18 +1747,18 @@ public:
             for(int j = 0; j < intersection1_points.size(); j++){
               for(int k = 0; k < intersection2_points.size(); k++){
                 if((int)(stepped_history[intersection1_points[j]].get_x()) == (int)(stepped_history[intersection2_points[k]].get_x())){
-                  cout << "match_x " << (int)(stepped_history[intersection1_points[j]].get_x()) << " match_x_dist " << abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())) << endl;
+                  // cout << "match_x " << (int)(stepped_history[intersection1_points[j]].get_x()) << " match_x_dist " << abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())) << endl;
                   match_x.push_back((int)(stepped_history[intersection1_points[j]].get_x()));
                   match_x_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_y()) - (int)(stepped_history[intersection2_points[k]].get_y())));
                 }
                 if((int)(stepped_history[intersection1_points[j]].get_y()) == (int)(stepped_history[intersection2_points[k]].get_y())){
-                  cout << "match_y " << (int)(stepped_history[intersection1_points[j]].get_y()) << " match_y_dist " << abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())) << endl;
+                  // cout << "match_y " << (int)(stepped_history[intersection1_points[j]].get_y()) << " match_y_dist " << abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())) << endl;
                   match_y.push_back((int)(stepped_history[intersection1_points[j]].get_y()));
                   match_y_dist.push_back(abs((int)(stepped_history[intersection1_points[j]].get_x()) - (int)(stepped_history[intersection2_points[k]].get_x())));
                 }
               }
             }
-            cout << "match_x " << match_x.size() << " match_y " << match_y.size() << endl;
+            // cout << "match_x " << match_x.size() << " match_y " << match_y.size() << endl;
             if(match_x.size() > 0 and match_y.size() == 0){
               for(int j = 0; j < match_x.size(); j++){
                 vector<CartesianPoint> passagePath;
@@ -1767,7 +1767,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs((int)(passagePath.size()) - match_x_dist[j]) << endl;
+                // cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs((int)(passagePath.size()) - match_x_dist[j]) << endl;
                 if(abs((int)(passagePath.size()) - match_x_dist[j]) <= 2 and passagePath.size() > 0){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1787,7 +1787,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs((int)(passagePath.size()) - match_y_dist[j]) << endl;
+                // cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs((int)(passagePath.size()) - match_y_dist[j]) << endl;
                 if(abs((int)(passagePath.size()) - match_y_dist[j]) <= 2 and passagePath.size() > 0){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1807,7 +1807,7 @@ public:
                     passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                   }
                 }
-                cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs((int)(passagePath.size()) - match_x_dist[j]) << endl;
+                // cout << "passagePath " << passagePath.size() << " match_x_dist " << match_x_dist[j] << " difference " << abs((int)(passagePath.size()) - match_x_dist[j]) << endl;
                 if(abs((int)(passagePath.size()) - match_x_dist[j]) <= 2 and passagePath.size() > 0){
                   sort(passagePath.begin(), passagePath.end());
                   if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1826,7 +1826,7 @@ public:
                       passagePath.push_back(CartesianPoint(passage12_points[k][0], passage12_points[k][1]));
                     }
                   }
-                  cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs((int)(passagePath.size()) - match_y_dist[j]) << endl;
+                  // cout << "passagePath " << passagePath.size() << " match_y_dist " << match_y_dist[j] << " difference " << abs((int)(passagePath.size()) - match_y_dist[j]) << endl;
                   if(abs((int)(passagePath.size()) - match_y_dist[j]) <= 2 and passagePath.size() > 0){
                     sort(passagePath.begin(), passagePath.end());
                     if(stepped_history[intersection1_points[0]].get_distance(passagePath[0]) > stepped_history[intersection1_points[0]].get_distance(passagePath[passagePath.size()-1])){
@@ -1840,7 +1840,7 @@ public:
               }
             }
           }
-          cout << "addedTrail " << addedTrail << endl;
+          // cout << "addedTrail " << addedTrail << endl;
           if(addedTrail == false){
             vector<CartesianPoint> closestPoints;
             double minDistBetween = 1000000;
@@ -1855,7 +1855,7 @@ public:
                 }
               }
             }
-            cout << "closestPoints " << closestPoints.size() << endl;
+            // cout << "closestPoints " << closestPoints.size() << endl;
             graph_trails.push_back(closestPoints);
           }
         }
