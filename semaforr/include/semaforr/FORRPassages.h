@@ -1436,51 +1436,124 @@ public:
           }
         }
         // cout << "missing_labels " << missing_labels.size() << " new_ind " << new_ind << endl;
-        for(int i = missing_labels.size()-1; i >= 0; i--){
-          int current_ind = missing_labels[i];
-          // cout << "current_ind " << current_ind << endl;
-          for(int j = 0; j < intersections.size(); j++){
-            for(int k = 0; k < intersections[0].size(); k++){
-              if(intersections[j][k] > current_ind){
-                intersections[j][k] = intersections[j][k] - 1;
+        if(missing_labels.size() > 0){
+          for(int i = missing_labels.size()-1; i >= 0; i--){
+            int current_ind = missing_labels[i];
+            // cout << "current_ind " << current_ind << endl;
+            for(int j = 0; j < intersections.size(); j++){
+              for(int k = 0; k < intersections[0].size(); k++){
+                if(intersections[j][k] > current_ind){
+                  intersections[j][k] = intersections[j][k] - 1;
+                }
+              }
+            }
+            if(current_ind <= new_ind){
+              new_ind = new_ind - 1;
+            }
+            max_component = max_component - 1;
+          }
+          // cout << "new_ind " << new_ind << endl;
+          // cout << "After fixed missing_labels" << endl;
+          // for(int i = 0; i < intersections.size(); i++){
+          //   for(int j = 0; j < intersections[0].size(); j++){
+          //     cout << intersections[i][j] << " ";
+          //   }
+          //   cout << endl;
+          // }
+          vector< vector<int> > fixed_edges;
+          for(int i = 0; i < intersections.size(); i++){
+            int start = -1;
+            int stop = -1;
+            for(int j = 0; j < intersections[0].size(); j++){
+              if(intersections[i][j] > 0 and start == -1){
+                start = intersections[i][j];
+              }
+              else if((intersections[i][j] > 0 or intersections[i][j] == -1) and start > -1 and (stop == -1 or stop == start)){
+                stop = intersections[i][j];
+              }
+              else if(intersections[i][j] == 0){
+                start = -1;
+                stop = -1;
+              }
+              if(start > -1 and stop > -1){
+                vector<int> current_pair;
+                if(start < stop){
+                  current_pair.push_back(start);
+                  current_pair.push_back(stop);
+                }
+                else{
+                  current_pair.push_back(stop);
+                  current_pair.push_back(start);
+                }
+                if(start != stop and find(fixed_edges.begin(), fixed_edges.end(), current_pair) == fixed_edges.end()){
+                  fixed_edges.push_back(current_pair);
+                }
+                start = stop;
+                stop = -1;
               }
             }
           }
-          if(current_ind <= new_ind){
-            new_ind = new_ind - 1;
+          for(int j = 0; j < intersections[0].size(); j++){
+            int start = -1;
+            int stop = -1;
+            for(int i = 0; i < intersections.size(); i++){
+              if(intersections[i][j] > 0 and start == -1){
+                start = intersections[i][j];
+              }
+              else if((intersections[i][j] > 0 or intersections[i][j] == -1) and start > -1 and (stop == -1 or stop == start)){
+                stop = intersections[i][j];
+              }
+              else if(intersections[i][j] == 0){
+                start = -1;
+                stop = -1;
+              }
+              if(start > -1 and stop > -1){
+                vector<int> current_pair;
+                if(start < stop){
+                  current_pair.push_back(start);
+                  current_pair.push_back(stop);
+                }
+                else{
+                  current_pair.push_back(stop);
+                  current_pair.push_back(start);
+                }
+                if(start != stop and find(fixed_edges.begin(), fixed_edges.end(), current_pair) == fixed_edges.end()){
+                  fixed_edges.push_back(current_pair);
+                }
+                start = stop;
+                stop = -1;
+              }
+            }
           }
-          max_component = max_component - 1;
-          for(int j = 0; j < graph.size(); j++){
-            if(graph[j][0] > current_ind){
-              graph[j][0] = graph[j][0] - 1;
+          vector< vector<int> > fixed_graph;
+          vector<int> fixed_graph_edges;
+          for(int i = new_ind+1; i < max_component+1; i++){
+            fixed_graph_edges.push_back(i);
+            // cout << i << endl;
+          }
+          for(int i = 0; i < fixed_graph_edges.size(); i++){
+            vector< vector<int> > matches;
+            for(int j = 0; j < fixed_edges.size(); j++){
+              if(fixed_edges[j][1] == fixed_graph_edges[i]){
+                matches.push_back(fixed_edges[j]);
+              }
             }
-            if(graph[j][1] > current_ind){
-              graph[j][1] = graph[j][1] - 1;
-            }
-            if(graph[j][2] > current_ind){
-              graph[j][2] = graph[j][2] - 1;
+            for(int j = 0; j < matches.size()-1; j++){
+              for(int k = j+1; k < matches.size(); k++){
+                vector<int> seq;
+                seq.push_back(matches[j][0]);
+                seq.push_back(matches[j][1]);
+                seq.push_back(matches[k][0]);
+                fixed_graph.push_back(seq);
+              }
             }
           }
+          graph = fixed_graph;
+          // cout << "after fixed graph" << endl;
+          // for(int i = 0; i < graph.size(); i++){
+          //   cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
+          // }
         }
-        // cout << "new_ind " << new_ind << endl;
-        // cout << "After fixed missing_labels" << endl;
-        // for(int i = 0; i < intersections.size(); i++){
-        //   for(int j = 0; j < intersections[0].size(); j++){
-        //     cout << intersections[i][j] << " ";
-        //   }
-        //   cout << endl;
-        // }
-        vector< vector<int> > fixed_graph;
-        for(int i = 0; i < graph.size(); i++){
-          if(graph[i][0] != graph[i][2]){
-            fixed_graph.push_back(graph[i]);
-          }
-        }
-        graph = fixed_graph;
-        // cout << "after fixed graph" << endl;
-        // for(int i = 0; i < graph.size(); i++){
-        //   cout << graph[i][0] << " " << graph[i][1] << " " << graph[i][2] << endl;
-        // }
 
         // cout << "graph_nodes" << endl;
         for(int i = 1; i < new_ind+1; i++){

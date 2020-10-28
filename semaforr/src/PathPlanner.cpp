@@ -1612,6 +1612,9 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
             }
           }
           // cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+          if(rn_queue.size() == 0){
+            final_rn = current_neighbor;
+          }
         }
         // cout << "final_rn " << final_rn.regionID << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
         int lx = (int)(regions[final_rn.regionID].getCenter().get_x()*100);

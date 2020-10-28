@@ -718,7 +718,7 @@ class Task {
 				vector<int> passageValues = regions[i].getPassageValues();
 				for(int p = 0; p < passageValues.size(); p++){
 					if(passageValues[p] == nPassage){
-						foundPassage == true;
+						foundPassage = true;
 						break;
 					}
 				}
@@ -1246,7 +1246,7 @@ class Task {
 				vector<int> passageValues = regions[i].getPassageValues();
 				for(int p = 0; p < passageValues.size(); p++){
 					if(passageValues[p] == nPassage){
-						foundPassage == true;
+						foundPassage = true;
 						break;
 					}
 				}
