@@ -1612,11 +1612,26 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
             }
           }
           // cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
-          if(rn_queue.size() == 0){
-            final_rn = current_neighbor;
-          }
+          // if(rn_queue.size() == 0){
+          //   final_rn = current_neighbor;
+          // }
         }
         // cout << "final_rn " << final_rn.regionID << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+        if(final_rn.regionID == -1){
+          int newRegion = -1;
+          double max_score = -100000000.0;
+          for(int i = 0; i < regions.size() ; i++){
+            double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0)) - regions[i].getRadius());
+            double neighbors = regions[i].getMinExits().size();
+            double score = d + neighbors;
+            if(score > max_score and regions[i].getPassageValues().size() > 0){
+              // cout << "newRegion " << i << " with score " << score << endl;
+              newRegion = i;
+              max_score = score;
+            }
+          }
+          final_rn.regionID = newRegion;
+        }
         int lx = (int)(regions[final_rn.regionID].getCenter().get_x()*100);
         int ly = (int)(regions[final_rn.regionID].getCenter().get_y()*100);
         // cout << "Point in lregion " << final_rn.regionID << " lx " << lx << " ly " << ly << " ID " << originalNavGraph->getNodeID(lx, ly) << endl;
