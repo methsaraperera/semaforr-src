@@ -769,7 +769,8 @@ class Task {
 				already_searched.push_back(start_rn.regionID);
 				// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				RegionNode final_rn;
-				while(rn_queue.size() > 0){
+				int count = 0;
+				while(rn_queue.size() > 0 and count < 1000){
 					RegionNode current_neighbor = rn_queue.top();
 					// cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
 					already_searched.push_back(current_neighbor.regionID);
@@ -809,6 +810,7 @@ class Task {
 						}
 					}
 					// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+					count = count + 1;
 				}
 				// cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				if(final_rn.regionID == -1){
@@ -1019,7 +1021,8 @@ class Task {
 						already_searched.push_back(start_rn.regionID);
 						// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 						RegionNode final_rn;
-						while(rn_queue.size() > 0){
+						int count = 0;
+						while(rn_queue.size() > 0 and count < 1000){
 							RegionNode current_neighbor = rn_queue.top();
 							// cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
 							already_searched.push_back(current_neighbor.regionID);
@@ -1052,6 +1055,7 @@ class Task {
 								}
 							}
 							// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+							count = count + 1;
 						}
 						// cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 						if(final_rn.regionID == -1){
@@ -1297,7 +1301,8 @@ class Task {
 				already_searched.push_back(start_rn.regionID);
 				// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				RegionNode final_rn;
-				while(rn_queue.size() > 0){
+				int count = 0;
+				while(rn_queue.size() > 0 and count < 1000){
 					RegionNode current_neighbor = rn_queue.top();
 					// cout << "current_neighbor " << current_neighbor.regionID << " cost " << current_neighbor.nodeCost << endl;
 					already_searched.push_back(current_neighbor.regionID);
@@ -1337,6 +1342,7 @@ class Task {
 						}
 					}
 					// cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+					count = count + 1;
 				}
 				// cout << "final_rn " << final_rn.regionID << " regionSequence " << final_rn.regionSequence.size() << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
 				if(final_rn.regionID == -1){

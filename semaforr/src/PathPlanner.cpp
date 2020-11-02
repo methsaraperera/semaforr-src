@@ -1594,7 +1594,8 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
         already_searched.push_back(start_rn);
         // cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
         RegionNode final_rn;
-        while(rn_queue.size() > 0){
+        int count = 0;
+        while(rn_queue.size() > 0 and count < 1000){
           RegionNode current_neighbor = rn_queue.top();
           // cout << "current_neighbor " << current_neighbor.regionID << " passagevalues " << current_neighbor.region.getPassageValues().size() << " cost " << current_neighbor.nodeCost << endl;
           already_searched.push_back(current_neighbor);
@@ -1615,6 +1616,7 @@ vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
           // if(rn_queue.size() == 0){
           //   final_rn = current_neighbor;
           // }
+          count = count + 1;
         }
         // cout << "final_rn " << final_rn.regionID << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
         if(final_rn.regionID == -1){
