@@ -351,10 +351,18 @@ public:
 	geometry_msgs::PointStamped target;
 	target.header.frame_id = "map";
 	target.header.stamp = ros::Time::now();
-	target.point.x = con->gethighwayExploration()->getHighwayTarget().getX();
-	target.point.y = con->gethighwayExploration()->getHighwayTarget().getY();
-	target.point.z = 0;
-	highway_target_pub_.publish(target);
+	if(con->getHighwaysOn() == 1){
+		target.point.x = con->gethighwayExploration()->getHighwayTarget().getX();
+		target.point.y = con->gethighwayExploration()->getHighwayTarget().getY();
+		target.point.z = 0;
+		highway_target_pub_.publish(target);
+	}
+	else if(con->getHighwaysOn() == 2){
+		target.point.x = con->getfrontierExploration()->getFrontierTarget().getX();
+		target.point.y = con->getfrontierExploration()->getFrontierTarget().getY();
+		target.point.z = 0;
+		highway_target_pub_.publish(target);
+	}
   }
 
   void publish_next_waypoint(){
@@ -432,9 +440,13 @@ public:
 	nav_msgs::Path path;
 	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
-	
-	vector< vector<double> > waypoints = con->gethighwayExploration()->getHighwayPath();
-
+	vector< vector<double> > waypoints;
+	if(con->getHighwaysOn() == 1){
+		waypoints = con->gethighwayExploration()->getHighwayPath();
+	}
+	else if(con->getHighwaysOn() == 2){
+		waypoints = con->getfrontierExploration()->getFrontierPath();
+	}
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;
 		poseStamped.header.frame_id = "map";
@@ -1015,36 +1027,71 @@ public:
 
 	grid.info.origin.orientation.w = 0;
 	grid.info.resolution = 1;
-	grid.info.width = con->gethighwayExploration()->getLength();
-	grid.info.height = con->gethighwayExploration()->getHeight();
-	vector< vector<int> > highways;
-	if(con->getHighwayFinished()){
-		highways = beliefs->getAgentState()->getPassageGrid();
-	}
-	else{
-		highways = con->gethighwayExploration()->getHighwayGrid();
-	}
-	if(highways.size() > 0){
-		for(int j = 0; j < grid.info.height; j++){
-			for(int i = 0; i < grid.info.width; i++){
-				if(highways[i][j] < 0){
-					grid.data.push_back(-1);
-				}
-				else if(highways[i][j] * 2 < 100){
-					grid.data.push_back(highways[i][j] * 2);
-				}
-				else{
-					grid.data.push_back(100);
+	if(con->getHighwaysOn() == 1){
+		grid.info.width = con->gethighwayExploration()->getLength();
+		grid.info.height = con->gethighwayExploration()->getHeight();
+		vector< vector<int> > highways;
+		if(con->getHighwayFinished()){
+			highways = beliefs->getAgentState()->getPassageGrid();
+		}
+		else{
+			highways = con->gethighwayExploration()->getHighwayGrid();
+		}
+		if(highways.size() > 0){
+			for(int j = 0; j < grid.info.height; j++){
+				for(int i = 0; i < grid.info.width; i++){
+					if(highways[i][j] < 0){
+						grid.data.push_back(-1);
+					}
+					else if(highways[i][j] * 2 < 100){
+						grid.data.push_back(highways[i][j] * 2);
+					}
+					else{
+						grid.data.push_back(100);
+					}
 				}
 			}
+			highway_pub_.publish(grid);
 		}
-		highway_pub_.publish(grid);
+	}
+	else if(con->getHighwaysOn() == 2){
+		grid.info.width = con->getfrontierExploration()->getLength();
+		grid.info.height = con->getfrontierExploration()->getHeight();
+		vector< vector<int> > highways;
+		if(con->getFrontierFinished()){
+			highways = beliefs->getAgentState()->getPassageGrid();
+		}
+		else{
+			highways = con->getfrontierExploration()->getFrontierGrid();
+		}
+		if(highways.size() > 0){
+			for(int j = 0; j < grid.info.height; j++){
+				for(int i = 0; i < grid.info.width; i++){
+					if(highways[i][j] < 0){
+						grid.data.push_back(-1);
+					}
+					else if(highways[i][j] * 2 < 100){
+						grid.data.push_back(highways[i][j] * 2);
+					}
+					else{
+						grid.data.push_back(100);
+					}
+				}
+			}
+			highway_pub_.publish(grid);
+		}
 	}
   }
 
   void publish_highway_stack(){
 	// ROS_DEBUG("Inside publish highway_stack");
-	vector< Position > highway_stack = con->gethighwayExploration()->getHighwayStack();
+	vector< Position > highway_stack;
+	if(con->getHighwaysOn() == 1){
+		highway_stack = con->gethighwayExploration()->getHighwayStack();
+	}
+	else if(con->getHighwaysOn() == 2){
+		highway_stack = con->getfrontierExploration()->getFrontierStack();
+	}
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "map";
 	marker.header.stamp = ros::Time::now();
@@ -1363,11 +1410,21 @@ public:
 	std::stringstream passageStream;
 	if(currentTask > 0 and decisionCount == 1){
 		vector< vector<int> > highways;
-		if(con->getHighwayFinished()){
-			highways = beliefs->getAgentState()->getPassageGrid();
+		if(con->getHighwaysOn() == 1){
+			if(con->getHighwayFinished()){
+				highways = beliefs->getAgentState()->getPassageGrid();
+			}
+			else{
+				highways = con->gethighwayExploration()->getHighwayGrid();
+			}
 		}
-		else{
-			highways = con->gethighwayExploration()->getHighwayGrid();
+		else if(con->getHighwaysOn() == 2){
+			if(con->getFrontierFinished()){
+				highways = beliefs->getAgentState()->getPassageGrid();
+			}
+			else{
+				highways = con->getfrontierExploration()->getFrontierGrid();
+			}
 		}
 		if(highways.size() > 0){
 			for(int j = 0; j < highways.size()-1; j++){

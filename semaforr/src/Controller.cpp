@@ -251,6 +251,14 @@ void Controller::initialize_params(string filename){
       highwaysOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("highwaysOn " << highwaysOn);
     }
+    else if (fileLine.find("frontiersOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      frontiersOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("frontiersOn " << frontiersOn);
+    }
     else if (fileLine.find("outofhereOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -894,6 +902,10 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   highwayFinished = 0;
   highwayExploration = new HighwayExplorer(l, h, highwayDistanceThreshold, highwayTimeThreshold, highwayDecisionThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
 
+  // Initialize frontiers
+  frontierFinished = 0;
+  frontierExploration = new FronterExplorer(l, h, highwayTimeThreshold, highwayDecisionThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
+
   // Initialize circumnavigator
   // PathPlanner *skeleton_planner;
   // for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
@@ -914,7 +926,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
-      if(aStarOn and (!highwaysOn or (highwaysOn and highwayExploration->getHighwaysComplete()))){
+      if(aStarOn and (!highwaysOn or (highwaysOn and highwayExploration->getHighwaysComplete())) and (!frontiersOn or (frontiersOn and frontierExploration->getFrontiersComplete()))){
         tierTwoDecision(current, true);
       }
       else{
@@ -922,20 +934,22 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       }
       firstTaskAssigned = true;
   }
-  if(highwayExploration->getHighwaysComplete() or !highwaysOn){
+  if((highwayExploration->getHighwaysComplete() or !highwaysOn) and (frontierExploration->getFrontiersComplete() or !frontiersOn)){
     //bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isWaypointComplete(current);
     bool waypointReached = beliefs->getAgentState()->getCurrentTask()->isAnyWaypointComplete(current, beliefs->getAgentState()->getCurrentLaserEndpoints());
     bool taskCompleted = beliefs->getAgentState()->getCurrentTask()->isTaskComplete(current);
     bool isPlanActive = beliefs->getAgentState()->getCurrentTask()->getIsPlanActive();
     // cout << "waypointReached " <<   waypointReached << " taskCompleted " << taskCompleted << " isPlanActive " << isPlanActive << endl;
-    if(highwayFinished == 1){
-      if(highwaysOn){
+    if(highwayFinished == 1 or frontierFinished == 1){
+      if(highwaysOn or frontiersOn){
         learnSpatialModel(beliefs->getAgentState(), true, false);
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
         // beliefs->getAgentState()->setPassageGrid(highwayExploration->getHighwayGrid());
-        beliefs->getAgentState()->setRemainingCandidates(highwayExploration->getRemainingHighwayStack());
+        if(highwaysOn){
+          beliefs->getAgentState()->setRemainingCandidates(highwayExploration->getRemainingHighwayStack());
+        }
       }
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -1091,8 +1105,12 @@ FORRAction Controller::decide() {
   if(!highwayExploration->getHighwaysComplete() and highwaysOn){
     decidedAction = highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
   }
+  else if(!frontierExploration->getFrontiersComplete() and frontiersOn){
+    decidedAction = frontierExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+  }
   else{
     highwayFinished++;
+    frontierFinished++;
     decidedAction = FORRDecision();
   }
   if(situationsOn){
@@ -1187,7 +1205,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
   gettimeofday(&cv,NULL);
   start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 
-  if((skeleton and aStarOn) or (hallwayskel and highwayFinished >= 1 and aStarOn)){
+  if((skeleton and aStarOn) or (hallwayskel and (highwayFinished >= 1 or frontierFinished >= 1) and aStarOn)){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
     PathPlanner *hallway_skeleton_planner;
@@ -1268,7 +1286,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       // cout << "Connected Graph: " << skeleton_planner->getOrigGraph()->isConnected() << endl;
     }
   }
-  if(hallwayskel and highwayFinished == 1 and aStarOn){
+  if(hallwayskel and (highwayFinished == 1 or frontierFinished == 1) and aStarOn){
     PathPlanner *hwskeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       if((*it)->getName() == "hallwayskel"){
@@ -1447,7 +1465,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    if(findawayOn and decisionMade == false and highwayFinished > 1){
+    if(findawayOn and decisionMade == false and (highwayFinished > 1 or frontierFinished > 1)){
       if(tier1->advisorFindAWay(decision)){
         ROS_INFO_STREAM("Advisor FindAWay has made a decision " << decision->type << " " << decision->parameter);
         decisionStats->decisionTier = 1.6;
@@ -1503,7 +1521,7 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
     planner->setPosHistory(beliefs->getAgentState()->getAllTrace());
     vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
     planner->setSpatialModel(beliefs->getSpatialModel()->getConveyors(),beliefs->getSpatialModel()->getRegionList()->getRegions(),beliefs->getSpatialModel()->getDoors()->getDoors(),trails_trace,beliefs->getSpatialModel()->getHallways()->getHallways());
-    if(highwayFinished >= 1){
+    if(highwayFinished >= 1 or frontierFinished >= 1){
       // cout << "setting values for highways" << endl;
       planner->setPassageGrid(beliefs->getAgentState()->getPassageGrid(), beliefs->getAgentState()->getPassageGraphNodes(), beliefs->getAgentState()->getPassageGraph(), beliefs->getAgentState()->getAveragePassage());
       // cout << "set planner values" << endl;

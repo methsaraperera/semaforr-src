@@ -19,6 +19,7 @@
 #include "FORRActionStats.h"
 #include "PathPlanner.h"
 #include "HighwayExplore.h"
+#include "FrontierExplore.h"
 #include "Circumnavigate.h"
 #include "FORRPassages.h"
 
@@ -69,6 +70,7 @@ public:
   }
 
   HighwayExplorer *gethighwayExploration() { return highwayExploration; }
+  FrontierExplorer *getfrontierExploration() { return frontierExploration; }
 
   bool getHighwayFinished(){
     if(highwayFinished >= 1){
@@ -76,6 +78,27 @@ public:
     }
     else{
       return false;
+    }
+  }
+
+  bool getFrontierFinished(){
+    if(frontierFinished >= 1){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  int getHighwaysOn(){
+    if(highwaysOn){
+      return 1;
+    }
+    else if(frontiersOn){
+      return 2;
+    }
+    else{
+      return 0;
     }
   }
 
@@ -113,6 +136,7 @@ private:
   Beliefs *beliefs;
 
   HighwayExplorer *highwayExploration;
+  FrontierExplorer *frontierExploration;
   Circumnavigate *circumnavigator;
 
   // An ordered list of advisors that are consulted by Controller::FORRDecision
@@ -139,12 +163,14 @@ private:
   bool aStarOn;
   bool situationsOn;
   bool highwaysOn;
+  bool frontiersOn;
   bool outofhereOn;
   bool doorwayOn;
   bool findawayOn;
   bool behindOn;
   bool firstTaskAssigned;
   int highwayFinished;
+  int frontierFinished;
   bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn, skeleton, hallwayskel;
 };
   
