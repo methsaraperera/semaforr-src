@@ -132,12 +132,16 @@ public:
 		double r_y = current_position.getY();
 		double r_ang = current_position.getTheta();
 		double middle_distance = 0;
+		double middle_distance_min = 50;
 		vector<CartesianPoint> laserEndpoints;
 		for(int i = 0; i < current_laser.ranges.size(); i++){
 			double angle = start_angle + r_ang;
 			laserEndpoints.push_back(CartesianPoint(r_x + current_laser.ranges[i]*cos(angle), r_y + current_laser.ranges[i]*sin(angle)));
 			if(i >= 195 and i <= 465){
 				middle_distance += current_laser.ranges[i];
+				if(ls.ranges[i] < middle_distance_min){
+					middle_distance_min = ls.ranges[i];
+				}
 			}
 			start_angle = start_angle + increment;
 		}
@@ -193,7 +197,7 @@ public:
 					passed_grid[startx][starty] = passed_grid[startx][starty] + 1;
 				}
 			}
-			if(laserEndpoints[j].get_distance(current_position.getX(), current_position.getY()) <= 20){
+			if(laserEndpoints[j].get_distance(CartesianPoint(current_position.getX(), current_position.getY())) <= 20){
 				hit_grid[ex][ey] = 1;
 			}
 		}
@@ -229,7 +233,7 @@ public:
 			for(int j = 0; j < frontier_grid[i].size(); j++){
 				if(stack_grid[i][j] == -1 and frontier_grid[i][j] == -1 and traveled_grid[i][j] == -1){
 					if(frontier_grid[i+1][j] == 0 or frontier_grid[i-1][j] == 0 or frontier_grid[i][j+1] == 0 or frontier_grid[i][j-1] == 0){
-						frontier_stack.push_back(Position(i,j));
+						frontier_stack.push_back(Position(i,j,0));
 						frontier_stack_view.push_back(current_position);
 						stack_grid[i][j] = 1;
 					}
@@ -252,7 +256,7 @@ public:
 				frontier_stack.erase(frontier_stack.begin());
 				frontier_stack_view.erase(frontier_stack_view.begin());
 				top_point_decisions = 0;
-				return goTowardsPoint(current_position, current_target);
+				return goTowardsPoint(current_position, current_target, middle_distance_min);
 			}
 			else{
 				frontiers_complete = true;
@@ -312,12 +316,12 @@ public:
 				cout << "Top point achieved, go towards current_target" << endl;
 				go_to_top_point = false;
 				top_point_decisions = 0;
-				return goTowardsPoint(current_position, current_target);
+				return goTowardsPoint(current_position, current_target, middle_distance_min);
 			}
 			else if(dist_to_top_point <= 1 and can_access_top_point){
 				cout << "Top point close, go towards" << endl;
 				top_point_decisions++;
-				return goTowardsPoint(current_position, top_point);
+				return goTowardsPoint(current_position, top_point, middle_distance_min);
 			}
 			else if(path_to_top_point.size() > 0){
 				cout << "Top point not in range, go to top point by following path" << endl;
@@ -332,7 +336,7 @@ public:
 					if(can_access_waypoint){
 						cout << "Can Access Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 						top_point_decisions++;
-						return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
+						return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0), middle_distance_min);
 					}
 					else{
 						int num = -1;
@@ -344,12 +348,12 @@ public:
 						if(can_access_waypoint){
 							cout << "New Access waypoint " << path_to_top_point[num][0] << " " << path_to_top_point[num][1] << endl;
 							top_point_decisions++;
-							return goTowardsPoint(current_position, Position(path_to_top_point[num][0], path_to_top_point[num][1], 0));
+							return goTowardsPoint(current_position, Position(path_to_top_point[num][0], path_to_top_point[num][1], 0), middle_distance_min);
 						}
 						else{
 							cout << "Try Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 							top_point_decisions++;
-							return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
+							return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0), middle_distance_min);
 						}
 					}
 				}
@@ -358,13 +362,13 @@ public:
 				findPathOnGrid(current_position, top_point);
 				// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 				top_point_decisions++;
-				return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0));
+				return goTowardsPoint(current_position, Position(path_to_top_point[0][0], path_to_top_point[0][1], 0), middle_distance_min);
 			}
 		}
 		else{
 			// cout << "Going to current_target " << current_target.getX() << " " << current_target.getY() << endl;
 			// cout << "Current grid value " << frontier_grid[(int)(current_position.getX())][(int)(current_position.getY())] << endl;
-			return goTowardsPoint(current_position, current_target);
+			return goTowardsPoint(current_position, current_target, middle_distance_min);
 		}
 	}
 
@@ -420,7 +424,7 @@ public:
 		}
 	}
 
-	FORRAction goTowardsPoint(Position current_position, Position target_position){
+	FORRAction goTowardsPoint(Position current_position, Position target_position, double middle_distance_min){
 		// cout << "In goTowardsPoint" << endl;
 		double distance_from_target = current_position.getDistance(target_position);
 		// cout << "Distance from target : " << distance_from_target << endl;
@@ -462,7 +466,7 @@ public:
 				intensity--;
 			// cout << "Move Intensity : " << intensity << endl;
 
-			while(move[intensity] > current_position.middle_distance_min){
+			while(move[intensity] > middle_distance_min){
 				intensity--;
 			}
 			// cout << "Move Intensity : " << intensity << endl;
