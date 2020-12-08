@@ -139,8 +139,8 @@ public:
 			laserEndpoints.push_back(CartesianPoint(r_x + current_laser.ranges[i]*cos(angle), r_y + current_laser.ranges[i]*sin(angle)));
 			if(i >= 195 and i <= 465){
 				middle_distance += current_laser.ranges[i];
-				if(ls.ranges[i] < middle_distance_min){
-					middle_distance_min = ls.ranges[i];
+				if(laserEndpoints.ranges[i] < middle_distance_min){
+					middle_distance_min = laserEndpoints.ranges[i];
 				}
 			}
 			start_angle = start_angle + increment;

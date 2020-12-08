@@ -904,7 +904,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 
   // Initialize frontiers
   frontierFinished = 0;
-  frontierExploration = new FronterExplorer(l, h, highwayTimeThreshold, highwayDecisionThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
+  frontierExploration = new FrontierExplorer(l, h, highwayTimeThreshold, highwayDecisionThreshold, arrMove, arrRotate, moveArrMax, rotateArrMax);
 
   // Initialize circumnavigator
   // PathPlanner *skeleton_planner;
