@@ -1201,11 +1201,11 @@ public:
 			for(int i = 0; i < position_history.size(); i++){
 				dist_to_top = position_history[i].point.getDistance(target_point.point);
 				if(position_history[i] == target_point){
-					target_point_index == i;
+					target_point_index = i;
 					break;
 				}
 				else if(dist_to_top < 0.25){
-					target_point_index == i;
+					target_point_index = i;
 					break;
 				}
 			}
