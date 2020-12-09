@@ -950,6 +950,9 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         if(highwaysOn){
           beliefs->getAgentState()->setRemainingCandidates(highwayExploration->getRemainingHighwayStack());
         }
+        else if(frontiersOn){
+          beliefs->getAgentState()->setRemainingCandidates(frontierExploration->getRemainingFrontierStack());
+        }
       }
       beliefs->getAgentState()->finishTask();
       ROS_DEBUG("Selecting Next Task");
@@ -1107,6 +1110,7 @@ FORRAction Controller::decide() {
   }
   else if(!frontierExploration->getFrontiersComplete() and frontiersOn){
     decidedAction = frontierExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+    cout << "frontier decision " << decidedAction.type << " " << decidedAction.parameter << endl;
   }
   else{
     highwayFinished++;
@@ -1205,7 +1209,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
   gettimeofday(&cv,NULL);
   start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 
-  if((skeleton and aStarOn) or (hallwayskel and (highwayFinished >= 1 or frontierFinished >= 1) and aStarOn)){
+  if((skeleton) or (hallwayskel and (highwayFinished >= 1 or frontierFinished >= 1))){
     cout << "Updating skeleton planner" << endl;
     PathPlanner *skeleton_planner;
     PathPlanner *hallway_skeleton_planner;
@@ -1286,7 +1290,7 @@ void Controller::updateSkeletonGraph(AgentState* agentState){
       // cout << "Connected Graph: " << skeleton_planner->getOrigGraph()->isConnected() << endl;
     }
   }
-  if(hallwayskel and (highwayFinished == 1 or frontierFinished == 1) and aStarOn){
+  if(hallwayskel and (highwayFinished == 1 or frontierFinished == 1)){
     PathPlanner *hwskeleton_planner;
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       if((*it)->getName() == "hallwayskel"){

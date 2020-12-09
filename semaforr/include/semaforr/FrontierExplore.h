@@ -60,6 +60,20 @@ public:
 			}
 			stack_grid.push_back(col);
 		}
+		for(int i = 0; i < l; i++){
+			vector<int> col;
+			for(int j = 0; j < h; j ++){
+				col.push_back(0);
+			}
+			passed_grid.push_back(col);
+		}
+		for(int i = 0; i < l; i++){
+			vector<int> col;
+			for(int j = 0; j < h; j ++){
+				col.push_back(0);
+			}
+			hit_grid.push_back(col);
+		}
 		frontiers_complete = false;
 		go_to_top_point = false;
 		top_point_decisions = 0;
@@ -102,6 +116,7 @@ public:
 		vector< vector<Position> > hwst;
 		for(int i = 0; i < frontier_stack.size(); i++){
 			vector<Position> pair_points;
+			pair_points.push_back(frontier_stack_view[i]);
 			pair_points.push_back(frontier_stack[i]);
 			hwst.push_back(pair_points);
 		}
@@ -151,52 +166,43 @@ public:
 		middle_distance = middle_distance / 271.0;
 		cout << "middle_distance " << middle_distance << " middle_distance_min " << middle_distance_min << endl;
 		laserEndpoints_history.push_back(laserEndpoints);
-		cout << "before passed_grid" << endl;
-		vector< vector<int> > passed_grid;
-		for(int i = 0; i < length; i++){
-			vector<int> col;
-			for(int j = 0; j < height; j ++){
-				col.push_back(0);
-			}
-			passed_grid.push_back(col);
-		}
-		vector< vector<int> > hit_grid;
-		for(int i = 0; i < length; i++){
-			vector<int> col;
-			for(int j = 0; j < height; j ++){
-				col.push_back(0);
-			}
-			hit_grid.push_back(col);
-		}
 		int startx = (int)(current_position.getX());
 		int starty = (int)(current_position.getY());
 		cout << "startx " << startx << " starty " << starty << endl;
 		for(int j = 0; j < laserEndpoints.size(); j++){
-			double ex = laserEndpoints[j].get_x();
-			double ey = laserEndpoints[j].get_y();
-			double ea = starty - ey;
-			double eb = ex - startx;
-			double ec = (startx - ex) * starty + (ey - starty) * startx;
+			int ex = (int)(laserEndpoints[j].get_x());
+			int ey = (int)(laserEndpoints[j].get_y());
+			int ea = starty - ey;
+			int eb = ex - startx;
+			int ec = (startx - ex) * starty + (ey - starty) * startx;
 			// cout << "ex " << ex << " ey " << ey << " ea " << ea << " eb " << eb << " ec " << ec << endl;
 			if(startx > ex){
 				for(int i = startx; i > ex; i--){
-					passed_grid[i][-(ea * i + ec) / eb] = passed_grid[i][-(ea * i + ec) / eb] + 1;
+					if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint(i, (-(ea * i + ec) / eb))) <= 20){
+						passed_grid[i][(int)(-(ea * i + ec) / eb)] = passed_grid[i][(int)(-(ea * i + ec) / eb)] + 1;
+					}
 				}
 			}
 			else if(startx < ex){
 				for(int i = startx; i < ex; i++){
-					passed_grid[i][-(ea * i + ec) / eb] = passed_grid[i][-(ea * i + ec) / eb] + 1;
+					if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint(i, (-(ea * i + ec) / eb))) <= 20){
+						passed_grid[i][(int)(-(ea * i + ec) / eb)] = passed_grid[i][(int)(-(ea * i + ec) / eb)] + 1;
+					}
 				}
 			}
 			else{
 				if(starty > ey){
 					for(int i = starty; i > ey; i--){
-						passed_grid[-(eb * i + ec) / ea][i] = passed_grid[-(eb * i + ec) / ea][i] + 1;
+						if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint((-(eb * i + ec) / ea), i)) <= 20){
+							passed_grid[(int)(-(eb * i + ec) / ea)][i] = passed_grid[(int)(-(eb * i + ec) / ea)][i] + 1;
+						}
 					}
 				}
 				else if(starty < ey){
 					for(int i = starty; i < ey; i++){
-						passed_grid[-(eb * i + ec) / ea][i] = passed_grid[-(eb * i + ec) / ea][i] + 1;
+						if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint((-(eb * i + ec) / ea), i)) <= 20){
+							passed_grid[(int)(-(eb * i + ec) / ea)][i] = passed_grid[(int)(-(eb * i + ec) / ea)][i] + 1;
+						}
 					}
 				}
 				else{
@@ -204,7 +210,7 @@ public:
 				}
 			}
 			if(laserEndpoints[j].get_distance(CartesianPoint(current_position.getX(), current_position.getY())) <= 20){
-				hit_grid[ex][ey] = 1;
+				hit_grid[ex][ey] = hit_grid[ex][ey] + 1;
 			}
 		}
 		cout << "before ratio_grid" << endl;
@@ -222,23 +228,24 @@ public:
 					ratio_grid[i][j] = (double)(hit_grid[i][j]) / ((double)(hit_grid[i][j]) + (double)(passed_grid[i][j]));
 				}
 				else{
-					ratio_grid[i][j] = -1;
+					ratio_grid[i][j] = -1.0;
 				}
+				cout << i << " " << j << " passed_grid " << passed_grid[i][j] << " hit_grid " << hit_grid[i][j] << " ratio_grid " << ratio_grid[i][j] << endl;
 			}
 		}
 		cout << "after ratio_grid" << endl;
 		for(int i = 0; i < ratio_grid.size(); i++){
 			for(int j = 0; j < ratio_grid[i].size(); j++){
-				if(ratio_grid[i][j] >= 0.25 and frontier_grid[i][j] == -1){
+				if(ratio_grid[i][j] >= 0.75 and frontier_grid[i][j] == -1){
 					frontier_grid[i][j] = 1;
 				}
-				else if(ratio_grid[i][j] >= 0 and ratio_grid[i][j] < 0.25 and frontier_grid[i][j] == -1){
+				else if(ratio_grid[i][j] >= 0.0 and ratio_grid[i][j] <= 0.25 and frontier_grid[i][j] == -1){
 					frontier_grid[i][j] = 0;
 				}
 				else if(ratio_grid[i][j] >= 0.95 and frontier_grid[i][j] == 0){
 					frontier_grid[i][j] = 1;
 				}
-				else if(ratio_grid[i][j] >= 0 and ratio_grid[i][j] < 0.05 and frontier_grid[i][j] == 1){
+				else if(ratio_grid[i][j] >= 0 and ratio_grid[i][j] <= 0.05 and frontier_grid[i][j] == 1){
 					frontier_grid[i][j] = 0;
 				}
 			}
@@ -386,6 +393,8 @@ public:
 				top_point_decisions = 0;
 				go_to_top_point = true;
 				path_to_top_point.clear();
+				start_rotations = 0;
+				return FORRAction(RIGHT_TURN, 1);
 			}
 			else{
 				cout << "No more in stack" << endl;
@@ -521,7 +530,7 @@ public:
 	void waypointAchieved(Position current_position){
 		cout << "In waypointAchieved" << endl;
 		bool erase_waypoint = true;
-		while(erase_waypoint){
+		while(erase_waypoint and path_to_top_point.size() > 0){
 			Position current_waypoint = Position(path_to_top_point[0][0], path_to_top_point[0][1], 0);
 			double dist_to_current_waypoint = current_position.getDistance(current_waypoint);
 			if(dist_to_current_waypoint <= 0.25){
@@ -607,6 +616,8 @@ private:
 	Position top_point;
 	vector< vector<int> > stack_grid;
 	vector< vector<int> > traveled_grid;
+	vector< vector<int> > passed_grid;
+	vector< vector<int> > hit_grid;
 	vector< vector<double> > path_to_top_point;
 	bool frontiers_complete;
 	bool go_to_top_point;
