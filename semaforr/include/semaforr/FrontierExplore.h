@@ -176,41 +176,43 @@ public:
 			int eb = ex - startx;
 			int ec = (startx - ex) * starty + (ey - starty) * startx;
 			// cout << "ex " << ex << " ey " << ey << " ea " << ea << " eb " << eb << " ec " << ec << endl;
-			if(startx > ex){
-				for(int i = startx; i > ex; i--){
-					if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint(i, (-(ea * i + ec) / eb))) <= 20){
-						passed_grid[i][(int)(-(ea * i + ec) / eb)] = passed_grid[i][(int)(-(ea * i + ec) / eb)] + 1;
-					}
-				}
-			}
-			else if(startx < ex){
-				for(int i = startx; i < ex; i++){
-					if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint(i, (-(ea * i + ec) / eb))) <= 20){
-						passed_grid[i][(int)(-(ea * i + ec) / eb)] = passed_grid[i][(int)(-(ea * i + ec) / eb)] + 1;
-					}
-				}
-			}
-			else{
-				if(starty > ey){
-					for(int i = starty; i > ey; i--){
-						if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint((-(eb * i + ec) / ea), i)) <= 20){
-							passed_grid[(int)(-(eb * i + ec) / ea)][i] = passed_grid[(int)(-(eb * i + ec) / ea)][i] + 1;
+			if(ex >= 0 and ey >= 0 and ex < passed_grid.size() and ey < passed_grid[0].size()){
+				if(startx > ex){
+					for(int i = startx; i > ex; i--){
+						if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint(i, (-(ea * i + ec) / eb))) <= 20){
+							passed_grid[i][(int)(-(ea * i + ec) / eb)] = passed_grid[i][(int)(-(ea * i + ec) / eb)] + 1;
 						}
 					}
 				}
-				else if(starty < ey){
-					for(int i = starty; i < ey; i++){
-						if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint((-(eb * i + ec) / ea), i)) <= 20){
-							passed_grid[(int)(-(eb * i + ec) / ea)][i] = passed_grid[(int)(-(eb * i + ec) / ea)][i] + 1;
+				else if(startx < ex){
+					for(int i = startx; i < ex; i++){
+						if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint(i, (-(ea * i + ec) / eb))) <= 20){
+							passed_grid[i][(int)(-(ea * i + ec) / eb)] = passed_grid[i][(int)(-(ea * i + ec) / eb)] + 1;
 						}
 					}
 				}
 				else{
-					passed_grid[startx][starty] = passed_grid[startx][starty] + 1;
+					if(starty > ey){
+						for(int i = starty; i > ey; i--){
+							if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint((-(eb * i + ec) / ea), i)) <= 20){
+								passed_grid[(int)(-(eb * i + ec) / ea)][i] = passed_grid[(int)(-(eb * i + ec) / ea)][i] + 1;
+							}
+						}
+					}
+					else if(starty < ey){
+						for(int i = starty; i < ey; i++){
+							if(CartesianPoint(current_position.getX(), current_position.getY()).get_distance(CartesianPoint((-(eb * i + ec) / ea), i)) <= 20){
+								passed_grid[(int)(-(eb * i + ec) / ea)][i] = passed_grid[(int)(-(eb * i + ec) / ea)][i] + 1;
+							}
+						}
+					}
+					else{
+						passed_grid[startx][starty] = passed_grid[startx][starty] + 1;
+					}
 				}
-			}
-			if(laserEndpoints[j].get_distance(CartesianPoint(current_position.getX(), current_position.getY())) <= 20){
-				hit_grid[ex][ey] = hit_grid[ex][ey] + 1;
+				if(laserEndpoints[j].get_distance(CartesianPoint(current_position.getX(), current_position.getY())) <= 20){
+					hit_grid[ex][ey] = hit_grid[ex][ey] + 1;
+				}
 			}
 		}
 		cout << "before ratio_grid" << endl;
@@ -230,7 +232,7 @@ public:
 				else{
 					ratio_grid[i][j] = -1.0;
 				}
-				cout << i << " " << j << " passed_grid " << passed_grid[i][j] << " hit_grid " << hit_grid[i][j] << " ratio_grid " << ratio_grid[i][j] << endl;
+				// cout << i << " " << j << " passed_grid " << passed_grid[i][j] << " hit_grid " << hit_grid[i][j] << " ratio_grid " << ratio_grid[i][j] << endl;
 			}
 		}
 		cout << "after ratio_grid" << endl;
@@ -313,7 +315,7 @@ public:
 
 		double dist_to_current_target = current_target.getDistance(current_position);
 
-		if(dist_to_current_target <= 0.5 or middle_distance <= 0.5 or middle_distance_min <= 0.3 or top_point_decisions == decision_limit){
+		if(((dist_to_current_target <= 0.5 or middle_distance <= 0.5 or middle_distance_min <= 0.3) and go_to_top_point == false) or top_point_decisions == decision_limit){
 			cout << "Decision limit reached " << top_point_decisions << endl;
 			cout << "Reached current target " << dist_to_current_target << endl;
 			cout << "Too close in front " << middle_distance << endl;
