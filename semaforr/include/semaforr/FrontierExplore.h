@@ -27,6 +27,43 @@
 
 using namespace std;
 
+struct FrontierGridNode{
+	int x;
+	int y;
+	FrontierGridNode * previous;
+	double nodeCost;
+	FrontierGridNode(): x(0), y(0), nodeCost(0.0) { }
+	FrontierGridNode(int xval, int yval, int cost){
+		x = xval;
+		y = yval;
+		nodeCost = cost;
+	}
+	bool operator==(const FrontierGridNode n) {
+		if(x == n.x and y == n.y){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	bool operator < (const FrontierGridNode n) const{
+		if(nodeCost < n.nodeCost){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	bool operator > (const FrontierGridNode n) const{
+		if(nodeCost > n.nodeCost){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+}
+
 class FrontierExplorer{
 public:
 	FrontierExplorer(int l, int h, double tthreshold, double decthreshold, double arrMove[], double arrRotate[], int moveArrMax, int rotateArrMax){
@@ -101,7 +138,16 @@ public:
 
 	vector< vector<int> > getFrontierGrid(){return frontier_grid;}
 
-	vector< vector<double> > getFrontierPath(){return path_to_top_point;}
+	vector< vector<double> > getFrontierPath(){
+		if(go_to_top_point){
+			return path_to_top_point;
+		}
+		else if(path_to_current_target.size() > 0){
+			return path_to_current_target;
+		}
+		vector< vector<double> > path;
+		return path;
+	}
 
 	vector<Position> getFrontierStack(){
 		vector<Position> hwst;
@@ -395,6 +441,7 @@ public:
 				top_point_decisions = 0;
 				go_to_top_point = true;
 				path_to_top_point.clear();
+				path_to_current_target.clear();
 				start_rotations = 0;
 				return FORRAction(RIGHT_TURN, 1);
 			}
@@ -459,7 +506,8 @@ public:
 				}
 			}
 			else{
-				findPathOnGrid(current_position, top_point);
+				cout << "find path to top point" << endl;
+				findPathFromHistory(current_position, top_point);
 				// cout << "Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 				if(path_to_top_point.size() > 0){
 					waypointAchieved(current_position);
@@ -477,12 +525,66 @@ public:
 		else{
 			cout << "Going to current_target " << current_target.getX() << " " << current_target.getY() << endl;
 			// cout << "Current grid value " << frontier_grid[(int)(current_position.getX())][(int)(current_position.getY())] << endl;
-			top_point_decisions++;
-			return goTowardsPoint(current_position, current_target, middle_distance_min);
+			bool can_access_current_target = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(current_target.getX(), current_target.getY()), 5);
+			if(can_access_current_target){
+				cout << "Can access current target" << endl;
+				top_point_decisions++;
+				return goTowardsPoint(current_position, current_target, middle_distance_min);
+			}
+			else if(path_to_current_target.size() > 0){
+				cout << "current target not in range, go to current target by following path" << endl;
+				waypointAchieved(current_position);
+				if(path_to_current_target.size() == 0){
+					top_point_decisions++;
+					return FORRAction(FORWARD, 0);
+				}
+				else{
+					bool can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_current_target[0][0], path_to_current_target[0][1]), 5);
+					if(can_access_waypoint){
+						cout << "Can Access Current waypoint " << path_to_current_target[0][0] << " " << path_to_current_target[0][1] << endl;
+						top_point_decisions++;
+						return goTowardsPoint(current_position, Position(path_to_current_target[0][0], path_to_current_target[0][1], 0), middle_distance_min);
+					}
+					else{
+						int num = -1;
+						while(!can_access_waypoint and num < path_to_current_target.size()){
+							num = num + 1;
+							can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_current_target[num][0], path_to_current_target[num][1]), 5);
+						}
+						cout << "num " << num << " can_access_waypoint " << can_access_waypoint << endl;
+						if(can_access_waypoint){
+							cout << "New Access waypoint " << path_to_current_target[num][0] << " " << path_to_current_target[num][1] << endl;
+							top_point_decisions++;
+							return goTowardsPoint(current_position, Position(path_to_current_target[num][0], path_to_current_target[num][1], 0), middle_distance_min);
+						}
+						else{
+							cout << "Try Current waypoint " << path_to_current_target[0][0] << " " << path_to_current_target[0][1] << endl;
+							top_point_decisions++;
+							return goTowardsPoint(current_position, Position(path_to_current_target[0][0], path_to_current_target[0][1], 0), middle_distance_min);
+						}
+					}
+				}
+			}
+			else{
+				cout << "Follow open grid to try to get to target" << endl;
+				findPathOnGrid(current_position, current_target);
+				// cout << "Current waypoint " << path_to_current_target[0][0] << " " << path_to_current_target[0][1] << endl;
+				if(path_to_current_target.size() > 0){
+					waypointAchieved(current_position);
+					if(path_to_current_target.size() == 0){
+						top_point_decisions++;
+						return FORRAction(FORWARD, 0);
+					}
+					else{
+						top_point_decisions++;
+						return goTowardsPoint(current_position, Position(path_to_current_target[0][0], path_to_current_target[0][1], 0), middle_distance_min);
+					}
+				}
+			}
 		}
 	}
 
-	void findPathOnGrid(Position current_point, Position target_point){
+	void findPathFromHistory(Position current_point, Position target_point){
 		path_to_top_point.clear();
 		cout << "current_point " << current_point.getX() << " " << current_point.getY() << " target_point " << target_point.getX() << " " << target_point.getY() << endl;
 		int target_point_index = -1;
@@ -529,18 +631,180 @@ public:
 		}
 	}
 
+	void findPathOnGrid(Position current_point, Position target_point){
+		path_to_current_target.clear();
+		cout << "current_point " << current_point.getX() << " " << current_point.getY() << " target_point " << target_point.getX() << " " << target_point.getY() << endl;
+		int current_x = (int)(current_point.getX());
+		int current_y = (int)(current_point.getY());
+		int target_x = (int)(target_point.getX());
+		int target_y = (int)(target_point.getY());
+		if(current_x == target_x and current_y == target_y){
+			vector<double> current;
+			current.push_back(target_point.getX());
+			current.push_back(target_point.getY());
+			path_to_current_target.push_back(current);
+			return;
+		}
+		priority_queue<FrontierGridNode, vector<FrontierGridNode>, greater<FrontierGridNode> > rn_queue;
+		vector<FrontierGridNode> already_searched;
+		FrontierGridNode start_rn = FrontierGridNode(current_x, current_y, 0);
+		if(current_x-1 >= 0){
+			if(frontier_grid[current_x-1][current_y] == 0){
+				FrontierGridNode neighbor = FrontierGridNode(current_x-1, current_y, start_rn.nodeCost+1);
+				neighbor->previous = &start_rn;
+				rn_queue.push(neighbor);
+			}
+		}
+		if(current_x+1 < frontier_grid.size()){
+			if(frontier_grid[current_x+1][current_y] == 0){
+				FrontierGridNode neighbor = FrontierGridNode(current_x+1, current_y, start_rn.nodeCost+1);
+				neighbor->previous = &start_rn;
+				rn_queue.push(neighbor);
+			}
+		}
+		if(current_y-1 >= 0){
+			if(frontier_grid[current_x][current_y-1] == 0){
+				FrontierGridNode neighbor = FrontierGridNode(current_x, current_y-1, start_rn.nodeCost+1);
+				neighbor->previous = &start_rn;
+				rn_queue.push(neighbor);
+			}
+		}
+		if(current_y+1 < frontier_grid[0].size()){
+			if(frontier_grid[current_x][current_y+1] == 0){
+				FrontierGridNode neighbor = FrontierGridNode(current_x, current_y+1, start_rn.nodeCost+1);
+				neighbor->previous = &start_rn;
+				rn_queue.push(neighbor);
+			}
+		}
+		already_searched.push_back(start_rn);
+		cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+		FrontierGridNode target_rn = FrontierGridNode(target_x, target_y, 0);
+		FrontierGridNode final_rn = start_rn;
+		int count = 0;
+		while(rn_queue.size() > 0 and count < 1000){
+			FrontierGridNode current_neighbor = rn_queue.top();
+			cout << "current_neighbor " << current_neighbor.x << " " << current_neighbor.y << " cost " << current_neighbor.nodeCost << endl;
+			already_searched.push_back(current_neighbor);
+			rn_queue.pop();
+			if(current_neighbor == target_rn){
+				final_rn = current_neighbor;
+				break;
+			}
+			if(current_neighbor.x-1 >= 0){
+				if(frontier_grid[current_neighbor.x-1][current_neighbor.y] == 0){
+					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x-1, current_neighbor.y, current_neighbor.nodeCost+1);
+					neighbor->previous = &current_neighbor;
+					bool foundAlreadySearched = false;
+					for(int a = 0; a < already_searched.size(); a++){
+						if(already_searched[a] == neighbor){
+							foundAlreadySearched = true;
+							break;
+						}
+					}
+					if(foundAlreadySearched == false){
+						rn_queue.push(neighbor);
+					}
+				}
+			}
+			if(current_neighbor.x+1 < frontier_grid.size()){
+				if(frontier_grid[current_neighbor.x+1][current_neighbor.y] == 0){
+					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x+1, current_neighbor.y, current_neighbor.nodeCost+1);
+					neighbor->previous = &current_neighbor;
+					bool foundAlreadySearched = false;
+					for(int a = 0; a < already_searched.size(); a++){
+						if(already_searched[a] == neighbor){
+							foundAlreadySearched = true;
+							break;
+						}
+					}
+					if(foundAlreadySearched == false){
+						rn_queue.push(neighbor);
+					}
+				}
+			}
+			if(current_neighbor.y-1 >= 0){
+				if(frontier_grid[current_neighbor.x][current_neighbor.y-1] == 0){
+					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x, current_neighbor.y-1, current_neighbor.nodeCost+1);
+					neighbor->previous = &current_neighbor;
+					bool foundAlreadySearched = false;
+					for(int a = 0; a < already_searched.size(); a++){
+						if(already_searched[a] == neighbor){
+							foundAlreadySearched = true;
+							break;
+						}
+					}
+					if(foundAlreadySearched == false){
+						rn_queue.push(neighbor);
+					}
+				}
+			}
+			if(current_neighbor.y+1 < frontier_grid[0].size()){
+				if(frontier_grid[current_neighbor.x][current_neighbor.y+1] == 0){
+					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x, current_neighbor.y+1, current_neighbor.nodeCost+1);
+					neighbor->previous = &current_neighbor;
+					bool foundAlreadySearched = false;
+					for(int a = 0; a < already_searched.size(); a++){
+						if(already_searched[a] == neighbor){
+							foundAlreadySearched = true;
+							break;
+						}
+					}
+					if(foundAlreadySearched == false){
+						rn_queue.push(neighbor);
+					}
+				}
+			}
+			cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+			count = count + 1;
+		}
+		if(final_rn == start_rn){
+			vector<double> current;
+			current.push_back(target_point.getX());
+			current.push_back(target_point.getY());
+			path_to_current_target.push_back(current);
+			return;
+		}
+		else{
+			FrontierGridNode current_rn = final_rn;
+			while(current_rn != start_rn){
+				vector<double> current;
+				current.push_back(current_rn.x);
+				current.push_back(current_rn.y);
+				path_to_current_target.push_back(current);
+				current_rn = *current_rn->previous;
+			}
+			reverse(path_to_current_target.begin(), path_to_current_target.end());
+			return;
+		}
+	}
+
 	void waypointAchieved(Position current_position){
 		cout << "In waypointAchieved" << endl;
 		bool erase_waypoint = true;
-		while(erase_waypoint and path_to_top_point.size() > 0){
-			Position current_waypoint = Position(path_to_top_point[0][0], path_to_top_point[0][1], 0);
-			double dist_to_current_waypoint = current_position.getDistance(current_waypoint);
-			if(dist_to_current_waypoint <= 0.25){
-				cout << "Waypoint Achieved, removing waypoint" << endl;
-				path_to_top_point.erase(path_to_top_point.begin());
+		if(go_to_top_point){
+			while(erase_waypoint and path_to_top_point.size() > 0){
+				Position current_waypoint = Position(path_to_top_point[0][0], path_to_top_point[0][1], 0);
+				double dist_to_current_waypoint = current_position.getDistance(current_waypoint);
+				if(dist_to_current_waypoint <= 0.25){
+					cout << "Waypoint Achieved, removing waypoint" << endl;
+					path_to_top_point.erase(path_to_top_point.begin());
+				}
+				else{
+					erase_waypoint = false;
+				}
 			}
-			else{
-				erase_waypoint = false;
+		}
+		else if(path_to_current_target.size() > 0){
+			while(erase_waypoint and path_to_current_target.size() > 0){
+				Position current_waypoint = Position(path_to_current_target[0][0], path_to_current_target[0][1], 0);
+				double dist_to_current_waypoint = current_position.getDistance(current_waypoint);
+				if(dist_to_current_waypoint <= 0.25){
+					cout << "Waypoint Achieved, removing waypoint" << endl;
+					path_to_current_target.erase(path_to_current_target.begin());
+				}
+				else{
+					erase_waypoint = false;
+				}
 			}
 		}
 	}
@@ -621,6 +885,7 @@ private:
 	vector< vector<int> > passed_grid;
 	vector< vector<int> > hit_grid;
 	vector< vector<double> > path_to_top_point;
+	vector< vector<double> > path_to_current_target;
 	bool frontiers_complete;
 	bool go_to_top_point;
 };
