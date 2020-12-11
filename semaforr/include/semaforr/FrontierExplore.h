@@ -27,42 +27,52 @@
 
 using namespace std;
 
-struct FrontierGridNode{
-	int x;
-	int y;
-	FrontierGridNode * previous;
-	double nodeCost;
-	FrontierGridNode(): x(0), y(0), nodeCost(0.0) { }
-	FrontierGridNode(int xval, int yval, int cost){
-		x = xval;
-		y = yval;
-		nodeCost = cost;
-	}
-	bool operator==(const FrontierGridNode n) {
-		if(x == n.x and y == n.y){
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-	bool operator < (const FrontierGridNode n) const{
-		if(nodeCost < n.nodeCost){
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-	bool operator > (const FrontierGridNode n) const{
-		if(nodeCost > n.nodeCost){
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-}
+// struct FrontierGridNode{
+// 	int x;
+// 	int y;
+// 	vector<FrontierGridNode> nodeSequence;
+// 	int nodeCost;
+// 	int distanceTarget;
+// 	FrontierGridNode(): x(0), y(0), nodeCost(0), distanceTarget(0) { }
+// 	FrontierGridNode(int xval, int yval, int cost, int distval){
+// 		x = xval;
+// 		y = yval;
+// 		nodeCost = cost;
+// 		distanceTarget = distval;
+// 	}
+// 	void addToNodeSequence(FrontierGridNode n){
+// 		nodeSequence.push_back(n);
+// 	}
+// 	void setNodeSequence(vector<FrontierGridNode> ns){
+// 		nodeSequence = ns;
+// 	}
+// 	bool operator==(const FrontierGridNode n) {
+// 		if(x == n.x and y == n.y){
+// 			return true;
+// 		}
+// 		else{
+// 			return false;
+// 		}
+// 	}
+// 	bool operator < (const FrontierGridNode n) const{
+// 		// if((nodeCost + distanceTarget) < (n.nodeCost + n.distanceTarget)){
+// 		if((distanceTarget) > (n.distanceTarget)){
+// 			return true;
+// 		}
+// 		else{
+// 			return false;
+// 		}
+// 	}
+// 	bool operator > (const FrontierGridNode n) const{
+// 		// if((nodeCost + distanceTarget) > (n.nodeCost + n.distanceTarget)){
+// 		if((distanceTarget) < (n.distanceTarget)){
+// 			return true;
+// 		}
+// 		else{
+// 			return false;
+// 		}
+// 	}
+// };
 
 class FrontierExplorer{
 public:
@@ -479,7 +489,7 @@ public:
 					return FORRAction(FORWARD, 0);
 				}
 				else{
-					bool can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_top_point[0][0], path_to_top_point[0][1]), 5);
+					bool can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_top_point[0][0], path_to_top_point[0][1]), 10);
 					if(can_access_waypoint){
 						cout << "Can Access Current waypoint " << path_to_top_point[0][0] << " " << path_to_top_point[0][1] << endl;
 						top_point_decisions++;
@@ -489,7 +499,7 @@ public:
 						int num = -1;
 						while(!can_access_waypoint and num < path_to_top_point.size()){
 							num = num + 1;
-							can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_top_point[num][0], path_to_top_point[num][1]), 5);
+							can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_top_point[num][0], path_to_top_point[num][1]), 10);
 						}
 						cout << "num " << num << " can_access_waypoint " << can_access_waypoint << endl;
 						if(can_access_waypoint){
@@ -539,7 +549,7 @@ public:
 					return FORRAction(FORWARD, 0);
 				}
 				else{
-					bool can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_current_target[0][0], path_to_current_target[0][1]), 5);
+					bool can_access_waypoint = canAccessPoint(laserEndpoints, CartesianPoint(current_position.getX(), current_position.getY()), CartesianPoint(path_to_current_target[0][0], path_to_current_target[0][1]), 10);
 					if(can_access_waypoint){
 						cout << "Can Access Current waypoint " << path_to_current_target[0][0] << " " << path_to_current_target[0][1] << endl;
 						top_point_decisions++;
@@ -645,137 +655,234 @@ public:
 			path_to_current_target.push_back(current);
 			return;
 		}
-		priority_queue<FrontierGridNode, vector<FrontierGridNode>, greater<FrontierGridNode> > rn_queue;
-		vector<FrontierGridNode> already_searched;
-		FrontierGridNode start_rn = FrontierGridNode(current_x, current_y, 0);
-		if(current_x-1 >= 0){
-			if(frontier_grid[current_x-1][current_y] == 0){
-				FrontierGridNode neighbor = FrontierGridNode(current_x-1, current_y, start_rn.nodeCost+1);
-				neighbor->previous = &start_rn;
-				rn_queue.push(neighbor);
-			}
-		}
-		if(current_x+1 < frontier_grid.size()){
-			if(frontier_grid[current_x+1][current_y] == 0){
-				FrontierGridNode neighbor = FrontierGridNode(current_x+1, current_y, start_rn.nodeCost+1);
-				neighbor->previous = &start_rn;
-				rn_queue.push(neighbor);
-			}
-		}
-		if(current_y-1 >= 0){
-			if(frontier_grid[current_x][current_y-1] == 0){
-				FrontierGridNode neighbor = FrontierGridNode(current_x, current_y-1, start_rn.nodeCost+1);
-				neighbor->previous = &start_rn;
-				rn_queue.push(neighbor);
-			}
-		}
-		if(current_y+1 < frontier_grid[0].size()){
-			if(frontier_grid[current_x][current_y+1] == 0){
-				FrontierGridNode neighbor = FrontierGridNode(current_x, current_y+1, start_rn.nodeCost+1);
-				neighbor->previous = &start_rn;
-				rn_queue.push(neighbor);
-			}
-		}
-		already_searched.push_back(start_rn);
-		cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
-		FrontierGridNode target_rn = FrontierGridNode(target_x, target_y, 0);
-		FrontierGridNode final_rn = start_rn;
-		int count = 0;
-		while(rn_queue.size() > 0 and count < 1000){
-			FrontierGridNode current_neighbor = rn_queue.top();
-			cout << "current_neighbor " << current_neighbor.x << " " << current_neighbor.y << " cost " << current_neighbor.nodeCost << endl;
-			already_searched.push_back(current_neighbor);
-			rn_queue.pop();
-			if(current_neighbor == target_rn){
-				final_rn = current_neighbor;
-				break;
-			}
-			if(current_neighbor.x-1 >= 0){
-				if(frontier_grid[current_neighbor.x-1][current_neighbor.y] == 0){
-					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x-1, current_neighbor.y, current_neighbor.nodeCost+1);
-					neighbor->previous = &current_neighbor;
-					bool foundAlreadySearched = false;
-					for(int a = 0; a < already_searched.size(); a++){
-						if(already_searched[a] == neighbor){
-							foundAlreadySearched = true;
-							break;
-						}
-					}
-					if(foundAlreadySearched == false){
-						rn_queue.push(neighbor);
+		int closest_x = current_x;
+		int closest_y = current_y;
+		int min_dist = 100;
+		for(int i = current_x - 2; i <= current_x + 2; i++){
+			for(int j = current_y - 2; j <= current_y + 2; j++){
+				if(i >= 0 and i < frontier_grid.size() and j >= 0 and j < frontier_grid[0].size() and i != current_x and j != current_y){
+					int dist_target = abs(target_x - i) + abs(target_y - j);
+					if(frontier_grid[i][j] == 0 and dist_target < min_dist){
+						closest_x = i;
+						closest_y = j;
+						min_dist = dist_target;
 					}
 				}
 			}
-			if(current_neighbor.x+1 < frontier_grid.size()){
-				if(frontier_grid[current_neighbor.x+1][current_neighbor.y] == 0){
-					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x+1, current_neighbor.y, current_neighbor.nodeCost+1);
-					neighbor->previous = &current_neighbor;
-					bool foundAlreadySearched = false;
-					for(int a = 0; a < already_searched.size(); a++){
-						if(already_searched[a] == neighbor){
-							foundAlreadySearched = true;
-							break;
-						}
-					}
-					if(foundAlreadySearched == false){
-						rn_queue.push(neighbor);
-					}
-				}
-			}
-			if(current_neighbor.y-1 >= 0){
-				if(frontier_grid[current_neighbor.x][current_neighbor.y-1] == 0){
-					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x, current_neighbor.y-1, current_neighbor.nodeCost+1);
-					neighbor->previous = &current_neighbor;
-					bool foundAlreadySearched = false;
-					for(int a = 0; a < already_searched.size(); a++){
-						if(already_searched[a] == neighbor){
-							foundAlreadySearched = true;
-							break;
-						}
-					}
-					if(foundAlreadySearched == false){
-						rn_queue.push(neighbor);
-					}
-				}
-			}
-			if(current_neighbor.y+1 < frontier_grid[0].size()){
-				if(frontier_grid[current_neighbor.x][current_neighbor.y+1] == 0){
-					FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x, current_neighbor.y+1, current_neighbor.nodeCost+1);
-					neighbor->previous = &current_neighbor;
-					bool foundAlreadySearched = false;
-					for(int a = 0; a < already_searched.size(); a++){
-						if(already_searched[a] == neighbor){
-							foundAlreadySearched = true;
-							break;
-						}
-					}
-					if(foundAlreadySearched == false){
-						rn_queue.push(neighbor);
-					}
-				}
-			}
-			cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
-			count = count + 1;
 		}
-		if(final_rn == start_rn){
-			vector<double> current;
-			current.push_back(target_point.getX());
-			current.push_back(target_point.getY());
-			path_to_current_target.push_back(current);
-			return;
-		}
-		else{
-			FrontierGridNode current_rn = final_rn;
-			while(current_rn != start_rn){
-				vector<double> current;
-				current.push_back(current_rn.x);
-				current.push_back(current_rn.y);
-				path_to_current_target.push_back(current);
-				current_rn = *current_rn->previous;
-			}
-			reverse(path_to_current_target.begin(), path_to_current_target.end());
-			return;
-		}
+		vector<double> current;
+		current.push_back(closest_x);
+		current.push_back(closest_y);
+		path_to_current_target.push_back(current);
+
+		// priority_queue<FrontierGridNode> rn_queue;
+		// // vector<FrontierGridNode> already_searched;
+		// // vector<FrontierGridNode> already_on_queue;
+		// vector< vector<int> > searched_grid;
+		// for(int i = 0; i < length; i++){
+		// 	vector<int> col;
+		// 	for(int j = 0; j < height; j ++){
+		// 		col.push_back(0);
+		// 	}
+		// 	searched_grid.push_back(col);
+		// }
+		// FrontierGridNode start_rn = FrontierGridNode(current_x, current_y, 0, (abs(current_x - target_x) + abs(current_y - target_y)));
+		// if(current_x-1 >= 0){
+		// 	if(frontier_grid[current_x-1][current_y] == 0){
+		// 		FrontierGridNode neighbor = FrontierGridNode(current_x-1, current_y, start_rn.nodeCost+1, (abs(current_x-1 - target_x) + abs(current_y - target_y)));
+		// 		neighbor.addToNodeSequence(start_rn);
+		// 		rn_queue.push(neighbor);
+		// 		// already_on_queue.push_back(neighbor);
+		// 	}
+		// }
+		// if(current_x+1 < frontier_grid.size()){
+		// 	if(frontier_grid[current_x+1][current_y] == 0){
+		// 		FrontierGridNode neighbor = FrontierGridNode(current_x+1, current_y, start_rn.nodeCost+1, (abs(current_x+1 - target_x) + abs(current_y - target_y)));
+		// 		neighbor.addToNodeSequence(start_rn);
+		// 		rn_queue.push(neighbor);
+		// 		// already_on_queue.push_back(neighbor);
+		// 	}
+		// }
+		// if(current_y-1 >= 0){
+		// 	if(frontier_grid[current_x][current_y-1] == 0){
+		// 		FrontierGridNode neighbor = FrontierGridNode(current_x, current_y-1, start_rn.nodeCost+1, (abs(current_x - target_x) + abs(current_y-1 - target_y)));
+		// 		neighbor.addToNodeSequence(start_rn);
+		// 		rn_queue.push(neighbor);
+		// 		// already_on_queue.push_back(neighbor);
+		// 	}
+		// }
+		// if(current_y+1 < frontier_grid[0].size()){
+		// 	if(frontier_grid[current_x][current_y+1] == 0){
+		// 		FrontierGridNode neighbor = FrontierGridNode(current_x, current_y+1, start_rn.nodeCost+1, (abs(current_x - target_x) + abs(current_y+1 - target_y)));
+		// 		neighbor.addToNodeSequence(start_rn);
+		// 		rn_queue.push(neighbor);
+		// 		// already_on_queue.push_back(neighbor);
+		// 	}
+		// }
+		// // already_searched.push_back(start_rn);
+		// searched_grid[start_rn.x][start_rn.y] = 1;
+		// cout << "rn_queue " << rn_queue.size() << endl;
+		// FrontierGridNode target_rn = FrontierGridNode(target_x, target_y, 0, 0);
+		// FrontierGridNode final_rn = start_rn;
+		// int count = 0;
+		// while(rn_queue.size() > 0 and count < 5000){
+		// 	FrontierGridNode current_neighbor = rn_queue.top();
+		// 	cout << "current_neighbor " << current_neighbor.x << " " << current_neighbor.y << " cost " << current_neighbor.nodeCost << " distanceTarget " << current_neighbor.distanceTarget << " " << current_neighbor.nodeSequence.size() << endl;
+		// 	searched_grid[current_neighbor.x][current_neighbor.y] = 1;
+		// 	// already_searched.push_back(current_neighbor);
+		// 	rn_queue.pop();
+		// 	cout << "rn_queue " << rn_queue.size() << endl;
+		// 	if(current_neighbor == target_rn){
+		// 		final_rn = current_neighbor;
+		// 		cout << "final_rn " << final_rn.x << " " << final_rn.y << " " << final_rn.nodeSequence.size() << endl;
+		// 		break;
+		// 	}
+		// 	if(current_neighbor.x-1 >= 0){
+		// 		if(frontier_grid[current_neighbor.x-1][current_neighbor.y] == 0){
+		// 			FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x-1, current_neighbor.y, current_neighbor.nodeCost+1, (abs(current_neighbor.x-1 - target_x) + abs(current_neighbor.y - target_y)));
+		// 			// bool foundAlreadySearched = false;
+		// 			// for(int a = 0; a < already_searched.size(); a++){
+		// 			// 	// cout << "neighbor " << neighbor.x << " " << neighbor.y << " already_searched " << already_searched[a].x << " " << already_searched[a].y << " " << (already_searched[a] == neighbor) << endl;
+		// 			// 	if(already_searched[a] == neighbor){
+		// 			// 		foundAlreadySearched = true;
+		// 			// 		break;
+		// 			// 	}
+		// 			// }
+		// 			// bool foundAlreadyOnQueue = false;
+		// 			// if(foundAlreadySearched == false){
+		// 			// 	for(int a = 0; a < already_on_queue.size(); a++){
+		// 			// 		if(already_on_queue[a] == neighbor and already_on_queue[a].nodeCost == neighbor.nodeCost){
+		// 			// 			foundAlreadyOnQueue = true;
+		// 			// 			break;
+		// 			// 		}
+		// 			// 	}
+		// 			// }
+		// 			// cout << "foundAlreadySearched " << foundAlreadySearched << " foundAlreadyOnQueue " << foundAlreadyOnQueue << endl;
+		// 			if(searched_grid[neighbor.x][neighbor.y] == 0){
+		// 				neighbor.setNodeSequence(current_neighbor.nodeSequence);
+		// 				neighbor.addToNodeSequence(current_neighbor);
+		// 				cout << "neighbor added " << neighbor.x << " " << neighbor.y << " " << neighbor.nodeSequence.size() << endl;
+		// 				rn_queue.push(neighbor);
+		// 				// already_on_queue.push_back(neighbor);
+		// 			}
+		// 		}
+		// 	}
+		// 	if(current_neighbor.x+1 < frontier_grid.size()){
+		// 		if(frontier_grid[current_neighbor.x+1][current_neighbor.y] == 0){
+		// 			FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x+1, current_neighbor.y, current_neighbor.nodeCost+1, (abs(current_neighbor.x+1 - target_x) + abs(current_neighbor.y - target_y)));
+		// 			// bool foundAlreadySearched = false;
+		// 			// for(int a = 0; a < already_searched.size(); a++){
+		// 			// 	// cout << "neighbor " << neighbor.x << " " << neighbor.y << " already_searched " << already_searched[a].x << " " << already_searched[a].y << " " << (already_searched[a] == neighbor) << endl;
+		// 			// 	if(already_searched[a] == neighbor){
+		// 			// 		foundAlreadySearched = true;
+		// 			// 		break;
+		// 			// 	}
+		// 			// }
+		// 			// bool foundAlreadyOnQueue = false;
+		// 			// if(foundAlreadySearched == false){
+		// 			// 	for(int a = 0; a < already_on_queue.size(); a++){
+		// 			// 		if(already_on_queue[a] == neighbor and already_on_queue[a].nodeCost == neighbor.nodeCost){
+		// 			// 			foundAlreadyOnQueue = true;
+		// 			// 			break;
+		// 			// 		}
+		// 			// 	}
+		// 			// }
+		// 			// cout << "foundAlreadySearched " << foundAlreadySearched << " foundAlreadyOnQueue " << foundAlreadyOnQueue << endl;
+		// 			if(searched_grid[neighbor.x][neighbor.y] == 0){
+		// 				neighbor.setNodeSequence(current_neighbor.nodeSequence);
+		// 				neighbor.addToNodeSequence(current_neighbor);
+		// 				cout << "neighbor added " << neighbor.x << " " << neighbor.y << " " << neighbor.nodeSequence.size() << endl;
+		// 				rn_queue.push(neighbor);
+		// 				// already_on_queue.push_back(neighbor);
+		// 			}
+		// 		}
+		// 	}
+		// 	if(current_neighbor.y-1 >= 0){
+		// 		if(frontier_grid[current_neighbor.x][current_neighbor.y-1] == 0){
+		// 			FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x, current_neighbor.y-1, current_neighbor.nodeCost+1, (abs(current_neighbor.x - target_x) + abs(current_neighbor.y-1 - target_y)));
+		// 			// bool foundAlreadySearched = false;
+		// 			// for(int a = 0; a < already_searched.size(); a++){
+		// 			// 	// cout << "neighbor " << neighbor.x << " " << neighbor.y << " already_searched " << already_searched[a].x << " " << already_searched[a].y << " " << (already_searched[a] == neighbor) << endl;
+		// 			// 	if(already_searched[a] == neighbor){
+		// 			// 		foundAlreadySearched = true;
+		// 			// 		break;
+		// 			// 	}
+		// 			// }
+		// 			// bool foundAlreadyOnQueue = false;
+		// 			// if(foundAlreadySearched == false){
+		// 			// 	for(int a = 0; a < already_on_queue.size(); a++){
+		// 			// 		if(already_on_queue[a] == neighbor and already_on_queue[a].nodeCost == neighbor.nodeCost){
+		// 			// 			foundAlreadyOnQueue = true;
+		// 			// 			break;
+		// 			// 		}
+		// 			// 	}
+		// 			// }
+		// 			// cout << "foundAlreadySearched " << foundAlreadySearched << " foundAlreadyOnQueue " << foundAlreadyOnQueue << endl;
+		// 			if(searched_grid[neighbor.x][neighbor.y] == 0){
+		// 				neighbor.setNodeSequence(current_neighbor.nodeSequence);
+		// 				neighbor.addToNodeSequence(current_neighbor);
+		// 				cout << "neighbor added " << neighbor.x << " " << neighbor.y << " " << neighbor.nodeSequence.size() << endl;
+		// 				rn_queue.push(neighbor);
+		// 				// already_on_queue.push_back(neighbor);
+		// 			}
+		// 		}
+		// 	}
+		// 	if(current_neighbor.y+1 < frontier_grid[0].size()){
+		// 		if(frontier_grid[current_neighbor.x][current_neighbor.y+1] == 0){
+		// 			FrontierGridNode neighbor = FrontierGridNode(current_neighbor.x, current_neighbor.y+1, current_neighbor.nodeCost+1, (abs(current_neighbor.x - target_x) + abs(current_neighbor.y+1 - target_y)));
+		// 			// bool foundAlreadySearched = false;
+		// 			// for(int a = 0; a < already_searched.size(); a++){
+		// 			// 	// cout << "neighbor " << neighbor.x << " " << neighbor.y << " already_searched " << already_searched[a].x << " " << already_searched[a].y << " " << (already_searched[a] == neighbor) << endl;
+		// 			// 	if(already_searched[a] == neighbor){
+		// 			// 		foundAlreadySearched = true;
+		// 			// 		break;
+		// 			// 	}
+		// 			// }
+		// 			// bool foundAlreadyOnQueue = false;
+		// 			// if(foundAlreadySearched == false){
+		// 			// 	for(int a = 0; a < already_on_queue.size(); a++){
+		// 			// 		if(already_on_queue[a] == neighbor and already_on_queue[a].nodeCost == neighbor.nodeCost){
+		// 			// 			foundAlreadyOnQueue = true;
+		// 			// 			break;
+		// 			// 		}
+		// 			// 	}
+		// 			// }
+		// 			// cout << "foundAlreadySearched " << foundAlreadySearched << " foundAlreadyOnQueue " << foundAlreadyOnQueue << endl;
+		// 			if(searched_grid[neighbor.x][neighbor.y] == 0){
+		// 				neighbor.setNodeSequence(current_neighbor.nodeSequence);
+		// 				neighbor.addToNodeSequence(current_neighbor);
+		// 				cout << "neighbor added " << neighbor.x << " " << neighbor.y << " " << neighbor.nodeSequence.size() << endl;
+		// 				rn_queue.push(neighbor);
+		// 				// already_on_queue.push_back(neighbor);
+		// 			}
+		// 		}
+		// 	}
+		// 	count = count + 1;
+		// 	cout << "rn_queue " << rn_queue.size() << " count " << count << endl;
+		// }
+		// if(final_rn == start_rn){
+		// 	cout << "final_rn is still start_rn" << endl;
+		// 	vector<double> current;
+		// 	current.push_back(target_point.getX());
+		// 	current.push_back(target_point.getY());
+		// 	path_to_current_target.push_back(current);
+		// 	return;
+		// }
+		// else{
+		// 	cout << "found target_rn, traverse links to build path" << endl;
+		// 	cout << "final_rn " << final_rn.x << " " << final_rn.y << " " << final_rn.nodeSequence.size() << endl;
+		// 	for(int i = 0; i < final_rn.nodeSequence.size(); i++){
+		// 		vector<double> current;
+		// 		current.push_back(final_rn.nodeSequence[i].x);
+		// 		current.push_back(final_rn.nodeSequence[i].y);
+		// 		path_to_current_target.push_back(current);
+		// 	}
+		// 	cout << "final path_to_current_target " << endl;
+		// 	for(int i = 0; i < path_to_current_target.size(); i++){
+		// 		cout << path_to_current_target[i][0] << " " << path_to_current_target[i][1] << endl;
+		// 	}
+		// 	return;
+		// }
 	}
 
 	void waypointAchieved(Position current_position){
@@ -785,7 +892,7 @@ public:
 			while(erase_waypoint and path_to_top_point.size() > 0){
 				Position current_waypoint = Position(path_to_top_point[0][0], path_to_top_point[0][1], 0);
 				double dist_to_current_waypoint = current_position.getDistance(current_waypoint);
-				if(dist_to_current_waypoint <= 0.25){
+				if(dist_to_current_waypoint <= 0.75){
 					cout << "Waypoint Achieved, removing waypoint" << endl;
 					path_to_top_point.erase(path_to_top_point.begin());
 				}
@@ -798,7 +905,7 @@ public:
 			while(erase_waypoint and path_to_current_target.size() > 0){
 				Position current_waypoint = Position(path_to_current_target[0][0], path_to_current_target[0][1], 0);
 				double dist_to_current_waypoint = current_position.getDistance(current_waypoint);
-				if(dist_to_current_waypoint <= 0.25){
+				if(dist_to_current_waypoint <= 0.75){
 					cout << "Waypoint Achieved, removing waypoint" << endl;
 					path_to_current_target.erase(path_to_current_target.begin());
 				}
