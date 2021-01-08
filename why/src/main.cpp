@@ -206,19 +206,59 @@ public:
 			gettimeofday(&cv,NULL);
 			start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 			//target = "(" + parseText(current_log)[4] + ", " + parseText(current_log)[5] + ")";
-			decisionTier = atoi(parseText(current_log)[10].c_str());
+			decisionTier = atof(parseText(current_log)[10].c_str());
 			vetoedActions = parseText(current_log)[11];
 			chosenAction = parseText(current_log)[12]+parseText(current_log)[13];
 			advisorComments = parseText(current_log)[15];
 			//ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
+			vector< vector <string> > veteoes;
+			std::stringstream ss;
+			ss.str(vetoedActions);
+			std::string item;
+			char delim = ';';
+			while (std::getline(ss, item, delim)) {
+				std::vector<std::string> vstrings;
+				std::stringstream st;
+				st.str(item);
+				std::string sitem;
+				char sdelim = ' ';
+				while (std::getline(st, sitem, sdelim)) {
+					vstrings.push_back(sitem);
+				}
+				vetoes.push_back(vstrings);
+			}
+			
 
-			if (decisionTier == 1){
-				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensor range and this would get us closer to it.\n" + victoryAlternateActions(chosenAction);
-			} else if (vetoedActions == "0 1;0 2;0 3;0 4;0 5;" and chosenAction == "30") {
+			if (decisionTier == 1.1){
+				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.2){
+				explanationString.data = "I could see our waypoint and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.3){
+				explanationString.data = "I can't get to where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.4){
+				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this show me the way.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.5){
+				explanationString.data = "I am " + actioningText[chosenAction] + " because I want to check if I'm stuck here.\n" + "Somewhat confident, because I am not sure if I am stuck.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.6){
+				explanationString.data = "I want to get closer to our target and " + actioningText[chosenAction] + " would let us explore in that direction.\n" + "Somewhat confident, because I am not sure if this is the right way to our target.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.7){
+				explanationString.data = "I want to learn about our world and " + actioningText[chosenAction] + " would let me explore.\n" + "Somewhat confident, because I am not sure if area will help me get around later.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (decisionTier == 1.8){
+				explanationString.data = "I want to find the boundaries of our world and " + actioningText[chosenAction] + " would let find them.\n" + "Somewhat confident, because I am not sure if I will need to know about these boundaries later.\n" + alternateActions(chosenAction, decisionTier);
+			}
+			else if (vetoedActions == "0 1;0 2;0 3;0 4;0 5;0 6;" and chosenAction == "30") {
 				//ROS_DEBUG(vetoedActions << endl);
 				decisionTier = 1;
 				explanationString.data = "I decided to " + actionText[chosenAction] + " because there's not enough room to move forward.\n" + "Highly confident, since there is not enough room to move forward.\n" + vetoedAlternateActions(vetoedActions, chosenAction);
-			} else {
+			}
+			else {
 				parseTier3Comments(advisorComments);
 				advisorTScore = computeTier3TScores(advisorComments, chosenAction);
 				computeConfidence(chosenAction);
@@ -546,12 +586,35 @@ public:
 		return explanation + "\n";
 	}
 	
-	std::string victoryAlternateActions(std::string chosenAction) {
+	std::string alternateActions(std::string chosenAction, int decTier) {
 		std::string alternateExplanations;
 		std::map <std::string, std::string>::iterator itr;
 		for (itr = actionText.begin(); itr != actionText.end(); itr++) {
 			if (itr->first != chosenAction and itr->first != "30" and (itr->second).length() >0) {
-				alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our goal and another action would get us closer to it.\n";
+				if (decTier = 1.1){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our goal and another action would get us closer to it.\n";
+				}
+				else if (decTier = 1.2){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our waypoint and another action would get us closer to it.\n";
+				}
+				else if (decTier = 1.3){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I need to get through here and another action would reposition me better.\n";
+				}
+				else if (decTier = 1.4){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I want to turn around so I can see where I want to go.\n";
+				}
+				else if (decTier = 1.5){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I want to turn to check if I am stuck.\n";
+				}
+				else if (decTier = 1.6){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to find our target.\n";
+				}
+				else if (decTier = 1.7){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to learn about the world.\n";
+				}
+				else if (decTier = 1.8){
+					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better find the boundaries of this world.\n";
+				}
 			}
 		}
 		return alternateExplanations;

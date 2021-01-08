@@ -972,6 +972,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
+      // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
     }
     //if task is complete
     if(taskCompleted == true){
@@ -995,6 +996,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
+      // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
       //ROS_DEBUG("Task Cleared!!");
@@ -1037,6 +1039,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       beliefs->getAgentState()->setRepositionCount(0);
       beliefs->getAgentState()->setFindAWayCount(0);
       beliefs->getAgentState()->setEnforcerCount(0);
+      // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
     }
     // else if(isPlanActive == false and aStarOn){
     //   ROS_DEBUG("No active plan, setting up new plan!!");
@@ -1056,6 +1059,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         beliefs->getAgentState()->setRepositionCount(0);
         beliefs->getAgentState()->setFindAWayCount(0);
         beliefs->getAgentState()->setEnforcerCount(0);
+        // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
         tier1->resetLocalExploration();
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
@@ -1107,10 +1111,12 @@ FORRAction Controller::decide() {
   FORRAction decidedAction;
   if(!highwayExploration->getHighwaysComplete() and highwaysOn){
     decidedAction = highwayExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
+    decisionStats->decisionTier = 1.7;
   }
   else if(!frontierExploration->getFrontiersComplete() and frontiersOn){
     decidedAction = frontierExploration->exploreDecision(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
     cout << "frontier decision " << decidedAction.type << " " << decidedAction.parameter << endl;
+    decisionStats->decisionTier = 1.8;
   }
   else{
     highwayFinished++;
@@ -1434,8 +1440,22 @@ bool Controller::tierOneDecision(FORRAction *decision){
   else{
     ROS_INFO("Advisor AvoidObstacles will veto actions");
     tier1->advisorAvoidObstacles();
+    vector<FORRAction> AOVetoedActions;
+    set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+    set<FORRAction>::iterator it;
+    for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
+      AOVetoedActions.push_back(*it);
+    }
     ROS_INFO("Advisor NotOpposite will veto actions");
     tier1->advisorNotOpposite();
+    vector<FORRAction> NOVetoedActions;
+    set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+    set<FORRAction>::iterator it;
+    for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
+      if(AOVetoedActions.find(*it) == AOVetoedActions.end()){
+        NOVetoedActions.push_back(*it);
+      }
+    }
     if(tier1->advisorEnforcer(decision)){ 
       ROS_INFO_STREAM("Advisor Enforcer has made a decision " << decision->type << " " << decision->parameter);
       // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
@@ -1476,23 +1496,51 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    // else{
-    //   // group of vetoing tier1 advisors which adds to the list of vetoed actions
-    //   ROS_INFO("Advisor don't go back will veto actions");
-    //   tier1->advisorDontGoBack();
+    // ROS_INFO("Advisor don't go back will veto actions");
+    // tier1->advisorDontGoBack();
+    // vector<FORRAction> DGBVetoedActions;
+    // set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+    // set<FORRAction>::iterator it;
+    // for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
+    //   if(AOVetoedActions.find(*it) == AOVetoedActions.end() and NOVetoedActions.find(*it) == NOVetoedActions.end()){
+    //     DGBVetoedActions.push_back(*it);
+    //   }
     // }
-    // if(situationsOn){
-    //   ROS_INFO("Advisor situation will veto actions");
-    //   tier1->advisorSituation();
+    vector<FORRAction> SVetoedActions;
+    if(situationsOn){
+      ROS_INFO("Advisor situation will veto actions");
+      tier1->advisorSituation();
+      set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+      set<FORRAction>::iterator it;
+      for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
+        if(AOVetoedActions.find(*it) == AOVetoedActions.end() and NOVetoedActions.find(*it) == NOVetoedActions.end() and DGBVetoedActions.find(*it) == DGBVetoedActions.end()){
+          SVetoedActions.push_back(*it);
+        }
+      }
+    }
+    std::stringstream vetoList;
+    vector<FORRAction>::iterator it;
+    for(it = AOVetoedActions->begin(); it != AOVetoedActions->end(); it++){
+      vetoList << it->type << " " << it->parameter << " 1a;";
+    }
+    for(it = NOVetoedActions->begin(); it != NOVetoedActions->end(); it++){
+      vetoList << it->type << " " << it->parameter << " 1b;";
+    }
+    // for(it = DGBVetoedActions->begin(); it != DGBVetoedActions->end(); it++){
+    //   vetoList << it->type << " " << it->parameter << " 1c;";
     // }
+    for(it = SVetoedActions->begin(); it != SVetoedActions->end(); it++){
+      vetoList << it->type << " " << it->parameter << " 1d;";
+    }
+    decisionStats->vetoedActions = vetoList.str();
   }
-  set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
-  std::stringstream vetoList;
-  set<FORRAction>::iterator it;
-  for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
-    vetoList << it->type << " " << it->parameter << ";";
-  }
-  decisionStats->vetoedActions = vetoList.str();
+  // set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
+  // std::stringstream vetoList;
+  // set<FORRAction>::iterator it;
+  // for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
+  //   vetoList << it->type << " " << it->parameter << ";";
+  // }
+  // decisionStats->vetoedActions = vetoList.str();
   //cout << "vetoedActions = " << vetoList.str() << endl;
   
   return decisionMade;

@@ -520,8 +520,6 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
                 if(forward.parameter >= decision->parameter){
                   ROS_DEBUG("Waypoint in sight and no obstacles and not vetoed, Enforcer advisor to take decision");
                   decisionMade = true;
-                  // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-                  // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
                   // if(decision->type == FORWARD)
                   //   beliefs->getAgentState()->setGetOutTriggered(false);
                 }
@@ -648,6 +646,9 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             waypointPathInSight = true;
             break;
           }
+        }
+        if(waypointPathInSight == false){
+          beliefs->getAgentState()->increaseEnforcerCount();
         }
       }
       else if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoints()[i].getType() == 2){
@@ -801,6 +802,8 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     beliefs->getAgentState()->setRepositionCount(0);
     beliefs->getAgentState()->setFindAWayCount(0);
     beliefs->getAgentState()->setEnforcerCount(0);
+    // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+    // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
   }
   return decisionMade;
 }
@@ -851,6 +854,7 @@ bool Tier1Advisor::advisorDontGoBack(){
   set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
   set<FORRAction> *action_set = beliefs->getAgentState()->getActionSet();
   set<FORRAction>::iterator actionIter;
+  int numOfVetoes = 0;
   for(actionIter = action_set->begin(); actionIter != action_set->end(); actionIter++){
     FORRAction forrAction = *actionIter;
     if(std::find(vetoedActions->begin(), vetoedActions->end(), forrAction) != vetoedActions->end()){
@@ -865,11 +869,12 @@ bool Tier1Advisor::advisorDontGoBack(){
         FORRAction a(forrAction.type,forrAction.parameter);
         ROS_DEBUG_STREAM("Vetoed action : " << a.type << " " << a.parameter);
         vetoedActions->insert(a);
+        numOfVetoes++;
       }
     }
   }
-  cout << "Don't go back number of vetoes " << vetoedActions->size() << " " << action_set->size() << endl;
-  if(vetoedActions->size() == beliefs->getAgentState()->getRotationActionSet()->size()){
+  cout << "Don't go back number of vetoes " << numOfVetoes << " " << action_set->size() << endl;
+  if(numOfVetoes == beliefs->getAgentState()->getRotationActionSet()->size()){
     beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
   }
   return false; 
