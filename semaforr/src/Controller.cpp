@@ -1449,8 +1449,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     ROS_INFO("Advisor NotOpposite will veto actions");
     tier1->advisorNotOpposite();
     vector<FORRAction> NOVetoedActions;
-    set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
-    set<FORRAction>::iterator it;
+    vetoedActions = beliefs->getAgentState()->getVetoedActions();
     for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
       if(AOVetoedActions.find(*it) == AOVetoedActions.end()){
         NOVetoedActions.push_back(*it);
@@ -1498,9 +1497,8 @@ bool Controller::tierOneDecision(FORRAction *decision){
     }
     // ROS_INFO("Advisor don't go back will veto actions");
     // tier1->advisorDontGoBack();
-    // vector<FORRAction> DGBVetoedActions;
-    // set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
-    // set<FORRAction>::iterator it;
+    vector<FORRAction> DGBVetoedActions;
+    // vetoedActions = beliefs->getAgentState()->getVetoedActions();
     // for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
     //   if(AOVetoedActions.find(*it) == AOVetoedActions.end() and NOVetoedActions.find(*it) == NOVetoedActions.end()){
     //     DGBVetoedActions.push_back(*it);
@@ -1510,8 +1508,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     if(situationsOn){
       ROS_INFO("Advisor situation will veto actions");
       tier1->advisorSituation();
-      set<FORRAction> *vetoedActions = beliefs->getAgentState()->getVetoedActions();
-      set<FORRAction>::iterator it;
+      vetoedActions = beliefs->getAgentState()->getVetoedActions();
       for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
         if(AOVetoedActions.find(*it) == AOVetoedActions.end() and NOVetoedActions.find(*it) == NOVetoedActions.end() and DGBVetoedActions.find(*it) == DGBVetoedActions.end()){
           SVetoedActions.push_back(*it);
@@ -1519,7 +1516,6 @@ bool Controller::tierOneDecision(FORRAction *decision){
       }
     }
     std::stringstream vetoList;
-    vector<FORRAction>::iterator it;
     for(it = AOVetoedActions->begin(); it != AOVetoedActions->end(); it++){
       vetoList << it->type << " " << it->parameter << " 1a;";
     }

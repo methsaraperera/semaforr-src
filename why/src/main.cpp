@@ -211,7 +211,7 @@ public:
 			chosenAction = parseText(current_log)[12]+parseText(current_log)[13];
 			advisorComments = parseText(current_log)[15];
 			//ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
-			vector< vector <string> > veteoes;
+			vector< vector <string> > vetoes;
 			std::stringstream ss;
 			ss.str(vetoedActions);
 			std::string item;
