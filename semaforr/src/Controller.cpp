@@ -1451,7 +1451,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     vector<FORRAction> NOVetoedActions;
     vetoedActions = beliefs->getAgentState()->getVetoedActions();
     for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
-      if(AOVetoedActions.find(*it) == AOVetoedActions.end()){
+      if(find(AOVetoedActions.begin(), AOVetoedActions.end(), *it) == AOVetoedActions.end()){
         NOVetoedActions.push_back(*it);
       }
     }
@@ -1500,7 +1500,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
     vector<FORRAction> DGBVetoedActions;
     // vetoedActions = beliefs->getAgentState()->getVetoedActions();
     // for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
-    //   if(AOVetoedActions.find(*it) == AOVetoedActions.end() and NOVetoedActions.find(*it) == NOVetoedActions.end()){
+    //   if(find(AOVetoedActions.begin(), AOVetoedActions.end(), *it) == AOVetoedActions.end() and find(NOVetoedActions.begin(), NOVetoedActions.end(), *it) == NOVetoedActions.end()){
     //     DGBVetoedActions.push_back(*it);
     //   }
     // }
@@ -1510,22 +1510,22 @@ bool Controller::tierOneDecision(FORRAction *decision){
       tier1->advisorSituation();
       vetoedActions = beliefs->getAgentState()->getVetoedActions();
       for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
-        if(AOVetoedActions.find(*it) == AOVetoedActions.end() and NOVetoedActions.find(*it) == NOVetoedActions.end() and DGBVetoedActions.find(*it) == DGBVetoedActions.end()){
+        if(find(AOVetoedActions.begin(), AOVetoedActions.end(), *it) == AOVetoedActions.end() and find(NOVetoedActions.begin(), NOVetoedActions.end(), *it) == NOVetoedActions.end() and find(DGBVetoedActions.begin(), DGBVetoedActions.end(), *it) == DGBVetoedActions.end()){
           SVetoedActions.push_back(*it);
         }
       }
     }
     std::stringstream vetoList;
-    for(it = AOVetoedActions->begin(); it != AOVetoedActions->end(); it++){
+    for(it = AOVetoedActions.begin(); it != AOVetoedActions.end(); it++){
       vetoList << it->type << " " << it->parameter << " 1a;";
     }
-    for(it = NOVetoedActions->begin(); it != NOVetoedActions->end(); it++){
+    for(it = NOVetoedActions.begin(); it != NOVetoedActions.end(); it++){
       vetoList << it->type << " " << it->parameter << " 1b;";
     }
-    // for(it = DGBVetoedActions->begin(); it != DGBVetoedActions->end(); it++){
+    // for(it = DGBVetoedActions.begin(); it != DGBVetoedActions.end(); it++){
     //   vetoList << it->type << " " << it->parameter << " 1c;";
     // }
-    for(it = SVetoedActions->begin(); it != SVetoedActions->end(); it++){
+    for(it = SVetoedActions.begin(); it != SVetoedActions.end(); it++){
       vetoList << it->type << " " << it->parameter << " 1d;";
     }
     decisionStats->vetoedActions = vetoList.str();
