@@ -1516,17 +1516,17 @@ bool Controller::tierOneDecision(FORRAction *decision){
       }
     }
     std::stringstream vetoList;
-    for(it = AOVetoedActions.begin(); it != AOVetoedActions.end(); it++){
-      vetoList << it->type << " " << it->parameter << " 1a;";
+    for(int i = 0; i < AOVetoedActions.size(); i++){
+      vetoList << AOVetoedActions[i].type << " " << AOVetoedActions[i].parameter << " 1a;";
     }
-    for(it = NOVetoedActions.begin(); it != NOVetoedActions.end(); it++){
-      vetoList << it->type << " " << it->parameter << " 1b;";
+    for(int i = 0; i < NOVetoedActions.size(); i++){
+      vetoList << NOVetoedActions[i].type << " " << NOVetoedActions[i].parameter << " 1b;";
     }
-    // for(it = DGBVetoedActions.begin(); it != DGBVetoedActions.end(); it++){
-    //   vetoList << it->type << " " << it->parameter << " 1c;";
+    // for(int i = 0; i < DGBVetoedActions.size(); i++){
+    //   vetoList << DGBVetoedActions[i].type << " " << DGBVetoedActions[i].parameter << " 1c;";
     // }
-    for(it = SVetoedActions.begin(); it != SVetoedActions.end(); it++){
-      vetoList << it->type << " " << it->parameter << " 1d;";
+    for(int i = 0; i < SVetoedActions.size(); i++){
+      vetoList << SVetoedActions[i].type << " " << SVetoedActions[i].parameter << " 1d;";
     }
     decisionStats->vetoedActions = vetoList.str();
   }
