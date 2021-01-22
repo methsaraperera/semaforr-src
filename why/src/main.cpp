@@ -227,42 +227,52 @@ public:
 				}
 				vetoes.push_back(vstrings);
 			}
-			
+			int numMovesVetoed = 0;
+			int numRotationsVetoed = 0;
+			for(int i = 0; i < vetoes.size(); i++){
+				if(vetoes[i][0] == '0'){
+					numMovesVetoed ++;
+				}
+				else if(vetoes[i][0] == '1' or vetoes[i][0] == '2'){
+					numRotationsVetoed ++;
+				}
+			}
+			// enforcer2, thru3, behind4, out5, lle6
 
 			if (decisionTier == 1.1){
-				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.2){
-				explanationString.data = "I could see our waypoint and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I could see our waypoint and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.3){
-				explanationString.data = "I can't get to where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I can't get to where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.4){
-				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this show me the way.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this show me the way.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.5){
-				explanationString.data = "I am " + actioningText[chosenAction] + " because I want to check if I'm stuck here.\n" + "Somewhat confident, because I am not sure if I am stuck.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I am " + actioningText[chosenAction] + " because I'm stuck and want to get out of here.\n" + "Somewhat confident, because I am not sure if this will get me out.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.6){
-				explanationString.data = "I want to get closer to our target and " + actioningText[chosenAction] + " would let us explore in that direction.\n" + "Somewhat confident, because I am not sure if this is the right way to our target.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I want to get closer to our target and " + actioningText[chosenAction] + " would let us explore in that direction.\n" + "Somewhat confident, because I am not sure if this is the right way to our target.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.7){
-				explanationString.data = "I want to learn about our world and " + actioningText[chosenAction] + " would let me explore.\n" + "Somewhat confident, because I am not sure if area will help me get around later.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I want to learn about our world and " + actioningText[chosenAction] + " would let me explore.\n" + "Somewhat confident, because I am not sure if area will help me get around later.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.8){
-				explanationString.data = "I want to find the boundaries of our world and " + actioningText[chosenAction] + " would let find them.\n" + "Somewhat confident, because I am not sure if I will need to know about these boundaries later.\n" + alternateActions(chosenAction, decisionTier);
+				explanationString.data = "I want to find the boundaries of our world and " + actioningText[chosenAction] + " would let find them.\n" + "Somewhat confident, because I am not sure if I will need to know about these boundaries later.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
-			else if (vetoedActions == "0 1;0 2;0 3;0 4;0 5;0 6;" and chosenAction == "30") {
+			else if (numMovesVetoed == 6 and numRotationsVetoed == 12 and chosenAction == "30") {
 				//ROS_DEBUG(vetoedActions << endl);
 				decisionTier = 1;
-				explanationString.data = "I decided to " + actionText[chosenAction] + " because there's not enough room to move forward.\n" + "Highly confident, since there is not enough room to move forward.\n" + vetoedAlternateActions(vetoedActions, chosenAction);
+				explanationString.data = "I decided to " + actionText[chosenAction] + " because I want to think more about what to do.\n" + "Not confident, since I don't know what to do.\n" + vetoedAlternateActions(vetoes, chosenAction);
 			}
 			else {
 				parseTier3Comments(advisorComments);
 				advisorTScore = computeTier3TScores(advisorComments, chosenAction);
 				computeConfidence(chosenAction);
-				explanationString.data = tier3Explanation(chosenAction) + "\n" + confidenceExplanation() + "\n" + vetoedAlternateActions(vetoedActions, chosenAction) + "\n" + tier3AlternateActions(advisorComments, chosenAction);
+				explanationString.data = tier3Explanation(chosenAction) + "\n" + confidenceExplanation() + "\n" + vetoedAlternateActions(vetoes, chosenAction) + "\n" + tier3AlternateActions(advisorComments, chosenAction);
 			}
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
@@ -586,59 +596,85 @@ public:
 		return explanation + "\n";
 	}
 	
-	std::string alternateActions(std::string chosenAction, int decTier) {
+	std::string alternateActions(std::string chosenAction, int decTier, vector< vector <string> > vetoes) {
 		std::string alternateExplanations;
 		std::map <std::string, std::string>::iterator itr;
-		for (itr = actionText.begin(); itr != actionText.end(); itr++) {
-			if (itr->first != chosenAction and itr->first != "30" and (itr->second).length() >0) {
-				if (decTier = 1.1){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our goal and another action would get us closer to it.\n";
+		if (decTier == 1.1 or decTier == 1.7 or decTier == 1.8){
+			for (itr = actionText.begin(); itr != actionText.end(); itr++) {
+				if (itr->first != chosenAction and itr->first != "30" and (itr->second).length() >0) {
+					if (decTier = 1.1){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our goal and another action would get us closer to it.\n";
+					}
+					else if (decTier = 1.7){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to learn about the world.\n";
+					}
+					else if (decTier = 1.8){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better find the boundaries of this world.\n";
+					}
 				}
-				else if (decTier = 1.2){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our waypoint and another action would get us closer to it.\n";
+			}
+		}
+		else{
+			for (itr = actionText.begin(); itr != actionText.end(); itr++) {
+				bool actionVetoed = false;
+				for(int i = 0; i < vetoes.size(); i++){
+					if(itr->first == vetoes[i][0]+vetoes[i][1]){
+						actionVetoed = true;
+						if(vetoes[i][2] == '1a'){
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because the wall was in the way.\n";
+						}
+						else if(vetoes[i][2] == '1b'){
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I was just facing that way.\n";
+						}
+						else if(vetoes[i][2] == '1c'){
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
+						}
+						else if(vetoes[i][2] == '1d'){
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I don't think I should do that in our current situation.\n";
+						}
+					}
 				}
-				else if (decTier = 1.3){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I need to get through here and another action would reposition me better.\n";
-				}
-				else if (decTier = 1.4){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I want to turn around so I can see where I want to go.\n";
-				}
-				else if (decTier = 1.5){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I want to turn to check if I am stuck.\n";
-				}
-				else if (decTier = 1.6){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to find our target.\n";
-				}
-				else if (decTier = 1.7){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to learn about the world.\n";
-				}
-				else if (decTier = 1.8){
-					alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better find the boundaries of this world.\n";
+				if (itr->first != chosenAction and itr->first != "30" and (itr->second).length() >0 and actionVetoed == false) {
+					if (decTier = 1.2){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our waypoint and another action would get us closer to it.\n";
+					}
+					else if (decTier = 1.3){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I need to get through here and another action would reposition me better.\n";
+					}
+					else if (decTier = 1.4){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I want to turn around so I can see where I want to go.\n";
+					}
+					else if (decTier = 1.5){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I think another action will help me get out of here.\n";
+					}
+					else if (decTier = 1.6){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to find our target.\n";
+					}
 				}
 			}
 		}
 		return alternateExplanations;
 	}
 	
-	std::string vetoedAlternateActions(std::string vetoedActions, std::string chosenAction){
+	std::string vetoedAlternateActions(vector< vector <string> > vetoes, std::string chosenAction){
 		std::string alternateExplanations;
-
-		std::vector<std::string> vstrings;
-		std::stringstream ss;
-		ss.str(vetoedActions);
-		std::string item;
-		char delim = ';';
-		while (std::getline(ss, item, delim)) {
-			item.erase(std::remove(item.begin(), item.end(), ' '), item.end());
-			vstrings.push_back(item);
-		}
-		
-		for (int i=0; i < vstrings.size(); i++) {
-			if (vstrings[i].at(0) == '0' and (chosenAction.at(0) == '0' or chosenAction.at(0) == '3')) {
-				alternateExplanations = alternateExplanations + "I decided not to " + actionText[vstrings[i]] + " because the wall was in the way.\n";
-			}
-			else if ((vstrings[i].at(0) == '1' or vstrings[i].at(0) == '2') and (chosenAction.at(0) == '1' or chosenAction.at(0) == '2')) {
-				alternateExplanations = alternateExplanations + "I decided not to " + actionText[vstrings[i]] + " because I was just facing that way.\n";
+		std::map <std::string, std::string>::iterator itr;
+		for (itr = actionText.begin(); itr != actionText.end(); itr++) {
+			for(int i = 0; i < vetoes.size(); i++){
+				if(itr->first == vetoes[i][0]+vetoes[i][1]){
+					if(vetoes[i][2] == '1a'){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because the wall was in the way.\n";
+					}
+					else if(vetoes[i][2] == '1b'){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I was just facing that way.\n";
+					}
+					else if(vetoes[i][2] == '1c'){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
+					}
+					else if(vetoes[i][2] == '1d'){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I don't think I should do that in our current situation.\n";
+					}
+				}
 			}
 		}
 		return alternateExplanations;

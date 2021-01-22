@@ -1458,7 +1458,20 @@ bool Controller::tierOneDecision(FORRAction *decision){
     if(tier1->advisorEnforcer(decision)){ 
       ROS_INFO_STREAM("Advisor Enforcer has made a decision " << decision->type << " " << decision->parameter);
       // circumnavigator->addToStack(beliefs->getAgentState()->getCurrentPosition(), beliefs->getAgentState()->getCurrentLaserScan());
-      decisionStats->decisionTier = 1.2;
+      if(beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "skeleton" or beliefs->getAgentState()->getCurrentTask()->getPlannerName() == "hallwayskel"){
+        if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getCreator() == 2){
+          decisionStats->decisionTier = 1.5;
+        }
+        else if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getCreator() == 3){
+          decisionStats->decisionTier = 1.6;
+        }
+        else{
+          decisionStats->decisionTier = 1.2;
+        }
+      }
+      else{
+        decisionStats->decisionTier = 1.2;
+      }
       decisionMade = true;
     }
     if(doorwayOn and decisionMade == false){
