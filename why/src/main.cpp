@@ -76,7 +76,7 @@ private:
 	double gini, overallSupport, confidenceLevel;
 	std::vector <double> diffTScores, diffOverallSupports;
 	double computationTimeSec=0.0;
-	int decisionTier=0;
+	double decisionTier=0;
 
 public:
 	//! ROS node initialization
@@ -197,7 +197,7 @@ public:
 		double start_timecv, end_timecv;
 		while(nh_.ok()) {
 			while(init_message_received == false){
-				//ROS_DEBUG("Waiting for first message");
+				ROS_DEBUG("Waiting for first message");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -210,7 +210,7 @@ public:
 			vetoedActions = parseText(current_log)[11];
 			chosenAction = parseText(current_log)[12]+parseText(current_log)[13];
 			advisorComments = parseText(current_log)[15];
-			//ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
+			ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
 			vector< vector <string> > vetoes;
 			std::stringstream ss;
 			ss.str(vetoedActions);
@@ -230,15 +230,15 @@ public:
 			int numMovesVetoed = 0;
 			int numRotationsVetoed = 0;
 			for(int i = 0; i < vetoes.size(); i++){
-				if(vetoes[i][0] == '0'){
+				if(vetoes[i][0] == "0"){
 					numMovesVetoed ++;
 				}
-				else if(vetoes[i][0] == '1' or vetoes[i][0] == '2'){
+				else if(vetoes[i][0] == "1" or vetoes[i][0] == "2"){
 					numRotationsVetoed ++;
 				}
 			}
 			// enforcer2, thru3, behind4, out5, lle6
-
+			cout << "numMovesVetoed " << numMovesVetoed << " numRotationsVetoed " << numRotationsVetoed << endl;
 			if (decisionTier == 1.1){
 				explanationString.data = "I could see our target and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our target is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
@@ -258,6 +258,7 @@ public:
 				explanationString.data = "I want to get closer to our target and " + actioningText[chosenAction] + " would let us explore in that direction.\n" + "Somewhat confident, because I am not sure if this is the right way to our target.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.7){
+				cout << "inside decisionTier 1.7" << endl;
 				explanationString.data = "I want to learn about our world and " + actioningText[chosenAction] + " would let me explore.\n" + "Somewhat confident, because I am not sure if area will help me get around later.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.8){
@@ -277,7 +278,7 @@ public:
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 			computationTimeSec = (end_timecv-start_timecv);
-			//ROS_INFO_STREAM("After explanation: " << explanationString.data);
+			ROS_INFO_STREAM("After explanation: " << explanationString.data);
 			logExplanationData();
 			//send the explanation
 			explanations_pub_.publish(explanationString);
@@ -596,19 +597,20 @@ public:
 		return explanation + "\n";
 	}
 	
-	std::string alternateActions(std::string chosenAction, int decTier, vector< vector <string> > vetoes) {
+	std::string alternateActions(std::string chosenAction, double decTier, vector< vector <string> > vetoes) {
+		cout << "Inside alternateActions" << endl;
 		std::string alternateExplanations;
 		std::map <std::string, std::string>::iterator itr;
 		if (decTier == 1.1 or decTier == 1.7 or decTier == 1.8){
 			for (itr = actionText.begin(); itr != actionText.end(); itr++) {
 				if (itr->first != chosenAction and itr->first != "30" and (itr->second).length() >0) {
-					if (decTier = 1.1){
+					if (decTier == 1.1){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our goal and another action would get us closer to it.\n";
 					}
-					else if (decTier = 1.7){
+					else if (decTier == 1.7){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to learn about the world.\n";
 					}
-					else if (decTier = 1.8){
+					else if (decTier == 1.8){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better find the boundaries of this world.\n";
 					}
 				}
@@ -620,34 +622,34 @@ public:
 				for(int i = 0; i < vetoes.size(); i++){
 					if(itr->first == vetoes[i][0]+vetoes[i][1]){
 						actionVetoed = true;
-						if(vetoes[i][2] == '1a'){
-							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because the wall was in the way.\n";
+						if(vetoes[i][2] == "1a"){
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because something was in the way.\n";
 						}
-						else if(vetoes[i][2] == '1b'){
+						else if(vetoes[i][2] == "1b"){
 							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I was just facing that way.\n";
 						}
-						else if(vetoes[i][2] == '1c'){
+						else if(vetoes[i][2] == "1c"){
 							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
 						}
-						else if(vetoes[i][2] == '1d'){
+						else if(vetoes[i][2] == "1d"){
 							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I don't think I should do that in our current situation.\n";
 						}
 					}
 				}
 				if (itr->first != chosenAction and itr->first != "30" and (itr->second).length() >0 and actionVetoed == false) {
-					if (decTier = 1.2){
+					if (decTier == 1.2){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I sense our waypoint and another action would get us closer to it.\n";
 					}
-					else if (decTier = 1.3){
+					else if (decTier == 1.3){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I need to get through here and another action would reposition me better.\n";
 					}
-					else if (decTier = 1.4){
+					else if (decTier == 1.4){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I want to turn around so I can see where I want to go.\n";
 					}
-					else if (decTier = 1.5){
+					else if (decTier == 1.5){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I think another action will help me get out of here.\n";
 					}
-					else if (decTier = 1.6){
+					else if (decTier == 1.6){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to find our target.\n";
 					}
 				}
@@ -662,16 +664,16 @@ public:
 		for (itr = actionText.begin(); itr != actionText.end(); itr++) {
 			for(int i = 0; i < vetoes.size(); i++){
 				if(itr->first == vetoes[i][0]+vetoes[i][1]){
-					if(vetoes[i][2] == '1a'){
-						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because the wall was in the way.\n";
+					if(vetoes[i][2] == "1a"){
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because something was in the way.\n";
 					}
-					else if(vetoes[i][2] == '1b'){
+					else if(vetoes[i][2] == "1b"){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I was just facing that way.\n";
 					}
-					else if(vetoes[i][2] == '1c'){
+					else if(vetoes[i][2] == "1c"){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
 					}
-					else if(vetoes[i][2] == '1d'){
+					else if(vetoes[i][2] == "1d"){
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I don't think I should do that in our current situation.\n";
 					}
 				}
