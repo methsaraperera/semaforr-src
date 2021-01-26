@@ -893,7 +893,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   decisionStats = new FORRActionStats();
 
   // Initialize situations
-  // initialize_situations(situation_config);
+  initialize_situations(situation_config);
 
   // Initialize spatial model
   // initialize_spatial_model(spatial_model_config);
@@ -972,7 +972,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
-      // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
+      beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
     }
     //if task is complete
     if(taskCompleted == true){
@@ -996,7 +996,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       tier1->resetLocalExploration();
       // beliefs->getAgentState()->resetDirections();
       // circumnavigator->resetCircumnavigate();
-      // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
+      beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
       //Clear existing task and associated plans
       beliefs->getAgentState()->finishTask();
       //ROS_DEBUG("Task Cleared!!");
@@ -1039,7 +1039,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       beliefs->getAgentState()->setRepositionCount(0);
       beliefs->getAgentState()->setFindAWayCount(0);
       beliefs->getAgentState()->setEnforcerCount(0);
-      // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
+      beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
     }
     // else if(isPlanActive == false and aStarOn){
     //   ROS_DEBUG("No active plan, setting up new plan!!");
@@ -1059,7 +1059,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         beliefs->getAgentState()->setRepositionCount(0);
         beliefs->getAgentState()->setFindAWayCount(0);
         beliefs->getAgentState()->setEnforcerCount(0);
-        // beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
+        beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
         tier1->resetLocalExploration();
         // beliefs->getAgentState()->resetDirections();
         // circumnavigator->resetCircumnavigate();
@@ -1122,9 +1122,9 @@ FORRAction Controller::decide() {
     highwayFinished++;
     frontierFinished++;
     decidedAction = FORRDecision();
-  }
-  if(situationsOn){
-    beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
+    if(situationsOn){
+      beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
+    }
   }
   return decidedAction;
 }
@@ -1508,15 +1508,15 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    // ROS_INFO("Advisor don't go back will veto actions");
-    // tier1->advisorDontGoBack();
+    ROS_INFO("Advisor don't go back will veto actions");
+    tier1->advisorDontGoBack();
     vector<FORRAction> DGBVetoedActions;
-    // vetoedActions = beliefs->getAgentState()->getVetoedActions();
-    // for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
-    //   if(find(AOVetoedActions.begin(), AOVetoedActions.end(), *it) == AOVetoedActions.end() and find(NOVetoedActions.begin(), NOVetoedActions.end(), *it) == NOVetoedActions.end()){
-    //     DGBVetoedActions.push_back(*it);
-    //   }
-    // }
+    vetoedActions = beliefs->getAgentState()->getVetoedActions();
+    for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
+      if(find(AOVetoedActions.begin(), AOVetoedActions.end(), *it) == AOVetoedActions.end() and find(NOVetoedActions.begin(), NOVetoedActions.end(), *it) == NOVetoedActions.end()){
+        DGBVetoedActions.push_back(*it);
+      }
+    }
     vector<FORRAction> SVetoedActions;
     if(situationsOn){
       ROS_INFO("Advisor situation will veto actions");
@@ -1535,9 +1535,9 @@ bool Controller::tierOneDecision(FORRAction *decision){
     for(int i = 0; i < NOVetoedActions.size(); i++){
       vetoList << NOVetoedActions[i].type << " " << NOVetoedActions[i].parameter << " 1b;";
     }
-    // for(int i = 0; i < DGBVetoedActions.size(); i++){
-    //   vetoList << DGBVetoedActions[i].type << " " << DGBVetoedActions[i].parameter << " 1c;";
-    // }
+    for(int i = 0; i < DGBVetoedActions.size(); i++){
+      vetoList << DGBVetoedActions[i].type << " " << DGBVetoedActions[i].parameter << " 1c;";
+    }
     for(int i = 0; i < SVetoedActions.size(); i++){
       vetoList << SVetoedActions[i].type << " " << SVetoedActions[i].parameter << " 1d;";
     }
