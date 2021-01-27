@@ -802,8 +802,8 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
     beliefs->getAgentState()->setRepositionCount(0);
     beliefs->getAgentState()->setFindAWayCount(0);
     beliefs->getAgentState()->setEnforcerCount(0);
-    // Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
-    // beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
+    Position currentPosition = beliefs->getAgentState()->getCurrentPosition();
+    beliefs->getAgentState()->getCurrentTask()->updatePlanPositions(currentPosition.getX(), currentPosition.getY());
   }
   return decisionMade;
 }

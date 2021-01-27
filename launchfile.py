@@ -162,7 +162,7 @@ for i in range(0,num_runs):
         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_why-decision_" + str(j) + "_" + str(i) + ".txt"
+        log_name = map_name + "_why-decision_all_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
