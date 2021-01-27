@@ -520,7 +520,9 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     Graph *navGraphDistance = new Graph(map,(int)(p*100.0));
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
-    //tier2Planners.push_back(planner);
+    if(skeleton != 1 and hallwayskel != 1){
+      tier2Planners.push_back(planner);
+    }
     planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: distance");
   }
@@ -649,8 +651,9 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     cout << "initialized nav graph" << endl;
     PathPlanner *sk_planner = new PathPlanner(navGraphSkeleton, n,n, "skeleton");
     tier2Planners.push_back(sk_planner);
-    Graph *origNavGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
-    sk_planner->setOriginalNavGraph(origNavGraphSkeleton);
+    // Graph *origNavGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
+    // sk_planner->setOriginalNavGraph(origNavGraphSkeleton);
+    sk_planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: skeleton");
   }
   if(hallwayskel == 1){
@@ -1693,10 +1696,26 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
     ROS_DEBUG_STREAM("Number of best plans = " << bestPlanInds.size() << " random_number = " << random_number);
     ROS_DEBUG_STREAM("Selected Best plan " << bestPlanNames.at(random_number));
     decisionStats->chosenPlanner = bestPlanNames.at(random_number);
+    for(int i = 0; i < plannerNames.size(); i++){
+      if(plannerNames[i] != bestPlanNames.at(random_number)){
+        decisionStats->chosenPlanner = decisionStats->chosenPlanner + ">" + plannerNames[i];
+      }
+    }
     for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
       PathPlanner *planner = *it;
       if(planner->getName() == bestPlanNames.at(random_number)){
         beliefs->getAgentState()->setCurrentWaypoints(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), planner, aStarOn, plans.at(bestPlanInds.at(random_number)), beliefs->getSpatialModel()->getRegionList()->getRegions());
+        if(planner->getName() == "hallwayskel"){
+          if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getCreator() == 0){
+            decisionStats->chosenPlanner = "skeleton>highway";
+          }
+          else{
+            decisionStats->chosenPlanner = "highway>skeleton";
+          }
+        }
+        else if(planner->getName() == "skeleton"){
+          decisionStats->chosenPlanner = "skeleton>distance";
+        }
         break;
       }
     }

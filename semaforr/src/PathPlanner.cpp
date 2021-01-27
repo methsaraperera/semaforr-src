@@ -178,10 +178,14 @@ int PathPlanner::calcPath(bool cautious){
           }
           else{
             origPaths.push_back(list<int>());
+            origPathCost += 0;
+            origPathCosts.push_back(0);
           }
         }
         else{
           origPaths.push_back(list<int>());
+          origPathCost += 0;
+          origPathCosts.push_back(0);
         }
         if(ts.getID() != Node::invalid_node_index and tt.getID() != Node::invalid_node_index){
           if(PATH_DEBUG) {
@@ -209,10 +213,14 @@ int PathPlanner::calcPath(bool cautious){
           }
           else{
             origPaths.push_back(list<int>());
+            origPathCost += 0;
+            origPathCosts.push_back(0);
           }
         }
         else{
           origPaths.push_back(list<int>());
+          origPathCost += 0;
+          origPathCosts.push_back(0);
         }
         if(rs.getID() != Node::invalid_node_index and tt.getID() != Node::invalid_node_index){
           if(PATH_DEBUG) {
@@ -232,14 +240,18 @@ int PathPlanner::calcPath(bool cautious){
             if(!cautious)
               smoothPath(origPath3, rs, tt);
 
-            origPathCosts.push_back(calcOrigPathCost(origPath2));
+            origPathCosts.push_back(calcOrigPathCost(origPath3));
           }
           else{
             origPaths.push_back(list<int>());
+            origPathCost += 0;
+            origPathCosts.push_back(0);
           }
         }
         else{
           origPaths.push_back(list<int>());
+          origPathCost += 0;
+          origPathCosts.push_back(0);
         }
         cout << "Plan " << name << " cost = " << pathCost << " origPathCost " << origPathCost << endl;
       }

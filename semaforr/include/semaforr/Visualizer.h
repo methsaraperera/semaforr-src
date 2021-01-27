@@ -380,15 +380,15 @@ public:
   void publish_plan(){
 	// ROS_DEBUG("Inside publish plan!!");
 	nav_msgs::Path path;
-	path.header.frame_id = "map";
+	// path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
 
 	vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getWaypoints();
-	// double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
-	// double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
-	//std::stringstream output;
-	//output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
-	//path.header.frame_id = output.str();
+	double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
+	double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
+	std::stringstream output;
+	output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
+	path.header.frame_id = output.str();
 
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;

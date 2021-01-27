@@ -262,7 +262,31 @@ class Task {
   		return points;
   	}
   }
-  vector<CartesianPoint> getOrigWaypoints(){return origWaypoints;}
+  vector<CartesianPoint> getOrigWaypoints(){
+  	if(plannerName != "hallwayskel"){
+  		return origWaypoints;
+  	}
+  	else{
+  		for(int i = 0; i < alternate_skeleton_waypoints.size(); i++){
+  			if(alternate_skeleton_waypoints[i].getType() == 0){
+  				origWaypoints.push_back(alternate_skeleton_waypoints[i].getRegion().getCenter());
+  				// cout << "region waypoint " << i << " " << alternate_skeleton_waypoints[i].getRegion().getCenter().get_x() << " " << alternate_skeleton_waypoints[i].getRegion().getCenter().get_y() << " " << alternate_skeleton_waypoints[i].getRegion().getRadius() << endl;
+  			}
+  			else if(alternate_skeleton_waypoints[i].getType() == 1 or alternate_skeleton_waypoints[i].getType() == 3){
+  				vector<CartesianPoint> pathBetween = alternate_skeleton_waypoints[i].getPath();
+  				for(int j = 0; j < pathBetween.size(); j++){
+  					origWaypoints.push_back(pathBetween[j]);
+  					// cout << "path waypoint " << i << " " << j << " " << pathBetween[j].get_x() << " " << pathBetween[j].get_y() << endl;
+  				}
+  			}
+  			else if(alternate_skeleton_waypoints[i].getType() == 2){
+  				origWaypoints.push_back(alternate_skeleton_waypoints[i].getPassageCentroid());
+  			}
+  		}
+  		// cout << "number of points " << origWaypoints.size() << endl;
+  		return origWaypoints;
+  	}
+  }
   int getPlanSize(){
   	if(plannerName != "skeleton" and plannerName != "hallwayskel"){
   		return waypoints.size();
@@ -294,6 +318,7 @@ class Task {
   	}
   	else{
   		skeleton_waypoints.clear();
+  		alternate_skeleton_waypoints.clear();
   		wr = sk_waypoint();
   	}
   }
@@ -306,6 +331,11 @@ class Task {
 	waypoints.clear();
 	tierTwoWaypoints.clear();
 	skeleton_waypoints.clear();
+	alternate_skeleton_waypoints.clear();
+	pathCostInNavGraph = 0;
+	pathCostInNavOrigGraph = 0;
+	origPathCostInNavGraph = 0;
+	origPathCostInOrigNavGraph = 0;
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
 	Node s(1, source.getX()*100, source.getY()*100);
@@ -353,34 +383,36 @@ class Task {
   }
 
   bool generateOriginalWaypoints(Position source, PathPlanner *planner){
-	origWaypoints.clear();
-	//a_star planner works in cms so all units are converts into cm
-	//once plan is generated waypoints are stored in meters
-	Node s(1, source.getX()*100, source.getY()*100);
-	planner->setSource(s);
-	Node t(1, x*100, y*100);
-	planner->setTarget(t);
+  	if(planner->getName() != "hallwayskel"){
+		origWaypoints.clear();
+		//a_star planner works in cms so all units are converts into cm
+		//once plan is generated waypoints are stored in meters
+		Node s(1, source.getX()*100, source.getY()*100);
+		planner->setSource(s);
+		Node t(1, x*100, y*100);
+		planner->setTarget(t);
 
-	cout << "plan generation status" << planner->calcOrigPath(true) << endl;
+		cout << "plan generation status" << planner->calcOrigPath(true) << endl;
 
-	list<int> path = planner->getOrigPath();
-	navGraph = planner->getOrigGraph();
-	list<int>::iterator it;
-	for ( it = path.begin(); it != path.end(); it++ ){
-		double x = navGraph->getNode(*it).getX()/100.0;
-		double y = navGraph->getNode(*it).getY()/100.0;
-		CartesianPoint waypoint(x,y);
-		origWaypoints.push_back(waypoint);
-  	}
-  	origPathCostInOrigNavGraph = planner->getOrigPathCost();
-  	origPathCostInNavGraph = planner->calcPathCost(path);
-  	/*vector<CartesianPoint> skippedwaypoints;
-	for(int i = 0; i < origWaypoints.size(); i+=4){
-		skippedwaypoints.push_back(origWaypoints[i]);
+		list<int> path = planner->getOrigPath();
+		navGraph = planner->getOrigGraph();
+		list<int>::iterator it;
+		for ( it = path.begin(); it != path.end(); it++ ){
+			double x = navGraph->getNode(*it).getX()/100.0;
+			double y = navGraph->getNode(*it).getY()/100.0;
+			CartesianPoint waypoint(x,y);
+			origWaypoints.push_back(waypoint);
+	  	}
+	  	origPathCostInOrigNavGraph = planner->getOrigPathCost();
+	  	origPathCostInNavGraph = planner->calcPathCost(path);
+	  	/*vector<CartesianPoint> skippedwaypoints;
+		for(int i = 0; i < origWaypoints.size(); i+=4){
+			skippedwaypoints.push_back(origWaypoints[i]);
+		}
+		origWaypoints = skippedwaypoints;*/
+		planner->resetOrigPath();
+		cout << "plan generation complete" << endl;
 	}
-	origWaypoints = skippedwaypoints;*/
-	planner->resetOrigPath();
-	cout << "plan generation complete" << endl;
   }
 
   bool generateWaypointsFromInds(Position source, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, list<int> indices, vector<FORRRegion> regions){
@@ -388,6 +420,7 @@ class Task {
 	waypoints.clear();
 	tierTwoWaypoints.clear();
 	skeleton_waypoints.clear();
+	alternate_skeleton_waypoints.clear();
 	//a_star planner works in cms so all units are converts into cm
 	//once plan is generated waypoints are stored in meters
 	//Node s(1, source.getX()*100, source.getY()*100);
@@ -534,7 +567,7 @@ class Task {
 			isPlanComplete = false;
 		}
 		pathCostInNavGraph = planner->getPathCost();
-		pathCostInNavOrigGraph = 0;
+		pathCostInNavOrigGraph = planner->calcOrigPathCost(waypointInd);
 	}
 	else if(plannerName == "hallwayskel"){
 		// origNavGraph = planner->getOrigGraph();
@@ -1465,7 +1498,7 @@ class Task {
 			}
 		}
 		cout << "final passage num of waypoints " << skeleton_waypoints.size() << endl;
-		vector<sk_waypoint> alternate_skeleton_waypoints;
+		// vector<sk_waypoint> alternate_skeleton_waypoints;
 		if(origPlansInds[2].size() > 0){
 			cout << "generate plan in skeleton graph" << endl;
 			int step = -1;
@@ -1636,17 +1669,34 @@ class Task {
 				}
 			}
 			cout << "alternate_skeleton_waypoints " << alternate_skeleton_waypoints.size() << " cost " << alternate_path_cost << endl;
+			pathCostInNavGraph = planner->getPathCost() + planner->getOrigPathCost();
+			pathCostInNavOrigGraph = main_path_cost;
+			origPathCostInOrigNavGraph = alternate_path_cost;
+	  		origPathCostInNavGraph = planner->getOrigPathCosts()[2];
 			if(alternate_path_cost < main_path_cost){
+				vector<sk_waypoint> temp_skeleton_waypoints;
+				for(int i = 0; i < skeleton_waypoints.size(); i++){
+					temp_skeleton_waypoints.push_back(skeleton_waypoints[i]);
+				}
 				skeleton_waypoints = alternate_skeleton_waypoints;
+				alternate_skeleton_waypoints = temp_skeleton_waypoints;
+				pathCostInNavGraph = alternate_path_cost;
+				pathCostInNavOrigGraph = planner->getOrigPathCosts()[2];
+				origPathCostInOrigNavGraph = planner->getPathCost() + planner->getOrigPathCost();
+	  			origPathCostInNavGraph = main_path_cost;
 			}
+		}
+		else{
+			pathCostInNavGraph = planner->getPathCost() + planner->getOrigPathCost();
+			pathCostInNavOrigGraph = 0;
+			origPathCostInOrigNavGraph = 0;
+	  		origPathCostInNavGraph = planner->getOrigPathCosts()[2];
 		}
 		if(skeleton_waypoints.size() > 0){
 			cout << "Plan active is true" << endl;
 			isPlanActive = true;
 			isPlanComplete = false;
 		}
-		pathCostInNavGraph = planner->getPathCost() + planner->getOrigPathCost();
-		pathCostInNavOrigGraph = 0;
 	}
 	//setupNextWaypoint(source);
 	setupNearestWaypoint(source, currentLaserEndpoints);
@@ -2278,6 +2328,7 @@ class Task {
   double origPathCostInOrigNavGraph, origPathCostInNavGraph;
 
   vector<sk_waypoint> skeleton_waypoints;
+  vector<sk_waypoint> alternate_skeleton_waypoints;
   vector<sk_waypoint> finished_sk_waypoints;
 
   vector< vector<int> > passage_grid;

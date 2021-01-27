@@ -152,7 +152,7 @@ public:
   void setCurrentWaypoints(Position current, vector<CartesianPoint> currentLaserEndpoints, PathPlanner *planner, bool aStarOn, list<int> indices, vector<FORRRegion> regions){
     if(aStarOn){
       currentTask->generateWaypointsFromInds(current, currentLaserEndpoints, planner, indices, regions);
-      //currentTask->generateOriginalWaypoints(current, planner);
+      currentTask->generateOriginalWaypoints(current, planner);
     }
   }
 

@@ -324,6 +324,8 @@ public:
 
   double getPathCost() { return pathCost; }
   double getOrigPathCost() { return origPathCost; }
+  vector <double> getPathCosts() { return pathCosts; }
+  vector <double> getOrigPathCosts() { return origPathCosts; }
 
   double getRemainingPathLength(double x, double y);  
     
