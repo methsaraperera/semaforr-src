@@ -60,40 +60,45 @@ private:
 	bool orig_plan_message_received;
 	// Stats on plans
 	double planDistance=0, originalPlanDistance=0, planCost=0, originalPlanCost=0, planCrowdDensity=0, originalPlanCrowdDensity=0, planCrowdRisk=0, originalPlanCrowdRisk=0;
-	// distance intervals with their associated phrases
-	std::vector <double> distanceThreshold;
-	std::vector <std::string> distancePhrase;
-	// density intervals with their associated phrases
-	std::vector <double> densityThreshold;
-	std::vector <std::string> densityPhrase;
-	// risk intervals with their associated phrases
-	std::vector <double> riskThreshold;
-	std::vector <std::string> riskPhrase;
-	// flow intervals with their associated phrases
-	std::vector <double> flowThreshold;
-	std::vector <std::string> flowPhrase;
-	// convey intervals with their associated phrases
-	std::vector <double> conveyThreshold;
-	std::vector <std::string> conveyPhrase;
-	// hallway intervals with their associated phrases
-	std::vector <double> hallwayThreshold;
-	std::vector <std::string> hallwayPhrase;
-	// region intervals with their associated phrases
-	std::vector <double> regionThreshold;
-	std::vector <std::string> regionPhrase;
-	// trail intervals with their associated phrases
-	std::vector <double> trailThreshold;
-	std::vector <std::string> trailPhrase;
-	// skeleton intervals with their associated phrases
-	std::vector <double> skeletonThreshold;
-	std::vector <std::string> skeletonPhrase;
-	// highway intervals with their associated phrases
-	std::vector <double> highwayThreshold;
-	std::vector <std::string> highwayPhrase;
+	// thresholds and their associated phrases
+	map <string, vector < pair<double, string> > > thresholds;
+	// objectives and their associated phrases
+	map <string, vector <string> > objectives;
+	// // distance intervals with their associated phrases
+	// vector <double> distanceThreshold;
+	// vector <string> distancePhrase;
+	// // density intervals with their associated phrases
+	// vector <double> densityThreshold;
+	// vector <string> densityPhrase;
+	// // risk intervals with their associated phrases
+	// vector <double> riskThreshold;
+	// vector <string> riskPhrase;
+	// // flow intervals with their associated phrases
+	// vector <double> flowThreshold;
+	// vector <string> flowPhrase;
+	// // convey intervals with their associated phrases
+	// vector <double> conveyThreshold;
+	// vector <string> conveyPhrase;
+	// // hallway intervals with their associated phrases
+	// vector <double> hallwayThreshold;
+	// vector <string> hallwayPhrase;
+	// // region intervals with their associated phrases
+	// vector <double> regionThreshold;
+	// vector <string> regionPhrase;
+	// // trail intervals with their associated phrases
+	// vector <double> trailThreshold;
+	// vector <string> trailPhrase;
+	// // skeleton intervals with their associated phrases
+	// vector <double> skeletonThreshold;
+	// vector <string> skeletonPhrase;
+	// // highway intervals with their associated phrases
+	// vector <double> highwayThreshold;
+	// vector <string> highwayPhrase;
 	// other parameters
 	double targetX, targetY, robotY, robotX;
 	string selected_planner;
 	vector<string> alternative_planners;
+	string alt_planner;
 	bool sameplan;
 	double computationTimeSec=0.0;
 	int densityNum = 5;
@@ -157,7 +162,7 @@ public:
 
 	void initialize(string text_config){
 		string fileLine;
-		std::ifstream file(text_config.c_str());
+		ifstream file(text_config.c_str());
 		ROS_DEBUG_STREAM("Reading text_config_file:" << text_config);
 		if(!file.is_open()){
 			ROS_DEBUG("Unable to locate or read text config file!");
@@ -165,98 +170,123 @@ public:
 
 		while(getline(file, fileLine)){
 			//cout << "Inside while in tasks" << endl;
-			if(fileLine[0] == '#')  // skip comment lines
+			if(fileLine[0] == '#'){  // skip comment lines
 				continue;
-			else if (fileLine.find("distance") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					distanceThreshold.push_back(atof(vstrings[i].c_str()));
-					distancePhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
-			else if (fileLine.find("density") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					densityThreshold.push_back(atof(vstrings[i].c_str()));
-					densityPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
+			else if (fileLine.find("threshold") != string::npos){
+				vector<string> vstrings = parseText(fileLine, '\t');
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
-			else if (fileLine.find("risk") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					riskThreshold.push_back(atof(vstrings[i].c_str()));
-					riskPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+				for(int i=1; i < vstrings.size(); i+=7){
+					vector < pair<double, string> > thresh;
+					thresh.push_back(pair<double, string>(atof(vstrings[i+1].c_str()),vstrings[i+2]));
+					thresh.push_back(pair<double, string>(atof(vstrings[i+3].c_str()),vstrings[i+4]));
+					thresh.push_back(pair<double, string>(atof(vstrings[i+5].c_str()),vstrings[i+6]));
+					thresholds.insert(pair< string, vector < pair<double, string> > >(vstrings[i], thresh));
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << " " << vstrings[i+4] << " " << vstrings[i+5] << " " << vstrings[i+6] << endl);
 				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
-			else if (fileLine.find("flow") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					flowThreshold.push_back(atof(vstrings[i].c_str()));
-					flowPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			else if (fileLine.find("objphrases") != string::npos){
+				vector<string> vstrings = parseText(fileLine, '\t');
+				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				for(int i=1; i < vstrings.size(); i+=4){
+					vector <string> > objs;
+					objs.push_back(vstrings[i+1]);
+					objs.push_back(vstrings[i+2]);
+					objs.push_back(vstrings[i+3]);
+					objectives.insert(pair< string, vector <string> >(vstrings[i], objs));
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << endl);
 				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 			}
-			else if (fileLine.find("conveys") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					conveyThreshold.push_back(atof(vstrings[i].c_str()));
-					conveyPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
-			else if (fileLine.find("hallwayer") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					hallwayThreshold.push_back(atof(vstrings[i].c_str()));
-					hallwayPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
-			else if (fileLine.find("spatial") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					regionThreshold.push_back(atof(vstrings[i].c_str()));
-					regionPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
-			else if (fileLine.find("trailer") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					trailThreshold.push_back(atof(vstrings[i].c_str()));
-					trailPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
-			else if (fileLine.find("skeleton") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					skeletonThreshold.push_back(atof(vstrings[i].c_str()));
-					skeletonPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
-			else if (fileLine.find("hallwayskel") != std::string::npos){
-				std::vector<std::string> vstrings = parseText(fileLine, '\t');
-				for(int i=1; i < vstrings.size(); i+=2){
-					highwayThreshold.push_back(atof(vstrings[i].c_str()));
-					highwayPhrase.push_back(vstrings[i+1]);
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
-				}
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
-			}
+			// else if (fileLine.find("distance") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		distanceThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		distancePhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("density") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		densityThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		densityPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("risk") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		riskThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		riskPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("flow") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		flowThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		flowPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("conveys") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		conveyThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		conveyPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("hallwayer") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		hallwayThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		hallwayPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("spatial") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		regionThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		regionPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("trailer") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		trailThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		trailPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("skeleton") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		skeletonThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		skeletonPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
+			// else if (fileLine.find("hallwayskel") != string::npos){
+			// 	vector<string> vstrings = parseText(fileLine, '\t');
+			// 	for(int i=1; i < vstrings.size(); i+=2){
+			// 		highwayThreshold.push_back(atof(vstrings[i].c_str()));
+			// 		highwayPhrase.push_back(vstrings[i+1]);
+			// 		//ROS_DEBUG_STREAM("File text:" << vstrings[i+1] << " " << vstrings[i] << endl);
+			// 	}
+			// 	//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+			// }
 		}
 		ros::spinOnce();
 	}
@@ -278,7 +308,7 @@ public:
 			ROS_INFO_STREAM("Messages received");
 			gettimeofday(&cv,NULL);
 			start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
-			std::vector<std::string> parsed_log = parseText(current_log, '\t');
+			vector<string> parsed_log = parseText(current_log, '\t');
 			targetX = atof(parsed_log[4].c_str());
 			targetY = atof(parsed_log[5].c_str());
 			robotX = atof(parsed_log[6].c_str());
@@ -287,30 +317,36 @@ public:
 			alternative_planners = parseText(parsed_log[25], '>');
 			alternative_planners.erase(alternative_planners.begin());
 			savePlanCosts();
+			alt_planner = 'distance';
+			if(selected_planner == 'skeleton'){
+				if(alternative_planners[0] == 'hallwayskel'){
+					selected_planner = 'skeletonhall';
+					alt_planner = 'hallwayskel';
+				}
+			}
+			else if(selected_planner == 'hallwayskel'){
+				alt_planner = 'skeletonhall';
+			}
 			//ROS_INFO_STREAM("Before compute plan distances");
 			//computePlanDistances();
 			//ROS_INFO_STREAM("Before compute plan densities");
 			//computePlanDensities();
 			//computePlanRisks();
 			//ROS_INFO_STREAM("Before compare plans");
-			if (comparePlans()) {
-				//explanationString.data = "I decided to go this way because I think it is just as short and not that crowded.\nI think both plans are equally good.\nWe could go that way since it's a bit shorter but it could also be a bit more crowded.\nI'm only somewhat sure because even though my plan is a bit less crowded, it is also a bit longer than your plan.";
-				//explanationString.data = "I decided to go this way because I think it is just as short and not that risky.\nI think both plans are equally good.\nWe could go that way since it's a bit shorter but it could also be a bit more risky.\nI'm only somewhat sure because even though my plan is a bit less risky, it is also a bit longer than your plan.";
-				explanationString.data = "I decided to go this way because I think it is just as short and follows hallways.\nI think both plans are equally good.\nWe could go that way since it's a bit shorter but it could also be a bit farther from known hallways.\nI'm only somewhat sure because even though my plan is a bit better at following hallways, it is also a bit longer than your plan.";
+			if(selected_planner == 'distance'){
+				explanationString.data = "I decided to go this way because I agree that we should take the shortest route.\nI think your way is better.\nYour way is the best way to go.\nI'm really sure because this is the shortest way.";
+			}
+			else if (comparePlans()) {
+				explanationString.data = "I decided to go this way because I think it is just as " + objectivePhrase(alt_planner, 0) + " and equally " + objectivePhrase(selected_planner, 0) + ".\nI think both plans are equally good.\nWe could go that way since it's a bit " + objectivePhrase(alt_planner, 1) + " but it could also be a bit " + objectivePhrase(selected_planner, 2) + ".\nI'm only somewhat sure because even though my plan is a bit " + objectivePhrase(selected_planner, 1) + ", it is also a bit " + objectivePhrase(alt_planner, 2) + " than your plan.";
 			}
 			else if ((planDistance - originalPlanDistance) <= 0) {
-				//ROS_INFO_STREAM("Before density diff to phrase");
-				//explanationString.data = "I think my way is " + densityDifftoPhrase() + " less crowded.\n" + "I think my way is better because it's " + densityDifftoPhrase() + " less crowded.\n" + "We could go that way since it's a bit shorter but it could also be " + densityDifftoPhrase() + " more crowded.\n" + "I'm " + computeConf() + ".";
-				//ROS_INFO_STREAM("Before risk diff to phrase");
-				//explanationString.data = "I think my way is " + riskDifftoPhrase() + " less risky.\n" + "I think my way is better because it's " + riskDifftoPhrase() + " less risky.\n" + "We could go that way since it's a bit shorter but it could also be " + riskDifftoPhrase() + " more risky.\n" + "I'm " + computeRiskConf() + ".";
-				//ROS_INFO_STREAM("Before cost diff to phrase");
-				explanationString.data = "I think my way is " + costDifftoPhrase() + " better at following hallways.\n" + "I think my way is better because it's " + costDifftoPhrase() + " better at following hallways.\n" + "We could go that way since it's a bit shorter but it could also be " + costDifftoPhrase() + " farther from known hallways.\n" + "I'm " + computeCostConf() + ".";
+				explanationString.data = "I think my way is " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ".\n" + "I think my way is better because it's " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ".\n" + "We could go that way since it's a bit " + objectivePhrase(alt_planner, 1) + " but it could also be " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 2) + ".\n" + "I'm " + computeCostConf() + ".";
 			}
 			else {
-				//ROS_INFO_STREAM("Before distance diff to phrase");
-				//explanationString.data = "Although there may be " + distanceDiffToPhrase() + " shorter way, I think my way is " + densityDifftoPhrase() + " less crowded.\n" + "I think my way is better because it's " + densityDifftoPhrase() + " less crowded.\n" + "We could go that way since it's " + distanceDiffToPhrase() + " shorter but it could also be " + densityDifftoPhrase() + " more crowded.\n" + "I'm " + computeConf() + ".";
-				//explanationString.data = "Although there may be " + distanceDiffToPhrase() + " shorter way, I think my way is " + riskDifftoPhrase() + " less risky.\n" + "I think my way is better because it's " + riskDifftoPhrase() + " less risky.\n" + "We could go that way since it's " + distanceDiffToPhrase() + " shorter but it could also be " + riskDifftoPhrase() + " more risky.\n" + "I'm " + computeRiskConf() + ".";
-				explanationString.data = "Although there may be " + distanceDiffToPhrase() + " shorter way, I think my way is " + costDifftoPhrase() + " better at following hallways.\n" + "I think my way is better because it's " + costDifftoPhrase() + " better at following hallways.\n" + "We could go that way since it's " + distanceDiffToPhrase() + " shorter but it could also be " + costDifftoPhrase() + " farther from known hallways.\n" + "I'm " + computeCostConf() + ".";
+				explanationString.data = "Although there may be another way that is " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 1) + ", I think my way is " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ".\n" + "I think my way is better because it's " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ".\n" + "We could go that way since it's " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 1) + " but it could also be " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 2) + ".\n" + "I'm " + computeCostConf() + ".";
+			}
+			if(selected_planner == 'hallwayskel' or selected_planner == 'skeletonhall'){
+				// give explanation for them
 			}
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
@@ -358,13 +394,13 @@ public:
 
 	void savePlanCosts(){
 		//ROS_INFO_STREAM("Inside save plan distances");
-		std::vector<std::string> vstrings1 = parseText(current_plan.header.frame_id, '\t');
-		planDistance = atof(vstrings1[1].c_str());
-		planCost = atof(vstrings1[0].c_str());
+		vector<string> vstrings1 = parseText(current_plan.header.frame_id, '\t');
+		planCost = atof(vstrings1[0].c_str()); // cost is for selected plan
+		planDistance = atof(vstrings1[1].c_str()); // distance is for alternative plan
 		ROS_INFO_STREAM("Plan distance: " << planDistance << " Plan cost = " << planCost);
-		std::vector<std::string> vstrings2 = parseText(current_original_plan.header.frame_id, '\t');
-		originalPlanDistance = atof(vstrings2[1].c_str());
+		vector<string> vstrings2 = parseText(current_original_plan.header.frame_id, '\t');
 		originalPlanCost = atof(vstrings2[0].c_str());
+		originalPlanDistance = atof(vstrings2[1].c_str());
 		ROS_INFO_STREAM("Orig Plan distance: " << originalPlanDistance << " Orig Plan cost = " << originalPlanCost);
 	}
 
@@ -489,38 +525,39 @@ public:
 		return sameplan;
 	}
 
-	std::string densityDifftoPhrase(){
-		//ROS_INFO_STREAM("Inside density diff to phrase");
-		std::string phrase;
-		for (int i = densityThreshold.size()-1; i >= 0; --i) {
-			if ((planCrowdDensity - originalPlanCrowdDensity) <= densityThreshold[i]) {
-				phrase = densityPhrase[i];
-				densityNum = i;
-			}
-		}
-		ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << phrase << " " << densityNum);
-		return phrase;
-	}
+	// string densityDifftoPhrase(){
+	// 	//ROS_INFO_STREAM("Inside density diff to phrase");
+	// 	string phrase;
+	// 	for (int i = densityThreshold.size()-1; i >= 0; --i) {
+	// 		if ((planCrowdDensity - originalPlanCrowdDensity) <= densityThreshold[i]) {
+	// 			phrase = densityPhrase[i];
+	// 			densityNum = i;
+	// 		}
+	// 	}
+	// 	ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << phrase << " " << densityNum);
+	// 	return phrase;
+	// }
 
-	std::string riskDifftoPhrase(){
-		//ROS_INFO_STREAM("Inside risk diff to phrase");
-		std::string phrase;
-		for (int i = densityThreshold.size()-1; i >= 0; --i) {
-			if ((planCrowdRisk - originalPlanCrowdRisk) <= densityThreshold[i]) {
-				phrase = densityPhrase[i];
-				riskNum = i;
-			}
-		}
-		ROS_INFO_STREAM((planCrowdRisk - originalPlanCrowdRisk) << " " << phrase << " " << riskNum);
-		return phrase;
-	}
+	// string riskDifftoPhrase(){
+	// 	//ROS_INFO_STREAM("Inside risk diff to phrase");
+	// 	string phrase;
+	// 	for (int i = densityThreshold.size()-1; i >= 0; --i) {
+	// 		if ((planCrowdRisk - originalPlanCrowdRisk) <= densityThreshold[i]) {
+	// 			phrase = densityPhrase[i];
+	// 			riskNum = i;
+	// 		}
+	// 	}
+	// 	ROS_INFO_STREAM((planCrowdRisk - originalPlanCrowdRisk) << " " << phrase << " " << riskNum);
+	// 	return phrase;
+	// }
 
-	std::string costDifftoPhrase(){
+	string costDifftoPhrase(string plannerName){
 		//ROS_INFO_STREAM("Inside cost diff to phrase");
-		std::string phrase;
-		for (int i = densityThreshold.size()-1; i >= 0; --i) {
-			if ((planCost - originalPlanCost) <= densityThreshold[i]) {
-				phrase = densityPhrase[i];
+		vector < pair<double, string> > plannerThreshold = thresholds[plannerName];
+		string phrase;
+		for (int i = plannerThreshold.size()-1; i >= 0; --i) {
+			if ((planCost - originalPlanCost) <= plannerThreshold[i].first) {
+				phrase = plannerThreshold[i].second;
 				costNum = i;
 			}
 		}
@@ -528,12 +565,13 @@ public:
 		return phrase;
 	}
 
-	std::string distanceDiffToPhrase(){
+	string distanceDiffToPhrase(string plannerName){
 		//ROS_INFO_STREAM("Inside distance diff to phrase");
-		std::string phrase;
-		for (int i = distanceThreshold.size()-1; i >= 0; --i) {
-			if ((planDistance - originalPlanDistance) <= distanceThreshold[i]) {
-				phrase = distancePhrase[i];
+		vector < pair<double, string> > plannerThreshold = thresholds[plannerName];
+		string phrase;
+		for (int i = plannerThreshold.size()-1; i >= 0; --i) {
+			if ((planDistance - originalPlanDistance) <= plannerThreshold[i]) {
+				phrase = plannerThreshold[i];
 				distanceNum = i;
 			}
 		}
@@ -541,68 +579,76 @@ public:
 		return phrase;
 	}
 
-	std::string computeConf(){
-		ROS_INFO_STREAM("Inside compute conf");
-		std::string phrase, tempphrase;
-		if (densityNum == 5) tempphrase = densityDifftoPhrase();
-		if (distanceNum == 5) tempphrase = distanceDiffToPhrase();
-		ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << densityNum << " " << (planDistance - originalPlanDistance) << " " << distanceNum);
-		if ((densityNum == 0 and distanceNum == 2) or (densityNum == 1 and distanceNum == 1) or (densityNum == 2 and distanceNum == 0)){
-			phrase = "only somewhat sure because even though my plan is " + densityDifftoPhrase() + " less crowded, it is also " + distanceDiffToPhrase() + " longer than your plan";
-		}
-		else if((densityNum == 1 and distanceNum == 2) or (densityNum == 2 and distanceNum == 2) or (densityNum == 2 and distanceNum == 1)){
-			phrase = "not sure because my plan is " + distanceDiffToPhrase() + " longer than your plan and only " + densityDifftoPhrase() + " less crowded";
-		}
-		else if((densityNum == 0 and distanceNum == 1) or (densityNum == 0 and distanceNum == 0) or (densityNum == 1 and distanceNum == 0)){
-			phrase = "really sure because my plan is " + densityDifftoPhrase() + " less crowded and only " + distanceDiffToPhrase() + " longer than your plan";
-		}
+	string objectivePhrase(string plannerName, int type){
+		//ROS_INFO_STREAM("Inside objectivePhrase");
+		vector <string> plannerObjective = objectives[plannerName];
+		string phrase = plannerObjective[type];
+		//ROS_INFO_STREAM(type << " " << phrase);
 		return phrase;
 	}
 
-	std::string computeRiskConf(){
-		ROS_INFO_STREAM("Inside compute risk conf");
-		std::string phrase, tempphrase;
-		if (riskNum == 5) tempphrase = riskDifftoPhrase();
-		if (distanceNum == 5) tempphrase = distanceDiffToPhrase();
-		ROS_INFO_STREAM((planCrowdRisk - originalPlanCrowdRisk) << " " << riskNum << " " << (planDistance - originalPlanDistance) << " " << distanceNum);
-		if ((riskNum == 0 and distanceNum == 2) or (riskNum == 1 and distanceNum == 1) or (riskNum == 2 and distanceNum == 0)){
-			phrase = "only somewhat sure because even though my plan is " + riskDifftoPhrase() + " less risky, it is also " + distanceDiffToPhrase() + " longer than your plan";
-		}
-		else if((riskNum == 1 and distanceNum == 2) or (riskNum == 2 and distanceNum == 2) or (riskNum == 2 and distanceNum == 1)){
-			phrase = "not sure because my plan is " + distanceDiffToPhrase() + " longer than your plan and only " + riskDifftoPhrase() + " less risky";
-		}
-		else if((riskNum == 0 and distanceNum == 1) or (riskNum == 0 and distanceNum == 0) or (riskNum == 1 and distanceNum == 0)){
-			phrase = "really sure because my plan is " + riskDifftoPhrase() + " less risky and only " + distanceDiffToPhrase() + " longer than your plan";
-		}
-		return phrase;
-	}
+	// string computeConf(){
+	// 	ROS_INFO_STREAM("Inside compute conf");
+	// 	string phrase, tempphrase;
+	// 	if (densityNum == 5) tempphrase = densityDifftoPhrase();
+	// 	if (distanceNum == 5) tempphrase = distanceDiffToPhrase();
+	// 	ROS_INFO_STREAM((planCrowdDensity - originalPlanCrowdDensity) << " " << densityNum << " " << (planDistance - originalPlanDistance) << " " << distanceNum);
+	// 	if ((densityNum == 0 and distanceNum == 2) or (densityNum == 1 and distanceNum == 1) or (densityNum == 2 and distanceNum == 0)){
+	// 		phrase = "only somewhat sure because even though my plan is " + densityDifftoPhrase() + " less crowded, it is also " + distanceDiffToPhrase() + " longer than your plan";
+	// 	}
+	// 	else if((densityNum == 1 and distanceNum == 2) or (densityNum == 2 and distanceNum == 2) or (densityNum == 2 and distanceNum == 1)){
+	// 		phrase = "not sure because my plan is " + distanceDiffToPhrase() + " longer than your plan and only " + densityDifftoPhrase() + " less crowded";
+	// 	}
+	// 	else if((densityNum == 0 and distanceNum == 1) or (densityNum == 0 and distanceNum == 0) or (densityNum == 1 and distanceNum == 0)){
+	// 		phrase = "really sure because my plan is " + densityDifftoPhrase() + " less crowded and only " + distanceDiffToPhrase() + " longer than your plan";
+	// 	}
+	// 	return phrase;
+	// }
 
-	std::string computeCostConf(){
+	// string computeRiskConf(){
+	// 	ROS_INFO_STREAM("Inside compute risk conf");
+	// 	string phrase, tempphrase;
+	// 	if (riskNum == 5) tempphrase = riskDifftoPhrase();
+	// 	if (distanceNum == 5) tempphrase = distanceDiffToPhrase();
+	// 	ROS_INFO_STREAM((planCrowdRisk - originalPlanCrowdRisk) << " " << riskNum << " " << (planDistance - originalPlanDistance) << " " << distanceNum);
+	// 	if ((riskNum == 0 and distanceNum == 2) or (riskNum == 1 and distanceNum == 1) or (riskNum == 2 and distanceNum == 0)){
+	// 		phrase = "only somewhat sure because even though my plan is " + riskDifftoPhrase() + " less risky, it is also " + distanceDiffToPhrase() + " longer than your plan";
+	// 	}
+	// 	else if((riskNum == 1 and distanceNum == 2) or (riskNum == 2 and distanceNum == 2) or (riskNum == 2 and distanceNum == 1)){
+	// 		phrase = "not sure because my plan is " + distanceDiffToPhrase() + " longer than your plan and only " + riskDifftoPhrase() + " less risky";
+	// 	}
+	// 	else if((riskNum == 0 and distanceNum == 1) or (riskNum == 0 and distanceNum == 0) or (riskNum == 1 and distanceNum == 0)){
+	// 		phrase = "really sure because my plan is " + riskDifftoPhrase() + " less risky and only " + distanceDiffToPhrase() + " longer than your plan";
+	// 	}
+	// 	return phrase;
+	// }
+
+	string computeCostConf(){
 		//ROS_INFO_STREAM("Inside compute cost conf");
-		std::string phrase, tempphrase;
-		if (costNum == 5) tempphrase = costDifftoPhrase();
-		if (distanceNum == 5) tempphrase = distanceDiffToPhrase();
+		string phrase, tempphrase;
+		if (costNum == 5) tempphrase = costDifftoPhrase(selected_planner);
+		if (distanceNum == 5) tempphrase = distanceDiffToPhrase(alt_planner);
 		//ROS_INFO_STREAM((planCost - originalPlanCost) << " " << costNum << " " << (planDistance - originalPlanDistance) << " " << distanceNum);
 		if ((costNum == 0 and distanceNum == 2) or (costNum == 1 and distanceNum == 1) or (costNum == 2 and distanceNum == 0)){
-			phrase = "only somewhat sure because even though my plan is " + costDifftoPhrase() + " better at following hallways, it is also " + distanceDiffToPhrase() + " longer than your plan";
+			phrase = "only somewhat sure because even though my plan is " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ", it is also " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 2) + " than your plan";
 		}
 		else if((costNum == 1 and distanceNum == 2) or (costNum == 2 and distanceNum == 2) or (costNum == 2 and distanceNum == 1)){
-			phrase = "not sure because my plan is " + distanceDiffToPhrase() + " longer than your plan and only " + costDifftoPhrase() + " better at following hallways";
+			phrase = "not sure because my plan is " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 1) + " than your plan and only " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 2) + " than your plan";
 		}
 		else if((costNum == 0 and distanceNum == 1) or (costNum == 0 and distanceNum == 0) or (costNum == 1 and distanceNum == 0)){
-			phrase = "really sure because my plan is " + costDifftoPhrase() + " better at following hallways and only " + distanceDiffToPhrase() + " longer than your plan";
+			phrase = "really sure because my plan is " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + " and only " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 2) + " than your plan";
 		}
 		return phrase;
 	}
 
-	std::vector<std::string> parseText(string text, char delim){
+	vector<string> parseText(string text, char delim){
 		//ROS_INFO_STREAM("Inside parse text");
-		std::vector<std::string> vstrings;
-		std::stringstream ss;
+		vector<string> vstrings;
+		stringstream ss;
 		ss.str(text);
-		std::string item;
+		string item;
 		// char delim = '\t';
-		while (std::getline(ss, item, delim)) {
+		while (getline(ss, item, delim)) {
 			vstrings.push_back(item);
 		}
 		return vstrings;
@@ -615,15 +661,18 @@ public:
 		sameplan=1;
 		computationTimeSec=0.0;
 		densityNum=5, distanceNum=5, riskNum=5, costNum=5;
+		string selected_planner;
+		alternative_planners.clear();
+		alt_planner = '';
 	}
 	
 	void logExplanationData() {
 		//ROS_INFO_STREAM("Inside log explanation data");
 		std_msgs::String logData;
-		std::vector<std::string> vstrings = parseText(current_log, '\t');
+		vector<string> vstrings = parseText(current_log, '\t');
 
-		std::stringstream output;
-		output << atof(vstrings[0].c_str()) << "\t" << atof(vstrings[1].c_str()) << "\t" << atof(vstrings[2].c_str()) << "\t" << computationTimeSec << "\t" << sameplan << "\t" << planDistance << "\t" << originalPlanDistance << "\t" << (planDistance - originalPlanDistance) << "\t" << planCost << "\t" << originalPlanCost << "\t" << (planCost - originalPlanCost);
+		stringstream output;
+		output << atof(vstrings[0].c_str()) << "\t" << atof(vstrings[1].c_str()) << "\t" << atof(vstrings[2].c_str()) << "\t" << computationTimeSec << "\t" << sameplan << "\t" << alt_planner << "\t" << planDistance << "\t" << originalPlanDistance << "\t" << (planDistance - originalPlanDistance) << "\t" << selected_planner << "\t" << planCost << "\t" << originalPlanCost << "\t" << (planCost - originalPlanCost);
 		
 		logData.data = output.str();
 		plan_explanations_log_pub_.publish(logData);
