@@ -17,6 +17,7 @@
 #include <iterator>
 #include <map>
 #include <algorithm>
+#include <cmath>        //for atan2 and M_PI
 #include <sys/time.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -64,6 +65,10 @@ private:
 	map <string, vector < pair<double, string> > > thresholds;
 	// objectives and their associated phrases
 	map <string, vector <string> > objectives;
+	// plan directions phrases
+	map <int, string> directions_phrases;
+	// plan distances phrases
+	map <double, string> distances_phrases;
 	// // distance intervals with their associated phrases
 	// vector <double> distanceThreshold;
 	// vector <string> distancePhrase;
@@ -195,6 +200,22 @@ public:
 					objs.push_back(vstrings[i+3]);
 					objectives.insert(pair< string, vector <string> >(vstrings[i], objs));
 					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << endl);
+				}
+			}
+			else if (fileLine.find("plandirections") != string::npos){
+				vector<string> vstrings = parseText(fileLine, '\t');
+				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				for(int i=1; i < vstrings.size(); i+=2){
+					directions_phrases.insert(pair< int, string >(atoi(vstrings[i].c_str()), vstrings[i+1]));
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+				}
+			}
+			else if (fileLine.find("plandistances") != string::npos){
+				vector<string> vstrings = parseText(fileLine, '\t');
+				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				for(int i=1; i < vstrings.size(); i+=2){
+					distances_phrases.insert(pair< double, string >(atof(vstrings[i].c_str()), vstrings[i+1]));
+					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 			}
 			// else if (fileLine.find("distance") != string::npos){
@@ -347,6 +368,91 @@ public:
 			}
 			if(selected_planner == 'hallwayskel' or selected_planner == 'skeletonhall'){
 				// give explanation for them
+
+				vector<double> current_plan_angles;
+				vector<double> current_plan_distances;
+				for(int i = 0; i < current_plan.poses.size()-1; i++){
+					current_plan_angles.push_back(atan2(current_plan.poses[i].pose.position.y - current_plan.poses[i+1].pose.position.y, current_plan.poses[i].pose.position.x - current_plan.poses[i+1].pose.position.x));
+					current_plan_distances.push_back(computeDistance(current_plan.poses[i].pose.position.x, current_plan.poses[i].pose.position.y, current_plan.poses[i+1].pose.position.x, current_plan.poses[i+1].pose.position.y));
+				}
+				vector<double> alt_plan_angles;
+				vector<double> alt_plan_distances;
+				for(int i = 0; i < current_original_plan.poses.size()-1; i++){
+					alt_plan_angles.push_back(atan2(current_original_plan.poses[i].pose.position.y - current_original_plan.poses[i+1].pose.position.y, current_original_plan.poses[i].pose.position.x - current_original_plan.poses[i+1].pose.position.x));
+					alt_plan_distances.push_back(computeDistance(current_original_plan.poses[i].pose.position.x, current_original_plan.poses[i].pose.position.y, current_original_plan.poses[i+1].pose.position.x, current_original_plan.poses[i+1].pose.position.y));
+				}
+				vector<int> current_plan_directions;
+				for(int i = 0; i < current_plan_angles.size(); i++){
+					if(current_plan_angles[i] >= -M_PI/8.0 and current_plan_angles[i] < M_PI/8.0){
+						current_plan_directions.push_back(5);
+					}
+					else if(current_plan_angles[i] >= M_PI/8.0 and current_plan_angles[i] < 3.0*M_PI/8.0){
+						current_plan_directions.push_back(6);
+					}
+					else if(current_plan_angles[i] >= 3.0*M_PI/8.0 and current_plan_angles[i] < 5.0*M_PI/8.0){
+						current_plan_directions.push_back(7);
+					}
+					else if(current_plan_angles[i] >= 5.0*M_PI/8.0 and current_plan_angles[i] < 7.0*M_PI/8.0){
+						current_plan_directions.push_back(8);
+					}
+					else if(current_plan_angles[i] >= 7.0*M_PI/8.0 or current_plan_angles[i] < -7.0*M_PI/8.0){
+						current_plan_directions.push_back(1);
+					}
+					else if(current_plan_angles[i] >= -7.0*M_PI/8.0 and current_plan_angles[i] < -5.0*M_PI/8.0){
+						current_plan_directions.push_back(2);
+					}
+					else if(current_plan_angles[i] >= -5.0*M_PI/8.0 and current_plan_angles[i] < -3.0*M_PI/8.0){
+						current_plan_directions.push_back(3);
+					}
+					else if(current_plan_angles[i] >= -3.0*M_PI/8.0 and current_plan_angles[i] < -M_PI/8.0){
+						current_plan_directions.push_back(4);
+					}
+				}
+				vector<int> alt_plan_directions;
+				for(int i = 0; i < alt_plan_angles.size(); i++){
+					if(alt_plan_angles[i] >= -M_PI/8.0 and alt_plan_angles[i] < M_PI/8.0){
+						alt_plan_directions.push_back(5);
+					}
+					else if(alt_plan_angles[i] >= M_PI/8.0 and alt_plan_angles[i] < 3.0*M_PI/8.0){
+						alt_plan_directions.push_back(6);
+					}
+					else if(alt_plan_angles[i] >= 3.0*M_PI/8.0 and alt_plan_angles[i] < 5.0*M_PI/8.0){
+						alt_plan_directions.push_back(7);
+					}
+					else if(alt_plan_angles[i] >= 5.0*M_PI/8.0 and alt_plan_angles[i] < 7.0*M_PI/8.0){
+						alt_plan_directions.push_back(8);
+					}
+					else if(alt_plan_angles[i] >= 7.0*M_PI/8.0 or alt_plan_angles[i] < -7.0*M_PI/8.0){
+						alt_plan_directions.push_back(1);
+					}
+					else if(alt_plan_angles[i] >= -7.0*M_PI/8.0 and alt_plan_angles[i] < -5.0*M_PI/8.0){
+						alt_plan_directions.push_back(2);
+					}
+					else if(alt_plan_angles[i] >= -5.0*M_PI/8.0 and alt_plan_angles[i] < -3.0*M_PI/8.0){
+						alt_plan_directions.push_back(3);
+					}
+					else if(alt_plan_angles[i] >= -3.0*M_PI/8.0 and alt_plan_angles[i] < -M_PI/8.0){
+						alt_plan_directions.push_back(4);
+					}
+				}
+				vector<int> current_plan_direction_changes;
+				for(int i = 0; i < current_plan_directions.size()-1; i++){
+					if(current_plan_directions[i+1] - current_plan_directions[i] < 0){
+						current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i] + 8);
+					}
+					else{
+						current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i]);
+					}
+				}
+				vector<int> alt_plan_direction_changes;
+				for(int i = 0; i < alt_plan_directions.size()-1; i++){
+					if(alt_plan_directions[i+1] - alt_plan_directions[i] < 0){
+						alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i] + 8);
+					}
+					else{
+						alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i]);
+					}
+				}
 			}
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
