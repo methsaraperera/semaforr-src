@@ -28,7 +28,6 @@
 #include <semaforr/CrowdModel.h>
 #include <python2.7/Python.h>
 
-#include <iterator>
 #include <random>
 
 
@@ -122,16 +121,9 @@ public:
 		m.getRPY(roll, pitch, yaw);
 		Position currentPose(x,y,yaw);
 		if(add_noise){
-			const double location_mean = 0.0;
-			const double locatin_stddev = 0.5;
-			const double orientation_mean = 0.0;
-			const double orientation_stddev = 0.0872665;
-			std::default_random_engine generator;
-			std::normal_distribution<double> dist(location_mean, locatin_stddev);
-			std::normal_distribution<double> orient(location_mean, locatin_stddev);
-			double new_x = currentPose.getX() + dist(generator);
-			double new_y = currentPose.getY() + dist(generator);
-			double new_theta = currentPose.getTheta() + orient(generator);
+			double new_x = currentPose.getX() + ((float(rand()) / float(RAND_MAX)) * (1 - -1)) + -1;
+			double new_y = currentPose.getY() + ((float(rand()) / float(RAND_MAX)) * (1 - -1)) + -1;
+			double new_theta = currentPose.getTheta() + ((float(rand()) / float(RAND_MAX)) * (0.0872665 - -0.0872665)) + -0.0872665;
 			if(new_theta < -M_PI){
 				new_theta = new_theta + 2 * M_PI;
 			}

@@ -194,7 +194,7 @@ public:
 				vector<string> vstrings = parseText(fileLine, '\t');
 				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 				for(int i=1; i < vstrings.size(); i+=4){
-					vector <string> > objs;
+					vector <string> objs;
 					objs.push_back(vstrings[i+1]);
 					objs.push_back(vstrings[i+2]);
 					objs.push_back(vstrings[i+3]);
@@ -338,15 +338,15 @@ public:
 			alternative_planners = parseText(parsed_log[25], '>');
 			alternative_planners.erase(alternative_planners.begin());
 			savePlanCosts();
-			alt_planner = 'distance';
-			if(selected_planner == 'skeleton'){
-				if(alternative_planners[0] == 'hallwayskel'){
-					selected_planner = 'skeletonhall';
-					alt_planner = 'hallwayskel';
+			alt_planner = "distance";
+			if(selected_planner == "skeleton"){
+				if(alternative_planners[0] == "hallwayskel"){
+					selected_planner = "skeletonhall";
+					alt_planner = "hallwayskel";
 				}
 			}
-			else if(selected_planner == 'hallwayskel'){
-				alt_planner = 'skeletonhall';
+			else if(selected_planner == "hallwayskel"){
+				alt_planner = "skeletonhall";
 			}
 			//ROS_INFO_STREAM("Before compute plan distances");
 			//computePlanDistances();
@@ -354,7 +354,7 @@ public:
 			//computePlanDensities();
 			//computePlanRisks();
 			//ROS_INFO_STREAM("Before compare plans");
-			if(selected_planner == 'distance'){
+			if(selected_planner == "distance"){
 				explanationString.data = "I decided to go this way because I agree that we should take the shortest route.\nI think your way is better.\nYour way is the best way to go.\nI'm really sure because this is the shortest way.";
 			}
 			else if (comparePlans()) {
@@ -366,7 +366,7 @@ public:
 			else {
 				explanationString.data = "Although there may be another way that is " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 1) + ", I think my way is " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ".\n" + "I think my way is better because it's " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 1) + ".\n" + "We could go that way since it's " + distanceDiffToPhrase(alt_planner) + " " + objectivePhrase(alt_planner, 1) + " but it could also be " + costDifftoPhrase(selected_planner) + " " + objectivePhrase(selected_planner, 2) + ".\n" + "I'm " + computeCostConf() + ".";
 			}
-			if(selected_planner == 'hallwayskel' or selected_planner == 'skeletonhall'){
+			if(selected_planner == "hallwayskel" or selected_planner == "skeletonhall"){
 				// give explanation for them
 				vector<double> current_plan_angles;
 				vector<double> current_plan_distances;
@@ -675,8 +675,8 @@ public:
 		vector < pair<double, string> > plannerThreshold = thresholds[plannerName];
 		string phrase;
 		for (int i = plannerThreshold.size()-1; i >= 0; --i) {
-			if ((planDistance - originalPlanDistance) <= plannerThreshold[i]) {
-				phrase = plannerThreshold[i];
+			if ((planDistance - originalPlanDistance) <= plannerThreshold[i].first) {
+				phrase = plannerThreshold[i].second;
 				distanceNum = i;
 			}
 		}
@@ -768,7 +768,7 @@ public:
 		densityNum=5, distanceNum=5, riskNum=5, costNum=5;
 		string selected_planner;
 		alternative_planners.clear();
-		alt_planner = '';
+		alt_planner = " ";
 	}
 	
 	void logExplanationData() {
