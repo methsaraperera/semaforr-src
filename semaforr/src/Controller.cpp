@@ -291,6 +291,14 @@ void Controller::initialize_params(string filename){
       behindOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("behindOn " << behindOn);
     }
+    else if (fileLine.find("dontgobackOn") != std::string::npos) {
+      std::stringstream ss(fileLine);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      dontgobackOn = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("dontgobackOn " << dontgobackOn);
+    }
     else if (fileLine.find("aStarOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -1512,7 +1520,9 @@ bool Controller::tierOneDecision(FORRAction *decision){
       }
     }
     ROS_INFO("Advisor don't go back will veto actions");
-    tier1->advisorDontGoBack();
+    if(dontgobackOn){
+      tier1->advisorDontGoBack();
+    }
     vector<FORRAction> DGBVetoedActions;
     vetoedActions = beliefs->getAgentState()->getVetoedActions();
     for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){

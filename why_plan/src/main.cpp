@@ -368,7 +368,6 @@ public:
 			}
 			if(selected_planner == 'hallwayskel' or selected_planner == 'skeletonhall'){
 				// give explanation for them
-
 				vector<double> current_plan_angles;
 				vector<double> current_plan_distances;
 				for(int i = 0; i < current_plan.poses.size()-1; i++){
@@ -457,7 +456,7 @@ public:
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 			computationTimeSec = (end_timecv-start_timecv);
-			//ROS_INFO_STREAM("After Plan explanation: " << explanationString.data);
+			ROS_INFO_STREAM("After Plan explanation: " << explanationString.data);
 			//ROS_INFO_STREAM("Before log data");
 			logExplanationData();
 			//send the explanation

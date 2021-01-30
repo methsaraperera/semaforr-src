@@ -28,6 +28,9 @@
 #include <semaforr/CrowdModel.h>
 #include <python2.7/Python.h>
 
+#include <iterator>
+#include <random>
+
 
 using namespace std;
 
@@ -57,6 +60,8 @@ private:
 	Controller *controller;
 	// Pos received
 	bool init_pos_received, init_laser_received;
+	// Add noise to pose
+	bool add_noise;
 	// Visualization 
 	Visualizer *viz_;
 public:
@@ -76,6 +81,7 @@ public:
 		init_pos_received = false;
  		init_laser_received = false;
 		current.setX(0);current.setY(0);current.setTheta(0);
+		add_noise = true;
 		previous.setX(0);previous.setY(0);previous.setTheta(0);
 		viz_ = new Visualizer(&nh_, con);
 	}
@@ -115,6 +121,25 @@ public:
 		double roll, pitch, yaw;
 		m.getRPY(roll, pitch, yaw);
 		Position currentPose(x,y,yaw);
+		if(add_noise){
+			const double location_mean = 0.0;
+			const double locatin_stddev = 0.5;
+			const double orientation_mean = 0.0;
+			const double orientation_stddev = 0.0872665;
+			std::default_random_engine generator;
+			std::normal_distribution<double> dist(location_mean, locatin_stddev);
+			std::normal_distribution<double> orient(location_mean, locatin_stddev);
+			double new_x = currentPose.getX() + dist(generator);
+			double new_y = currentPose.getY() + dist(generator);
+			double new_theta = currentPose.getTheta() + orient(generator);
+			if(new_theta < -M_PI){
+				new_theta = new_theta + 2 * M_PI;
+			}
+			else if(new_theta > M_PI){
+				new_theta = new_theta - 2 * M_PI;
+			}
+			currentPose = Position(new_x, new_y, new_theta);
+		}
 		if(init_pos_received == false){
 			//ROS_DEBUG("First Pose message");
 			init_pos_received = true;

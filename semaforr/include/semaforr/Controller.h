@@ -168,6 +168,7 @@ private:
   bool doorwayOn;
   bool findawayOn;
   bool behindOn;
+  bool dontgobackOn;
   bool firstTaskAssigned;
   int highwayFinished;
   int frontierFinished;
