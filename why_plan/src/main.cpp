@@ -348,6 +348,7 @@ public:
 			else if(selected_planner == "hallwayskel"){
 				alt_planner = "skeletonhall";
 			}
+			cout << "selected_planner " << selected_planner << " alt_planner " << alt_planner << endl;
 			//ROS_INFO_STREAM("Before compute plan distances");
 			//computePlanDistances();
 			//ROS_INFO_STREAM("Before compute plan densities");
@@ -657,7 +658,7 @@ public:
 	// }
 
 	string costDifftoPhrase(string plannerName){
-		//ROS_INFO_STREAM("Inside cost diff to phrase");
+		ROS_INFO_STREAM("Inside cost diff to phrase");
 		vector < pair<double, string> > plannerThreshold = thresholds[plannerName];
 		string phrase;
 		for (int i = plannerThreshold.size()-1; i >= 0; --i) {
@@ -666,12 +667,12 @@ public:
 				costNum = i;
 			}
 		}
-		//ROS_INFO_STREAM((planCost - originalPlanCost) << " " << phrase << " " << costNum);
+		ROS_INFO_STREAM((planCost - originalPlanCost) << " " << phrase << " " << costNum);
 		return phrase;
 	}
 
 	string distanceDiffToPhrase(string plannerName){
-		//ROS_INFO_STREAM("Inside distance diff to phrase");
+		ROS_INFO_STREAM("Inside distance diff to phrase");
 		vector < pair<double, string> > plannerThreshold = thresholds[plannerName];
 		string phrase;
 		for (int i = plannerThreshold.size()-1; i >= 0; --i) {
@@ -680,15 +681,15 @@ public:
 				distanceNum = i;
 			}
 		}
-		//ROS_INFO_STREAM((planDistance - originalPlanDistance) << " " << phrase << " " << distanceNum);
+		ROS_INFO_STREAM((planDistance - originalPlanDistance) << " " << phrase << " " << distanceNum);
 		return phrase;
 	}
 
 	string objectivePhrase(string plannerName, int type){
-		//ROS_INFO_STREAM("Inside objectivePhrase");
+		ROS_INFO_STREAM("Inside objectivePhrase");
 		vector <string> plannerObjective = objectives[plannerName];
 		string phrase = plannerObjective[type];
-		//ROS_INFO_STREAM(type << " " << phrase);
+		ROS_INFO_STREAM(type << " " << phrase);
 		return phrase;
 	}
 

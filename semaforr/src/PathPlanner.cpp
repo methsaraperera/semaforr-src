@@ -35,8 +35,10 @@ int PathPlanner::calcPath(bool cautious){
       target.printNode();
       cout << endl;
     }
-    if(!navGraph->isConnected()){
-      return 5;
+    if(name == "skeleton" or name == "hallwayskel"){
+      if(!navGraph->isConnected()){
+        return 5;
+      }
     }
 
     Node s, t;

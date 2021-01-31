@@ -118,8 +118,8 @@ public:
 		m.getRPY(roll, pitch, yaw);
 		Position currentPose(x,y,yaw);
 		if(add_noise){
-			double new_x = currentPose.getX() + ((float(rand()) / float(RAND_MAX)) * (1 - -1)) + -1;
-			double new_y = currentPose.getY() + ((float(rand()) / float(RAND_MAX)) * (1 - -1)) + -1;
+			double new_x = currentPose.getX() + ((float(rand()) / float(RAND_MAX)) * (0.5 - -0.5)) + -0.5;
+			double new_y = currentPose.getY() + ((float(rand()) / float(RAND_MAX)) * (0.5 - -0.5)) + -0.5;
 			double new_theta = currentPose.getTheta() + ((float(rand()) / float(RAND_MAX)) * (0.0872665 - -0.0872665)) + -0.0872665;
 			if(new_theta < -M_PI){
 				new_theta = new_theta + 2 * M_PI;

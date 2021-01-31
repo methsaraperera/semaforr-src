@@ -197,7 +197,7 @@ public:
 		double start_timecv, end_timecv;
 		while(nh_.ok()) {
 			while(init_message_received == false){
-				ROS_DEBUG("Waiting for first message");
+				// ROS_DEBUG("Waiting for first message");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -210,7 +210,7 @@ public:
 			vetoedActions = parseText(current_log)[11];
 			chosenAction = parseText(current_log)[12]+parseText(current_log)[13];
 			advisorComments = parseText(current_log)[15];
-			ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
+			// ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);
 			vector< vector <string> > vetoes;
 			std::stringstream ss;
 			ss.str(vetoedActions);
