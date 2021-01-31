@@ -132,9 +132,11 @@ public:
 	}
 
 	void updateLog(const std_msgs::String & log){
-		log_message_received = true;
-		current_log = log.data;
-		//ROS_INFO_STREAM("Recieved log data: " << current_log << endl);
+		if(parseText(log.data, '\t')[25].length() > 1){
+			log_message_received = true;
+			current_log = log.data;
+			//ROS_INFO_STREAM("Recieved log data: " << current_log << endl);
+		}
 	}
 
 	void updateCrowdDensity(const nav_msgs::OccupancyGrid & crowd_density){
@@ -330,12 +332,17 @@ public:
 			gettimeofday(&cv,NULL);
 			start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 			vector<string> parsed_log = parseText(current_log, '\t');
+			cout << "current decision " << parsed_log[0] << " " << parsed_log[1] << endl;
 			targetX = atof(parsed_log[4].c_str());
 			targetY = atof(parsed_log[5].c_str());
 			robotX = atof(parsed_log[6].c_str());
 			robotY = atof(parsed_log[7].c_str());
+			cout << "planners " << parsed_log[25] << endl;
 			selected_planner = parseText(parsed_log[25], '>')[0];
 			alternative_planners = parseText(parsed_log[25], '>');
+			for(int i = 0; i < alternative_planners.size(); i++){
+				cout << alternative_planners[i] << endl;
+			}
 			alternative_planners.erase(alternative_planners.begin());
 			savePlanCosts();
 			alt_planner = "distance";

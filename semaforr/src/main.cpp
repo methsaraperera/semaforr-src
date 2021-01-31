@@ -77,7 +77,7 @@ public:
 		init_pos_received = false;
  		init_laser_received = false;
 		current.setX(0);current.setY(0);current.setTheta(0);
-		add_noise = false;
+		add_noise = true;
 		previous.setX(0);previous.setY(0);previous.setTheta(0);
 		viz_ = new Visualizer(&nh_, con);
 	}
