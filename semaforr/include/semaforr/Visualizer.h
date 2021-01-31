@@ -110,7 +110,7 @@ public:
   }
 
   void publish(){
-	if(beliefs->getAgentState()->getCurrentTask() != NULL){
+	if(beliefs->getAgentState()->getCurrentTask() != NULL and con->getHighwayFinished()){
 		publish_next_target();
 		publish_next_waypoint();
 		publish_plan();
