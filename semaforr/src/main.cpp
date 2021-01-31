@@ -28,9 +28,6 @@
 #include <semaforr/CrowdModel.h>
 #include <python2.7/Python.h>
 
-#include <random>
-
-
 using namespace std;
 
 // Main interface between SemaFORR and ROS, all ROS related information should be in RobotDriver
