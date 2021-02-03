@@ -129,10 +129,10 @@ public:
 	}*/
 	//publish_edges_cost();
 	publish_conveyor();
-	// publish_hallway1();
-	// publish_hallway2();
-	// publish_hallway3();
-	// publish_hallway4();
+	publish_hallway1();
+	publish_hallway2();
+	publish_hallway3();
+	publish_hallway4();
 	publish_region();
 	publish_exits();
 	publish_skeleton();

@@ -1519,8 +1519,8 @@ bool Controller::tierOneDecision(FORRAction *decision){
         decisionMade = true;
       }
     }
-    ROS_INFO("Advisor don't go back will veto actions");
     if(dontgobackOn){
+      ROS_INFO("Advisor don't go back will veto actions");
       tier1->advisorDontGoBack();
     }
     vector<FORRAction> DGBVetoedActions;

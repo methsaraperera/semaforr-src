@@ -356,6 +356,12 @@ public:
 				alt_planner = "skeletonhall";
 			}
 			cout << "selected_planner " << selected_planner << " alt_planner " << alt_planner << endl;
+			if(selected_planner != "skeleton" and alt_planner == "distance"){
+				planDistance = planDistance / 100.0;
+				originalPlanDistance = originalPlanDistance / 100.0;
+				planCost = planCost / 100.0;
+				originalPlanCost = originalPlanCost / 100.0;
+			}
 			//ROS_INFO_STREAM("Before compute plan distances");
 			//computePlanDistances();
 			//ROS_INFO_STREAM("Before compute plan densities");
