@@ -345,18 +345,11 @@ public:
 			}
 			alternative_planners.erase(alternative_planners.begin());
 			savePlanCosts();
-			alt_planner = "distance";
-			if(selected_planner == "skeleton"){
-				if(alternative_planners[0] == "hallwayskel"){
-					selected_planner = "skeletonhall";
-					alt_planner = "hallwayskel";
-				}
-			}
-			else if(selected_planner == "hallwayskel"){
-				alt_planner = "skeletonhall";
+			if(selected_planner != "hallwayskel" and selected_planner != "skeletonhall"){
+				alt_planner = "distance";
 			}
 			cout << "selected_planner " << selected_planner << " alt_planner " << alt_planner << endl;
-			if(selected_planner != "skeleton" and alt_planner == "distance"){
+			if(alt_planner == "distance"){
 				planDistance = planDistance / 100.0;
 				originalPlanDistance = originalPlanDistance / 100.0;
 				planCost = planCost / 100.0;

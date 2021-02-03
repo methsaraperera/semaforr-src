@@ -1717,10 +1717,10 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
         beliefs->getAgentState()->setCurrentWaypoints(current, beliefs->getAgentState()->getCurrentLaserEndpoints(), planner, aStarOn, plans.at(bestPlanInds.at(random_number)), beliefs->getSpatialModel()->getRegionList()->getRegions());
         if(planner->getName() == "hallwayskel"){
           if(beliefs->getAgentState()->getCurrentTask()->getSkeletonWaypoint().getCreator() == 0){
-            decisionStats->chosenPlanner = "skeleton>highway";
+            decisionStats->chosenPlanner = "skeletonhall>hallwayskel";
           }
           else{
-            decisionStats->chosenPlanner = "highway>skeleton";
+            decisionStats->chosenPlanner = "hallwayskel>skeletonhall";
           }
         }
         else if(planner->getName() == "skeleton"){
