@@ -372,18 +372,21 @@ public:
 			}
 			if(selected_planner == "hallwayskel" or selected_planner == "skeletonhall"){
 				// give explanation for them
+				cout << "Give plan based explanation" << endl;
 				vector<double> current_plan_angles;
 				vector<double> current_plan_distances;
 				for(int i = 0; i < current_plan.size()-1; i++){
 					current_plan_angles.push_back(atan2(current_plan[i][1] - current_plan[i+1][1], current_plan[i][0] - current_plan[i+1][0]));
 					current_plan_distances.push_back(computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]));
 				}
+				cout << "current plan angles " << current_plan_angles.size() << " current plan distances " << current_plan_distances.size() << endl; 
 				vector<double> alt_plan_angles;
 				vector<double> alt_plan_distances;
 				for(int i = 0; i < current_original_plan.size()-1; i++){
 					alt_plan_angles.push_back(atan2(current_original_plan[i][1] - current_original_plan[i+1][1], current_original_plan[i][0] - current_original_plan[i+1][0]));
 					alt_plan_distances.push_back(computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]));
 				}
+				cout << "alt plan angles " << alt_plan_angles.size() << " alt plan distances " << alt_plan_distances.size() << endl;
 				vector<int> current_plan_directions;
 				for(int i = 0; i < current_plan_angles.size(); i++){
 					if(current_plan_angles[i] >= -M_PI/8.0 and current_plan_angles[i] < M_PI/8.0){
@@ -411,6 +414,7 @@ public:
 						current_plan_directions.push_back(4);
 					}
 				}
+				cout << "current plan directions " << current_plan_directions.size() << endl;
 				vector<int> alt_plan_directions;
 				for(int i = 0; i < alt_plan_angles.size(); i++){
 					if(alt_plan_angles[i] >= -M_PI/8.0 and alt_plan_angles[i] < M_PI/8.0){
@@ -438,6 +442,7 @@ public:
 						alt_plan_directions.push_back(4);
 					}
 				}
+				cout << "alt plan directions " << alt_plan_directions.size() << endl;
 				vector<int> current_plan_direction_changes;
 				for(int i = 0; i < current_plan_directions.size()-1; i++){
 					if(current_plan_directions[i+1] - current_plan_directions[i] < 0){
@@ -447,6 +452,7 @@ public:
 						current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i]);
 					}
 				}
+				cout << "current plan direction changes " << current_plan_direction_changes.size() << endl;
 				vector<int> alt_plan_direction_changes;
 				for(int i = 0; i < alt_plan_directions.size()-1; i++){
 					if(alt_plan_directions[i+1] - alt_plan_directions[i] < 0){
@@ -456,6 +462,7 @@ public:
 						alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i]);
 					}
 				}
+				cout << "alt plan direction changes " << alt_plan_direction_changes.size() << endl;
 				cout << "current_plan_direction_phrases" << endl;
 				vector<string> current_plan_direction_phrases;
 				for(int i = 0; i < current_plan_direction_changes.size(); i++){
@@ -540,7 +547,7 @@ public:
 			point.push_back(atof(parseText(vstrings2[i], ' ')[1].c_str()));
 			current_original_plan.push_back(point);
 		}
-		ROS_INFO_STREAM("Orig Plan length " << current_plan.size());
+		ROS_INFO_STREAM("Orig Plan length " << current_original_plan.size());
 	}
 
 	double computeDistance(double x1, double y1, double x2, double y2){
