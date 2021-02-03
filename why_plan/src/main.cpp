@@ -466,6 +466,20 @@ public:
 						alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i]);
 					}
 				}
+				cout << "current_plan_direction_phrases" << endl;
+				vector<string> current_plan_direction_phrases;
+				for(int i = 0; i < current_plan_direction_changes.size(); i++){
+					current_plan_direction_phrases.push_back(directions_phrases[current_plan_direction_changes[i]]);
+					cout << directions_phrases[current_plan_direction_changes[i]] << " ";
+				}
+				cout << endl;
+				cout << "alt_plan_direction_phrases" << endl;
+				vector<string> alt_plan_direction_phrases;
+				for(int i = 0; i < alt_plan_direction_changes.size(); i++){
+					alt_plan_direction_phrases.push_back(directions_phrases[alt_plan_direction_changes[i]]);
+					cout << directions_phrases[alt_plan_direction_changes[i]] << " ";
+				}
+				cout << endl;
 			}
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);

@@ -153,7 +153,7 @@ spatials = "/config/spatial_model.conf"
 
 num_runs = 1
 advisors = "/config/advisors2.conf"
-params = "/config/params2.conf"
+params = "/config/params1.conf"
 map_name = "gradcenter-5"
 for i in range(0,num_runs):
     for j in range(1,2):
@@ -162,39 +162,39 @@ for i in range(0,num_runs):
         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_why-plan_" + str(j) + "_" + str(i) + ".txt"
+        log_name = map_name + "_why-planhighwaytest_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-num_runs = 1
-advisors = "/config/advisors2.conf"
-params = "/config/params2.conf"
-map_name = "hunter-10"
-for i in range(0,num_runs):
-    for j in range(1,2):
-        why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_why-plan_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target40test-" + str(j) + ".conf"
-        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+# num_runs = 1
+# advisors = "/config/advisors2.conf"
+# params = "/config/params2.conf"
+# map_name = "hunter-10"
+# for i in range(0,num_runs):
+#     for j in range(1,2):
+#         why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+#         whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+#         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
+#         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+#         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
+#         log_name = map_name + "_why-plan_" + str(j) + "_" + str(i) + ".txt"
+#         target_file_name = "target40test-" + str(j) + ".conf"
+#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-num_runs = 1
-advisors = "/config/advisors2.conf"
-params = "/config/params3.conf"
-map_name = "moma-5"
-for i in range(0,num_runs):
-    for j in range(1,2):
-        why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_why-plan_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target40test-" + str(j) + ".conf"
-        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+# num_runs = 1
+# advisors = "/config/advisors2.conf"
+# params = "/config/params3.conf"
+# map_name = "moma-5"
+# for i in range(0,num_runs):
+#     for j in range(1,2):
+#         why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+#         whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+#         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
+#         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+#         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
+#         log_name = map_name + "_why-plan_" + str(j) + "_" + str(i) + ".txt"
+#         target_file_name = "target40test-" + str(j) + ".conf"
+#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 # num_runs = 2
 # params = "/config/params3.conf"
 # map_name = "hunter-10"
