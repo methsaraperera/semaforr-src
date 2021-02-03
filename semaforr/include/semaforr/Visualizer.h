@@ -380,15 +380,15 @@ public:
   void publish_plan(){
 	// ROS_DEBUG("Inside publish plan!!");
 	nav_msgs::Path path;
-	// path.header.frame_id = "map";
+	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
 
 	vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getWaypoints();
-	double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
-	double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
-	std::stringstream output;
-	output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
-	path.header.frame_id = output.str();
+	// double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
+	// double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
+	// std::stringstream output;
+	// output << pathCostInNavGraph << "\t" << pathCostInNavOrigGraph;
+	// path.header.frame_id = output.str();
 
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;
@@ -461,15 +461,15 @@ public:
  void publish_original_plan(){
 	// ROS_DEBUG("Inside publish original plan!!");
 	nav_msgs::Path path;
-	//path.header.frame_id = "map";
+	path.header.frame_id = "map";
 	path.header.stamp = ros::Time::now();
 
 	vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getOrigWaypoints();
-	double origPathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInNavGraph();
-	double origPathCostInOrigNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInOrigNavGraph();
-	std::stringstream output;
-	output << origPathCostInNavGraph << "\t" << origPathCostInOrigNavGraph;
-	path.header.frame_id = output.str();
+	// double origPathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInNavGraph();
+	// double origPathCostInOrigNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInOrigNavGraph();
+	// std::stringstream output;
+	// output << origPathCostInNavGraph << "\t" << origPathCostInOrigNavGraph;
+	// path.header.frame_id = output.str();
 
 	for(int i = 0; i < waypoints.size(); i++){
 		geometry_msgs::PoseStamped poseStamped;
@@ -1285,6 +1285,9 @@ public:
 	std::stringstream planStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
 		vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getWaypoints();
+		double pathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavGraph();
+		double pathCostInNavOrigGraph = beliefs->getAgentState()->getCurrentTask()->getPathCostInNavOrigGraph();
+		planStream << pathCostInNavGraph << " " << pathCostInNavOrigGraph << ";";
 
 		for(int i = 0; i < waypoints.size(); i++){
 			planStream << waypoints[i].get_x() << " " << waypoints[i].get_y();
@@ -1299,6 +1302,9 @@ public:
 	std::stringstream origPlanStream;
 	if(beliefs->getAgentState()->getCurrentTask() != NULL){
 		vector <CartesianPoint> waypoints = beliefs->getAgentState()->getCurrentTask()->getOrigWaypoints();
+		double origPathCostInNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInNavGraph();
+		double origPathCostInOrigNavGraph = beliefs->getAgentState()->getCurrentTask()->getOrigPathCostInOrigNavGraph();
+		origPlanStream << origPathCostInNavGraph << " " << origPathCostInOrigNavGraph<< ";";
 
 		for(int i = 0; i < waypoints.size(); i++){
 			origPlanStream << waypoints[i].get_x() << " " << waypoints[i].get_y();

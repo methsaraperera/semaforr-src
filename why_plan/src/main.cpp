@@ -42,8 +42,8 @@ private:
 	ros::Subscriber sub_decision_log_;
 	ros::Subscriber sub_crowd_density_;
 	ros::Subscriber sub_crowd_risk_;
-	ros::Subscriber sub_plan_;
-	ros::Subscriber sub_original_plan_;
+	// ros::Subscriber sub_plan_;
+	// ros::Subscriber sub_original_plan_;
 	// Current log
 	string current_log;
 	// Current crowd density
@@ -51,14 +51,16 @@ private:
 	// Current crowd risk
 	nav_msgs::OccupancyGrid current_crowd_risk;
 	// Current plans
-	nav_msgs::Path current_plan;
-	nav_msgs::Path current_original_plan;
+	// nav_msgs::Path current_plan;
+	// nav_msgs::Path current_original_plan;
+	vector< vector<double> > current_plan;
+	vector< vector<double> > current_original_plan;
 	// Message received
 	bool log_message_received;
 	bool density_message_received;
 	bool risk_message_received;
-	bool plan_message_received;
-	bool orig_plan_message_received;
+	// bool plan_message_received;
+	// bool orig_plan_message_received;
 	// Stats on plans
 	double planDistance=0, originalPlanDistance=0, planCost=0, originalPlanCost=0, planCrowdDensity=0, originalPlanCrowdDensity=0, planCrowdRisk=0, originalPlanCrowdRisk=0;
 	// thresholds and their associated phrases
@@ -122,13 +124,13 @@ public:
 		sub_decision_log_ = nh.subscribe("decision_log", 1000, &Explanation::updateLog, this);
 		sub_crowd_density_ = nh.subscribe("crowd_density", 1000, &Explanation::updateCrowdDensity, this);
 		sub_crowd_risk_ = nh.subscribe("crowd_risk", 1000, &Explanation::updateCrowdRisk, this);
-		sub_plan_ = nh.subscribe("plan", 1000, &Explanation::updatePlan, this);
-		sub_original_plan_ = nh.subscribe("original_plan", 1000, &Explanation::updateOriginalPlan, this);
+		// sub_plan_ = nh.subscribe("plan", 1000, &Explanation::updatePlan, this);
+		// sub_original_plan_ = nh.subscribe("original_plan", 1000, &Explanation::updateOriginalPlan, this);
 		log_message_received = false;
 		density_message_received = false;
 		risk_message_received = false;
-		plan_message_received = false;
-		orig_plan_message_received = false;
+		// plan_message_received = false;
+		// orig_plan_message_received = false;
 	}
 
 	void updateLog(const std_msgs::String & log){
@@ -151,21 +153,21 @@ public:
 		//ROS_INFO_STREAM("Recieved crowd density data: " << current_crowd_risk << endl);
 	}
 
-	void updatePlan(const nav_msgs::Path & plan){
-		if (plan.poses.size() > 0) {
-			plan_message_received = true;
-			current_plan = plan;
-			//ROS_INFO_STREAM("Recieved plan data: " << current_plan << endl);
-		}
-	}
+	// void updatePlan(const nav_msgs::Path & plan){
+	// 	if (plan.size() > 0) {
+	// 		plan_message_received = true;
+	// 		current_plan = plan;
+	// 		//ROS_INFO_STREAM("Recieved plan data: " << current_plan << endl);
+	// 	}
+	// }
 
-	void updateOriginalPlan(const nav_msgs::Path & original_plan){
-		if (original_plan.poses.size() > 0) {
-			orig_plan_message_received = true;
-			current_original_plan = original_plan;
-			//ROS_INFO_STREAM("Recieved orig plan data: " << current_original_plan << endl);
-		}
-	}
+	// void updateOriginalPlan(const nav_msgs::Path & original_plan){
+	// 	if (original_plan.size() > 0) {
+	// 		orig_plan_message_received = true;
+	// 		current_original_plan = original_plan;
+	// 		//ROS_INFO_STREAM("Recieved orig plan data: " << current_original_plan << endl);
+	// 	}
+	// }
 
 	void initialize(string text_config){
 		string fileLine;
@@ -321,7 +323,7 @@ public:
 		double start_timecv, end_timecv;
 		while(nh_.ok()) {
 			//while(log_message_received == false or plan_message_received == false or orig_plan_message_received == false or (density_message_received == false and risk_message_received == false)){
-			while(log_message_received == false or plan_message_received == false or orig_plan_message_received == false){
+			while(log_message_received == false){
 				//ROS_DEBUG("Waiting for all messages");
 				//wait for some time
 				rate.sleep();
@@ -344,7 +346,7 @@ public:
 				cout << alternative_planners[i] << endl;
 			}
 			alternative_planners.erase(alternative_planners.begin());
-			savePlanCosts();
+			savePlanCosts(parsed_log);
 			if(selected_planner != "hallwayskel" and selected_planner != "skeletonhall"){
 				alt_planner = "distance";
 			}
@@ -377,15 +379,15 @@ public:
 				// give explanation for them
 				vector<double> current_plan_angles;
 				vector<double> current_plan_distances;
-				for(int i = 0; i < current_plan.poses.size()-1; i++){
-					current_plan_angles.push_back(atan2(current_plan.poses[i].pose.position.y - current_plan.poses[i+1].pose.position.y, current_plan.poses[i].pose.position.x - current_plan.poses[i+1].pose.position.x));
-					current_plan_distances.push_back(computeDistance(current_plan.poses[i].pose.position.x, current_plan.poses[i].pose.position.y, current_plan.poses[i+1].pose.position.x, current_plan.poses[i+1].pose.position.y));
+				for(int i = 0; i < current_plan.size()-1; i++){
+					current_plan_angles.push_back(atan2(current_plan[i][1] - current_plan[i+1][1], current_plan[i][0] - current_plan[i+1][0]));
+					current_plan_distances.push_back(computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]));
 				}
 				vector<double> alt_plan_angles;
 				vector<double> alt_plan_distances;
-				for(int i = 0; i < current_original_plan.poses.size()-1; i++){
-					alt_plan_angles.push_back(atan2(current_original_plan.poses[i].pose.position.y - current_original_plan.poses[i+1].pose.position.y, current_original_plan.poses[i].pose.position.x - current_original_plan.poses[i+1].pose.position.x));
-					alt_plan_distances.push_back(computeDistance(current_original_plan.poses[i].pose.position.x, current_original_plan.poses[i].pose.position.y, current_original_plan.poses[i+1].pose.position.x, current_original_plan.poses[i+1].pose.position.y));
+				for(int i = 0; i < current_original_plan.size()-1; i++){
+					alt_plan_angles.push_back(atan2(current_original_plan[i][1] - current_original_plan[i+1][1], current_original_plan[i][0] - current_original_plan[i+1][0]));
+					alt_plan_distances.push_back(computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]));
 				}
 				vector<int> current_plan_directions;
 				for(int i = 0; i < current_plan_angles.size(); i++){
@@ -485,8 +487,8 @@ public:
 			log_message_received = false;
 			density_message_received = false;
 			risk_message_received = false;
-			plan_message_received = false;
-			orig_plan_message_received = false;
+			// plan_message_received = false;
+			// orig_plan_message_received = false;
 			//ROS_INFO_STREAM("Before clear stats");
 			clearStats();
 			//ROS_INFO_STREAM("Loop completed");
@@ -497,37 +499,51 @@ public:
 		}
 	}
 
-	void computePlanDistances(){
-		//ROS_INFO_STREAM("Inside compute plan distances");
-		//planDistance = computeDistance(robotX, robotY, current_plan.poses[0].pose.position.x, current_plan.poses[0].pose.position.y);
-		//ROS_INFO_STREAM("Initial plan distance: " << planDistance);
-		for(int i = 0; i < current_plan.poses.size()-1; i++){
-			planDistance += computeDistance(current_plan.poses[i].pose.position.x, current_plan.poses[i].pose.position.y, current_plan.poses[i+1].pose.position.x, current_plan.poses[i+1].pose.position.y);
-		}
-		//ROS_INFO_STREAM("Plan distance after loop: " << planDistance);
-		planDistance += computeDistance(current_plan.poses[current_plan.poses.size()-1].pose.position.x, current_plan.poses[current_plan.poses.size()-1].pose.position.y, targetX, targetY);
-		//ROS_INFO_STREAM("Final plan distance: " << planDistance);
+	// void computePlanDistances(){
+	// 	//ROS_INFO_STREAM("Inside compute plan distances");
+	// 	//planDistance = computeDistance(robotX, robotY, current_plan[0][0], current_plan[0][1]);
+	// 	//ROS_INFO_STREAM("Initial plan distance: " << planDistance);
+	// 	for(int i = 0; i < current_plan.size()-1; i++){
+	// 		planDistance += computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]);
+	// 	}
+	// 	//ROS_INFO_STREAM("Plan distance after loop: " << planDistance);
+	// 	planDistance += computeDistance(current_plan[current_plan.size()-1][0], current_plan[current_plan.size()-1][1], targetX, targetY);
+	// 	//ROS_INFO_STREAM("Final plan distance: " << planDistance);
 
-		//originalPlanDistance = computeDistance(robotX, robotY, current_original_plan.poses[0].pose.position.x, current_original_plan.poses[0].pose.position.y);
-		//ROS_INFO_STREAM("Initial orig plan distance: " << originalPlanDistance);
-		for(int i = 0; i < current_original_plan.poses.size()-1; i++){
-			originalPlanDistance += computeDistance(current_original_plan.poses[i].pose.position.x, current_original_plan.poses[i].pose.position.y, current_original_plan.poses[i+1].pose.position.x, current_original_plan.poses[i+1].pose.position.y);
-		}
-		//ROS_INFO_STREAM("Orig Plan distance after loop: " << originalPlanDistance);
-		originalPlanDistance += computeDistance(current_original_plan.poses[current_original_plan.poses.size()-1].pose.position.x, current_original_plan.poses[current_original_plan.poses.size()-1].pose.position.y, targetX, targetY);
-		//ROS_INFO_STREAM("Final orig plan distance: " << originalPlanDistance);
-	}
+	// 	//originalPlanDistance = computeDistance(robotX, robotY, current_original_plan[0][0], current_original_plan[0][1]);
+	// 	//ROS_INFO_STREAM("Initial orig plan distance: " << originalPlanDistance);
+	// 	for(int i = 0; i < current_original_plan.size()-1; i++){
+	// 		originalPlanDistance += computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]);
+	// 	}
+	// 	//ROS_INFO_STREAM("Orig Plan distance after loop: " << originalPlanDistance);
+	// 	originalPlanDistance += computeDistance(current_original_plan[current_original_plan.size()-1][0], current_original_plan[current_original_plan.size()-1][1], targetX, targetY);
+	// 	//ROS_INFO_STREAM("Final orig plan distance: " << originalPlanDistance);
+	// }
 
-	void savePlanCosts(){
+	void savePlanCosts(vector<string> parsed_log){
 		//ROS_INFO_STREAM("Inside save plan distances");
-		vector<string> vstrings1 = parseText(current_plan.header.frame_id, '\t');
-		planCost = atof(vstrings1[0].c_str()); // cost is for selected plan
-		planDistance = atof(vstrings1[1].c_str()); // distance is for alternative plan
-		ROS_INFO_STREAM("Plan distance: " << planDistance << " Plan cost = " << planCost);
-		vector<string> vstrings2 = parseText(current_original_plan.header.frame_id, '\t');
-		originalPlanCost = atof(vstrings2[0].c_str());
-		originalPlanDistance = atof(vstrings2[1].c_str());
-		ROS_INFO_STREAM("Orig Plan distance: " << originalPlanDistance << " Orig Plan cost = " << originalPlanCost);
+		vector<string> vstrings1 = parseText(parsed_log[16], ';');
+		planCost = atof(parseText(vstrings1[0], " ")[0].c_str()); // cost is for selected plan
+		planDistance = atof(parseText(vstrings1[0], " ")[1].c_str()); // distance is for alternative plan
+		ROS_INFO_STREAM("Plan cost: " << planCost << " Plan distance = " << planDistance);
+		for(int i = 1; i < vstrings1.size(); i++){
+			vector<double> point;
+			point.push_back(atof(parseText(vstrings1[i], " ")[0].c_str()));
+			point.push_back(atof(parseText(vstrings1[i], " ")[1].c_str()));
+			current_plan.push_back(point);
+		}
+		ROS_INFO_STREAM("Plan length " << current_plan.size());
+		vector<string> vstrings2 = parseText(parsed_log[17], ';');
+		originalPlanCost = atof(parseText(vstrings2[0], " ")[0].c_str());
+		originalPlanDistance = atof(parseText(vstrings2[0], " ")[1].c_str());
+		ROS_INFO_STREAM("Orig Plan cost: " << originalPlanCost << " Orig Plan distance = " << originalPlanDistance);
+		for(int i = 1; i < vstrings2.size(); i++){
+			vector<double> point;
+			point.push_back(atof(parseText(vstrings2[i], " ")[0].c_str()));
+			point.push_back(atof(parseText(vstrings2[i], " ")[1].c_str()));
+			current_original_plan.push_back(point);
+		}
+		ROS_INFO_STREAM("Orig Plan length " << current_plan.size());
 	}
 
 	double computeDistance(double x1, double y1, double x2, double y2){
@@ -564,14 +580,14 @@ public:
 		}
 
 		ROS_INFO_STREAM("Initial plan density: " << planCrowdDensity);
-		for(int i = 0; i < current_plan.poses.size()-1; i++){
-			planCrowdDensity += getGridValue(current_plan.poses[i].pose.position.x, current_plan.poses[i].pose.position.y, map_width, map_height, boxes_width, boxes_height, densities);
+		for(int i = 0; i < current_plan.size()-1; i++){
+			planCrowdDensity += getGridValue(current_plan[i][0], current_plan[i][1], map_width, map_height, boxes_width, boxes_height, densities);
 		}
 		ROS_INFO_STREAM("Plan density after loop: " << planCrowdDensity);
 
 		ROS_INFO_STREAM("Initial orig plan density: " << originalPlanCrowdDensity);
-		for(int i = 0; i < current_original_plan.poses.size()-1; i++){
-			originalPlanCrowdDensity += getGridValue(current_original_plan.poses[i].pose.position.x, current_original_plan.poses[i].pose.position.y, map_width, map_height, boxes_width, boxes_height, densities);
+		for(int i = 0; i < current_original_plan.size()-1; i++){
+			originalPlanCrowdDensity += getGridValue(current_original_plan[i][0], current_original_plan[i][1], map_width, map_height, boxes_width, boxes_height, densities);
 		}
 		ROS_INFO_STREAM("Plan orig density after loop: " << originalPlanCrowdDensity);
 	}
@@ -599,14 +615,14 @@ public:
 		}
 
 		ROS_INFO_STREAM("Initial plan risk: " << planCrowdRisk);
-		for(int i = 0; i < current_plan.poses.size()-1; i++){
-			planCrowdRisk += getGridValue(current_plan.poses[i].pose.position.x, current_plan.poses[i].pose.position.y, map_width, map_height, boxes_width, boxes_height, risks);
+		for(int i = 0; i < current_plan.size()-1; i++){
+			planCrowdRisk += getGridValue(current_plan[i][0], current_plan[i][1], map_width, map_height, boxes_width, boxes_height, risks);
 		}
 		ROS_INFO_STREAM("Plan risk after loop: " << planCrowdRisk);
 
 		ROS_INFO_STREAM("Initial orig plan risk: " << originalPlanCrowdRisk);
-		for(int i = 0; i < current_original_plan.poses.size()-1; i++){
-			originalPlanCrowdRisk += getGridValue(current_original_plan.poses[i].pose.position.x, current_original_plan.poses[i].pose.position.y, map_width, map_height, boxes_width, boxes_height, risks);
+		for(int i = 0; i < current_original_plan.size()-1; i++){
+			originalPlanCrowdRisk += getGridValue(current_original_plan[i][0], current_original_plan[i][1], map_width, map_height, boxes_width, boxes_height, risks);
 		}
 		ROS_INFO_STREAM("Plan orig risk after loop: " << originalPlanCrowdRisk);
 	}
@@ -633,14 +649,14 @@ public:
 			ROS_INFO_STREAM("Plan densities or risks or costs are different");
 			return sameplan;
 		}
-		/*else if (current_plan.poses.size() != current_original_plan.poses.size()) {
+		/*else if (current_plan.size() != current_original_plan.size()) {
 			sameplan = 0;
 			ROS_INFO_STREAM("Plan number of poses are different");
 			return sameplan;
 		}
 		else {
-			for(int i = 0; i < current_plan.poses.size()-1; i++){
-				if (current_plan.poses[i].pose.position.x != current_original_plan.poses[i].pose.position.x or current_plan.poses[i].pose.position.y != current_original_plan.poses[i].pose.position.y) {
+			for(int i = 0; i < current_plan.size()-1; i++){
+				if (current_plan[i][0] != current_original_plan[i][0] or current_plan[i][1] != current_original_plan[i][1]) {
 					sameplan = 0;
 					ROS_INFO_STREAM("One of the plan poses is different");
 					return sameplan;
@@ -790,6 +806,8 @@ public:
 		string selected_planner;
 		alternative_planners.clear();
 		alt_planner = " ";
+		current_plan.clear();
+		current_original_plan.clear();
 	}
 	
 	void logExplanationData() {

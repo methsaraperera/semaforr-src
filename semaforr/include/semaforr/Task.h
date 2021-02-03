@@ -1674,7 +1674,7 @@ class Task {
 			pathCostInNavGraph = planner->getPathCost() + planner->getOrigPathCost();
 			pathCostInNavOrigGraph = main_path_cost;
 			origPathCostInOrigNavGraph = alternate_path_cost;
-	  		origPathCostInNavGraph = planner->getOrigPathCosts()[2];
+      origPathCostInNavGraph = planner->getOrigPathCosts()[2];
 			if(alternate_path_cost < main_path_cost){
 				vector<sk_waypoint> temp_skeleton_waypoints;
 				for(int i = 0; i < skeleton_waypoints.size(); i++){
@@ -1685,14 +1685,14 @@ class Task {
 				pathCostInNavGraph = alternate_path_cost;
 				pathCostInNavOrigGraph = planner->getOrigPathCosts()[2];
 				origPathCostInOrigNavGraph = planner->getPathCost() + planner->getOrigPathCost();
-	  			origPathCostInNavGraph = main_path_cost;
+        origPathCostInNavGraph = main_path_cost;
 			}
 		}
 		else{
 			pathCostInNavGraph = planner->getPathCost() + planner->getOrigPathCost();
 			pathCostInNavOrigGraph = 0;
 			origPathCostInOrigNavGraph = 0;
-	  		origPathCostInNavGraph = planner->getOrigPathCosts()[2];
+      origPathCostInNavGraph = planner->getOrigPathCosts()[2];
 		}
 		if(skeleton_waypoints.size() > 0){
 			cout << "Plan active is true" << endl;
