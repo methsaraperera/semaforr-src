@@ -184,42 +184,42 @@ public:
 			}
 			else if (fileLine.find("threshold") != string::npos){
 				vector<string> vstrings = parseText(fileLine, '\t');
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 				for(int i=1; i < vstrings.size(); i+=7){
 					vector < pair<double, string> > thresh;
 					thresh.push_back(pair<double, string>(atof(vstrings[i+1].c_str()),vstrings[i+2]));
 					thresh.push_back(pair<double, string>(atof(vstrings[i+3].c_str()),vstrings[i+4]));
 					thresh.push_back(pair<double, string>(atof(vstrings[i+5].c_str()),vstrings[i+6]));
 					thresholds.insert(pair< string, vector < pair<double, string> > >(vstrings[i], thresh));
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << " " << vstrings[i+4] << " " << vstrings[i+5] << " " << vstrings[i+6] << endl);
+					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << " " << vstrings[i+4] << " " << vstrings[i+5] << " " << vstrings[i+6] << endl);
 				}
 			}
 			else if (fileLine.find("objphrases") != string::npos){
 				vector<string> vstrings = parseText(fileLine, '\t');
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 				for(int i=1; i < vstrings.size(); i+=4){
 					vector <string> objs;
 					objs.push_back(vstrings[i+1]);
 					objs.push_back(vstrings[i+2]);
 					objs.push_back(vstrings[i+3]);
 					objectives.insert(pair< string, vector <string> >(vstrings[i], objs));
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << endl);
+					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << " " << vstrings[i+2] << " " << vstrings[i+3] << endl);
 				}
 			}
 			else if (fileLine.find("plandirections") != string::npos){
 				vector<string> vstrings = parseText(fileLine, '\t');
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 				for(int i=1; i < vstrings.size(); i+=2){
 					directions_phrases.insert(pair< int, string >(atoi(vstrings[i].c_str()), vstrings[i+1]));
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 			}
 			else if (fileLine.find("plandistances") != string::npos){
 				vector<string> vstrings = parseText(fileLine, '\t');
-				//ROS_DEBUG_STREAM("File text:" << vstrings[0]);
+				ROS_DEBUG_STREAM("File text:" << vstrings[0]);
 				for(int i=1; i < vstrings.size(); i+=2){
 					distances_phrases.insert(pair< double, string >(atof(vstrings[i].c_str()), vstrings[i+1]));
-					//ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
+					ROS_DEBUG_STREAM("File text:" << vstrings[i] << " " << vstrings[i+1] << endl);
 				}
 			}
 			// else if (fileLine.find("distance") != string::npos){
@@ -346,17 +346,12 @@ public:
 				cout << alternative_planners[i] << endl;
 			}
 			alternative_planners.erase(alternative_planners.begin());
+			alt_planner = alternative_planners[0];
 			savePlanCosts(parsed_log);
 			if(selected_planner != "hallwayskel" and selected_planner != "skeletonhall"){
 				alt_planner = "distance";
 			}
 			cout << "selected_planner " << selected_planner << " alt_planner " << alt_planner << endl;
-			if(alt_planner == "distance"){
-				planDistance = planDistance / 100.0;
-				originalPlanDistance = originalPlanDistance / 100.0;
-				planCost = planCost / 100.0;
-				originalPlanCost = originalPlanCost / 100.0;
-			}
 			//ROS_INFO_STREAM("Before compute plan distances");
 			//computePlanDistances();
 			//ROS_INFO_STREAM("Before compute plan densities");
@@ -521,26 +516,28 @@ public:
 	// }
 
 	void savePlanCosts(vector<string> parsed_log){
-		//ROS_INFO_STREAM("Inside save plan distances");
+		ROS_INFO_STREAM("Inside save plan costs");
+		cout << "Plan text " << parsed_log[16] << endl;
 		vector<string> vstrings1 = parseText(parsed_log[16], ';');
-		planCost = atof(parseText(vstrings1[0], " ")[0].c_str()); // cost is for selected plan
-		planDistance = atof(parseText(vstrings1[0], " ")[1].c_str()); // distance is for alternative plan
+		planCost = atof(parseText(vstrings1[0], ' ')[0].c_str()) / 100.0; // cost is for selected plan
+		planDistance = atof(parseText(vstrings1[0], ' ')[1].c_str()) / 100.0; // distance is for alternative plan
 		ROS_INFO_STREAM("Plan cost: " << planCost << " Plan distance = " << planDistance);
 		for(int i = 1; i < vstrings1.size(); i++){
 			vector<double> point;
-			point.push_back(atof(parseText(vstrings1[i], " ")[0].c_str()));
-			point.push_back(atof(parseText(vstrings1[i], " ")[1].c_str()));
+			point.push_back(atof(parseText(vstrings1[i], ' ')[0].c_str()));
+			point.push_back(atof(parseText(vstrings1[i], ' ')[1].c_str()));
 			current_plan.push_back(point);
 		}
 		ROS_INFO_STREAM("Plan length " << current_plan.size());
+		cout << "Orig Plan text " << parsed_log[17] << endl;
 		vector<string> vstrings2 = parseText(parsed_log[17], ';');
-		originalPlanCost = atof(parseText(vstrings2[0], " ")[0].c_str());
-		originalPlanDistance = atof(parseText(vstrings2[0], " ")[1].c_str());
+		originalPlanCost = atof(parseText(vstrings2[0], ' ')[0].c_str()) / 100.0;
+		originalPlanDistance = atof(parseText(vstrings2[0], ' ')[1].c_str()) / 100.0;
 		ROS_INFO_STREAM("Orig Plan cost: " << originalPlanCost << " Orig Plan distance = " << originalPlanDistance);
 		for(int i = 1; i < vstrings2.size(); i++){
 			vector<double> point;
-			point.push_back(atof(parseText(vstrings2[i], " ")[0].c_str()));
-			point.push_back(atof(parseText(vstrings2[i], " ")[1].c_str()));
+			point.push_back(atof(parseText(vstrings2[i], ' ')[0].c_str()));
+			point.push_back(atof(parseText(vstrings2[i], ' ')[1].c_str()));
 			current_original_plan.push_back(point);
 		}
 		ROS_INFO_STREAM("Orig Plan length " << current_plan.size());
