@@ -387,6 +387,7 @@ public:
 					for(int i = 0; i < current_plan.size()-1; i++){
 						current_plan_angles.push_back(atan2(current_plan[i][1] - current_plan[i+1][1], current_plan[i][0] - current_plan[i+1][0]));
 						current_plan_distances.push_back(computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]));
+						cout << computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]) << endl;
 					}
 					cout << "current plan angles " << current_plan_angles.size() << " current plan distances " << current_plan_distances.size() << endl;
 					vector<int> current_plan_directions;
@@ -442,11 +443,11 @@ public:
 						cout << "start_seg " << start_seg << " end_seg " << end_seg << " seg_dist " << seg_dist << endl;
 						cout << "Phrase " << i << " " << current_plan_direction_phrases[i] << " Phrase " << i+1 << " " << current_plan_direction_phrases[i+1] << endl;
 						if(current_plan_direction_phrases[i] == current_plan_direction_phrases[i+1] and current_plan_direction_phrases[i] == directions_phrases[0]){
-							end_seg = end_seg + 1;
+							end_seg = i + 1;
 						}
 						else if(current_plan_direction_phrases[i] != current_plan_direction_phrases[i+1] and current_plan_direction_phrases[i] == directions_phrases[0]){
 							current_plan_short_description.push_back(current_plan_direction_phrases[i]);
-							end_seg = end_seg + 1;
+							end_seg = i + 1;
 							for(int j = start_seg; j <= end_seg; j++){
 								seg_dist = seg_dist + current_plan_distances[j];
 							}
@@ -463,11 +464,15 @@ public:
 						}
 						else if(current_plan_direction_phrases[i] != directions_phrases[0] and current_plan_direction_phrases[i+1] != directions_phrases[0]){
 							current_plan_short_description.push_back(current_plan_direction_phrases[i]);
+							seg_dist = 0;
+							cout << "seg_dist " << seg_dist << endl;
+							current_plan_segment_distances.push_back(seg_dist);
+							current_plan_short_description.push_back(directions_phrases[0]);
 							seg_dist = current_plan_distances[i+1];
 							cout << "seg_dist " << seg_dist << endl;
 							current_plan_segment_distances.push_back(seg_dist);
 							start_seg = start_seg + 1;
-							end_seg = end_seg + 1;
+							end_seg = i + 1;
 						}
 						cout << "start_seg " << start_seg << " end_seg " << end_seg << " seg_dist " << seg_dist << endl;
 					}
@@ -482,14 +487,55 @@ public:
 					}
 					else{
 						current_plan_short_description.push_back(current_plan_direction_phrases[current_plan_direction_phrases.size()-1]);
+						seg_dist = 0;
+						cout << "seg_dist " << seg_dist << endl;
+						current_plan_segment_distances.push_back(seg_dist);
+						current_plan_short_description.push_back(directions_phrases[0]);
 						seg_dist = current_plan_distances[current_plan_direction_phrases.size()];
 						cout << "seg_dist " << seg_dist << endl;
 						current_plan_segment_distances.push_back(seg_dist);
 					}
-					cout << "current_plan_short_description " << current_plan_short_description.size() << endl;
-					for(int i = 0; i < current_plan_short_description.size(); i++){
-						cout << current_plan_short_description[i] << " " << current_plan_segment_distances[i] << endl;
+					if(current_plan_short_description[0] != directions_phrases[0]){
+						current_plan_short_description.insert(current_plan_short_description.begin(), directions_phrases[0]);
+						current_plan_segment_distances.insert(current_plan_segment_distances.begin(), current_plan_distances[0]);
 					}
+					cout << "current_plan_short_description " << current_plan_short_description.size() << endl;
+					string plan_description = "We will ";
+					for(int i = 0; i < current_plan_short_description.size()-1; i++){
+						cout << current_plan_short_description[i] << " " << current_plan_segment_distances[i] << endl;
+						if(current_plan_segment_distances[i] == 0){
+							plan_description = plan_description + current_plan_short_description[i] + ", ";
+						}
+						else{
+							string dist_phrase;
+							for(int j = distances_phrases.size()-1; j >= 0; --j) {
+								if(current_plan_segment_distances[i] <= distances_phrases[j].first) {
+									dist_phrase = distances_phrases[j].second;
+								}
+							}
+							ROS_INFO_STREAM(current_plan_segment_distances[i] << " " << dist_phrase);
+							plan_description = plan_description + current_plan_short_description[i] + " for about " + dist_phrase + ", ";
+						}
+					}
+					cout << current_plan_short_description[current_plan_short_description.size()-1] << " " << current_plan_segment_distances[current_plan_short_description.size()-1] << endl;
+					if(current_plan_segment_distances[current_plan_short_description.size()-1] == 0){
+						plan_description = plan_description + "and " + current_plan_short_description[current_plan_short_description.size()-1] + " to get to our target.";
+					}
+					else{
+						string dist_phrase;
+						for(int j = distances_phrases.size()-1; j >= 0; --j) {
+							if(current_plan_segment_distances[current_plan_short_description.size()-1] <= distances_phrases[j].first) {
+								dist_phrase = distances_phrases[j].second;
+							}
+						}
+						ROS_INFO_STREAM(current_plan_segment_distances[current_plan_short_description.size()-1] << " " << dist_phrase);
+						plan_description = plan_description + "and " + current_plan_short_description[current_plan_short_description.size()-1] + " for about " + dist_phrase + " to get to our target.";
+					}
+					cout << plan_description << endl;
+					explanationString.data = explanationString.data + "\n" + plan_description;
+				}
+				else if(current_plan.size() == 2){
+					explanationString.data = explanationString.data + "\n" + "We will go directly to our target.";
 				}
 				if(current_original_plan.size() > 2){
 					vector<double> alt_plan_angles;
@@ -497,6 +543,7 @@ public:
 					for(int i = 0; i < current_original_plan.size()-1; i++){
 						alt_plan_angles.push_back(atan2(current_original_plan[i][1] - current_original_plan[i+1][1], current_original_plan[i][0] - current_original_plan[i+1][0]));
 						alt_plan_distances.push_back(computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]));
+						cout << computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]) << endl;
 					}
 					cout << "alt plan angles " << alt_plan_angles.size() << " alt plan distances " << alt_plan_distances.size() << endl;
 					vector<int> alt_plan_directions;
@@ -537,13 +584,110 @@ public:
 						}
 					}
 					cout << "alt plan direction changes " << alt_plan_direction_changes.size() << endl;
-					cout << "alt_plan_direction_phrases" << endl;
 					vector<string> alt_plan_direction_phrases;
 					for(int i = 0; i < alt_plan_direction_changes.size(); i++){
 						alt_plan_direction_phrases.push_back(directions_phrases[alt_plan_direction_changes[i]]);
-						cout << directions_phrases[alt_plan_direction_changes[i]] << " ";
+						cout << directions_phrases[alt_plan_direction_changes[i]] << endl;
 					}
-					cout << endl;
+					cout << "alt_plan_direction_phrases " << alt_plan_direction_phrases.size() << endl;
+					vector<string> alt_plan_short_description;
+					vector<double> alt_plan_segment_distances;
+					double seg_dist = 0;
+					int start_seg = 0;
+					int end_seg = 0;
+					for(int i = 0; i < alt_plan_direction_phrases.size()-1; i++){
+						cout << "start_seg " << start_seg << " end_seg " << end_seg << " seg_dist " << seg_dist << endl;
+						cout << "Phrase " << i << " " << alt_plan_direction_phrases[i] << " Phrase " << i+1 << " " << alt_plan_direction_phrases[i+1] << endl;
+						if(alt_plan_direction_phrases[i] == alt_plan_direction_phrases[i+1] and alt_plan_direction_phrases[i] == directions_phrases[0]){
+							end_seg = i + 1;
+						}
+						else if(alt_plan_direction_phrases[i] != alt_plan_direction_phrases[i+1] and alt_plan_direction_phrases[i] == directions_phrases[0]){
+							alt_plan_short_description.push_back(alt_plan_direction_phrases[i]);
+							end_seg = i + 1;
+							for(int j = start_seg; j <= end_seg; j++){
+								seg_dist = seg_dist + alt_plan_distances[j];
+							}
+							cout << "seg_dist " << seg_dist << endl;
+							alt_plan_segment_distances.push_back(seg_dist);
+							start_seg = end_seg + 1;
+							seg_dist = 0;
+						}
+						else if(alt_plan_direction_phrases[i] != directions_phrases[0] and alt_plan_direction_phrases[i+1] == directions_phrases[0]){
+							alt_plan_short_description.push_back(alt_plan_direction_phrases[i]);
+							seg_dist = 0;
+							cout << "seg_dist " << seg_dist << endl;
+							alt_plan_segment_distances.push_back(seg_dist);
+						}
+						else if(alt_plan_direction_phrases[i] != directions_phrases[0] and alt_plan_direction_phrases[i+1] != directions_phrases[0]){
+							alt_plan_short_description.push_back(alt_plan_direction_phrases[i]);
+							seg_dist = 0;
+							cout << "seg_dist " << seg_dist << endl;
+							alt_plan_segment_distances.push_back(seg_dist);
+							alt_plan_short_description.push_back(directions_phrases[0]);
+							seg_dist = alt_plan_distances[i+1];
+							cout << "seg_dist " << seg_dist << endl;
+							alt_plan_segment_distances.push_back(seg_dist);
+							start_seg = start_seg + 1;
+							end_seg = i + 1;
+						}
+						cout << "start_seg " << start_seg << " end_seg " << end_seg << " seg_dist " << seg_dist << endl;
+					}
+					if(alt_plan_direction_phrases[alt_plan_direction_phrases.size()-1] == directions_phrases[0]){
+						alt_plan_short_description.push_back(alt_plan_direction_phrases[alt_plan_direction_phrases.size()-1]);
+						end_seg = end_seg + 1;
+						for(int j = start_seg; j <= end_seg; j++){
+							seg_dist = seg_dist + alt_plan_distances[j];
+						}
+						cout << "seg_dist " << seg_dist << endl;
+						alt_plan_segment_distances.push_back(seg_dist);
+					}
+					else{
+						alt_plan_short_description.push_back(alt_plan_direction_phrases[alt_plan_direction_phrases.size()-1]);
+						seg_dist = 0;
+						cout << "seg_dist " << seg_dist << endl;
+						alt_plan_segment_distances.push_back(seg_dist);
+						alt_plan_short_description.push_back(directions_phrases[0]);
+						seg_dist = alt_plan_distances[alt_plan_direction_phrases.size()];
+						cout << "seg_dist " << seg_dist << endl;
+						alt_plan_segment_distances.push_back(seg_dist);
+					}
+					cout << "alt_plan_short_description " << alt_plan_short_description.size() << endl;
+					string plan_description = "We could ";
+					for(int i = 0; i < alt_plan_short_description.size()-1; i++){
+						cout << alt_plan_short_description[i] << " " << alt_plan_segment_distances[i] << endl;
+						if(alt_plan_segment_distances[i] == 0){
+							plan_description = plan_description + alt_plan_short_description[i] + ", ";
+						}
+						else{
+							string dist_phrase;
+							for(int j = distances_phrases.size()-1; j >= 0; --j) {
+								if(alt_plan_segment_distances[i] <= distances_phrases[j].first) {
+									dist_phrase = distances_phrases[j].second;
+								}
+							}
+							ROS_INFO_STREAM(alt_plan_segment_distances[i] << " " << dist_phrase);
+							plan_description = plan_description + alt_plan_short_description[i] + " for about " + dist_phrase + ", ";
+						}
+					}
+					cout << alt_plan_short_description[alt_plan_short_description.size()-1] << " " << alt_plan_segment_distances[alt_plan_short_description.size()-1] << endl;
+					if(alt_plan_segment_distances[alt_plan_short_description.size()-1] == 0){
+						plan_description = plan_description + "and " + alt_plan_short_description[alt_plan_short_description.size()-1] + " to get to our target.";
+					}
+					else{
+						string dist_phrase;
+						for(int j = distances_phrases.size()-1; j >= 0; --j) {
+							if(alt_plan_segment_distances[alt_plan_short_description.size()-1] <= distances_phrases[j].first) {
+								dist_phrase = distances_phrases[j].second;
+							}
+						}
+						ROS_INFO_STREAM(alt_plan_segment_distances[alt_plan_short_description.size()-1] << " " << dist_phrase);
+						plan_description = plan_description + "and " + alt_plan_short_description[alt_plan_short_description.size()-1] + " for about " + dist_phrase + " to get to our target.";
+					}
+					cout << plan_description << endl;
+					explanationString.data = explanationString.data + "\n" + plan_description;
+				}
+				else if(current_original_plan.size() == 2){
+					explanationString.data = explanationString.data + "\n" + "We could go directly to our target.";
 				}
 			}
 			gettimeofday(&cv,NULL);
@@ -597,24 +741,34 @@ public:
 		planCost = atof(parseText(vstrings1[0], ' ')[0].c_str()) / 100.0; // cost is for selected plan
 		planDistance = atof(parseText(vstrings1[0], ' ')[1].c_str()) / 100.0; // distance is for alternative plan
 		ROS_INFO_STREAM("Plan cost: " << planCost << " Plan distance = " << planDistance);
+		vector<double> robot_point;
+		robot_point.push_back(robotX);
+		robot_point.push_back(robotY);
+		vector<double> target_point;
+		target_point.push_back(targetX);
+		target_point.push_back(targetY);
+		current_plan.push_back(robot_point);
 		for(int i = 1; i < vstrings1.size(); i++){
 			vector<double> point;
 			point.push_back(atof(parseText(vstrings1[i], ' ')[0].c_str()));
 			point.push_back(atof(parseText(vstrings1[i], ' ')[1].c_str()));
 			current_plan.push_back(point);
 		}
+		current_plan.push_back(target_point);
 		ROS_INFO_STREAM("Plan length " << current_plan.size());
 		cout << "Orig Plan text " << parsed_log[17] << endl;
 		vector<string> vstrings2 = parseText(parsed_log[17], ';');
 		originalPlanCost = atof(parseText(vstrings2[0], ' ')[0].c_str()) / 100.0;
 		originalPlanDistance = atof(parseText(vstrings2[0], ' ')[1].c_str()) / 100.0;
 		ROS_INFO_STREAM("Orig Plan cost: " << originalPlanCost << " Orig Plan distance = " << originalPlanDistance);
+		current_original_plan.push_back(robot_point);
 		for(int i = 1; i < vstrings2.size(); i++){
 			vector<double> point;
 			point.push_back(atof(parseText(vstrings2[i], ' ')[0].c_str()));
 			point.push_back(atof(parseText(vstrings2[i], ' ')[1].c_str()));
 			current_original_plan.push_back(point);
 		}
+		current_original_plan.push_back(target_point);
 		ROS_INFO_STREAM("Orig Plan length " << current_original_plan.size());
 	}
 
