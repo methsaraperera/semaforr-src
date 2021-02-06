@@ -145,7 +145,8 @@ int PathPlanner::calcPath(bool cautious){
 
       if(!cautious)
         smoothPath(path, s, t);
-
+      pathCost = 0;
+      pathCosts.clear();
       pathCost = calcPathCost(path);
       // cout << "calculated path cost" << endl;
       pathCalculated = true;
@@ -154,6 +155,7 @@ int PathPlanner::calcPath(bool cautious){
       }
       if(name == "hallwayskel"){
         origPathCost = 0;
+        origPathCosts.clear();
         if(rs.getID() != Node::invalid_node_index and rt.getID() != Node::invalid_node_index){
           if(PATH_DEBUG) {
             cout << signature << "rs:";

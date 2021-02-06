@@ -114,8 +114,8 @@ public:
     otherIntersection.clear();
     usedOtherIntersection.clear();
     use_coverage_grid = false;
-    pathCost = 0;
-    pathCosts.clear();
+    // pathCost = 0;
+    // pathCosts.clear();
   }
 
   void resetOrigPath() { 
@@ -127,8 +127,8 @@ public:
     origPathCompleted = true; 
     origPathCalculated = false;
     use_coverage_grid = false;
-    origPathCost = 0;
-    origPathCosts.clear();
+    // origPathCost = 0;
+    // origPathCosts.clear();
   }
 
   void setCrowdModel(semaforr::CrowdModel c){ 
