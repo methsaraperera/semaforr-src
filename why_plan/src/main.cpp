@@ -481,8 +481,8 @@ public:
 						current_plan_segment_distances.push_back(seg_dist);
 					}
 					else{
-						current_plan_short_description.push_back(current_plan_direction_phrases[i]);
-						seg_dist = current_plan_distances[i+1];
+						current_plan_short_description.push_back(current_plan_direction_phrases[current_plan_direction_phrases.size()-1]);
+						seg_dist = current_plan_distances[current_plan_direction_phrases.size()];
 						cout << "seg_dist " << seg_dist << endl;
 						current_plan_segment_distances.push_back(seg_dist);
 					}
