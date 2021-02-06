@@ -501,7 +501,12 @@ public:
 				for(int i = 0; i < current_plan_short_description.size()-1; i++){
 					cout << current_plan_short_description[i] << " " << current_plan_segment_distances[i] << endl;
 					if(current_plan_segment_distances[i] == 0){
-						plan_description = plan_description + current_plan_short_description[i] + ", ";
+						if(selected_planner == "skeletonhall" or selected_planner == "hallwayskel"){
+							plan_description = plan_description + current_plan_short_description[i] + " at an intersection, ";
+						}
+						else{
+							plan_description = plan_description + current_plan_short_description[i] + ", ";
+						}
 					}
 					else{
 						string dist_phrase;
@@ -653,7 +658,12 @@ public:
 				for(int i = 0; i < alt_plan_short_description.size()-1; i++){
 					cout << alt_plan_short_description[i] << " " << alt_plan_segment_distances[i] << endl;
 					if(alt_plan_segment_distances[i] == 0){
-						plan_description = plan_description + alt_plan_short_description[i] + ", ";
+						if(selected_planner == "skeletonhall" or selected_planner == "hallwayskel"){
+							plan_description = plan_description + alt_plan_short_description[i] + " at an intersection, ";
+						}
+						else{
+							plan_description = plan_description + alt_plan_short_description[i] + ", ";
+						}
 					}
 					else{
 						string dist_phrase;
