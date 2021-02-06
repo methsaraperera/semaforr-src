@@ -106,7 +106,7 @@ private:
 	string selected_planner;
 	vector<string> alternative_planners;
 	string alt_planner;
-	bool sameplan;
+	bool sameplan = 1;
 	double computationTimeSec=0.0;
 	int densityNum = 5;
 	int riskNum = 5;
@@ -351,6 +351,14 @@ public:
 			if(selected_planner != "hallwayskel" and selected_planner != "skeletonhall"){
 				alt_planner = "distance";
 			}
+			if(selected_planner == "skeletonhall"){
+				planCost = planCost * 100.0;
+				originalPlanCost = originalPlanCost * 100.0;
+			}
+			else if(alt_planner == "skeletonhall"){
+				planDistance = planDistance * 100.0;
+				originalPlanDistance = originalPlanDistance * 100.0;
+			}
 			cout << "selected_planner " << selected_planner << " alt_planner " << alt_planner << endl;
 			//ROS_INFO_STREAM("Before compute plan distances");
 			//computePlanDistances();
@@ -373,110 +381,170 @@ public:
 			if(selected_planner == "hallwayskel" or selected_planner == "skeletonhall"){
 				// give explanation for them
 				cout << "Give plan based explanation" << endl;
-				vector<double> current_plan_angles;
-				vector<double> current_plan_distances;
-				for(int i = 0; i < current_plan.size()-1; i++){
-					current_plan_angles.push_back(atan2(current_plan[i][1] - current_plan[i+1][1], current_plan[i][0] - current_plan[i+1][0]));
-					current_plan_distances.push_back(computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]));
-				}
-				cout << "current plan angles " << current_plan_angles.size() << " current plan distances " << current_plan_distances.size() << endl; 
-				vector<double> alt_plan_angles;
-				vector<double> alt_plan_distances;
-				for(int i = 0; i < current_original_plan.size()-1; i++){
-					alt_plan_angles.push_back(atan2(current_original_plan[i][1] - current_original_plan[i+1][1], current_original_plan[i][0] - current_original_plan[i+1][0]));
-					alt_plan_distances.push_back(computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]));
-				}
-				cout << "alt plan angles " << alt_plan_angles.size() << " alt plan distances " << alt_plan_distances.size() << endl;
-				vector<int> current_plan_directions;
-				for(int i = 0; i < current_plan_angles.size(); i++){
-					if(current_plan_angles[i] >= -M_PI/8.0 and current_plan_angles[i] < M_PI/8.0){
-						current_plan_directions.push_back(5);
+				if(current_plan.size() > 2){
+					vector<double> current_plan_angles;
+					vector<double> current_plan_distances;
+					for(int i = 0; i < current_plan.size()-1; i++){
+						current_plan_angles.push_back(atan2(current_plan[i][1] - current_plan[i+1][1], current_plan[i][0] - current_plan[i+1][0]));
+						current_plan_distances.push_back(computeDistance(current_plan[i][0], current_plan[i][1], current_plan[i+1][0], current_plan[i+1][1]));
 					}
-					else if(current_plan_angles[i] >= M_PI/8.0 and current_plan_angles[i] < 3.0*M_PI/8.0){
-						current_plan_directions.push_back(6);
+					cout << "current plan angles " << current_plan_angles.size() << " current plan distances " << current_plan_distances.size() << endl;
+					vector<int> current_plan_directions;
+					for(int i = 0; i < current_plan_angles.size(); i++){
+						if(current_plan_angles[i] >= -M_PI/8.0 and current_plan_angles[i] < M_PI/8.0){
+							current_plan_directions.push_back(5);
+						}
+						else if(current_plan_angles[i] >= M_PI/8.0 and current_plan_angles[i] < 3.0*M_PI/8.0){
+							current_plan_directions.push_back(6);
+						}
+						else if(current_plan_angles[i] >= 3.0*M_PI/8.0 and current_plan_angles[i] < 5.0*M_PI/8.0){
+							current_plan_directions.push_back(7);
+						}
+						else if(current_plan_angles[i] >= 5.0*M_PI/8.0 and current_plan_angles[i] < 7.0*M_PI/8.0){
+							current_plan_directions.push_back(8);
+						}
+						else if(current_plan_angles[i] >= 7.0*M_PI/8.0 or current_plan_angles[i] < -7.0*M_PI/8.0){
+							current_plan_directions.push_back(1);
+						}
+						else if(current_plan_angles[i] >= -7.0*M_PI/8.0 and current_plan_angles[i] < -5.0*M_PI/8.0){
+							current_plan_directions.push_back(2);
+						}
+						else if(current_plan_angles[i] >= -5.0*M_PI/8.0 and current_plan_angles[i] < -3.0*M_PI/8.0){
+							current_plan_directions.push_back(3);
+						}
+						else if(current_plan_angles[i] >= -3.0*M_PI/8.0 and current_plan_angles[i] < -M_PI/8.0){
+							current_plan_directions.push_back(4);
+						}
 					}
-					else if(current_plan_angles[i] >= 3.0*M_PI/8.0 and current_plan_angles[i] < 5.0*M_PI/8.0){
-						current_plan_directions.push_back(7);
+					cout << "current plan directions " << current_plan_directions.size() << endl;
+					vector<int> current_plan_direction_changes;
+					for(int i = 0; i < current_plan_directions.size()-1; i++){
+						if(current_plan_directions[i+1] - current_plan_directions[i] < 0){
+							current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i] + 8);
+						}
+						else{
+							current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i]);
+						}
 					}
-					else if(current_plan_angles[i] >= 5.0*M_PI/8.0 and current_plan_angles[i] < 7.0*M_PI/8.0){
-						current_plan_directions.push_back(8);
+					cout << "current plan direction changes " << current_plan_direction_changes.size() << endl;
+					vector<string> current_plan_direction_phrases;
+					for(int i = 0; i < current_plan_direction_changes.size(); i++){
+						current_plan_direction_phrases.push_back(directions_phrases[current_plan_direction_changes[i]]);
+						cout << directions_phrases[current_plan_direction_changes[i]] << endl;
 					}
-					else if(current_plan_angles[i] >= 7.0*M_PI/8.0 or current_plan_angles[i] < -7.0*M_PI/8.0){
-						current_plan_directions.push_back(1);
+					cout << "current_plan_direction_phrases " << current_plan_direction_phrases.size() << endl;
+					vector<string> current_plan_short_description;
+					vector<double> current_plan_segment_distances;
+					double seg_dist = 0;
+					int start_seg = 0;
+					int end_seg = 0;
+					for(int i = 0; i < current_plan_direction_phrases.size()-1; i++){
+						cout << "start_seg " << start_seg << " end_seg " << end_seg << " seg_dist " << seg_dist << endl;
+						cout << "Phrase " << i << " " << current_plan_direction_phrases[i] << " Phrase " << i+1 << " " << current_plan_direction_phrases[i+1] << endl;
+						if(current_plan_direction_phrases[i] == current_plan_direction_phrases[i+1] and current_plan_direction_phrases[i] == directions_phrases[0]){
+							end_seg = end_seg + 1;
+						}
+						else if(current_plan_direction_phrases[i] != current_plan_direction_phrases[i+1] and current_plan_direction_phrases[i] == directions_phrases[0]){
+							current_plan_short_description.push_back(current_plan_direction_phrases[i]);
+							end_seg = end_seg + 1;
+							for(int j = start_seg; j <= end_seg; j++){
+								seg_dist = seg_dist + current_plan_distances[j];
+							}
+							cout << "seg_dist " << seg_dist << endl;
+							current_plan_segment_distances.push_back(seg_dist);
+							start_seg = end_seg + 1;
+							seg_dist = 0;
+						}
+						else if(current_plan_direction_phrases[i] != directions_phrases[0] and current_plan_direction_phrases[i+1] == directions_phrases[0]){
+							current_plan_short_description.push_back(current_plan_direction_phrases[i]);
+							seg_dist = 0;
+							cout << "seg_dist " << seg_dist << endl;
+							current_plan_segment_distances.push_back(seg_dist);
+						}
+						else if(current_plan_direction_phrases[i] != directions_phrases[0] and current_plan_direction_phrases[i+1] != directions_phrases[0]){
+							current_plan_short_description.push_back(current_plan_direction_phrases[i]);
+							seg_dist = current_plan_distances[i+1];
+							cout << "seg_dist " << seg_dist << endl;
+							current_plan_segment_distances.push_back(seg_dist);
+							start_seg = start_seg + 1;
+							end_seg = end_seg + 1;
+						}
+						cout << "start_seg " << start_seg << " end_seg " << end_seg << " seg_dist " << seg_dist << endl;
 					}
-					else if(current_plan_angles[i] >= -7.0*M_PI/8.0 and current_plan_angles[i] < -5.0*M_PI/8.0){
-						current_plan_directions.push_back(2);
-					}
-					else if(current_plan_angles[i] >= -5.0*M_PI/8.0 and current_plan_angles[i] < -3.0*M_PI/8.0){
-						current_plan_directions.push_back(3);
-					}
-					else if(current_plan_angles[i] >= -3.0*M_PI/8.0 and current_plan_angles[i] < -M_PI/8.0){
-						current_plan_directions.push_back(4);
-					}
-				}
-				cout << "current plan directions " << current_plan_directions.size() << endl;
-				vector<int> alt_plan_directions;
-				for(int i = 0; i < alt_plan_angles.size(); i++){
-					if(alt_plan_angles[i] >= -M_PI/8.0 and alt_plan_angles[i] < M_PI/8.0){
-						alt_plan_directions.push_back(5);
-					}
-					else if(alt_plan_angles[i] >= M_PI/8.0 and alt_plan_angles[i] < 3.0*M_PI/8.0){
-						alt_plan_directions.push_back(6);
-					}
-					else if(alt_plan_angles[i] >= 3.0*M_PI/8.0 and alt_plan_angles[i] < 5.0*M_PI/8.0){
-						alt_plan_directions.push_back(7);
-					}
-					else if(alt_plan_angles[i] >= 5.0*M_PI/8.0 and alt_plan_angles[i] < 7.0*M_PI/8.0){
-						alt_plan_directions.push_back(8);
-					}
-					else if(alt_plan_angles[i] >= 7.0*M_PI/8.0 or alt_plan_angles[i] < -7.0*M_PI/8.0){
-						alt_plan_directions.push_back(1);
-					}
-					else if(alt_plan_angles[i] >= -7.0*M_PI/8.0 and alt_plan_angles[i] < -5.0*M_PI/8.0){
-						alt_plan_directions.push_back(2);
-					}
-					else if(alt_plan_angles[i] >= -5.0*M_PI/8.0 and alt_plan_angles[i] < -3.0*M_PI/8.0){
-						alt_plan_directions.push_back(3);
-					}
-					else if(alt_plan_angles[i] >= -3.0*M_PI/8.0 and alt_plan_angles[i] < -M_PI/8.0){
-						alt_plan_directions.push_back(4);
-					}
-				}
-				cout << "alt plan directions " << alt_plan_directions.size() << endl;
-				vector<int> current_plan_direction_changes;
-				for(int i = 0; i < current_plan_directions.size()-1; i++){
-					if(current_plan_directions[i+1] - current_plan_directions[i] < 0){
-						current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i] + 8);
+					if(current_plan_direction_phrases[current_plan_direction_phrases.size()-1] == directions_phrases[0]){
+						current_plan_short_description.push_back(current_plan_direction_phrases[current_plan_direction_phrases.size()-1]);
+						end_seg = end_seg + 1;
+						for(int j = start_seg; j <= end_seg; j++){
+							seg_dist = seg_dist + current_plan_distances[j];
+						}
+						cout << "seg_dist " << seg_dist << endl;
+						current_plan_segment_distances.push_back(seg_dist);
 					}
 					else{
-						current_plan_direction_changes.push_back(current_plan_directions[i+1] - current_plan_directions[i]);
+						current_plan_short_description.push_back(current_plan_direction_phrases[i]);
+						seg_dist = current_plan_distances[i+1];
+						cout << "seg_dist " << seg_dist << endl;
+						current_plan_segment_distances.push_back(seg_dist);
+					}
+					cout << "current_plan_short_description " << current_plan_short_description.size() << endl;
+					for(int i = 0; i < current_plan_short_description.size(); i++){
+						cout << current_plan_short_description[i] << " " << current_plan_segment_distances[i] << endl;
 					}
 				}
-				cout << "current plan direction changes " << current_plan_direction_changes.size() << endl;
-				vector<int> alt_plan_direction_changes;
-				for(int i = 0; i < alt_plan_directions.size()-1; i++){
-					if(alt_plan_directions[i+1] - alt_plan_directions[i] < 0){
-						alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i] + 8);
+				if(current_original_plan.size() > 2){
+					vector<double> alt_plan_angles;
+					vector<double> alt_plan_distances;
+					for(int i = 0; i < current_original_plan.size()-1; i++){
+						alt_plan_angles.push_back(atan2(current_original_plan[i][1] - current_original_plan[i+1][1], current_original_plan[i][0] - current_original_plan[i+1][0]));
+						alt_plan_distances.push_back(computeDistance(current_original_plan[i][0], current_original_plan[i][1], current_original_plan[i+1][0], current_original_plan[i+1][1]));
 					}
-					else{
-						alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i]);
+					cout << "alt plan angles " << alt_plan_angles.size() << " alt plan distances " << alt_plan_distances.size() << endl;
+					vector<int> alt_plan_directions;
+					for(int i = 0; i < alt_plan_angles.size(); i++){
+						if(alt_plan_angles[i] >= -M_PI/8.0 and alt_plan_angles[i] < M_PI/8.0){
+							alt_plan_directions.push_back(5);
+						}
+						else if(alt_plan_angles[i] >= M_PI/8.0 and alt_plan_angles[i] < 3.0*M_PI/8.0){
+							alt_plan_directions.push_back(6);
+						}
+						else if(alt_plan_angles[i] >= 3.0*M_PI/8.0 and alt_plan_angles[i] < 5.0*M_PI/8.0){
+							alt_plan_directions.push_back(7);
+						}
+						else if(alt_plan_angles[i] >= 5.0*M_PI/8.0 and alt_plan_angles[i] < 7.0*M_PI/8.0){
+							alt_plan_directions.push_back(8);
+						}
+						else if(alt_plan_angles[i] >= 7.0*M_PI/8.0 or alt_plan_angles[i] < -7.0*M_PI/8.0){
+							alt_plan_directions.push_back(1);
+						}
+						else if(alt_plan_angles[i] >= -7.0*M_PI/8.0 and alt_plan_angles[i] < -5.0*M_PI/8.0){
+							alt_plan_directions.push_back(2);
+						}
+						else if(alt_plan_angles[i] >= -5.0*M_PI/8.0 and alt_plan_angles[i] < -3.0*M_PI/8.0){
+							alt_plan_directions.push_back(3);
+						}
+						else if(alt_plan_angles[i] >= -3.0*M_PI/8.0 and alt_plan_angles[i] < -M_PI/8.0){
+							alt_plan_directions.push_back(4);
+						}
 					}
+					cout << "alt plan directions " << alt_plan_directions.size() << endl;
+					vector<int> alt_plan_direction_changes;
+					for(int i = 0; i < alt_plan_directions.size()-1; i++){
+						if(alt_plan_directions[i+1] - alt_plan_directions[i] < 0){
+							alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i] + 8);
+						}
+						else{
+							alt_plan_direction_changes.push_back(alt_plan_directions[i+1] - alt_plan_directions[i]);
+						}
+					}
+					cout << "alt plan direction changes " << alt_plan_direction_changes.size() << endl;
+					cout << "alt_plan_direction_phrases" << endl;
+					vector<string> alt_plan_direction_phrases;
+					for(int i = 0; i < alt_plan_direction_changes.size(); i++){
+						alt_plan_direction_phrases.push_back(directions_phrases[alt_plan_direction_changes[i]]);
+						cout << directions_phrases[alt_plan_direction_changes[i]] << " ";
+					}
+					cout << endl;
 				}
-				cout << "alt plan direction changes " << alt_plan_direction_changes.size() << endl;
-				cout << "current_plan_direction_phrases" << endl;
-				vector<string> current_plan_direction_phrases;
-				for(int i = 0; i < current_plan_direction_changes.size(); i++){
-					current_plan_direction_phrases.push_back(directions_phrases[current_plan_direction_changes[i]]);
-					cout << directions_phrases[current_plan_direction_changes[i]] << " ";
-				}
-				cout << endl;
-				cout << "alt_plan_direction_phrases" << endl;
-				vector<string> alt_plan_direction_phrases;
-				for(int i = 0; i < alt_plan_direction_changes.size(); i++){
-					alt_plan_direction_phrases.push_back(directions_phrases[alt_plan_direction_changes[i]]);
-					cout << directions_phrases[alt_plan_direction_changes[i]] << " ";
-				}
-				cout << endl;
 			}
 			gettimeofday(&cv,NULL);
 			end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
