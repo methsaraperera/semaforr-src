@@ -57,14 +57,14 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # why_explanations_file = open(why_explanations_name,"w")
     # why_explanations_process = subprocess.Popen(['rostopic','echo','/explanations'],stdout=why_explanations_file)
 
-    whyplan_explanations_file = open(whyplan_explanations_name,"w")
-    whyplan_explanations_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_explanations_file)
+    # whyplan_explanations_file = open(whyplan_explanations_name,"w")
+    # whyplan_explanations_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_explanations_file)
 
     # why_log_file = open(why_log_name,"w")
     # why_log_process = subprocess.Popen(['rostopic','echo','/explanations_log'],stdout=why_log_file)
 
-    whyplan_log_file = open(whyplan_log_name,"w")
-    whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
+    # whyplan_log_file = open(whyplan_log_name,"w")
+    # whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
 
     # start semaforr
     semaforr_process = subprocess.Popen(['rosrun','semaforr','semaforr', semaforr_path, target_set, map_config, map_dimensions, advisors, params, situations, spatials])
@@ -80,8 +80,8 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # print "waiting,,"
 
     # start why_plan
-    why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
-    print "waiting,,"
+    # why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
+    # print "waiting,,"
    
     rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
 
@@ -120,18 +120,18 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     #crowd_process.terminate()
     # situation_process.terminate()
     # why_process.terminate()
-    why_plan_process.terminate()
+    # why_plan_process.terminate()
     # print "Why terminated!"
     log_process.terminate()
     log_file.close()
     # why_explanations_process.terminate()
     # why_explanations_file.close()
-    whyplan_explanations_process.terminate()
-    whyplan_explanations_file.close()
+    # whyplan_explanations_process.terminate()
+    # whyplan_explanations_file.close()
     # why_log_process.terminate()
     # why_log_file.close()
-    whyplan_log_process.terminate()
-    whyplan_log_file.close()
+    # whyplan_log_process.terminate()
+    # whyplan_log_file.close()
     # situation_log_process.terminate()
     # situation_log_file.close()
     time.sleep(1)
@@ -151,19 +151,19 @@ explore = "off"
 situations = "/config/situations5.conf"
 spatials = "/config/spatial_model.conf"
 
-num_runs = 1
+num_runs = 8
 advisors = "/config/advisors2.conf"
-params = "/config/params1.conf"
-map_name = "gradcenter-5"
+params = "/config/params5.conf"
+map_name = "mcgovern-5"
 for i in range(0,num_runs):
-    for j in range(1,2):
+    for j in range(1,6):
         why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
         whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_why-planhighway_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target" + str(j) + ".conf"
+        log_name = map_name + "_fix_T1_CS_SM_PP_RPF_EX60_LLE_1500_" + str(j) + "_" + str(i) + ".txt"
+        target_file_name = "target40test-" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
 # num_runs = 1
