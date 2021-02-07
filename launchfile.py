@@ -162,7 +162,7 @@ for i in range(0,num_runs):
         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_fix_T1_CS_SM_PP_RPF_EX60_LLE_1500_" + str(j) + "_" + str(i) + ".txt"
+        log_name = map_name + "_fix_T1_CS_SM_SP_RPF_1500_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target40test-" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
