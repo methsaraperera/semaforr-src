@@ -640,7 +640,10 @@ public:
 	}
 
 	bool triggerLearning(){
-		if(current_coverage / initial_coverage - 1 > 0.1){
+		if(initial_coverage == 0){
+			return false;
+		}
+		else if(current_coverage / initial_coverage - 1 > 0.1){
 			initial_coverage = current_coverage;
 			return true;
 		}
