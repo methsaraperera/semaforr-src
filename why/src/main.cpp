@@ -249,7 +249,7 @@ public:
 				explanationString.data = "I can't get to where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.4){
-				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this show me the way.\n" + alternateActions(chosenAction, decisionTier, vetoes);
+				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this shows me the way.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.5){
 				explanationString.data = "I am " + actioningText[chosenAction] + " because I'm stuck and want to get out of here.\n" + "Somewhat confident, because I am not sure if this will get me out.\n" + alternateActions(chosenAction, decisionTier, vetoes);
@@ -259,7 +259,7 @@ public:
 			}
 			else if (decisionTier == 1.7){
 				cout << "inside decisionTier 1.7" << endl;
-				explanationString.data = "I want to learn about our world and " + actioningText[chosenAction] + " would let me explore.\n" + "Somewhat confident, because I am not sure if area will help me get around later.\n" + alternateActions(chosenAction, decisionTier, vetoes);
+				explanationString.data = "I want to learn about our world and " + actioningText[chosenAction] + " would let me explore.\n" + "Somewhat confident, because I am not sure if this area will help me get around later.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.8){
 				explanationString.data = "I want to find the boundaries of our world and " + actioningText[chosenAction] + " would let find them.\n" + "Somewhat confident, because I am not sure if I will need to know about these boundaries later.\n" + alternateActions(chosenAction, decisionTier, vetoes);
@@ -267,7 +267,7 @@ public:
 			else if (numMovesVetoed == 6 and numRotationsVetoed == 12 and chosenAction == "30") {
 				//ROS_DEBUG(vetoedActions << endl);
 				decisionTier = 1;
-				explanationString.data = "I decided to " + actionText[chosenAction] + " because I want to think more about what to do.\n" + "Not confident, since I don't know what to do.\n" + vetoedAlternateActions(vetoes, chosenAction);
+				explanationString.data = "I decided to " + actionText[chosenAction] + " because I want to think more about what to do.\n" + "Not confident, since I don't know what else to do right now.\n" + vetoedAlternateActions(vetoes, chosenAction);
 			}
 			else {
 				parseTier3Comments(advisorComments);
