@@ -321,6 +321,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
         (*decision) = (*actionIter);
         ROS_DEBUG("Only one action to get to Next Waypoint Region, Enforcer advisor to take decision");
         decisionMade = true;
+        shortcut = true;
       }
       else if(possible_set.size() > 1){
         ROS_DEBUG("More than one action to get to Next Waypoint Region, Enforcer advisor to take decision");
@@ -335,6 +336,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               // cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
+              shortcut = true;
             }
           }
         }
@@ -349,6 +351,7 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
               // cout << "New minDistance " << minDistance << endl;
               (*decision) = forrAction;
               decisionMade = true;
+              shortcut = true;
             }
           }
         }
@@ -634,6 +637,9 @@ bool Tier1Advisor::advisorEnforcer(FORRAction *decision) {
             decisionMade = true;
           }
           if(decisionMade){
+            if(i > 0){
+              shortcut = true;
+            }
             break;
           }
         }

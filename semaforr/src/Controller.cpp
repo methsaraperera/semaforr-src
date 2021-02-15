@@ -1477,7 +1477,12 @@ bool Controller::tierOneDecision(FORRAction *decision){
           decisionStats->decisionTier = 1.6;
         }
         else{
-          decisionStats->decisionTier = 1.2;
+          if(tier1->getShortcut() == true){
+            decisionStats->decisionTier = 1.21;
+          }
+          else{
+            decisionStats->decisionTier = 1.2;
+          }
         }
       }
       else{
@@ -1564,7 +1569,7 @@ bool Controller::tierOneDecision(FORRAction *decision){
   // }
   // decisionStats->vetoedActions = vetoList.str();
   //cout << "vetoedActions = " << vetoList.str() << endl;
-  
+  tier1->resetShortcut();
   return decisionMade;
 }
 

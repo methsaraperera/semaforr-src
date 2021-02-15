@@ -268,25 +268,26 @@ class Task {
   		return origWaypoints;
   	}
   	else{
+      vector<CartesianPoint> points;
   		for(int i = 0; i < alternate_skeleton_waypoints.size(); i++){
   			if(alternate_skeleton_waypoints[i].getType() == 0 and alternate_skeleton_waypoints[i].getCreator() == 0){
-  				origWaypoints.push_back(alternate_skeleton_waypoints[i].getRegion().getCenter());
+  				points.push_back(alternate_skeleton_waypoints[i].getRegion().getCenter());
   				// cout << "region waypoint " << i << " " << alternate_skeleton_waypoints[i].getRegion().getCenter().get_x() << " " << alternate_skeleton_waypoints[i].getRegion().getCenter().get_y() << " " << alternate_skeleton_waypoints[i].getRegion().getRadius() << endl;
   			}
   			// else if(alternate_skeleton_waypoints[i].getType() == 1 or alternate_skeleton_waypoints[i].getType() == 3){
   			// 	vector<CartesianPoint> pathBetween = alternate_skeleton_waypoints[i].getPath();
   			// 	for(int j = 0; j < pathBetween.size(); j++){
-  			// 		origWaypoints.push_back(pathBetween[j]);
+  			// 		points.push_back(pathBetween[j]);
   			// 		// cout << "path waypoint " << i << " " << j << " " << pathBetween[j].get_x() << " " << pathBetween[j].get_y() << endl;
   			// 	}
   			// }
   			// else 
   			else if(alternate_skeleton_waypoints[i].getType() == 2 and alternate_skeleton_waypoints[i].getCreator() == 1){
-  				origWaypoints.push_back(alternate_skeleton_waypoints[i].getPassageCentroid());
+  				points.push_back(alternate_skeleton_waypoints[i].getPassageCentroid());
   			}
   		}
-  		// cout << "number of points " << origWaypoints.size() << endl;
-  		return origWaypoints;
+  		// cout << "number of points " << points.size() << endl;
+  		return points;
   	}
   }
   int getPlanSize(){

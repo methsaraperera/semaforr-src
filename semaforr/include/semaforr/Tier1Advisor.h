@@ -19,6 +19,7 @@ public:
         Tier1Advisor(Beliefs *b){
 		beliefs = b;
 		localExploration = new LocalExplorer();
+		shortcut = false;
 	}
 
 	void advisorNotOpposite();
@@ -66,8 +67,17 @@ public:
 			return vector< vector<int> >();
 		}
 	}
+
+	bool getShortcut(){
+		return shortcut;
+	}
+
+	void setShortcut(){
+		shortcut = false;
+	}
 	
 private:
 	Beliefs *beliefs;
 	LocalExplorer *localExploration;
+	bool shortcut;
 };
