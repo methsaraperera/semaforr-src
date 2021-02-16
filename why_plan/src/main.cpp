@@ -365,7 +365,7 @@ public:
 			//computePlanRisks();
 			//ROS_INFO_STREAM("Before compare plans");
 			if(selected_planner == "distance"){
-				explanationString.data = "I decided to go this way because I agree that we should take the shortest route.\nI think your way is better.\nYour way is the best way to go.\nI'm really sure because this is the shortest way.";
+				explanationString.data = "I decided to go this way because I agree that we should take the shortest route.\nActually, I agree with you that we should take the shortest route.\nYour way is the best way to go.\nI'm really sure because this is the shortest way.";
 			}
 			else if (comparePlans()) {
 				explanationString.data = "I decided to go this way because I think it is just as " + objectivePhrase(alt_planner, 0) + " and equally " + objectivePhrase(selected_planner, 0) + ".\nI think both plans are equally good.\nWe could go your way since it's a bit " + objectivePhrase(alt_planner, 1) + " but it could also be a bit " + objectivePhrase(selected_planner, 2) + ".\nI'm only somewhat sure because even though my plan is a bit " + objectivePhrase(selected_planner, 1) + ", it is also a bit " + objectivePhrase(alt_planner, 2) + " than your plan.";
@@ -516,12 +516,12 @@ public:
 							}
 						}
 						ROS_INFO_STREAM(current_plan_segment_distances[i] << " " << dist_phrase);
-						plan_description = plan_description + current_plan_short_description[i] + " for about " + dist_phrase + ", ";
+						plan_description = plan_description + current_plan_short_description[i] + " about " + dist_phrase + ", ";
 					}
 				}
 				cout << current_plan_short_description[current_plan_short_description.size()-1] << " " << current_plan_segment_distances[current_plan_short_description.size()-1] << endl;
 				if(current_plan_segment_distances[current_plan_short_description.size()-1] == 0){
-					plan_description = plan_description + "and " + current_plan_short_description[current_plan_short_description.size()-1] + " to get to our target.";
+					plan_description = plan_description + "and " + current_plan_short_description[current_plan_short_description.size()-1] + " to reach our target.";
 				}
 				else{
 					string dist_phrase;
@@ -531,7 +531,7 @@ public:
 						}
 					}
 					ROS_INFO_STREAM(current_plan_segment_distances[current_plan_short_description.size()-1] << " " << dist_phrase);
-					plan_description = plan_description + "and " + current_plan_short_description[current_plan_short_description.size()-1] + " for about " + dist_phrase + " to get to our target.";
+					plan_description = plan_description + "and " + current_plan_short_description[current_plan_short_description.size()-1] + " about " + dist_phrase + " to reach our target.";
 				}
 				cout << plan_description << endl;
 				explanationString.data = explanationString.data + "\n" + plan_description;
@@ -673,12 +673,12 @@ public:
 							}
 						}
 						ROS_INFO_STREAM(alt_plan_segment_distances[i] << " " << dist_phrase);
-						plan_description = plan_description + alt_plan_short_description[i] + " for about " + dist_phrase + ", ";
+						plan_description = plan_description + alt_plan_short_description[i] + " about " + dist_phrase + ", ";
 					}
 				}
 				cout << alt_plan_short_description[alt_plan_short_description.size()-1] << " " << alt_plan_segment_distances[alt_plan_short_description.size()-1] << endl;
 				if(alt_plan_segment_distances[alt_plan_short_description.size()-1] == 0){
-					plan_description = plan_description + "and " + alt_plan_short_description[alt_plan_short_description.size()-1] + " to get to our target.";
+					plan_description = plan_description + "and " + alt_plan_short_description[alt_plan_short_description.size()-1] + " to reach our target.";
 				}
 				else{
 					string dist_phrase;
@@ -688,7 +688,7 @@ public:
 						}
 					}
 					ROS_INFO_STREAM(alt_plan_segment_distances[alt_plan_short_description.size()-1] << " " << dist_phrase);
-					plan_description = plan_description + "and " + alt_plan_short_description[alt_plan_short_description.size()-1] + " for about " + dist_phrase + " to get to our target.";
+					plan_description = plan_description + "and " + alt_plan_short_description[alt_plan_short_description.size()-1] + " about " + dist_phrase + " to reach our target.";
 				}
 				cout << plan_description << endl;
 				explanationString.data = explanationString.data + "\n" + plan_description;

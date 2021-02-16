@@ -247,10 +247,10 @@ public:
 				explanationString.data = "I could see our waypoint and " + actioningText[chosenAction] + " would get us closer to it.\n" + "Highly confident, since our waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.21){
-				explanationString.data = "I could see our next waypoint and " + actioningText[chosenAction] + " would let us take a shortcut to get closer to it.\n" + "Highly confident, since our next waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
+				explanationString.data = "I saw that " + actioningText[chosenAction] + " would let us take a shortcut to get further along in our plan.\n" + "Highly confident, since our next waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.3){
-				explanationString.data = "I can't get to where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier, vetoes);
+				explanationString.data = "I can't get where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.4){
 				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this shows me the way.\n" + alternateActions(chosenAction, decisionTier, vetoes);
@@ -430,22 +430,22 @@ public:
 		map <string, double>::iterator itr;
 		//ROS_INFO_STREAM(advisorTScore.size());
 		for (itr = advisorTScore.begin(); itr != advisorTScore.end(); itr++) {
-			if (itr->second > (0.75)) {
+			if (itr->second > (1.5)) {
 				supportPhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
 			}
-			else if (itr->second > (0)) {
+			else if (itr->second > (0.75)) {
 				slightSupportPhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
 			}
-			else if (itr->second > (-0.75)) {
+			else if (itr->second > (-1.5) and itr->second <= (-0.75)) {
 				slightOpposePhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
 			}
-			else {
+			else if (itr->second <= (-1.5)){
 				opposePhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
@@ -491,50 +491,49 @@ public:
 			}
 			opposeConcat = opposeConcat + "and " + opposePhrases[opposePhrases.size()-1];
 			//ROS_INFO_STREAM("Greater than 2 Oppose: " << opposeConcat);
-			explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+			// explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
 			//ROS_INFO_STREAM(explanation);
 		}
 		else if (opposePhrases.size() == 2) {
 			opposeConcat = opposePhrases[0] + " and " + opposePhrases[1];
 			//ROS_INFO_STREAM("Equals 2 Oppose: " << opposeConcat);
-			explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+			// explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
 			//ROS_INFO_STREAM(explanation);
 		}
 		else if (opposePhrases.size() == 1) {
 			opposeConcat = opposePhrases[0];
 			//ROS_INFO_STREAM("Equals 1 Oppose: " << opposeConcat);
-			explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+			// explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
 			//ROS_INFO_STREAM(explanation);
 		}
 		else if (opposePhrases.size() == 0) {
-			if (supportPhrases.size() == 0) {
-				if (slightSupportPhrases.size() > 0 and slightOpposePhrases.size() > 0) {
-					if (slightOpposePhrases.size() > 2) {
-						for (int i = 0; i < slightOpposePhrases.size()-1; i++) {
-							opposeConcat = opposeConcat + slightOpposePhrases[i] + ", ";
-						}
-						opposeConcat = opposeConcat + "and " + slightOpposePhrases[slightOpposePhrases.size()-1];
-						//ROS_INFO_STREAM("Greater than 2 Slightly Oppose: " << opposeConcat);
-					}
-					else if (slightOpposePhrases.size() == 2) {
-						opposeConcat = slightOpposePhrases[0] + " and " + slightOpposePhrases[1];
-						//ROS_INFO_STREAM("Equals 2 Slightly Oppose: " << opposeConcat);
-					}
-					else if (slightOpposePhrases.size() == 1) {
-						opposeConcat = slightOpposePhrases[0];
-						//ROS_INFO_STREAM("Equals 1 Slightly Oppose: " << opposeConcat);
-					}
-					explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
-					//ROS_INFO_STREAM(explanation);
+			if (slightOpposePhrases.size() > 2) {
+				for (int i = 0; i < slightOpposePhrases.size()-1; i++) {
+					opposeConcat = opposeConcat + slightOpposePhrases[i] + ", ";
 				}
-				else {
-					explanation = "I decided to " + actionText[chosenAction] + " because just as good as anything else.";
-				}
+				opposeConcat = opposeConcat + "and " + slightOpposePhrases[slightOpposePhrases.size()-1];
+				//ROS_INFO_STREAM("Greater than 2 Slightly Oppose: " << opposeConcat);
 			}
-			else {
-				explanation = "I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
-				//ROS_INFO_STREAM(explanation);
+			else if (slightOpposePhrases.size() == 2) {
+				opposeConcat = slightOpposePhrases[0] + " and " + slightOpposePhrases[1];
+				//ROS_INFO_STREAM("Equals 2 Slightly Oppose: " << opposeConcat);
 			}
+			else if (slightOpposePhrases.size() == 1) {
+				opposeConcat = slightOpposePhrases[0];
+				//ROS_INFO_STREAM("Equals 1 Slightly Oppose: " << opposeConcat);
+			}
+			// explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+			//ROS_INFO_STREAM(explanation);
+		}
+		if((supportPhrases.size() > 0 or slightSupportPhrases.size() > 0) and (opposePhrases.size() > 0 or slightOpposePhrases.size() > 0)){
+			explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+		}
+		else if (supportPhrases.size() > 0 or slightSupportPhrases.size() > 0){
+			explanation = "I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
+			//ROS_INFO_STREAM(explanation);
+		}
+		else {
+			explanation = "I decided to " + actionText[chosenAction] + " because it's just as good as anything else.";
 		}
 		
 		return explanation + "\n";
@@ -589,22 +588,22 @@ public:
 		//ROS_INFO_STREAM(giniPhraseID << " " << overallSupportPhraseID << " " << confidenceLevelPhraseID);
 		
 		if (giniPhraseID == confidenceLevelPhraseID and overallSupportPhraseID == confidenceLevelPhraseID) {
-			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because " + phraseGini + ". I " + phraseOverallSupport + " to do this most.";
+			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because " + phraseGini + ". I " + phraseOverallSupport + " to do this much more than some other action.";
 		}
 		else if (giniPhraseID == confidenceLevelPhraseID) {
 			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because " + phraseGini + ".";
 		}
 		else if (overallSupportPhraseID == confidenceLevelPhraseID) {
-			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because I " + phraseOverallSupport + " to do this most.";
+			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because I " + phraseOverallSupport + " to do this much more than some other action.";
 		}
 		else if (overallSupportPhraseID > confidenceLevelPhraseID and giniPhraseID < confidenceLevelPhraseID) {
-			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because, even though " + phraseGini + ", I " + phraseOverallSupport + " to do this most.";
+			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because, even though " + phraseGini + ", I " + phraseOverallSupport + " to do this much more than some other action.";
 		}
 		else if (giniPhraseID > confidenceLevelPhraseID and overallSupportPhraseID < confidenceLevelPhraseID) {
-			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because, even though I " + phraseOverallSupport + " to do this most, " + phraseGini + ".";
+			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because, even though I " + phraseOverallSupport + " to do this much more than some other action, " + phraseGini + ".";
 		}
 		else {
-			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because " + phraseGini + ". I " + phraseOverallSupport + " to do this most.";
+			explanation = "I'm " + phraseConfidenceLevel + " sure in my decision because " + phraseGini + ". I " + phraseOverallSupport + " to do this much more than some other action.";
 		}		
 		//ROS_INFO_STREAM(explanation);
 		return explanation + "\n";
@@ -645,7 +644,7 @@ public:
 							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
 						}
 						else if(vetoes[i][2] == "1d"){
-							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I don't think I should do that in our current situation.\n";
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because it's not what I usually do when in a place that looks like this.\n";
 						}
 					}
 				}
@@ -666,7 +665,7 @@ public:
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I think another action will help me get out of here.\n";
 					}
 					else if (decTier == 1.6){
-						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore to find our target.\n";
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because another action would let me better explore for our target.\n";
 					}
 				}
 			}
@@ -690,7 +689,7 @@ public:
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
 					}
 					else if(vetoes[i][2] == "1d"){
-						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I don't think I should do that in our current situation.\n";
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because it's not what I usually do when in a place that looks like this.\n";
 					}
 				}
 			}
