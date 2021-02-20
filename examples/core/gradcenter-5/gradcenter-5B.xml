@@ -3,7 +3,7 @@
 <BFSM>
 	<GoalSet id="0">
 		<Goal type="point" id="0" x="-3" y="0.0"/>
-		<Goal type="point" id="1" x="0" y="0.0"/>
+		<Goal type="point" id="-1" x="0" y="0.0"/>
 	</GoalSet>
 	
 	<!-- Sub-component for agent that grows -->

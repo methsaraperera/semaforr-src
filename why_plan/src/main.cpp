@@ -365,7 +365,7 @@ public:
 			//computePlanRisks();
 			//ROS_INFO_STREAM("Before compare plans");
 			if(selected_planner == "distance"){
-				explanationString.data = "I decided to go this way because I agree that we should take the shortest route.\nActually, I agree with you that we should take the shortest route.\nYour way is the best way to go.\nI'm really sure because this is the shortest way.";
+				explanationString.data = "I decided to go this way because I agree that we should take the shortest route.\nActually, I agree that we should take the shortest route.\nYour way is the best way to go.\nI'm really sure because this is the shortest way.";
 			}
 			else if (comparePlans()) {
 				explanationString.data = "I decided to go this way because I think it is just as " + objectivePhrase(alt_planner, 0) + " and equally " + objectivePhrase(selected_planner, 0) + ".\nI think both plans are equally good.\nWe could go your way since it's a bit " + objectivePhrase(alt_planner, 1) + " but it could also be a bit " + objectivePhrase(selected_planner, 2) + ".\nI'm only somewhat sure because even though my plan is a bit " + objectivePhrase(selected_planner, 1) + ", it is also a bit " + objectivePhrase(alt_planner, 2) + " than your plan.";

@@ -250,7 +250,7 @@ public:
 				explanationString.data = "I saw that " + actioningText[chosenAction] + " would let us take a shortcut to get further along in our plan.\n" + "Highly confident, since our next waypoint is in sensor range and this would get us closer to it.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.3){
-				explanationString.data = "I can't get where I want to go and " + actioningText[chosenAction] + " help me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier, vetoes);
+				explanationString.data = "I can't get where I want to go and " + actioningText[chosenAction] + " helps me reposition to get there.\n" + "Somewhat confident, because I am not sure this would get me through.\n" + alternateActions(chosenAction, decisionTier, vetoes);
 			}
 			else if (decisionTier == 1.4){
 				explanationString.data = "I think where I want to go is behind me and " + actioningText[chosenAction] + " will help me see it.\n" + "Somewhat confident, because I am not sure this shows me the way.\n" + alternateActions(chosenAction, decisionTier, vetoes);
@@ -431,32 +431,52 @@ public:
 		//ROS_INFO_STREAM(advisorTScore.size());
 		for (itr = advisorTScore.begin(); itr != advisorTScore.end(); itr++) {
 			if (itr->second > (1.5)) {
-				supportPhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
+				if(supportPhrases.size() == 0){
+					supportPhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
+				}
+				else{
+					supportPhrases.push_back(advSupportRationales[itr->first]);
+				}
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
 			}
 			else if (itr->second > (0.75)) {
-				slightSupportPhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
+				if(slightSupportPhrases.size() == 0){
+					slightSupportPhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
+				}
+				else{
+					slightSupportPhrases.push_back(advSupportRationales[itr->first]);
+				}
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advSupportRationales[itr->first]);
 			}
 			else if (itr->second > (-1.5) and itr->second <= (-0.75)) {
-				slightOpposePhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
+				if(slightOpposePhrases.size() == 0){
+					slightOpposePhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
+				}
+				else{
+					slightOpposePhrases.push_back(advOpposeRationales[itr->first]);
+				}
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
 			}
 			else if (itr->second <= (-1.5)){
-				opposePhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
+				if(opposePhrases.size() == 0){
+					opposePhrases.push_back("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
+				}
+				else{
+					opposePhrases.push_back(advOpposeRationales[itr->first]);
+				}
 				//ROS_INFO_STREAM(itr->first << ": " << itr->second);
 				//ROS_INFO_STREAM("I " + tier3TScoretoPhrase(itr->second) + " to " + advOpposeRationales[itr->first]);
 			}
 		}
 		
 		if (supportPhrases.size() > 2) {
-			for (int i = 0; i < supportPhrases.size()-1; i++) {
+			for (int i = 0; i < supportPhrases.size()-2; i++) {
 				supportConcat = supportConcat + supportPhrases[i] + ", ";
 			}
-			supportConcat = supportConcat + "and " + supportPhrases[supportPhrases.size()-1];
+			supportConcat = supportConcat + supportPhrases[supportPhrases.size()-2] + " and " + supportPhrases[supportPhrases.size()-1];
 			//ROS_INFO_STREAM("Greater than 2: " << supportConcat);
 		}
 		else if (supportPhrases.size() == 2) {
@@ -469,10 +489,10 @@ public:
 		}
 		else if (supportPhrases.size() == 0) {
 			if (slightSupportPhrases.size() > 2) {
-				for (int i = 0; i < slightSupportPhrases.size()-1; i++) {
+				for (int i = 0; i < slightSupportPhrases.size()-2; i++) {
 					supportConcat = supportConcat + slightSupportPhrases[i] + ", ";
 				}
-				supportConcat = supportConcat + "and " + slightSupportPhrases[slightSupportPhrases.size()-1];
+				supportConcat = supportConcat + slightSupportPhrases[slightSupportPhrases.size()-2] + " and " + slightSupportPhrases[slightSupportPhrases.size()-1];
 				//ROS_INFO_STREAM("Greater than 2 Slightly: " << supportConcat);
 			}
 			else if (slightSupportPhrases.size() == 2) {
@@ -486,10 +506,10 @@ public:
 		}
 		
 		if (opposePhrases.size() > 2) {
-			for (int i = 0; i < opposePhrases.size()-1; i++) {
+			for (int i = 0; i < opposePhrases.size()-2; i++) {
 				opposeConcat = opposeConcat + opposePhrases[i] + ", ";
 			}
-			opposeConcat = opposeConcat + "and " + opposePhrases[opposePhrases.size()-1];
+			opposeConcat = opposeConcat + opposePhrases[opposePhrases.size()-2] + " and " + opposePhrases[opposePhrases.size()-1];
 			//ROS_INFO_STREAM("Greater than 2 Oppose: " << opposeConcat);
 			// explanation = "Although " + opposeConcat + ", I decided to " + actionText[chosenAction] + " because " + supportConcat + ".";
 			//ROS_INFO_STREAM(explanation);
@@ -508,10 +528,10 @@ public:
 		}
 		else if (opposePhrases.size() == 0) {
 			if (slightOpposePhrases.size() > 2) {
-				for (int i = 0; i < slightOpposePhrases.size()-1; i++) {
+				for (int i = 0; i < slightOpposePhrases.size()-2; i++) {
 					opposeConcat = opposeConcat + slightOpposePhrases[i] + ", ";
 				}
-				opposeConcat = opposeConcat + "and " + slightOpposePhrases[slightOpposePhrases.size()-1];
+				opposeConcat = opposeConcat + slightOpposePhrases[slightOpposePhrases.size()-1] + " and " + slightOpposePhrases[slightOpposePhrases.size()-1];
 				//ROS_INFO_STREAM("Greater than 2 Slightly Oppose: " << opposeConcat);
 			}
 			else if (slightOpposePhrases.size() == 2) {
@@ -644,7 +664,7 @@ public:
 							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
 						}
 						else if(vetoes[i][2] == "1d"){
-							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because it's not what I usually do when in a place that looks like this.\n";
+							alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because it's not what I usually do when in a spot that looks like this.\n";
 						}
 					}
 				}
@@ -689,7 +709,7 @@ public:
 						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because I've already been there.\n";
 					}
 					else if(vetoes[i][2] == "1d"){
-						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because it's not what I usually do when in a place that looks like this.\n";
+						alternateExplanations = alternateExplanations + "I decided not to " + itr->second + " because it's not what I usually do when in a spot that looks like this.\n";
 					}
 				}
 			}
