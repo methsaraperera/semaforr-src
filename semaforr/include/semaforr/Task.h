@@ -2399,9 +2399,6 @@ class Task {
 
   // Plan positions
   vector< vector<int> > planPositions;
-  }
-  }
-  }
 
 };
 
