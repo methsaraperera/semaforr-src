@@ -784,7 +784,7 @@ bool AgentState::getRobotConfined(int decisionLimit, double distanceLimit){
 
   vector< vector <CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
   cout << "laser_hist " << laser_hist->size() << endl;
-  int dimension = 200;
+  int dimension = currentTask->getDimension();
   vector< vector<int> > total_coverages;
   for(int k = startPosition; k < laser_hist->size(); k++){
     vector< vector<int> > grid;

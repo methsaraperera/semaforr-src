@@ -210,7 +210,7 @@ vector<int> FORRSituations::identifySituation(sensor_msgs::LaserScan ls) {
 
 vector< vector<int> > FORRSituations::overlaySituations(vector< vector<CartesianPoint> > laserendpoints, vector<Position> poses){
   cout << "overlaySituations laserendpoints " << laserendpoints.size() << " poses " << poses.size() << endl;
-  int dimension = 200;
+  int dimension = 330;
   vector< vector <vector<int> > > total_coverages;
   for(int k = 0; k < laserendpoints.size(); k++){
     vector< vector<int> > grid;
@@ -1050,7 +1050,7 @@ double FORRSituations::getAccuracyForSituation(AgentState *agentState){
 
 double FORRSituations::overlapBetweenSituations(vector<CartesianPoint> laser, Position pose, vector< vector<int> > comp_grid){
   cout << "overlapBetweenSituations" << endl;
-  int dimension = 200;
+  int dimension = 330;
   vector< vector<int> > grid;
   for(int i = 0; i < dimension; i++){
     vector<int> col;

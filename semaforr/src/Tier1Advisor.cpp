@@ -1448,10 +1448,11 @@ bool Tier1Advisor::advisorFindAWay(FORRAction *decision){
         //   potential_exploration.push_back(potential);
         // }
       }
+      int dimension = beliefs->getAgentState()->getCurrentTask()->getDimension();
       vector< vector<int> > coverage_grid;
-      for(int i = 0; i < 200; i++){
+      for(int i = 0; i < dimension; i++){
         vector<int> col;
-        for(int j = 0; j < 200; j++){
+        for(int j = 0; j < dimension; j++){
           col.push_back(-1);
         }
         coverage_grid.push_back(col);

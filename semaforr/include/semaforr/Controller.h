@@ -126,7 +126,7 @@ private:
   void updateSkeletonGraph(AgentState* agentState);
 
   void initialize_advisors(std::string);
-  void initialize_tasks(std::string);
+  void initialize_tasks(std::string, int length, int height);
   void initialize_params(std::string);
   void initialize_planner(std::string,std::string, int &l, int &h);
   void initialize_situations(std::string);

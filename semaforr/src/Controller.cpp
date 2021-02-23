@@ -682,7 +682,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
 // Read from the config file and intialize tasks
 //
 //
-void Controller::initialize_tasks(string filename){
+void Controller::initialize_tasks(string filename, int length, int height){
   string fileLine;
   std::ifstream file(filename.c_str());
   ROS_DEBUG_STREAM("Reading read_task_file:" << filename);
@@ -701,7 +701,7 @@ void Controller::initialize_tasks(string filename){
       std::vector<std::string> vstrings(begin, end);
       double x = atof(vstrings[0].c_str());
       double y = atof(vstrings[1].c_str());
-      beliefs->getAgentState()->addTask(x,y);
+      beliefs->getAgentState()->addTask(x,y,length,height);
       ROS_DEBUG_STREAM("Task: " << x << " " << y << endl);
     }
   }
@@ -895,7 +895,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   initialize_advisors(advisor_config);
 
   // Initialize the tasks from a config file
-  initialize_tasks(target_set);
+  initialize_tasks(target_set, l, h);
 
   // Initialize parameters
   beliefs->getAgentState()->setAgentStateParameters(canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle);

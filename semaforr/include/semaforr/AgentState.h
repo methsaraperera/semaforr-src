@@ -162,8 +162,8 @@ public:
   }
   void clearVetoedActions() { vetoedActions->clear();}
   
-  void addTask(float x, float y) {
-    Task *task = new Task(x,y);
+  void addTask(float x, float y, int l, int h) {
+    Task *task = new Task(x,y,l,h);
     agenda.push_back(task); 
     all_agenda.push_back(task);
   }
