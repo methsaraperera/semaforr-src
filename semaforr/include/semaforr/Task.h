@@ -90,6 +90,7 @@ class Task {
 
   double getTaskX(){ return x;}
   double getTaskY(){ return y;}
+  int getDimension(){ return dimension;}
 
   double getX() { 
 	if(isPlanActive == false){
@@ -2325,10 +2326,6 @@ class Task {
 	graph_trails = gt;
 	graph_through_intersections = gti;
     graph_intersection_trails = git;
-  }
-
-  int getDimension(){
-    return dimension;
   }
    
  private:
