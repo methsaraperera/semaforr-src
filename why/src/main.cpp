@@ -191,7 +191,8 @@ public:
 	
 	void run(){
 		std_msgs::String explanationString;
-		string vetoedActions, chosenAction, advisorComments, currentPlan;
+		string vetoedActions, chosenAction, advisorComments;
+		vector<string> currentPlan;
 		ros::Rate rate(30.0);
 		timeval cv;
 		double start_timecv, end_timecv;
@@ -208,7 +209,7 @@ public:
 			//target = "(" + parseText(current_log, '\t')[4] + ", " + parseText(current_log, '\t')[5] + ")";
 			decisionTier = atof(parseText(current_log, '\t')[10].c_str());
 			vetoedActions = parseText(current_log, '\t')[11];
-			chosenAction = parseText(current_log, '\t')[12]+parseText(current_log)[13];
+			chosenAction = parseText(current_log, '\t')[12]+parseText(current_log, '\t')[13];
 			advisorComments = parseText(current_log, '\t')[15];
 			currentPlan = parseText(parseText(current_log, '\t')[16], ';');
 			// ROS_INFO_STREAM(decisionTier << " " << vetoedActions << " " << chosenAction << " " << advisorComments << endl << endl);

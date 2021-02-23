@@ -72,7 +72,7 @@ public:
 		return shortcut;
 	}
 
-	void setShortcut(){
+	void resetShortcut(){
 		shortcut = false;
 	}
 	
