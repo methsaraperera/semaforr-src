@@ -76,6 +76,7 @@ public:
     all_position_trace = new vector<Position>();
     all_laser_history = new vector< vector<CartesianPoint> >();
     all_laserscan_history = new vector< sensor_msgs::LaserScan >();
+    killBecauseStuck = false;
   }
   
   // Best possible move towards the target
@@ -174,7 +175,7 @@ public:
   list<Task*>& getAllAgenda() { return all_agenda; }
   
   //Merge finish task and skip task they are both doing the same right now
-  void finishTask() {
+  void finishTask(bool skipTask) {
     if (currentTask != NULL){
       //save the current task position into all_trace
       vector<CartesianPoint> trace;
@@ -187,6 +188,14 @@ public:
       vector< vector<CartesianPoint> > *laser_hist = currentTask->getLaserHistory();
       all_laser_trace.push_back(*laser_hist);
       task_decision_count.push_back(currentTask->getDecisionCount());
+      if(skipTask){
+        if((*pos_hist)[0] == (*pos_hist)[pos_hist->size()-1]){
+          killBecauseStuck = true;
+        }
+        else{
+          killBecauseStuck = false;
+        }
+      }
       agenda.remove(currentTask);
     }
     rotateMode = true;
@@ -216,6 +225,9 @@ public:
 	if(getAgenda().size() == 0 && currentTask == NULL){
 		status = true;
  	}
+  else if(killBecauseStuck == true){
+    status = true;
+  }
 	return status;
   }
 
@@ -596,6 +608,8 @@ public:
 
   // Parameters
   double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle;
+
+  bool killBecauseStuck;
 
   // Passage Values
   vector< vector<int> > passage_grid;

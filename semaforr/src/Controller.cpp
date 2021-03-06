@@ -965,7 +965,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
           beliefs->getAgentState()->setRemainingCandidates(frontierExploration->getRemainingFrontierStack());
         }
       }
-      beliefs->getAgentState()->finishTask();
+      beliefs->getAgentState()->finishTask(false);
       ROS_DEBUG("Selecting Next Task");
       if(aStarOn){
         tierTwoDecision(current, true);
@@ -1009,7 +1009,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
       // circumnavigator->resetCircumnavigate();
       beliefs->getAgentState()->getCurrentTask()->resetPlanPositions();
       //Clear existing task and associated plans
-      beliefs->getAgentState()->finishTask();
+      beliefs->getAgentState()->finishTask(false);
       //ROS_DEBUG("Task Cleared!!");
       //cout << "Agenda Size = " << beliefs->getAgentState()->getAgenda().size() << endl;
       if(beliefs->getAgentState()->getAgenda().size() > 0){
@@ -1086,7 +1086,7 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         // if(beliefs->getAgentState()->getAllAgenda().size() < planLimit +1){
         //   beliefs->getAgentState()->addTask(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
         // }
-        beliefs->getAgentState()->finishTask();
+        beliefs->getAgentState()->finishTask(true);
         if(beliefs->getAgentState()->getAgenda().size() > 0){
           ROS_DEBUG_STREAM("Controller.cpp taskCount > " << (beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) << " planLimit " << (planLimit - 1));
           if((beliefs->getAgentState()->getAllAgenda().size() - beliefs->getAgentState()->getAgenda().size()) > (planLimit - 1)){
