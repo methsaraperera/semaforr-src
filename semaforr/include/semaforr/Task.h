@@ -393,7 +393,7 @@ class Task {
   }
 
   bool generateOriginalWaypoints(Position source, PathPlanner *planner){
-  	if(planner->getName() != "hallwayskel"){
+  	if(planner->getName() != "hallwayskel" and planner->getName() != "skeleton"){
 		origWaypoints.clear();
 		//a_star planner works in cms so all units are converts into cm
 		//once plan is generated waypoints are stored in meters

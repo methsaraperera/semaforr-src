@@ -172,7 +172,7 @@ private:
   bool firstTaskAssigned;
   int highwayFinished;
   int frontierFinished;
-  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn, skeleton, hallwayskel;
+  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, safe, skeleton, hallwayskel;
 };
   
 #endif /* CONTROLLER_H */

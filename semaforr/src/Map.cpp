@@ -219,4 +219,14 @@ double Map::distanceFromSegment(double x1, double y1, double x2, double y2, doub
     return sqrt(diffX * diffX + diffY * diffY);
 }
 
-
+double Map::getDistanceClosestWall(double x, double y)
+{
+  double minDistance = 1000000.0;
+  for(int i = 0; i < walls.size(); i++){
+    double wallDist = distanceFromWall(x, y, i);
+    if(wallDist < minDistance){
+      minDistance = wallDist;
+    }
+  }
+  return minDistance;
+}

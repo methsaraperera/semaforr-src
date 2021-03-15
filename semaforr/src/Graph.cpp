@@ -139,7 +139,7 @@ void Graph::generateNavGraph() {
       bool inBuf = false;
       if ( map->isPointInBuffer(x,y) )
         inBuf = true;
-      Node * n = new Node(index, x, y, 0, inBuf);
+      Node * n = new Node(index, x, y, 0, inBuf, map->getDistanceClosestWall(x,y));
       nodes.push_back(n);
       //cout << x << ":" << y << ":" << index << endl;
       nodeIndex[x][y] = index;
@@ -246,7 +246,7 @@ bool Graph::addNode(int x, int y, double r, int ind){
   bool node_added = false;
   if(nodeIndex[x][y] == -1){
     nodeIndex[x][y] = ind;
-    Node * n = new Node(ind, x, y, r, false);
+    Node * n = new Node(ind, x, y, r, false, 0);
     nodes.push_back(n);
     // cout << "Added Node " << ind << " x " << x << " y " << y << endl;
     node_added = true;

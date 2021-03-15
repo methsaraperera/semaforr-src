@@ -142,7 +142,7 @@ public:
   void setPosHistory(vector< vector<CartesianPoint> > all_trace){
     posHistMap.clear();
     posHistMapNorm.clear();
-    if (name == "novel" or name == "combined"){
+    if (name == "explore"){
       width = navGraph->getMap()->getLength()/100;
       height = navGraph->getMap()->getHeight()/100;
       granularity = 10;
@@ -165,28 +165,28 @@ public:
           posHistMap[(int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width)][(int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height)] += 1;
         }
       }
-      double cmax=-1.0, cmin=1000000.0;
-      for(int i = 0; i < boxes_width; i++){
-        for(int j = 0; j < boxes_height; j++){
-          if(posHistMap[i][j]>cmax){
-            cmax = posHistMap[i][j];
-          }
-          if(posHistMap[i][j]<cmin){
-            cmin = posHistMap[i][j];
-          }
-        }
-      }
+      // double cmax=-1.0, cmin=1000000.0;
+      // for(int i = 0; i < boxes_width; i++){
+      //   for(int j = 0; j < boxes_height; j++){
+      //     if(posHistMap[i][j]>cmax){
+      //       cmax = posHistMap[i][j];
+      //     }
+      //     if(posHistMap[i][j]<cmin){
+      //       cmin = posHistMap[i][j];
+      //     }
+      //   }
+      // }
       //cout << "max = " << cmax << " min = " << cmin << endl;
-      for(int i = 0; i < boxes_width; i++){
-        vector<double> colm;
-        for(int j = 0; j < boxes_height; j++){
-          //cout << "Cell val = " << posHistMap[i][j] << " Normed = " << ((double)posHistMap[i][j]-cmin)/(cmax-cmin) << endl;
-          double normedCellVal = ((double)posHistMap[i][j]-cmin)/(cmax-cmin);
-          //cout << "normedCellVal = " << normedCellVal << endl;
-          colm.push_back(normedCellVal);
-        }
-        posHistMapNorm.push_back(colm);
-      }
+      // for(int i = 0; i < boxes_width; i++){
+      //   vector<double> colm;
+      //   for(int j = 0; j < boxes_height; j++){
+      //     //cout << "Cell val = " << posHistMap[i][j] << " Normed = " << ((double)posHistMap[i][j]-cmin)/(cmax-cmin) << endl;
+      //     double normedCellVal = ((double)posHistMap[i][j]-cmin)/(cmax-cmin);
+      //     //cout << "normedCellVal = " << normedCellVal << endl;
+      //     colm.push_back(normedCellVal);
+      //   }
+      //   posHistMapNorm.push_back(colm);
+      // }
       /*for(int i = 0; i < boxes_width; i++){
         for(int j = 0; j < boxes_height; j++){
           cout << posHistMapNorm[i][j] << " ";

@@ -459,13 +459,13 @@ void Controller::initialize_params(string filename){
       conveys = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("conveys " << conveys);
     }
-    else if (fileLine.find("turn") != std::string::npos) {
+    else if (fileLine.find("safe") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
       std::istream_iterator<std::string> end;
       std::vector<std::string> vstrings(begin, end);
-      turn = atof(vstrings[1].c_str());
-      ROS_DEBUG_STREAM("turn " << turn);
+      safe = atof(vstrings[1].c_str());
+      ROS_DEBUG_STREAM("safe " << safe);
     }
     else if (fileLine.find("skeleton") != std::string::npos) {
       std::stringstream ss(fileLine);
@@ -646,13 +646,13 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     planner->setOriginalNavGraph(origNavGraph);
     ROS_DEBUG_STREAM("Created planner: conveys");
   }
-  if(turn == 1){
-    Graph *navGraphTurn = new Graph(map,(int)(p*100.0));
+  if(safe == 1){
+    Graph *navGraphSafe = new Graph(map,(int)(p*100.0));
     cout << "initialized nav graph" << endl;
-    planner = new PathPlanner(navGraphTurn, *map, n,n, "turn");
+    planner = new PathPlanner(navGraphSafe, *map, n,n, "safe");
     tier2Planners.push_back(planner);
     planner->setOriginalNavGraph(origNavGraph);
-    ROS_DEBUG_STREAM("Created planner: turn");
+    ROS_DEBUG_STREAM("Created planner: safe");
   }
   if(skeleton == 1){
     Graph *navGraphSkeleton = new Graph((int)(p*100.0), l*100, h*100);
@@ -1652,15 +1652,15 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
       double min = *min_element(it->begin(), it->end());
       double norm_factor = (max - min)/10;
       vector<double> planCostNormalized;
-      // ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
+      ROS_DEBUG_STREAM("Computing normalized plan cost: Max = " << max << " Min = " << min << " Norm Factor = " << norm_factor);
       for (doubIT vt = it->begin(); vt != it->end(); vt++){
         if (max != min){
           planCostNormalized.push_back((*vt - min)/norm_factor);
-          // ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
+          ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = " << ((*vt - min)/norm_factor));
         }
         else{
           planCostNormalized.push_back(0);
-          // ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
+          ROS_DEBUG_STREAM("Original value = " << *vt << " Normalized = 0");
         }
       }
       planCostsNormalized.push_back(planCostNormalized);
@@ -1674,7 +1674,7 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
         cost += it->at(i);
         // ROS_DEBUG_STREAM("cost = " << cost);
       }
-      // ROS_DEBUG_STREAM("Final cost = " << cost);
+      ROS_DEBUG_STREAM("Final cost = " << cost);
       totalCosts.push_back(cost);
     }
     double minCost=100000;
@@ -1693,7 +1693,7 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
         minCombinedCost = totalCosts[i];
       }
     }*/
-    // ROS_DEBUG_STREAM("Min cost = " << minCost);
+    ROS_DEBUG_STREAM("Min cost = " << minCost);
     //ROS_DEBUG_STREAM("Min Combined cost = " << minCombinedCost);
 
     vector<string> bestPlanNames;

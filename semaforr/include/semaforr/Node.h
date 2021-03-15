@@ -16,6 +16,8 @@ protected:
 
   double radius;
 
+  double distToWall;
+
   int intersection_id;
   
   bool inBuffer;           // true if within a wall buffer ( too close to a wall ) 
@@ -28,8 +30,8 @@ protected:
   
 public:
 
-  Node(int i = invalid_node_index, int xt = 0, int yt = 0, double r = 0, bool ib = false)
-    : id(i), x(xt), y(yt), radius(r), inBuffer(ib), accessible(true)
+  Node(int i = invalid_node_index, int xt = 0, int yt = 0, double r = 0, bool ib = false, double dw = 0)
+    : id(i), x(xt), y(yt), radius(r), inBuffer(ib), distToWall(dw), accessible(true)
     {} 
 
   bool operator == (const Node& n) const{
@@ -63,6 +65,10 @@ public:
   void setRadius(double r) { this->radius = r; }
 
   double getRadius() const { return radius; }
+
+  void setDistWall(double dw) { this->distToWall = dw; }
+
+  double getDistWall() const { return distToWall; }
 
   bool getInBuffer() const { return inBuffer; }
 
