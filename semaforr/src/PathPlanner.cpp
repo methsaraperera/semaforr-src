@@ -385,7 +385,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     // return (w6 * smooth_cost);
     double s_cost = s.getDistWall();
     double d_cost = d.getDistWall();
-    return (w1 * oldcost * (w6 * 1/((s_cost + d_cost)/2)));
+    return (w1 * oldcost + (w6 * 1/((s_cost + d_cost)/2)));
   }
   if (name == "explore"){
     double ns_cost = novelCost(s.getX(), s.getY());
@@ -479,7 +479,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     else{
-      regioncost = (w1 * oldcost) * 0.25;
+      regioncost = (w1 * oldcost) * 1;
     }
     double sHallway=0, dHallway=0;
     for(int i = 0; i < hallways.size(); i++){
@@ -492,19 +492,19 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
     double hallwaycost;
     if (sHallway > 0 and dHallway > 0){
-      hallwaycost = (w1 * oldcost) * ((sHallway+dHallway)/2);
+      hallwaycost = (w1 * oldcost) + ((sHallway+dHallway)/2);
     }
     else{
-      hallwaycost = (w1 * oldcost) * 0.25;
+      hallwaycost = (w1 * oldcost) * 1;
     }
     double sconveycost = computeConveyorCost(s.getX(), s.getY());
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
     double conveycost;
     if (sconveycost > 0 and dconveycost > 0){
-      conveycost = (w7 * oldcost * ((sconveycost + dconveycost)/2));
+      conveycost = (w7 * oldcost + ((sconveycost + dconveycost)/2));
     }
     else{
-      conveycost = (w7 * oldcost * 0.25);
+      conveycost = (w7 * oldcost * 1);
     }
     double strailcount = 0;
     double dtrailcount = 0;
@@ -526,12 +526,12 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
     double trailcost;
     if (strailcount > 0 and dtrailcount > 0){
-      trailcost = (w7 * oldcost * ((strailcount + dtrailcount)/2));
+      trailcost = (w7 * oldcost + ((strailcount + dtrailcount)/2));
     }
     else{
-      trailcost = (w7 * oldcost * 0.25);
+      trailcost = (w7 * oldcost * 1);
     }
-    double finalcost = (w1 * oldcost) * 0.25;
+    double finalcost = (w1 * oldcost) * 1;
     if(regioncost > finalcost)
       finalcost = regioncost;
     if(hallwaycost > finalcost)
@@ -636,28 +636,28 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }
 
     if (sRegion >= 0 and dRegion >= 0){
-      return (w1 * oldcost) * 0.25;
+      return (w1 * oldcost) * 1;
     }
     else if (sRegion >= 0 and dRegion == -1){
       if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.5;
+        return (w1 * oldcost) * 1.5;
       }
       else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.75;
+        return (w1 * oldcost) * 1.75;
       }
       else{
-        return (w1 * oldcost) * 1;
+        return (w1 * oldcost) * 2;
       }
     }
     else if (sRegion ==-1 and dRegion >= 0){
       if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.5;
+        return (w1 * oldcost) * 1.5;
       }
       else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.75;
+        return (w1 * oldcost) * 1.75;
       }
       else{
-        return (w1 * oldcost) * 1;
+        return (w1 * oldcost) * 2;
       }
     }
     else{
@@ -675,7 +675,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     if (sHallway > 0 and dHallway > 0){
-      return (w1 * oldcost) * 1/((sHallway+dHallway)/2);
+      return (w1 * oldcost) + 1/((sHallway+dHallway)/2);
     }
     else{
       return (w1 * oldcost) * 10;
@@ -686,7 +686,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
     //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
     if (sconveycost > 0 and dconveycost > 0){
-      return (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
+      return (w7 * oldcost + 1/((sconveycost + dconveycost)/2));
     }
     else{
       return (w7 * oldcost * 10);
@@ -715,7 +715,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
     //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
     if (strailcount > 0 and dtrailcount > 0){
-      return (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
+      return (w7 * oldcost + 1/((strailcount + dtrailcount)/2));
     }
     else{
       return (w7 * oldcost * 10);
@@ -739,6 +739,25 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       flowcost = 0;
     }
     return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost) + (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));*/
+    double distcost = oldcost;
+
+    double novelcost = (w1 * oldcost) * 1;
+
+    double explorecost;
+    double exs_cost = novelCost(s.getX(), s.getY());
+    double exd_cost = novelCost(d.getX(), d.getY());
+    if (exs_cost > 0 or exd_cost > 0){
+      explorecost = (w1 * oldcost) + (w1 * (exs_cost+exd_cost)/2);
+    }
+    else{
+      explorecost = (w1 * oldcost);
+    }
+
+    double safecost;
+    double safes_cost = s.getDistWall();
+    double safed_cost = d.getDistWall();
+    safecost = (w1 * oldcost + (w6 * 1/((safes_cost + safed_cost)/2)));
+
     int sRegion=-1,dRegion=-1;
     for(int i = 0; i < regions.size() ; i++){
       if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
@@ -790,33 +809,42 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     double regioncost;
+    double novelregioncost;
     if (sRegion >= 0 and dRegion >= 0){
-      regioncost = (w1 * oldcost) * 0.25;
+      regioncost = (w1 * oldcost) * 1;
+      novelregioncost = (w1 * oldcost) * 10;
     }
     else if (sRegion >= 0 and dRegion == -1){
       if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
-        regioncost = (w1 * oldcost) * 0.5;
+        regioncost = (w1 * oldcost) * 1.5;
+        novelregioncost = (w1 * oldcost) * 7;
       }
       else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
-        regioncost = (w1 * oldcost) * 0.75;
+        regioncost = (w1 * oldcost) * 1.75;
+        novelregioncost = (w1 * oldcost) * 5;
       }
       else{
-        regioncost = (w1 * oldcost) * 1;
+        regioncost = (w1 * oldcost) * 2;
+        novelregioncost = (w1 * oldcost) * 3;
       }
     }
     else if (sRegion ==-1 and dRegion >= 0){
       if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
-        regioncost = (w1 * oldcost) * 0.5;
+        regioncost = (w1 * oldcost) * 1.5;
+        novelregioncost = (w1 * oldcost) * 7;
       }
       else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
-        regioncost = (w1 * oldcost) * 0.75;
+        regioncost = (w1 * oldcost) * 1.75;
+        novelregioncost = (w1 * oldcost) * 5;
       }
       else{
-        regioncost = (w1 * oldcost) * 1;
+        regioncost = (w1 * oldcost) * 2;
+        novelregioncost = (w1 * oldcost) * 3;
       }
     }
     else{
       regioncost = (w1 * oldcost) * 10;
+      novelregioncost = (w1 * oldcost) * 1;
     }
     double sHallway=0, dHallway=0;
     for(int i = 0; i < hallways.size(); i++){
@@ -828,20 +856,26 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     double hallwaycost;
+    double novelhallwaycost;
     if (sHallway > 0 and dHallway > 0){
-      hallwaycost = (w1 * oldcost) * 1/((sHallway+dHallway)/2);
+      hallwaycost = (w1 * oldcost) + 1/((sHallway+dHallway)/2);
+      novelhallwaycost = (w1 * oldcost) + ((sHallway+dHallway)/2);
     }
     else{
       hallwaycost = (w1 * oldcost) * 10;
+      novelhallwaycost = (w1 * oldcost) * 1;
     }
     double sconveycost = computeConveyorCost(s.getX(), s.getY());
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
     double conveycost;
+    double novelconveycost;
     if (sconveycost > 0 and dconveycost > 0){
-      conveycost = (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
+      conveycost = (w7 * oldcost + 1/((sconveycost + dconveycost)/2));
+      novelconveycost = (w7 * oldcost + ((sconveycost + dconveycost)/2));
     }
     else{
       conveycost = (w7 * oldcost * 10);
+      novelconveycost = (w7 * oldcost * 1);
     }
     double strailcount = 0;
     double dtrailcount = 0;
@@ -862,21 +896,35 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       }
     }
     double trailcost;
+    double noveltrailcost;
     if (strailcount > 0 and dtrailcount > 0){
-      trailcost = (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
+      trailcost = (w7 * oldcost + 1/((strailcount + dtrailcount)/2));
+      noveltrailcost = (w7 * oldcost + ((strailcount + dtrailcount)/2));
     }
     else{
       trailcost = (w7 * oldcost * 10);
+      noveltrailcost = (w7 * oldcost * 1);
     }
-    double finalcost = (w1 * oldcost) * 10;
-    if(regioncost < finalcost)
-      finalcost = regioncost;
-    if(hallwaycost < finalcost)
-      finalcost = hallwaycost;
-    if(conveycost < finalcost)
-      finalcost = conveycost;
-    if(trailcost < finalcost)
-      finalcost = trailcost;
+    // double finalcost = (w1 * oldcost) * 10;
+    // if(regioncost < finalcost)
+    //   finalcost = regioncost;
+    // if(hallwaycost < finalcost)
+    //   finalcost = hallwaycost;
+    // if(conveycost < finalcost)
+    //   finalcost = conveycost;
+    // if(trailcost < finalcost)
+    //   finalcost = trailcost;
+
+    if(regioncost > novelcost)
+      novelcost = regioncost;
+    if(hallwaycost > novelcost)
+      novelcost = hallwaycost;
+    if(conveycost > novelcost)
+      novelcost = conveycost;
+    if(trailcost > novelcost)
+      novelcost = trailcost;
+    
+    double finalcost = (distcost + novelcost + explorecost + safecost + regioncost + hallwaycost + trailcost + conveycost) / 8.0;
     return finalcost;
   }
 

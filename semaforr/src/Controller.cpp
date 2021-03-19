@@ -528,7 +528,7 @@ void Controller::initialize_planner(string map_config, string map_dimensions, in
     Graph *navGraphDistance = new Graph(map,(int)(p*100.0));
     cout << "initialized nav graph" << endl;
     planner = new PathPlanner(navGraphDistance, *map, n,n, "distance");
-    if(skeleton != 1 and hallwayskel != 1){
+    if(skeleton != 1 and hallwayskel != 1 and combined != 1){
       tier2Planners.push_back(planner);
     }
     planner->setOriginalNavGraph(origNavGraph);
