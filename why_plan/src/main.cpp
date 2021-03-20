@@ -1048,7 +1048,7 @@ public:
 		vector<string> vstrings = parseText(current_log, '\t');
 
 		stringstream output;
-		output << atof(vstrings[0].c_str()) << "\t" << atof(vstrings[1].c_str()) << "\t" << atof(vstrings[2].c_str()) << "\t" << computationTimeSec << "\t" << sameplan << "\t" << alt_planner << "\t" << planDistance << "\t" << originalPlanDistance << "\t" << (planDistance - originalPlanDistance) << "\t" << selected_planner << "\t" << planCost << "\t" << originalPlanCost << "\t" << (planCost - originalPlanCost);
+		output << atof(vstrings[0].c_str()) << "\t" << atof(vstrings[1].c_str()) << "\t" << atof(vstrings[2].c_str()) << "\t" << computationTimeSec << "\t" << sameplan << "\t" << alt_planner << "\t" << planDistance << "\t" << originalPlanDistance << "\t" << (planDistance - originalPlanDistance) << "\t" << selected_planner << "\t" << planCost << "\t" << originalPlanCost << "\t" << (planCost - originalPlanCost) << "\t" << vstrings[16] << "\t" << vstrings[17];
 		
 		logData.data = output.str();
 		plan_explanations_log_pub_.publish(logData);

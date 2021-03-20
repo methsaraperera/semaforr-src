@@ -128,23 +128,23 @@ public:
 		visualized++;
 	}*/
 	//publish_edges_cost();
-	publish_conveyor();
-	publish_hallway1();
-	publish_hallway2();
-	publish_hallway3();
-	publish_hallway4();
-	publish_region();
-	publish_exits();
-	publish_skeleton();
-	publish_trails();
-	publish_doors();
-	// publish_barriers();
-	publish_walls();
-	//publish_occupancy();
-	publish_highway();
-	publish_highway_plan();
-	publish_highway_target();
-	publish_highway_stack();
+	// publish_conveyor();
+	// publish_hallway1();
+	// publish_hallway2();
+	// publish_hallway3();
+	// publish_hallway4();
+	// publish_region();
+	// publish_exits();
+	// publish_skeleton();
+	// publish_trails();
+	// publish_doors();
+	// // publish_barriers();
+	// publish_walls();
+	// //publish_occupancy();
+	// publish_highway();
+	// publish_highway_plan();
+	// publish_highway_target();
+	// publish_highway_stack();
   }
 
 

@@ -385,7 +385,12 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     // return (w6 * smooth_cost);
     double s_cost = s.getDistWall();
     double d_cost = d.getDistWall();
-    return (w1 * oldcost + (w6 * 1/((s_cost + d_cost)/2)));
+    if(s_cost > 0 or d_cost > 0){
+      return (w1 * oldcost + (w6 * 10/((s_cost + d_cost)/2)));
+    }
+    else{
+      return (w1 * oldcost) * 10;
+    }
   }
   if (name == "explore"){
     double ns_cost = novelCost(s.getX(), s.getY());
@@ -756,7 +761,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double safecost;
     double safes_cost = s.getDistWall();
     double safed_cost = d.getDistWall();
-    safecost = (w1 * oldcost + (w6 * 1/((safes_cost + safed_cost)/2)));
+    safecost = (w1 * oldcost + (w6 * 10/((safes_cost + safed_cost)/2)));
 
     int sRegion=-1,dRegion=-1;
     for(int i = 0; i < regions.size() ; i++){
