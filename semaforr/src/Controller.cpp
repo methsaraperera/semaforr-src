@@ -927,7 +927,7 @@ void Controller::initialize_spatial_model(string filename){
         istream_iterator<string> begin(sst);
         istream_iterator<string> end;
         vector<string> vstrings(begin, end);
-        regionpath.push_back(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())))
+        regionpath.push_back(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())));
       }
       beliefs->getSpatialModel()->getRegionList()->setRegionPath(regionpath);
       ROS_DEBUG_STREAM("regionpath " << regionpath.size());

@@ -109,8 +109,10 @@ int PathPlanner::calcPath(bool cautious){
     if (name != "distance" and name != "skeleton" and name != "hallwayskel") {
       cout << "Updating nav graph for non-distance planners" << endl;
       updateNavGraph();
+      cout << "Finished nav graph update" << endl;
     }
     astar newsearch(*navGraph, s, t, name);
+    cout << "Finished search" << endl;
     // cout << "finished search" << endl;
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
@@ -343,7 +345,7 @@ int PathPlanner::calcOrigPath(bool cautious){
 }
 
 void PathPlanner::updateNavGraph(){
-	cout << "Updating nav graph before with the current crowd model" << endl;
+	cout << "Updating nav graph before" << endl;
 	if(crowdModel.densities.size() == 0 and (name == "density" or name == "risk" or name == "flow")){
 		cout << "crowdModel not recieved" << endl;
 	}

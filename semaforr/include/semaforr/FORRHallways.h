@@ -223,6 +223,13 @@ public:
             cout << "num of mean_segments " << mean_segments.size() << endl;
 
             vector<vector<CartesianPoint> > initial_hallway_groups = ProcessHallwayData(mean_segments, map_width_, map_height_, threshold);
+            if(initial_hallways.size() > 0){
+              for(int j = 0; j < initial_hallways.size(); j++){
+                if(initial_hallways[j].getHallwayType() == i){
+                  initial_hallway_groups.push_back(initial_hallways[j].getPoints());
+                }
+              }
+            }
             if(initial_hallway_groups.size()>0){
               /*cout << "Initial Aggregates" << endl;
               for(int j = 0; j < initial_hallway_groups.size(); j++){
@@ -232,13 +239,6 @@ public:
                 cout << ";";
               }
               cout << endl;*/
-              if(initial_hallways.size() > 0){
-                for(int j = 0; j < initial_hallways.size(); j++){
-                  if(initial_hallways[j].getHallwayType() == i){
-                    initial_hallway_groups.push_back(initial_hallways[j].getPoints());
-                  }
-                }
-              }
               vector<vector<CartesianPoint> > merged_hallway_groups = MergeNearbyHallways(initial_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               // vector<vector<CartesianPoint> > hallway_groups = FillHallways(merged_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               /*cout << "Final Aggregates" << endl;
