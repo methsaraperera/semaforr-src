@@ -141,6 +141,7 @@ public:
       for(int i = 0; i < hlws.size(); i++){
         initial_hallways.push_back(Aggregate(hlws[i], idvals[i]));
       }
+      hallways = initial_hallways;
     }
     int getWidth(){return map_width_;}
     int getHeight(){return map_height_;}

@@ -833,10 +833,9 @@ void Controller::initialize_spatial_model(string filename){
       // updateSkeletonGraph(beliefs->getAgentState());
     }
     else if (fileLine.find("trails") != std::string::npos) {
-      string str = fileline;
       const char delim = ';';
       vector<string> out;
-      stringstream ss(str);
+      stringstream ss(fileLine);
       string s;
       while(getline(ss, s, delim)){
         out.push_back(s);
@@ -869,14 +868,15 @@ void Controller::initialize_spatial_model(string filename){
       beliefs->getSpatialModel()->getTrails()->setTrails(trls);
       ROS_DEBUG_STREAM("trails " << trls.size());
       vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-      beliefs->getSpatialModel()->getConveyors()->populateGridFromTrailTrace(trails_trace.back());
+      for(int i = 0; i < trails_trace.size(); i++){
+        beliefs->getSpatialModel()->getConveyors()->populateGridFromTrailTrace(trails_trace[i]);
+      }
       ROS_DEBUG_STREAM("conveyors updated");
     }
     else if (fileLine.find("hallways") != std::string::npos) {
-      string str = fileline;
       const char delim = ';';
       vector<string> out;
-      stringstream ss(str);
+      stringstream ss(fileLine);
       string s;
       while(getline(ss, s, delim)){
         out.push_back(s);
@@ -942,10 +942,10 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   decisionStats = new FORRActionStats();
 
   // Initialize situations
-  initialize_situations(situation_config);
+  // initialize_situations(situation_config);
 
   // Initialize spatial model
-  // initialize_spatial_model(spatial_model_config);
+  initialize_spatial_model(spatial_model_config);
 
   // Initialize highways
   highwayFinished = 0;

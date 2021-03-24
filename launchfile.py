@@ -81,16 +81,17 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # print "waiting,,"
 
     # start why_plan
-    why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
-    print "waiting,,"
+    if "_tier2votingallsm_" in log_name:
+        why_plan_process = subprocess.Popen(['rosrun','why_plan','why_plan'])
+        print "waiting,,"
    
-    # rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
+    rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
 
     # Wait till semaforr completes the process
     while semaforr_process.poll() is None:
         print "Semaforr process still running ..."
-        # if rviz_process.poll() is not None:
-        #     rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
+        if rviz_process.poll() is not None:
+            rviz_process = subprocess.Popen(['rosrun','rviz','rviz'])
         if menge_sim_process.poll() is not None or str(subprocess.check_output(["ps -A | grep 'menge' | wc -l"],shell=True))[0] != "1":
             break
         time.sleep(1)
@@ -115,7 +116,7 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
 
     # people_trajectories_process.terminate()
 
-    # rviz_process.terminate()
+    rviz_process.terminate()
     
     # print "Terminating crowd model"
     #crowd_process.terminate()
@@ -197,7 +198,7 @@ for i in range(0,num_runs):
         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_why-full_" + str(j) + "_" + str(i) + ".txt"
+        log_name = map_name + "_test_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "targetone.conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
