@@ -204,12 +204,14 @@ public:
     for(int i = 0; i < trl.size(); i++){
       vector<CartesianPoint> tempTrail;
       for(int j = 0; j < trl[i].size()-1; j++){
-        double step_size = 0.1;
-        for(double step = 0; step < 1; step += step_size){
-          double tx = (trl[i][j+1].get_x() * step) + (trl[i][j].get_x() * (1-step));
-          double ty = (trl[i][j+1].get_y() * step) + (trl[i][j].get_y() * (1-step));
-          tempTrail.push_back(CartesianPoint(tx,ty));
-        }
+        tempTrail.push_back(trl[i][j]);
+        tempTrail.push_back(CartesianPoint((trl[i][j].get_x()+trl[i][j+1].get_x())/2.0, (trl[i][j].get_y()+trl[i][j+1].get_y())/2.0));
+        // double step_size = 0.1;
+        // for(double step = 0; step < 1; step += step_size){
+        //   double tx = (trl[i][j+1].get_x() * step) + (trl[i][j].get_x() * (1-step));
+        //   double ty = (trl[i][j+1].get_y() * step) + (trl[i][j].get_y() * (1-step));
+        //   tempTrail.push_back(CartesianPoint(tx,ty));
+        // }
       }
       tempTrail.push_back(trl[i][trl[i].size()-1]);
       interpolatedTrails.push_back(tempTrail);

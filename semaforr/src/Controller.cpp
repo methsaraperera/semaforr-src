@@ -999,12 +999,12 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
       cout << "Set first task" << endl;
-      if(aStarOn and (!highwaysOn or (highwaysOn and highwayExploration->getHighwaysComplete())) and (!frontiersOn or (frontiersOn and frontierExploration->getFrontiersComplete()))){
-        tierTwoDecision(current, true);
-      }
-      else{
-        beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
-      }
+      // if(aStarOn and (!highwaysOn or (highwaysOn and highwayExploration->getHighwaysComplete())) and (!frontiersOn or (frontiersOn and frontierExploration->getFrontiersComplete()))){
+      //   tierTwoDecision(current, true);
+      // }
+      // else{
+      beliefs->getAgentState()->setCurrentTask(beliefs->getAgentState()->getNextTask());
+      // }
       firstTaskAssigned = true;
   }
   if((highwayExploration->getHighwaysComplete() or !highwaysOn) and (frontierExploration->getFrontiersComplete() or !frontiersOn)){
@@ -1192,8 +1192,12 @@ FORRAction Controller::decide() {
     decisionStats->decisionTier = 1.8;
   }
   else{
-    highwayFinished++;
-    frontierFinished++;
+    if(highwayFinished < 3){
+      highwayFinished++;
+    }
+    if(frontierFinished < 3){
+      frontierFinished++;
+    }
     decidedAction = FORRDecision();
     if(situationsOn){
       beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
