@@ -757,7 +757,7 @@ void Controller::initialize_spatial_model(string filename){
     //cout << "Inside while in spatial model" << endl;
     if(fileLine[0] == '#')  // skip comment lines
       continue;
-    else if (fileLine.find("regions") != std::string::npos) {
+    else if (fileLine.find("regions") != std::string::npos and regionsOn) {
       const char delim = ';';
       vector<string> out;
       stringstream ss(fileLine);
@@ -829,10 +829,12 @@ void Controller::initialize_spatial_model(string filename){
       beliefs->getSpatialModel()->getRegionList()->setRegions(initial_regions);
       // beliefs->getAgentState()->setInitialExitTraces(traces);
       ROS_DEBUG_STREAM("regions " << initial_regions.size());
-      beliefs->getSpatialModel()->getDoors()->learnDoors(initial_regions);
+      if(doorsOn){
+        beliefs->getSpatialModel()->getDoors()->learnDoors(initial_regions);
+      }
       // updateSkeletonGraph(beliefs->getAgentState());
     }
-    else if (fileLine.find("trails") != std::string::npos) {
+    else if (fileLine.find("trails") != std::string::npos and trailsOn) {
       const char delim = ';';
       vector<string> out;
       stringstream ss(fileLine);
@@ -867,13 +869,15 @@ void Controller::initialize_spatial_model(string filename){
       }
       beliefs->getSpatialModel()->getTrails()->setTrails(trls);
       ROS_DEBUG_STREAM("trails " << trls.size());
-      vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
-      for(int i = 0; i < trails_trace.size(); i++){
-        beliefs->getSpatialModel()->getConveyors()->populateGridFromTrailTrace(trails_trace[i]);
+      if(conveyorsOn){
+        vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
+        for(int i = 0; i < trails_trace.size(); i++){
+          beliefs->getSpatialModel()->getConveyors()->populateGridFromTrailTrace(trails_trace[i]);
+        }
+        ROS_DEBUG_STREAM("conveyors updated");
       }
-      ROS_DEBUG_STREAM("conveyors updated");
     }
-    else if (fileLine.find("hallways") != std::string::npos) {
+    else if (fileLine.find("hallways") != std::string::npos and hallwaysOn) {
       const char delim = ';';
       vector<string> out;
       stringstream ss(fileLine);
@@ -907,6 +911,26 @@ void Controller::initialize_spatial_model(string filename){
       }
       beliefs->getSpatialModel()->getHallways()->setHallways(hlws, idvals);
       ROS_DEBUG_STREAM("hallways " << hlws.size());
+    }
+    else if (fileLine.find("regionpath") != std::string::npos and regionsOn) {
+      const char delim = ';';
+      vector<string> out;
+      stringstream ss(fileLine);
+      string s;
+      while(getline(ss, s, delim)){
+        out.push_back(s);
+        cout << s << endl;
+      }
+      vector< CartesianPoint> regionpath;
+      for(int i = 0; i < out.size(); i++){
+        stringstream sst(out[i]);
+        istream_iterator<string> begin(sst);
+        istream_iterator<string> end;
+        vector<string> vstrings(begin, end);
+        regionpath.push_back(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())))
+      }
+      beliefs->getSpatialModel()->getRegionList()->setRegionPath(regionpath);
+      ROS_DEBUG_STREAM("regionpath " << regionpath.size());
     }
   }
 }

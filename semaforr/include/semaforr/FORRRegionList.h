@@ -20,6 +20,7 @@ class FORRRegionList{
   vector<FORRRegion> getRegions(){ return regions; }
   FORRRegion getRegion(int index){ return regions[index]; }
   void setRegions(vector<FORRRegion> regions_para) { regions = regions_para; }
+  void setRegionPath(vector< CartesianPoint> rp) { regionpath = rp; }
   //void addRegion(vector<FORRRegion> region) { regions.push_back(region);}
 
   //bool isExitToLeaf(FORRExit exit){
@@ -213,6 +214,11 @@ class FORRRegionList{
     // learning gates between different regions
     //clearAllExits();
     // for every position in the position history vector .. check if a move is from one region to another and save it as gate
+    int regionpathind = -1;
+    if(regionpath.size() > 0){
+      run_trace.push_back(regionpath);
+      regionpathind = run_trace.size()-1;
+    }
     cout << "In learning exits: size of trace is " << run_trace.size() << endl;
     vector<CartesianPoint> stepped_history;
     vector< vector<int> > step_to_trace;
@@ -277,7 +283,9 @@ class FORRRegionList{
           // connectionBetweenRegions += stepped_history[m].get_distance(stepped_history[m+1]);
           // cout << "step " << m << " " << stepped_history[m].get_x() << " " << stepped_history[m].get_y() << " point " << run_trace[step_to_trace[m][0]][step_to_trace[m][1]].get_x() << " " << run_trace[step_to_trace[m][0]][step_to_trace[m][1]].get_y() << endl;
           pathBetweenRegions.push_back(run_trace[step_to_trace[m][0]][step_to_trace[m][1]]);
-          laserBetweenRegions.push_back(laser_trace[step_to_trace[m][0]][step_to_trace[m][1]]);
+          if(step_to_trace[m][0] != regionpathind){
+            laserBetweenRegions.push_back(laser_trace[step_to_trace[m][0]][step_to_trace[m][1]]);
+          }
         }
 
         // Initialize trail vectors
@@ -285,25 +293,30 @@ class FORRRegionList{
         // std::vector< vector<CartesianPoint> > trailLaserEndpoints;
         // Push first point in path to trail
         // trailPositions.push_back(regions[begin_region_id].getCenter());
-        trailPositions.push_back(pathBetweenRegions[0]);
-        trailPositions.push_back(stepped_history[begin_position]);
+        if(pathBetweenRegions.size() == laserBetweenRegions.size()){
+          trailPositions.push_back(pathBetweenRegions[0]);
+          trailPositions.push_back(stepped_history[begin_position]);
         // trailLaserEndpoints.push_back(laserBetweenRegions[0]);
         // Find the furthest point on path that can be seen from current position, push that point to trail and then move to that point
-        for(int i = 0; i < pathBetweenRegions.size(); i++){
-          for(int n = pathBetweenRegions.size()-1; n > i; n--){
-            if(canAccessPoint(laserBetweenRegions[i], pathBetweenRegions[i], pathBetweenRegions[n], 5)) {
-              trailPositions.push_back(pathBetweenRegions[n]);
-              // trailLaserEndpoints.push_back(laserBetweenRegions[n]);
-              i = n-1;
+          for(int i = 0; i < pathBetweenRegions.size(); i++){
+            for(int n = pathBetweenRegions.size()-1; n > i; n--){
+              if(canAccessPoint(laserBetweenRegions[i], pathBetweenRegions[i], pathBetweenRegions[n], 5)) {
+                trailPositions.push_back(pathBetweenRegions[n]);
+                // trailLaserEndpoints.push_back(laserBetweenRegions[n]);
+                i = n-1;
+              }
             }
           }
-        }
         // if (pathBetweenRegions[pathBetweenRegions.size()-1].get_x() != trailPositions[trailPositions.size()-1].get_x() or pathBetweenRegions[pathBetweenRegions.size()-1].get_y() != trailPositions[trailPositions.size()-1].get_y()) {
         //   trailPositions.push_back(pathBetweenRegions.back());
         //   // trailLaserEndpoints.push_back(laserBetweenRegions.back());
         // }
         // trailPositions.push_back(regions[end_region_id].getCenter());
-        trailPositions.push_back(stepped_history[end_position]);
+          trailPositions.push_back(stepped_history[end_position]);
+        }
+        else{
+          trailPositions = pathBetweenRegions;
+        }
         // cout << "Length of trail " << trailPositions.size() << endl;
         if(trailPositions.size() == 2 and trailPositions[0] == trailPositions[1]){
           trailPositions.clear();
@@ -661,6 +674,7 @@ class FORRRegionList{
   
  private:
   vector<FORRRegion> regions;
+  vector<CartesianPoint> regionpath;
 };
 
 
