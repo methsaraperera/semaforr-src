@@ -57,13 +57,13 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
 
     # why_explanations_file = open(why_explanations_name,"w")
     # why_explanations_process = subprocess.Popen(['rostopic','echo','/explanations'],stdout=why_explanations_file)
-    if "_tier2weightedall_" not in log_name:
+    if "_tier2votingallsm_" in log_name:
         whyplan_explanations_file = open(whyplan_explanations_name,"w")
         whyplan_explanations_process = subprocess.Popen(['rostopic','echo','/plan_explanations'],stdout=whyplan_explanations_file)
 
     # why_log_file = open(why_log_name,"w")
     # why_log_process = subprocess.Popen(['rostopic','echo','/explanations_log'],stdout=why_log_file)
-    if "_tier2weightedall_" not in log_name:
+    if "_tier2votingallsm_" in log_name:
         whyplan_log_file = open(whyplan_log_name,"w")
         whyplan_log_process = subprocess.Popen(['rostopic','echo','/plan_explanations_log'],stdout=whyplan_log_file)
 
@@ -122,18 +122,21 @@ def experiment(map_name, log_name, density, flow, risk, cusum, discount, explore
     # if map_name != "gradcenter-5":
     #     situation_process.terminate()
     # why_process.terminate()
-    why_plan_process.terminate()
+    if "_tier2votingallsm_" in log_name:
+        why_plan_process.terminate()
     # print "Why terminated!"
     log_process.terminate()
     log_file.close()
     # why_explanations_process.terminate()
     # why_explanations_file.close()
-    whyplan_explanations_process.terminate()
-    whyplan_explanations_file.close()
+    if "_tier2votingallsm_" in log_name:
+        whyplan_explanations_process.terminate()
+        whyplan_explanations_file.close()
     # why_log_process.terminate()
     # why_log_file.close()
-    whyplan_log_process.terminate()
-    whyplan_log_file.close()
+    if "_tier2votingallsm_" in log_name:
+        whyplan_log_process.terminate()
+        whyplan_log_file.close()
     # situation_log_process.terminate()
     # situation_log_file.close()
     time.sleep(1)
@@ -183,19 +186,20 @@ spatials = "/config/spatial_model.conf"
 #         target_file_name = "target40test-" + str(j) + ".conf"
 #         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-# num_runs = 1
-# params = "/config/params1.conf"
-# map_name = "gradcenter-5"
-# for i in range(0,num_runs):
-#     for j in range(1,2):
-#         why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-#         whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-#         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
-#         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-#         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-#         log_name = map_name + "_why-full_" + str(j) + "_" + str(i) + ".txt"
-#         target_file_name = "target" + str(j) + ".conf"
-#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+num_runs = 1
+advisors = "/config/advisors2.conf"
+params = "/config/params1.conf"
+map_name = "gradcenter-5"
+for i in range(0,num_runs):
+    for j in range(1,2):
+        why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+        whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+        why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
+        whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+        situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
+        log_name = map_name + "_why-full_" + str(j) + "_" + str(i) + ".txt"
+        target_file_name = "targetone.conf"
+        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
 # num_runs = 8
 # advisors = "/config/advisors2.conf"
@@ -227,20 +231,20 @@ spatials = "/config/spatial_model.conf"
 #         target_file_name = "target" + str(j) + ".conf"
 #         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-num_runs = 5
-advisors = "/config/advisors2.conf"
-params = "/config/params3.conf"
-map_name = "moma-5"
-for i in range(4,num_runs):
-    for j in range(2,3):
-        why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_Original_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target40test-" + str(j) + ".conf"
-        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+# num_runs = 5
+# advisors = "/config/advisors2.conf"
+# params = "/config/params3.conf"
+# map_name = "moma-5"
+# for i in range(4,num_runs):
+#     for j in range(2,3):
+#         why_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+#         whyplan_explanations_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+#         why_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_log.txt"
+#         whyplan_log_name = map_name + "_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+#         situation_log_name = map_name + "_" + str(j) + "_" + str(i) + "_situation_log.txt"
+#         log_name = map_name + "_Original_" + str(j) + "_" + str(i) + ".txt"
+#         target_file_name = "target40test-" + str(j) + ".conf"
+#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
 # num_runs = 8
 # advisors = "/config/advisors2.conf"
@@ -263,12 +267,12 @@ params = "/config/params5.conf"
 map_name = "gradcenter-5"
 for i in range(0,num_runs):
     for j in range(1,6):
-        why_explanations_name = map_name + "_tier2votingall_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_tier2votingall_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_tier2votingall_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_tier2votingall_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_tier2votingall_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_tier2votingall_" + str(j) + "_" + str(i) + ".txt"
+        why_explanations_name = map_name + "_tier2votingallsm_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+        whyplan_explanations_name = map_name + "_tier2votingallsm_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+        why_log_name = map_name + "_tier2votingallsm_" + str(j) + "_" + str(i) + "_why_log.txt"
+        whyplan_log_name = map_name + "_tier2votingallsm_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+        situation_log_name = map_name + "_tier2votingallsm_" + str(j) + "_" + str(i) + "_situation_log.txt"
+        log_name = map_name + "_tier2votingallsm_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
@@ -278,12 +282,12 @@ params = "/config/params6.conf"
 map_name = "gradcenter-5"
 for i in range(0,num_runs):
     for j in range(1,6):
-        why_explanations_name = map_name + "_tier2weightedall_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_tier2weightedall_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_tier2weightedall_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_tier2weightedall_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_tier2weightedall_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_tier2weightedall_" + str(j) + "_" + str(i) + ".txt"
+        why_explanations_name = map_name + "_tier2weightedallsm_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+        whyplan_explanations_name = map_name + "_tier2weightedallsm_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+        why_log_name = map_name + "_tier2weightedallsm_" + str(j) + "_" + str(i) + "_why_log.txt"
+        whyplan_log_name = map_name + "_tier2weightedallsm_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+        situation_log_name = map_name + "_tier2weightedallsm_" + str(j) + "_" + str(i) + "_situation_log.txt"
+        log_name = map_name + "_tier2weightedallsm_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
@@ -292,42 +296,42 @@ advisors = "/config/advisors1.conf"
 params = "/config/params9.conf"
 map_name = "gradcenter-5"
 for i in range(0,num_runs):
-    for j in range(1,6):
-        why_explanations_name = map_name + "_tier2distance_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_tier2distance_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_tier2distance_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_tier2distance_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_tier2distance_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_tier2distance_" + str(j) + "_" + str(i) + ".txt"
+    for j in range(3,6):
+        why_explanations_name = map_name + "_tier2distancesm_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+        whyplan_explanations_name = map_name + "_tier2distancesm_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+        why_log_name = map_name + "_tier2distancesm_" + str(j) + "_" + str(i) + "_why_log.txt"
+        whyplan_log_name = map_name + "_tier2distancesm_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+        situation_log_name = map_name + "_tier2distancesm_" + str(j) + "_" + str(i) + "_situation_log.txt"
+        log_name = map_name + "_tier2distancesm_" + str(j) + "_" + str(i) + ".txt"
         target_file_name = "target" + str(j) + ".conf"
         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-num_runs = 1
-advisors = "/config/advisors1.conf"
-params = "/config/params7.conf"
-map_name = "gradcenter-5"
-for i in range(0,num_runs):
-    for j in range(1,6):
-        why_explanations_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target" + str(j) + ".conf"
-        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+# num_runs = 1
+# advisors = "/config/advisors1.conf"
+# params = "/config/params7.conf"
+# map_name = "gradcenter-5"
+# for i in range(0,num_runs):
+#     for j in range(1,6):
+#         why_explanations_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+#         whyplan_explanations_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+#         why_log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_log.txt"
+#         whyplan_log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+#         situation_log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + "_situation_log.txt"
+#         log_name = map_name + "_tier2votingspatial_" + str(j) + "_" + str(i) + ".txt"
+#         target_file_name = "target" + str(j) + ".conf"
+#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
 
-num_runs = 1
-advisors = "/config/advisors1.conf"
-params = "/config/params8.conf"
-map_name = "gradcenter-5"
-for i in range(0,num_runs):
-    for j in range(1,6):
-        why_explanations_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_explanations.txt"
-        whyplan_explanations_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
-        why_log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_log.txt"
-        whyplan_log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
-        situation_log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_situation_log.txt"
-        log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + ".txt"
-        target_file_name = "target" + str(j) + ".conf"
-        experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)
+# num_runs = 1
+# advisors = "/config/advisors1.conf"
+# params = "/config/params8.conf"
+# map_name = "gradcenter-5"
+# for i in range(0,num_runs):
+#     for j in range(1,6):
+#         why_explanations_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_explanations.txt"
+#         whyplan_explanations_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_plan_explanations.txt"
+#         why_log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_log.txt"
+#         whyplan_log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_why_plan_log.txt"
+#         situation_log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + "_situation_log.txt"
+#         log_name = map_name + "_tier2votingcommonsense_" + str(j) + "_" + str(i) + ".txt"
+#         target_file_name = "target" + str(j) + ".conf"
+#         experiment(map_name, log_name, density, flow, risk, cusum, discount, explore, advisors, params, situations, spatials)

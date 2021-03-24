@@ -761,7 +761,12 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double safecost;
     double safes_cost = s.getDistWall();
     double safed_cost = d.getDistWall();
-    safecost = (w1 * oldcost + (w6 * 10/((safes_cost + safed_cost)/2)));
+    if(safes_cost > 0 or safed_cost > 0){
+      safecost = (w1 * oldcost + (w6 * 10/((safes_cost + safed_cost)/2)));
+    }
+    else{
+      safecost = (w1 * oldcost) * 10;
+    }
 
     int sRegion=-1,dRegion=-1;
     for(int i = 0; i < regions.size() ; i++){

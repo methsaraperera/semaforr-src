@@ -142,7 +142,7 @@ public:
   void setPosHistory(vector< vector<CartesianPoint> > all_trace){
     posHistMap.clear();
     posHistMapNorm.clear();
-    if (name == "explore"){
+    if (name == "explore" or name == "combined"){
       width = navGraph->getMap()->getLength()/100;
       height = navGraph->getMap()->getHeight()/100;
       granularity = 10;

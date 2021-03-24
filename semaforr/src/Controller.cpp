@@ -798,78 +798,116 @@ void Controller::initialize_spatial_model(string filename){
         }
         initial_regions.push_back(new_region);
       }
+      // for(int i = 0; i < out.size(); i++){
+      //   stringstream sst(out[i]);
+      //   istream_iterator<string> begin(sst);
+      //   istream_iterator<string> end;
+      //   vector<string> vstrings(begin, end);
+      //   if(vstrings[0] == "regions"){
+      //     for (int j = 4; j < vstrings.size(); j += 9){
+      //       vector<CartesianPoint> exit_trace;
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[1].c_str()),atof(vstrings[2].c_str())));
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())));
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())));
+      //       exit_trace.push_back(initial_regions[atoi(vstrings[j+2].c_str())].getCenter());
+      //       traces.push_back(exit_trace);
+      //     }
+      //   }
+      //   else{
+      //     for (int j = 3; j < vstrings.size(); j += 9){
+      //       vector<CartesianPoint> exit_trace;
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())));
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())));
+      //       exit_trace.push_back(CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())));
+      //       exit_trace.push_back(initial_regions[atoi(vstrings[j+2].c_str())].getCenter());
+      //       traces.push_back(exit_trace);
+      //     }
+      //   }
+      // }
+      beliefs->getSpatialModel()->getRegionList()->setRegions(initial_regions);
+      // beliefs->getAgentState()->setInitialExitTraces(traces);
+      ROS_DEBUG_STREAM("regions " << initial_regions.size());
+      beliefs->getSpatialModel()->getDoors()->learnDoors(initial_regions);
+      // updateSkeletonGraph(beliefs->getAgentState());
+    }
+    else if (fileLine.find("trails") != std::string::npos) {
+      string str = fileline;
+      const char delim = ';';
+      vector<string> out;
+      stringstream ss(str);
+      string s;
+      while(getline(ss, s, delim)){
+        out.push_back(s);
+        cout << s << endl;
+      }
+      vector< vector< TrailMarker> > trls;
+      vector<CartesianPoint> lsim;
+      for (int k = 0; k < 660; k++){
+        lsim.push_back(CartesianPoint(0,0));
+      }
       for(int i = 0; i < out.size(); i++){
         stringstream sst(out[i]);
         istream_iterator<string> begin(sst);
         istream_iterator<string> end;
         vector<string> vstrings(begin, end);
-        if(vstrings[0] == "regions"){
-          for (int j = 4; j < vstrings.size(); j += 9){
-            vector<CartesianPoint> exit_trace;
-            exit_trace.push_back(CartesianPoint(atof(vstrings[1].c_str()),atof(vstrings[2].c_str())));
-            exit_trace.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
-            exit_trace.push_back(CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())));
-            exit_trace.push_back(CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())));
-            exit_trace.push_back(initial_regions[atoi(vstrings[j+2].c_str())].getCenter());
-            traces.push_back(exit_trace);
+        vector< TrailMarker> trl;
+        if(vstrings[0] == "trails"){
+          for (int j = 1; j < vstrings.size(); j += 2){
+            trl.push_back(TrailMarker(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), lsim));
           }
+          trls.push_back(trl);
         }
         else{
-          for (int j = 3; j < vstrings.size(); j += 9){
-            vector<CartesianPoint> exit_trace;
-            exit_trace.push_back(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())));
-            exit_trace.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
-            exit_trace.push_back(CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())));
-            exit_trace.push_back(CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())));
-            exit_trace.push_back(initial_regions[atoi(vstrings[j+2].c_str())].getCenter());
-            traces.push_back(exit_trace);
+          for (int j = 0; j < vstrings.size(); j += 2){
+            trl.push_back(TrailMarker(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), lsim));
           }
+          trls.push_back(trl);
         }
       }
-      beliefs->getSpatialModel()->getRegionList()->setRegions(initial_regions);
-      beliefs->getAgentState()->setInitialExitTraces(traces);
-      ROS_DEBUG_STREAM("regions " << initial_regions.size());
-      beliefs->getSpatialModel()->getDoors()->learnDoors(initial_regions);
-      updateSkeletonGraph(beliefs->getAgentState());
+      beliefs->getSpatialModel()->getTrails()->setTrails(trls);
+      ROS_DEBUG_STREAM("trails " << trls.size());
+      vector< vector<CartesianPoint> > trails_trace = beliefs->getSpatialModel()->getTrails()->getTrailsPoints();
+      beliefs->getSpatialModel()->getConveyors()->populateGridFromTrailTrace(trails_trace.back());
+      ROS_DEBUG_STREAM("conveyors updated");
     }
-  //   else if (fileLine.find("doors") != std::string::npos) {
-  //     string str = fileline;
-  //     const char delim = ';';
-  //     vector<string> out;
-  //     stringstream ss(str);
-  //     string s;
-  //     while(getline(ss, s, delim)){
-  //       out.push_back(s);
-  //       cout << s << endl;
-  //     }
-  //     std::vector< std::vector<Door> > initial_doors;
-
-
-  //     for(int i = 0; i < out.size(); i++){
-  //       stringstream sst(out[i]);
-  //       istream_iterator<string> begin(sst);
-  //       istream_iterator<string> end;
-  //       vector<string> vstrings(begin, end);
-  //       FORRRegion new_region;
-  //       if(vstrings[0] == "regions"){
-  //         new_region = FORRRegion(CartesianPoint(atof(vstrings[1].c_str()),atof(vstrings[2].c_str())),atof(vstrings[3].c_str()));
-  //         for (int j = 4; j < vstrings.size(); j += 8){
-  //           FORRExit new_exit = FORRExit(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())), CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())), atoi(vstrings[j+2].c_str()), atof(vstrings[j+7].c_str()));
-  //           new_region.addExit(new_exit);
-  //         }
-  //       }
-  //       else{
-  //         new_region = FORRRegion(CartesianPoint(atof(vstrings[0].c_str()),atof(vstrings[1].c_str())),atof(vstrings[2].c_str()));
-  //         for (int j = 3; j < vstrings.size(); j += 8){
-  //           FORRExit new_exit = FORRExit(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())), CartesianPoint(atof(vstrings[j+3].c_str()),atof(vstrings[j+4].c_str())), CartesianPoint(atof(vstrings[j+5].c_str()),atof(vstrings[j+6].c_str())), atoi(vstrings[j+2].c_str()), atof(vstrings[j+7].c_str()));
-  //           new_region.addExit(new_exit);
-  //         }
-  //       }
-  //       initial_regions.push_back(new_region);
-  //     }
-  //     beliefs->getSpatialModel()->getDoors()->setDoors(initial_doors);
-  //     ROS_DEBUG_STREAM("doors " << initial_doors.size());
-  //   }
+    else if (fileLine.find("hallways") != std::string::npos) {
+      string str = fileline;
+      const char delim = ';';
+      vector<string> out;
+      stringstream ss(str);
+      string s;
+      while(getline(ss, s, delim)){
+        out.push_back(s);
+        cout << s << endl;
+      }
+      vector< vector< CartesianPoint> > hlws;
+      vector<int> idvals;
+      for(int i = 0; i < out.size(); i++){
+        stringstream sst(out[i]);
+        istream_iterator<string> begin(sst);
+        istream_iterator<string> end;
+        vector<string> vstrings(begin, end);
+        vector< CartesianPoint> hlw;
+        if(vstrings[0] == "hallways"){
+          for (int j = 2; j < vstrings.size(); j += 2){
+            hlw.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
+          }
+          hlws.push_back(hlw);
+          idvals.push_back(atoi(vstrings[1].c_str()));
+        }
+        else{
+          for (int j = 1; j < vstrings.size(); j += 2){
+            hlw.push_back(CartesianPoint(atof(vstrings[j].c_str()),atof(vstrings[j+1].c_str())));
+          }
+          hlws.push_back(hlw);
+          idvals.push_back(atoi(vstrings[0].c_str()));
+        }
+      }
+      beliefs->getSpatialModel()->getHallways()->setHallways(hlws, idvals);
+      ROS_DEBUG_STREAM("hallways " << hlws.size());
+    }
   }
 }
 

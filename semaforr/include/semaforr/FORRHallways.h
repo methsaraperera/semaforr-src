@@ -122,6 +122,7 @@ class FORRHallways{
 public:
     FORRHallways(double wid, double hgt){
         hallways = vector<Aggregate>();
+        initial_hallways = vector<Aggregate>();
         map_width_ = wid;
         map_height_ = hgt;
         threshold = 0.7;
@@ -136,6 +137,11 @@ public:
         hallway_sections.push_back(vector<Segment>());
     };
     vector<Aggregate> getHallways(){return hallways;}
+    void setHallways(vector< vector<CartesianPoint> > hlws, vector<int> idvals){
+      for(int i = 0; i < hlws.size(); i++){
+        initial_hallways.push_back(Aggregate(hlws[i], idvals[i]));
+      }
+    }
     int getWidth(){return map_width_;}
     int getHeight(){return map_height_;}
     ~FORRHallways(){};
@@ -225,6 +231,13 @@ public:
                 cout << ";";
               }
               cout << endl;*/
+              if(initial_hallways.size() > 0){
+                for(int j = 0; j < initial_hallways.size(); j++){
+                  if(initial_hallways[j].getHallwayType() == i){
+                    initial_hallway_groups.push_back(initial_hallways[j].getPoints());
+                  }
+                }
+              }
               vector<vector<CartesianPoint> > merged_hallway_groups = MergeNearbyHallways(initial_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               // vector<vector<CartesianPoint> > hallway_groups = FillHallways(merged_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               /*cout << "Final Aggregates" << endl;
@@ -271,6 +284,7 @@ public:
 
 private:
     vector<Aggregate> hallways;
+    vector<Aggregate> initial_hallways;
     vector<vector<int> > interpolate;
     AgentState *agent_state;
     vector<CartesianPoint> trails_coordinates;
