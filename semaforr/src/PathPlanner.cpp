@@ -992,7 +992,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       noveltrailcost = (w7 * oldcost * 10);
     }
     else if (strailcount > 0 or dtrailcount > 0){
-      cost = (w7 * oldcost * 1.5);
+      trailcost = (w7 * oldcost * 1.5);
       noveltrailcost = (w7 * oldcost * 7);
     }
     else{
