@@ -1804,6 +1804,7 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
         break;
       }
     }
+    decisionStats->plannerComments = plannerCommentsList.str();
   }
   for (planner2It it = tier2Planners.begin(); it != tier2Planners.end(); it++){
     PathPlanner *planner = *it;
@@ -1814,7 +1815,6 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
   end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
   computationTimeSec = (end_timecv-start_timecv);
   decisionStats->planningComputationTime = computationTimeSec;
-  decisionStats->plannerComments = plannerCommentsList.str();
 }
 
 
