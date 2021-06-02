@@ -41,7 +41,7 @@
 			<Agent p_x="25" p_y="35"/>
 		</Generator>
     	</AgentGroup>
-    
+    <!--
 	<AgentGroup>
         <ProfileSelector type="const" name="group2" />
 		<StateSelector type="const" name="Walk1" />
@@ -251,7 +251,7 @@
 		</Generator>
     	</AgentGroup>
 	
-    <!--
+    
 	<AgentGroup>
         <ProfileSelector type="const" name="group3" />
 		<StateSelector type="const" name="start1" />

@@ -969,7 +969,7 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   // initialize_situations(situation_config);
 
   // Initialize spatial model
-  initialize_spatial_model(spatial_model_config);
+  // initialize_spatial_model(spatial_model_config);
 
   // Initialize highways
   highwayFinished = 0;
@@ -1732,14 +1732,18 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
       planCostsNormalized.push_back(planCostNormalized);
     }
     //planCostsNormalized.pop_back();
+    std::stringstream plannerCommentsList;
     vector<double> totalCosts;
     for (int i = 0; i < plans.size(); i++){
       double cost=0;
       // ROS_DEBUG_STREAM("Computing total cost = " << cost);
+      plannerCommentsList << plannerNames[i] << " ";
       for (costIT it = planCostsNormalized.begin(); it != planCostsNormalized.end(); it++){
         cost += it->at(i);
+        plannerCommentsList << it->at(i) << " ";
         // ROS_DEBUG_STREAM("cost = " << cost);
       }
+      plannerCommentsList << cost << ";";
       ROS_DEBUG_STREAM("Final cost = " << cost);
       totalCosts.push_back(cost);
     }
@@ -1810,6 +1814,7 @@ void Controller::tierTwoDecision(Position current, bool selectNextTask){
   end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
   computationTimeSec = (end_timecv-start_timecv);
   decisionStats->planningComputationTime = computationTimeSec;
+  decisionStats->plannerComments = plannerCommentsList.str();
 }
 
 
