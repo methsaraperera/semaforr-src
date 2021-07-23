@@ -138,7 +138,7 @@ public:
 	publish_skeleton();
 	publish_trails();
 	publish_doors();
-	publish_barriers();
+	// publish_barriers();
 	publish_walls();
 	// //publish_occupancy();
 	publish_highway();
