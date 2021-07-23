@@ -138,7 +138,7 @@ public:
 	publish_skeleton();
 	publish_trails();
 	publish_doors();
-	// // publish_barriers();
+	publish_barriers();
 	publish_walls();
 	// //publish_occupancy();
 	publish_highway();
@@ -920,51 +920,98 @@ public:
     void publish_barriers(){
 	// ROS_DEBUG("Inside publish barriers");
 
-	std::vector<LineSegment> barriers = beliefs->getSpatialModel()->getBarriers()->getBarriers();
+	// std::vector<LineSegment> barriers = beliefs->getSpatialModel()->getBarriers()->getBarriers();
 	// cout << "There are currently " << barriers.size() << " barriers" << endl;
-	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "map";
-	line_list.header.stamp = ros::Time::now();
-	line_list.ns = "basic_shapes";
-	line_list.action = visualization_msgs::Marker::ADD;
-	line_list.id = 1;
-	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.pose.orientation.w = 1.0;
-	line_list.scale.x = 0.1;
-	line_list.color.r = 1.0;
-	line_list.color.a = 1.0;
+	// visualization_msgs::Marker line_list;
+	// line_list.header.frame_id = "map";
+	// line_list.header.stamp = ros::Time::now();
+	// line_list.ns = "basic_shapes";
+	// line_list.action = visualization_msgs::Marker::ADD;
+	// line_list.id = 1;
+	// line_list.type = visualization_msgs::Marker::LINE_LIST;
+	// line_list.pose.orientation.w = 1.0;
+	// line_list.scale.x = 0.1;
+	// line_list.color.r = 1.0;
+	// line_list.color.a = 1.0;
 
-	for(int i = 0 ; i < barriers.size(); i++){
-		geometry_msgs::Point p1, p2;
-		p1.x = barriers[i].get_endpoints().first.get_x();
-		p1.y = barriers[i].get_endpoints().first.get_y();
-		p1.z = 0;
+	// for(int i = 0 ; i < barriers.size(); i++){
+	// 	geometry_msgs::Point p1, p2;
+	// 	p1.x = barriers[i].get_endpoints().first.get_x();
+	// 	p1.y = barriers[i].get_endpoints().first.get_y();
+	// 	p1.z = 0;
 
-		p2.x = barriers[i].get_endpoints().second.get_x();
-		p2.y = barriers[i].get_endpoints().second.get_y();
-		p2.z = 0;
+	// 	p2.x = barriers[i].get_endpoints().second.get_x();
+	// 	p2.y = barriers[i].get_endpoints().second.get_y();
+	// 	p2.z = 0;
 
-		line_list.points.push_back(p1);
-		line_list.points.push_back(p2);
-	}
-	barriers_pub_.publish(line_list);
+	// 	line_list.points.push_back(p1);
+	// 	line_list.points.push_back(p2);
+	// }
+	// barriers_pub_.publish(line_list);
+    visualization_msgs::Marker cube;
+	cube.header.frame_id = "map";
+	cube.header.stamp = ros::Time::now();
+	cube.ns = "basic_shapes";
+	cube.action = visualization_msgs::Marker::ADD;
+	cube.id = 1;
+	cube.type = visualization_msgs::Marker::CUBE;
+	cube.pose.orientation.w = 1.0;
+	cube.scale.x = 40;
+	cube.scale.y = 40;
+	cube.scale.z = 0.1;
+	cube.color.r = 1;
+	cube.color.g = 1;
+	cube.color.b = 1;
+	cube.color.a = 1;
+	cube.pose.position.x = 12;
+	cube.pose.position.y = 12;
+	cube.pose.position.z = -1;
+	barriers_pub_.publish(cube);
   }
 
   void publish_walls(){
 	// ROS_DEBUG("Inside publish walls");
 	vector<Wall> walls = con->getPlanner()->getMap()->getWalls();
 	// cout << "There are currently " << walls.size() << " walls" << endl;
-	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "map";
-    	line_list.header.stamp = ros::Time::now();
-	line_list.ns = "basic_shapes";
-	line_list.action = visualization_msgs::Marker::ADD;
-    	line_list.id = 1;
-	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.pose.orientation.w = 1.0;
-	line_list.scale.x = 0.3;
-	line_list.color.r = 0.5;
-	line_list.color.a = 0.5;
+	// visualization_msgs::Marker line_list;
+	// line_list.header.frame_id = "map";
+ //    	line_list.header.stamp = ros::Time::now();
+	// line_list.ns = "basic_shapes";
+	// line_list.action = visualization_msgs::Marker::ADD;
+ //    	line_list.id = 1;
+	// line_list.type = visualization_msgs::Marker::LINE_LIST;
+	// line_list.pose.orientation.w = 1.0;
+	// line_list.scale.x = 0.3;
+	// line_list.color.r = 0.5;
+	// line_list.color.a = 0.5;
+
+	// for(int i = 0 ; i < walls.size(); i++){
+	// 	geometry_msgs::Point p1, p2;
+	// 	p1.x = walls[i].x1/100.0;
+	// 	p1.y = walls[i].y1/100.0;
+	// 	p1.z = 0;
+	// 	p2.x = walls[i].x2/100.0;
+	// 	p2.y = walls[i].y2/100.0;
+	// 	p2.z = 0;
+
+	// 	line_list.points.push_back(p1);
+	// 	line_list.points.push_back(p2);
+	// }
+	// walls_pub_.publish(line_list);
+
+	visualization_msgs::Marker cube_list;
+	cube_list.header.frame_id = "map";
+	cube_list.header.stamp = ros::Time::now();
+	cube_list.ns = "basic_shapes";
+	cube_list.action = visualization_msgs::Marker::ADD;
+	cube_list.id = 1;
+	cube_list.type = visualization_msgs::Marker::CUBE_LIST;
+	cube_list.pose.orientation.w = 1.0;
+	cube_list.scale.x = 0.1;
+	cube_list.scale.y = 0.1;
+	cube_list.scale.z = 5;
+	cube_list.color.r = 0.5;
+	cube_list.color.a = 1;
 
 	for(int i = 0 ; i < walls.size(); i++){
 		geometry_msgs::Point p1, p2;
@@ -975,10 +1022,97 @@ public:
 		p2.y = walls[i].y2/100.0;
 		p2.z = 0;
 
-		line_list.points.push_back(p1);
-		line_list.points.push_back(p2);
+		cube_list.points.push_back(p1);
+		cube_list.points.push_back(p2);
+		double length = sqrt((p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y));
+		if(length > 0.1){
+			if(length <= 0.4){
+				geometry_msgs::Point p3;
+				p3.x = (p1.x + p2.x)/2;
+				p3.y = (p1.y + p2.y)/2;
+				cube_list.points.push_back(p3);
+			}
+			else{
+				if(p1.x == p2.x){
+					if(p1.y < p2.y){
+						for(double i = p1.y+0.1; i <= p2.y; i += 0.1){
+							geometry_msgs::Point p3;
+							p3.x = p1.x;
+							p3.y = i;
+							cube_list.points.push_back(p3);
+						}
+					}
+					else{
+						for(double i = p2.y+0.1; i <= p1.y; i += 0.1){
+							geometry_msgs::Point p3;
+							p3.x = p2.x;
+							p3.y = i;
+							cube_list.points.push_back(p3);
+						}
+					}
+				}
+				else if(p1.y == p2.y){
+					if(p1.x < p2.x){
+						for(double i = p1.x+0.1; i <= p2.x; i += 0.1){
+							geometry_msgs::Point p3;
+							p3.x = i;
+							p3.y = p1.y;
+							cube_list.points.push_back(p3);
+						}
+					}
+					else{
+						for(double i = p2.x+0.1; i <= p1.x; i += 0.1){
+							geometry_msgs::Point p3;
+							p3.x = i;
+							p3.y = p2.y;
+							cube_list.points.push_back(p3);
+						}
+					}
+				}
+				else{
+					double slope = (p1.y - p2.y) / (p1.x - p2.x);
+					double intercept = p1.y - slope * p1.x;
+					if(abs(p1.x - p2.x) > abs(p1.y - p2.y)){
+						if(p1.x < p2.x){
+							for(double i = p1.x+0.1; i <= p2.x; i += 0.1){
+								geometry_msgs::Point p3;
+								p3.x = i;
+								p3.y = slope * i + intercept;
+								cube_list.points.push_back(p3);
+							}
+						}
+						else{
+							for(double i = p2.x+0.1; i <= p1.x; i += 0.1){
+								geometry_msgs::Point p3;
+								p3.x = i;
+								p3.y = slope * i + intercept;
+								cube_list.points.push_back(p3);
+							}
+						}
+					}
+					else{
+						if(p1.y < p2.y){
+							for(double i = p1.y+0.1; i <= p2.y; i += 0.1){
+								geometry_msgs::Point p3;
+								p3.x = (i - intercept) / slope;
+								p3.y = i;
+								cube_list.points.push_back(p3);
+							}
+						}
+						else{
+							for(double i = p2.y+0.1; i <= p1.y; i += 0.1){
+								geometry_msgs::Point p3;
+								p3.x = (i - intercept) / slope;
+								p3.y = i;
+								cube_list.points.push_back(p3);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	walls_pub_.publish(line_list);
+	walls_pub_.publish(cube_list);
   }
 
   void publish_all_targets(){
