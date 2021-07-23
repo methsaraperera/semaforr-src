@@ -141,10 +141,10 @@ public:
 	// // publish_barriers();
 	publish_walls();
 	// //publish_occupancy();
-	// publish_highway();
-	// publish_highway_plan();
-	// publish_highway_target();
-	// publish_highway_stack();
+	publish_highway();
+	publish_highway_plan();
+	publish_highway_target();
+	publish_highway_stack();
   }
 
 
@@ -1453,7 +1453,7 @@ public:
 
 	std::stringstream output;
 
-	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner << "\t" << graphingComputationTime<< "\t" << passageStream.str() << "\t" << plannerComments;//  << "\t" << lep.str() << "\t" << ls.str() << "\t" << situationStream.str() << "\t" << situationAssignmentStream.str() << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence;
+	output << currentTask << "\t" << decisionCount << "\t" << overallTimeSec << "\t" << computationTimeSec << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << max_forward.parameter << "\t" << decisionTier << "\t" << vetoedActions << "\t" << chosenActionType << "\t" << chosenActionParameter << "\t" << advisors << "\t" << advisorComments << "\t" << planStream.str() << "\t" << origPlanStream.str() << "\t" << regionsstream.str() << "\t" << trailstream.str() << "\t" << doorStream.str() << "\t" << conveyorStream.str() << "\t" << hallwayStream.str() << "\t" << planningComputationTime << "\t" << learningComputationTime << "\t" << chosenPlanner << "\t" << graphingComputationTime<< "\t" << passageStream.str() << "\t" << plannerComments  << "\t" << lep.str() << "\t" << ls.str();// << "\t" << situationStream.str() << "\t" << situationAssignmentStream.str() << "\t" << crowdModel.str() << "\t" << crowdStream.str() << "\t" << allCrowdStream.str() << "\t" << advisorInfluence;
 
 	//output << currentTask << "\t" << decisionCount << "\t" << targetX << "\t" << targetY << "\t" << robotX << "\t" << robotY << "\t" << robotTheta << "\t" << lep.str() << "\t" << ls.str();
 
