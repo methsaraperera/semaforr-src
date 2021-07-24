@@ -104,7 +104,14 @@ public:
   list<int> getOrigPath(){ return origPath; }
 
   vector< list<int> > getPaths(){ return paths; }
-  vector< list<int> > getOrigPaths(){ return origPaths; }
+  vector< list<int> > getOrigPaths(){
+    if(origPaths.size() < 3){
+      origPaths.push_back(list<int>());
+      origPaths.push_back(list<int>());
+      origPaths.push_back(list<int>());
+    }
+    return origPaths;
+  }
 
   void resetPath() { 
     path.clear();
