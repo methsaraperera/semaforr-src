@@ -1203,6 +1203,13 @@ FORRAction Controller::decide() {
       beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
     }
   }
+  //ROS_DEBUG("After decision made");
+  beliefs->getAgentState()->getCurrentTask()->incrementDecisionCount();
+  //ROS_DEBUG("After incrementDecisionCount");
+  beliefs->getAgentState()->getCurrentTask()->saveDecision(*decision);
+  //ROS_DEBUG("After saveDecision");
+  beliefs->getAgentState()->clearVetoedActions();
+  //ROS_DEBUG("After clearVetoedActions");
   return decidedAction;
 }
 
@@ -1473,13 +1480,13 @@ FORRAction Controller::FORRDecision()
   	decisionStats->decisionTier = 3;
   }
   //cout << "decisionTier = " << decisionStats->decisionTier << endl;
-  //ROS_DEBUG("After decision made");
-  beliefs->getAgentState()->getCurrentTask()->incrementDecisionCount();
-  //ROS_DEBUG("After incrementDecisionCount");
-  beliefs->getAgentState()->getCurrentTask()->saveDecision(*decision);
-  //ROS_DEBUG("After saveDecision");
-  beliefs->getAgentState()->clearVetoedActions();
-  //ROS_DEBUG("After clearVetoedActions");
+  // //ROS_DEBUG("After decision made");
+  // beliefs->getAgentState()->getCurrentTask()->incrementDecisionCount();
+  // //ROS_DEBUG("After incrementDecisionCount");
+  // beliefs->getAgentState()->getCurrentTask()->saveDecision(*decision);
+  // //ROS_DEBUG("After saveDecision");
+  // beliefs->getAgentState()->clearVetoedActions();
+  // //ROS_DEBUG("After clearVetoedActions");
   // if(decision->type == FORWARD or decision->type == PAUSE){
   //   beliefs->getAgentState()->setRotateMode(true);
   // }
