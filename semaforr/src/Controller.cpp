@@ -1206,7 +1206,7 @@ FORRAction Controller::decide() {
   //ROS_DEBUG("After decision made");
   beliefs->getAgentState()->getCurrentTask()->incrementDecisionCount();
   //ROS_DEBUG("After incrementDecisionCount");
-  beliefs->getAgentState()->getCurrentTask()->saveDecision(*decision);
+  beliefs->getAgentState()->getCurrentTask()->saveDecision(decidedAction);
   //ROS_DEBUG("After saveDecision");
   beliefs->getAgentState()->clearVetoedActions();
   //ROS_DEBUG("After clearVetoedActions");
