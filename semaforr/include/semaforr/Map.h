@@ -50,6 +50,7 @@ public:
   static double distance(double x1, double y1, double x2, double y2);
   double distanceFromWall(double x, double y, int wallIndex);
   double distanceFromSegment(double x1, double y1, double x2, double y2, double pointX, double pointY);
+  double getDistanceClosestWall(double x, double y);
   
 protected:
   vector<Wall> walls;

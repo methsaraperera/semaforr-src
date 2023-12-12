@@ -153,9 +153,10 @@ namespace Menge {
 	/////////////////////////////////////////////////////////////////////
 
 	void Logger::setFile( const std::string & fileName ) {
-		_file.open( fileName.c_str(), std::ios::out );
+		// _file.open( fileName.c_str(), std::ios::out );
 		_validFile = _file.is_open();
 		if ( _validFile ) {
+			// std::cout << "Valid file, writing a log\n";
 			writeHeader();
 		} else {
 			std::cout << "Error opening file for writing a log\n";
@@ -166,6 +167,7 @@ namespace Menge {
 	/////////////////////////////////////////////////////////////////////
 
 	void Logger::writeHeader() {
+		// std::cout << "Trying to write to log\n";
 		_file << "<html>\n";
 		_file << "<head>\n";
 		_file << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n";

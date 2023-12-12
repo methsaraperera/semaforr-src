@@ -15,9 +15,14 @@ Written by Anoop Aroor, 2014
 class FORRExit{
  public:
   FORRExit(){};
-  FORRExit(CartesianPoint point, int region_id ){
+  FORRExit(CartesianPoint point, CartesianPoint mid_point, CartesianPoint region_point, int region_id, double distance_between, int connection_path, vector<CartesianPoint> connection_points){
     exitPoint = point;
+    middlePoint = mid_point;
+    exitRegionPoint = region_point;
     exitRegion = region_id;
+    exitDistance = distance_between;
+    connectionPath = connection_path;
+    connectionPoints = connection_points;
   }
 
   void print(){
@@ -33,8 +38,23 @@ class FORRExit{
   CartesianPoint getExitPoint(){ return exitPoint;}
   void setExitPoint(CartesianPoint point) { exitPoint = point;}
 
+  CartesianPoint getMidPoint(){ return middlePoint;}
+  void setMidPoint(CartesianPoint point) { middlePoint = point;}
+
+  CartesianPoint getExitRegionPoint(){ return exitRegionPoint;}
+  void setExitRegionPoint(CartesianPoint point){ exitRegionPoint = point;}
+
   void setExitRegion(int region_id) { exitRegion = region_id;}
   int getExitRegion(){ return exitRegion; }
+
+  void setExitDistance(double dist){ exitDistance = dist;}
+  double getExitDistance(){ return exitDistance; }
+
+  void setConnectionPath(int cp){ connectionPath = cp;}
+  int getConnectionPath(){ return connectionPath; }
+
+  void setConnectionPoints(vector<CartesianPoint> cp){ connectionPoints = cp;}
+  vector<CartesianPoint> getConnectionPoints(){ return connectionPoints; }
 
   bool operator < (const FORRExit &exit) const{
     return false;
@@ -42,7 +62,12 @@ class FORRExit{
 
  private:
   CartesianPoint exitPoint;
+  CartesianPoint middlePoint;
+  CartesianPoint exitRegionPoint;
   int exitRegion;
+  double exitDistance;
+  int connectionPath;
+  vector<CartesianPoint> connectionPoints;
 };
 
 

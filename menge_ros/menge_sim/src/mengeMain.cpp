@@ -80,7 +80,7 @@ size_t SUB_STEPS = 0;
 float SIM_DURATION = 800.f;
 
 // Controls whether the simulation is verbose or not
-bool VERBOSE = false;
+bool VERBOSE = true;
 
 // The location of the executable - for basic executable resources
 std::string ROOT;
@@ -121,17 +121,19 @@ int simMain( SimulatorDBEntry * dbEntry, const std::string & behaveFile, const s
 
 	size_t agentCount;
 	if ( outFile != "" ) logger << Logger::INFO_MSG << "Attempting to write scb file: " << outFile << "\n";
+	// ROS_INFO_STREAM(" Before Initializing simulator ");
 	//Initialize simulator	
 	SimSystem * system = dbEntry->getSimulatorSystem( agentCount, TIME_STEP, SUB_STEPS, SIM_DURATION, behaveFile, sceneFile, outFile, scbVersion, visualize, VERBOSE, nh);
-
+	// ROS_INFO_STREAM(" System created ");
 	if ( system == 0x0 ) {
 		return 1;
 	}
 
 	SceneGraph::GLScene * scene = new SceneGraph::GLScene();
 	scene->addSystem( system );
-	
+	// ROS_INFO_STREAM(" Scene created ");
 	if ( visualize ) {
+		// ROS_INFO_STREAM(" Yes visualization ");
 		Vis::ViewConfig viewCfg;
 		if ( VERBOSE ) {
 			logger << Logger::INFO_MSG << "Using visualizer!";
@@ -214,7 +216,7 @@ int main(int argc, char* argv[]) {
 	*/
 	
 	
-	logger.setFile( "log.html" );
+	logger.setFile( "logfile.html" );
 	logger << Logger::INFO_MSG << "initialized logger";
 	//argc = 3;
 
@@ -243,7 +245,7 @@ int main(int argc, char* argv[]) {
 #endif	// _WIN32
 	logger.line();
 	logger << Logger::INFO_MSG << "Plugin path: " << pluginPath;
-	pluginPath = "/home/anooparoor/catkin_ws/devel/lib";
+	pluginPath = "/home/rajkochhar/catkin_ws1/devel/lib";
 	plugins.loadPlugins( pluginPath );
 	if ( simDB.modelCount() == 0 ) {
 		logger << Logger::INFO_MSG << "There were no pedestrian models in the plugins folder\n";

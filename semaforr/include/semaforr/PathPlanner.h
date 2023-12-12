@@ -18,6 +18,11 @@
 #include "FORRExit.h"
 #include "FORRDoors.h"
 #include "Aggregate.h"
+#include <map>
+#include <algorithm>
+#include <queue>
+
+using namespace std;
 
 /*! 
   \brief PathPlanner class in PathPlanner module
@@ -35,9 +40,14 @@ private:
   list<int> path;
   vector< list<int> > paths;
   double pathCost;
-  list<int> origPath; 
+  list<int> origPath;
+  list<int> origPath1;
+  list<int> origPath2;
+  list<int> origPath3;
+  vector< list<int> > origPaths;
   double origPathCost;
   vector <double> pathCosts;
+  vector <double> origPathCosts;
   string name;
   vector< vector<int> > posHistMap;
   vector< vector<double> > posHistMapNorm;
@@ -54,6 +64,14 @@ private:
   vector< vector<Door> > doors;
   vector< vector<CartesianPoint> > trails;
   vector<Aggregate> hallways;
+  vector< vector<int> > passage_grid;
+  std::map<int, vector< vector<int> > > passage_graph_nodes;
+  vector< vector<int> > passage_average_values;
+  vector< vector<int> > passage_graph;
+  vector<Node> otherIntersection;
+  vector<bool> usedOtherIntersection;
+  vector< vector<int> > coverage_grid;
+  bool use_coverage_grid;
 
   //list<int>::iterator head;
   Node waypoint; 
@@ -74,7 +92,9 @@ public:
     \param Node starting point (source)
     \param Node destination point (target)
   */
- PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false){}
+ PathPlanner(Graph * g, Map& m, Node s, Node t, string n): navGraph(g), map(m), source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
+
+ PathPlanner(Graph * g, Node s, Node t, string n): navGraph(g), source(s), target(t), name(n), pathCalculated(false), use_coverage_grid(false){}
 
   int calcPath(bool cautious = false);
   int calcOrigPath(bool cautious = false);
@@ -84,18 +104,38 @@ public:
   list<int> getOrigPath(){ return origPath; }
 
   vector< list<int> > getPaths(){ return paths; }
+  vector< list<int> > getOrigPaths(){
+    if(origPaths.size() < 3){
+      origPaths.push_back(list<int>());
+      origPaths.push_back(list<int>());
+      origPaths.push_back(list<int>());
+    }
+    return origPaths;
+  }
 
   void resetPath() { 
     path.clear();
     paths.clear();
     pathCompleted = true; 
     pathCalculated = false;
+    otherIntersection.clear();
+    usedOtherIntersection.clear();
+    use_coverage_grid = false;
+    // pathCost = 0;
+    // pathCosts.clear();
   }
 
   void resetOrigPath() { 
     origPath.clear();
+    origPath1.clear();
+    origPath2.clear();
+    origPath3.clear();
+    origPaths.clear();
     origPathCompleted = true; 
     origPathCalculated = false;
+    use_coverage_grid = false;
+    // origPathCost = 0;
+    // origPathCosts.clear();
   }
 
   void setCrowdModel(semaforr::CrowdModel c){ 
@@ -109,7 +149,7 @@ public:
   void setPosHistory(vector< vector<CartesianPoint> > all_trace){
     posHistMap.clear();
     posHistMapNorm.clear();
-    if (name == "novel" or name == "combined"){
+    if (name == "explore" or name == "combined"){
       width = navGraph->getMap()->getLength()/100;
       height = navGraph->getMap()->getHeight()/100;
       granularity = 10;
@@ -132,28 +172,28 @@ public:
           posHistMap[(int)((all_trace[i][j].get_x()/(map_width*1.0)) * boxes_width)][(int)((all_trace[i][j].get_y()/(map_height*1.0)) * boxes_height)] += 1;
         }
       }
-      double cmax=-1.0, cmin=1000000.0;
-      for(int i = 0; i < boxes_width; i++){
-        for(int j = 0; j < boxes_height; j++){
-          if(posHistMap[i][j]>cmax){
-            cmax = posHistMap[i][j];
-          }
-          if(posHistMap[i][j]<cmin){
-            cmin = posHistMap[i][j];
-          }
-        }
-      }
+      // double cmax=-1.0, cmin=1000000.0;
+      // for(int i = 0; i < boxes_width; i++){
+      //   for(int j = 0; j < boxes_height; j++){
+      //     if(posHistMap[i][j]>cmax){
+      //       cmax = posHistMap[i][j];
+      //     }
+      //     if(posHistMap[i][j]<cmin){
+      //       cmin = posHistMap[i][j];
+      //     }
+      //   }
+      // }
       //cout << "max = " << cmax << " min = " << cmin << endl;
-      for(int i = 0; i < boxes_width; i++){
-        vector<double> colm;
-        for(int j = 0; j < boxes_height; j++){
-          //cout << "Cell val = " << posHistMap[i][j] << " Normed = " << ((double)posHistMap[i][j]-cmin)/(cmax-cmin) << endl;
-          double normedCellVal = ((double)posHistMap[i][j]-cmin)/(cmax-cmin);
-          //cout << "normedCellVal = " << normedCellVal << endl;
-          colm.push_back(normedCellVal);
-        }
-        posHistMapNorm.push_back(colm);
-      }
+      // for(int i = 0; i < boxes_width; i++){
+      //   vector<double> colm;
+      //   for(int j = 0; j < boxes_height; j++){
+      //     //cout << "Cell val = " << posHistMap[i][j] << " Normed = " << ((double)posHistMap[i][j]-cmin)/(cmax-cmin) << endl;
+      //     double normedCellVal = ((double)posHistMap[i][j]-cmin)/(cmax-cmin);
+      //     //cout << "normedCellVal = " << normedCellVal << endl;
+      //     colm.push_back(normedCellVal);
+      //   }
+      //   posHistMapNorm.push_back(colm);
+      // }
       /*for(int i = 0; i < boxes_width; i++){
         for(int j = 0; j < boxes_height; j++){
           cout << posHistMapNorm[i][j] << " ";
@@ -171,12 +211,14 @@ public:
     for(int i = 0; i < trl.size(); i++){
       vector<CartesianPoint> tempTrail;
       for(int j = 0; j < trl[i].size()-1; j++){
-        double step_size = 0.1;
-        for(double step = 0; step < 1; step += step_size){
-          double tx = (trl[i][j+1].get_x() * step) + (trl[i][j].get_x() * (1-step));
-          double ty = (trl[i][j+1].get_y() * step) + (trl[i][j].get_y() * (1-step));
-          tempTrail.push_back(CartesianPoint(tx,ty));
-        }
+        tempTrail.push_back(trl[i][j]);
+        tempTrail.push_back(CartesianPoint((trl[i][j].get_x()+trl[i][j+1].get_x())/2.0, (trl[i][j].get_y()+trl[i][j+1].get_y())/2.0));
+        // double step_size = 0.1;
+        // for(double step = 0; step < 1; step += step_size){
+        //   double tx = (trl[i][j+1].get_x() * step) + (trl[i][j].get_x() * (1-step));
+        //   double ty = (trl[i][j+1].get_y() * step) + (trl[i][j].get_y() * (1-step));
+        //   tempTrail.push_back(CartesianPoint(tx,ty));
+        // }
       }
       tempTrail.push_back(trl[i][trl[i].size()-1]);
       interpolatedTrails.push_back(tempTrail);
@@ -185,19 +227,47 @@ public:
     hallways = hlwys;
   }
 
+  void setPassageGrid(vector< vector<int> > pg, std::map<int, vector< vector<int> > > pgn, vector< vector<int> > pgr, vector< vector<int> > ap){
+    passage_grid = pg;
+    passage_graph_nodes = pgn;
+    passage_graph = pgr;
+    passage_average_values = ap;
+    otherIntersection.clear();
+    usedOtherIntersection.clear();
+  }
+
+  void setCoverageGrid(vector< vector<int> > cg){
+    coverage_grid = cg;
+    use_coverage_grid = true;
+  }
+
   void updateNavGraph();
   double computeNewEdgeCost(Node s, Node d, bool direction, double oldcost);
 
   Graph* getGraph(){ return navGraph; }
+  void resetGraph(){
+    navGraph->resetGraph();
+    // int length = navGraph->getLength();
+    // int height = navGraph->getHeight();
+    // int proximity = navGraph->getProximity();
+    // navGraph = new Graph(proximity, length, height);
+  }
   Graph* getOrigGraph(){ return originalNavGraph; }
+  void resetOrigGraph(){
+    originalNavGraph->resetGraph();
+  }
 
   Map* getMap() { return &map;}
+
+  vector<FORRRegion> getRegions() { return regions; }
 
   Node getSource(){ return source; }
 
   void setSource(Node s){ source = s; } 
 
-  Node getClosestNode(Node n, Node ref);
+  Node getClosestNode(Node n, Node ref, bool isTarget);
+
+  vector<Node> getClosestNodes(Node n, Node ref, bool findAny);
 
   Node getTarget(){ return target; }
 
@@ -267,6 +337,8 @@ public:
 
   double getPathCost() { return pathCost; }
   double getOrigPathCost() { return origPathCost; }
+  vector <double> getPathCosts() { return pathCosts; }
+  vector <double> getOrigPathCosts() { return origPathCosts; }
 
   double getRemainingPathLength(double x, double y);  
     

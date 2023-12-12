@@ -564,6 +564,13 @@ namespace Menge {
 					//Change it to odom frame for IMU measurements
     					poseStamped.header.frame_id = "map";
 					_pub_pose.publish(poseStamped);
+					geometry_msgs::PointStamped pointStamped;
+					pointStamped.header.frame_id = "map";
+					pointStamped.header.stamp = ros::Time::now();
+					pointStamped.point.x = poseStamped.pose.position.x;
+					pointStamped.point.y = poseStamped.pose.position.y;
+					pointStamped.point.z = 0;
+					_pub_position.publish(pointStamped);
 					//send laser sensor messages
 					sensor_msgs::LaserScan ls;					
 					this->computeRayScan(agt,ls);

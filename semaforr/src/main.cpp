@@ -26,7 +26,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_datatypes.h>
 #include <semaforr/CrowdModel.h>
-
+#include <python2.7/Python.h>
 
 using namespace std;
 
@@ -38,7 +38,7 @@ private:
 	ros::NodeHandle nh_;
 	//! We will be publishing to the "cmd_vel" topic to issue commands
 	ros::Publisher cmd_vel_pub_;
-	//! We will be listening to /pose, /laserscan and /crowd_model and /crowd_pose topics
+	//! We will be listening to /pose, /laserscan and /crowd_model, /crowd_pose topics
 	ros::Subscriber sub_pose_;
 	ros::Subscriber sub_laser_;
 	ros::Subscriber sub_crowd_model_;
@@ -56,6 +56,8 @@ private:
 	Controller *controller;
 	// Pos received
 	bool init_pos_received, init_laser_received;
+	// Add noise to pose
+	bool add_noise;
 	// Visualization 
 	Visualizer *viz_;
 public:
@@ -75,11 +77,12 @@ public:
 		init_pos_received = false;
  		init_laser_received = false;
 		current.setX(0);current.setY(0);current.setTheta(0);
+		add_noise = false;
 		previous.setX(0);previous.setY(0);previous.setTheta(0);
 		viz_ = new Visualizer(&nh_, con);
 	}
 
-	// Callback function for pose message
+	// Callback function for crowd pose message
 	void updateCrowdPose(const geometry_msgs::PoseArray &crowd_pose){
 		//ROS_DEBUG("Inside callback for crowd pose");
 		//update the crowd model of the belief
@@ -87,14 +90,14 @@ public:
 	}
 
 
-	// Callback function for pose message
+	// Callback function for crowd pose all message
 	void updateCrowdPoseAll(const geometry_msgs::PoseArray &crowd_pose_all){
-		//ROS_DEBUG("Inside callback for crowd pose");
+		//ROS_DEBUG("Inside callback for crowd pose all");
 		//update the crowd model of the belief
 		crowdPoseAll = crowd_pose_all;
 	}
 
-	// Callback function for pose message
+	// Callback function for crowd model message
 	void updateCrowdModel(const semaforr::CrowdModel & crowd_model){
 		//ROS_DEBUG("Inside callback for crowd model");
 		//cout << crowd_model.height << " " << crowd_model.width << endl;
@@ -114,6 +117,18 @@ public:
 		double roll, pitch, yaw;
 		m.getRPY(roll, pitch, yaw);
 		Position currentPose(x,y,yaw);
+		if(add_noise){
+			double new_x = currentPose.getX() + ((float(rand()) / float(RAND_MAX)) * (0.5 - -0.5)) + -0.5;
+			double new_y = currentPose.getY() + ((float(rand()) / float(RAND_MAX)) * (0.5 - -0.5)) + -0.5;
+			double new_theta = currentPose.getTheta() + ((float(rand()) / float(RAND_MAX)) * (0.0872665 - -0.0872665)) + -0.0872665;
+			if(new_theta < -M_PI){
+				new_theta = new_theta + 2 * M_PI;
+			}
+			else if(new_theta > M_PI){
+				new_theta = new_theta - 2 * M_PI;
+			}
+			currentPose = Position(new_x, new_y, new_theta);
+		}
 		if(init_pos_received == false){
 			//ROS_DEBUG("First Pose message");
 			init_pos_received = true;
@@ -141,11 +156,12 @@ public:
 	void run(){ 
 		//ROS_DEBUG("main::run()");  	
 		//Declares the message to be sent
+		Py_Initialize();
 		geometry_msgs::Twist base_cmd;
 
 		ros::Rate rate(30.0);
-		double epsilon_move = 0.2; //Meters
-		double epsilon_turn = 0.1; //Radians
+		double epsilon_move = 0.06; //Meters
+		double epsilon_turn = 0.11; //Radians
 		bool action_complete = true;
 		bool mission_complete = false;
 		FORRAction semaforr_action;
@@ -160,7 +176,7 @@ public:
 		while(nh_.ok()) {
 			// If pos value is not received from menge wait
 			while(init_pos_received == false or init_laser_received == false){
-				//ROS_DEBUG("Waiting for first message or laser");
+				ROS_DEBUG("Waiting for first message or laser");
 				//wait for some time
 				rate.sleep();
 				// Sense input 
@@ -178,13 +194,15 @@ public:
 				}
 				else{
 					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+					controller->gethighwayExploration()->setHighwaysComplete(overallTimeSec);
+					controller->getfrontierExploration()->setFrontiersComplete(overallTimeSec);
 				}
 				gettimeofday(&cv,NULL);
 				start_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 				controller->updateState(current, laserscan, crowdPose, crowdPoseAll);
-				//ROS_DEBUG("Finished UpdateState");
+				// ROS_DEBUG("Finished UpdateState");
 				viz_->publish();
-				//ROS_DEBUG("Finished Publish");
+				// ROS_DEBUG("Finished Publish");
 				previous = current;
 				ROS_DEBUG("Check if mission is complete");
 				mission_complete = controller->isMissionComplete();
@@ -194,6 +212,8 @@ public:
 					end_timecv = cv.tv_sec + (cv.tv_usec/1000000.0);
 					computationTimeSec = (end_timecv-start_timecv);
 					viz_->publishLog(semaforr_action, overallTimeSec, computationTimeSec);
+					controller->gethighwayExploration()->setHighwaysComplete(overallTimeSec);
+					controller->getfrontierExploration()->setFrontiersComplete(overallTimeSec);
 					break;
 				}
 				else{
@@ -225,6 +245,7 @@ public:
 			action_complete = testActionCompletion(semaforr_action, current, previous, epsilon_move, epsilon_turn, actionTimeSec);
 			//action_complete = true;
 		}
+		Py_Finalize();
 	}
 
 
@@ -233,16 +254,17 @@ public:
 	bool testActionCompletion(FORRAction action, Position current, Position previous, double epsilon_move, double epsilon_rotate, double elapsed_time)
 	{
 		//ROS_DEBUG("Testing if action has been completed by the robot");
-		//ROS_DEBUG_STREAM("Current position " << current.getX() << " " << current.getY() << " " << current.getTheta()); 
-		//ROS_DEBUG_STREAM("Previous position " << previous.getX() << " " << previous.getY() << " " << previous.getTheta());
+		// ROS_DEBUG_STREAM("Current position " << current.getX() << " " << current.getY() << " " << current.getTheta()); 
+		// ROS_DEBUG_STREAM("Previous position " << previous.getX() << " " << previous.getY() << " " << previous.getTheta());
 		bool actionComplete = false;
 		//ROS_DEBUG_STREAM("Position expected " << expected.getX() << " " << expected.getY() << " " << expected.getTheta());
 		if (action.type == FORWARD){
 			double distance_travelled = previous.getDistance(current);
 			double expected_travel = controller->getBeliefs()->getAgentState()->getMovement(action.parameter);
 			//if((abs(distance_travelled - expected_travel) < epsilon_move)){
-			if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel*0.6692+0.0111) or (abs(distance_travelled - expected_travel) < epsilon_move)){
-				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(distance_travelled - expected_travel));
+			// if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel*0.6692+0.0111) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
+			if ((elapsed_time >= 0.01 and action.parameter == 0) or (elapsed_time >= expected_travel) or (fabs(distance_travelled - expected_travel) < epsilon_move)){
+				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(distance_travelled - expected_travel));
 				actionComplete = true;
 			}
 			else{
@@ -258,12 +280,13 @@ public:
 			if(turn_completed < -M_PI)
 				turn_completed = turn_completed + (2*M_PI);
 
-			double turn_expected = controller->getBeliefs()->getAgentState()->getRotation(action.parameter);
+			double turn_expected = fabs(controller->getBeliefs()->getAgentState()->getRotation(action.parameter));
 			//if(action.type == RIGHT_TURN) 
 			//	turn_expected = (-1)*turn_expected;
 			//if((abs(turn_completed - turn_expected) < epsilon_rotate)){
-			if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)-0.078) or (abs(turn_completed - turn_expected) < epsilon_rotate)){
-				//ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << abs(turn_completed - turn_expected));
+			// if((elapsed_time >= (-0.0385*pow(turn_expected,2))+(0.7916*turn_expected)) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate)){
+			if((elapsed_time >= turn_expected/0.5) or (fabs(fabs(turn_completed) - turn_expected) < epsilon_rotate) and fabs(turn_completed) > 0){
+				// ROS_INFO_STREAM("elapsed_time : " << elapsed_time << " " << fabs(fabs(turn_completed) - turn_expected));
 				actionComplete = true;
 			}
 			else {
@@ -330,11 +353,15 @@ int main(int argc, char **argv) {
 		string map_dimensions(argv[4]);
 		string advisors(argv[5]);
 		string params(argv[6]);
+		string situations(argv[7]);
+		string spatials(argv[8]);
 
 		string advisor_config = path + advisors;
 		string params_config = path + params;
+		string situation_config = path + situations;
+		string spatial_model_config = path + spatials;
 
-		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions); 
+		Controller *controller = new Controller(advisor_config, params_config, map_config, target_set, map_dimensions, situation_config, spatial_model_config); 
 
 		ROS_INFO("Controller Initialized");
 		RobotDriver driver(nh, controller);

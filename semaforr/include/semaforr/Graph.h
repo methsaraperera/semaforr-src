@@ -8,6 +8,8 @@
 #include "Map.h"
 #include <assert.h>
 #include <fstream>
+#include <set>
+#include "FORRGeometry.h"
 
 class Graph {
 private:
@@ -16,23 +18,38 @@ private:
   vector< vector <int> > nodeIndex; 
 
   double proximity;           // proximity between 2 nodes ( in cm, 1m = 100cm ) 
+  int length;
+  int height;
 
   Map * map ; 
 
-  void generateNavGraph();    
+  void generateNavGraph();
 
   bool isEdge(Edge e); 
+
+  int maxInd;
  
 public: 
-  Graph(Map*, int);
+  Graph(Map * m, int p);
+
+  Graph(int p, int l, int h);
 
   ~Graph();
 
   Map* getMap() { return map; }
 
   int getProximity() const { return proximity; }
+  int getLength() const { return length; }
+  int getHeight() const { return height; }
+  int getMaxInd() const { return maxInd; }
 
   vector<Node*> getNodes() const { return nodes; }
+
+  void resetGraph();
+
+  bool addNode(int x, int y, double r, int ind);
+
+  void addEdge(int ind1, int ind2, double distance, vector<CartesianPoint> path);
 
   vector<Edge*> getEdges() const { return edges; }
 
@@ -54,7 +71,11 @@ public:
   vector<int> getNeighbors(Node n); 
 
   //! populates the graph with nodes and assigns their immediate neighbors
-  void populateNodeNeighbors(); 
+  void populateNodeNeighbors(bool withmap); 
+
+  void populateEdges();
+
+  bool isConnected();
 
   bool isNode(Node n); 
 

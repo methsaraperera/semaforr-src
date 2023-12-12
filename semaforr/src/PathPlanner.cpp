@@ -35,8 +35,14 @@ int PathPlanner::calcPath(bool cautious){
       target.printNode();
       cout << endl;
     }
+    if(name == "skeleton" or name == "hallwayskel"){
+      if(!navGraph->isConnected()){
+        return 5;
+      }
+    }
 
     Node s, t;
+    Node rs, rt, ts, tt;
     if ( navGraph->isNode(source) ) {
       if(PATH_DEBUG)
         cout << signature << "Source is a valid Node in the navigation graph" << endl;
@@ -45,7 +51,18 @@ int PathPlanner::calcPath(bool cautious){
     else {
       if(PATH_DEBUG)
         cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl;
-      s = getClosestNode(source, target);
+      if(name == "skeleton"){
+        s = getClosestNode(source, target, false);
+      }
+      else if(name == "hallwayskel"){
+        vector<Node> start_nodes = getClosestNodes(source, target, true);
+        s = start_nodes[0];
+        rs = start_nodes[1];
+        rt = start_nodes[2];
+      }
+      else{
+        s = getClosestNode(source, target, false);
+      }
     }
     //cout << signature << "Checking if source node is invalid" << endl;
     if ( s.getID() == Node::invalid_node_index )
@@ -59,7 +76,18 @@ int PathPlanner::calcPath(bool cautious){
     else {
       if(PATH_DEBUG)
         cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl;
-      t = getClosestNode(target, source);
+      if(name == "skeleton"){
+        t = getClosestNode(target, source, true);
+      }
+      else if(name == "hallwayskel"){
+        vector<Node> end_nodes = getClosestNodes(target, source, true);
+        t = end_nodes[0];
+        ts = end_nodes[2];
+        tt = end_nodes[1];
+      }
+      else{
+        t = getClosestNode(target, source, false);
+      }
     }
     //cout << signature << "Checking if target node is invalid" << endl;
     if ( t.getID() == Node::invalid_node_index )
@@ -74,26 +102,167 @@ int PathPlanner::calcPath(bool cautious){
       t.printNode();
       cout << endl;
     }
+    if(s.getID() == t.getID() and name != "hallwayskel")
+      return 4;
     //cout << signature << "Updating nav graph" << endl;
     // update the nav graph with the latest crowd model to change the edge weights
-    if (name != "distance") {
+    if (name != "distance" and name != "skeleton" and name != "hallwayskel") {
       cout << "Updating nav graph for non-distance planners" << endl;
       updateNavGraph();
+      cout << "Finished nav graph update" << endl;
     }
     astar newsearch(*navGraph, s, t, name);
+    cout << "Finished search" << endl;
+    // cout << "finished search" << endl;
     if ( newsearch.isPathFound() ) {
       path = newsearch.getPathToTarget();
+      // cout << "got path" << endl;
       paths = newsearch.getPathsToTarget();
+      // cout << "got paths" << endl;
       objectiveSet = false;
       pathCompleted = false;
 
+      // for(int i = 0; i < otherIntersection.size(); i++){
+      //   if(usedOtherIntersection[i] == true){
+      //     bool otherfound = false;
+      //     list<int>::iterator iter;
+      //     for ( iter = path.begin(); iter != path.end(); iter++ ){
+      //       if((*iter) == otherIntersection[i].getID()){
+      //         otherfound = true;
+      //         break;
+      //       }
+      //     }
+      //     if(otherfound == false){
+      //       if(i == 0){
+      //         path.insert(path.begin(), otherIntersection[i].getID());
+      //       }
+      //       else if(i == 1){
+      //         path.push_back(otherIntersection[i].getID());
+      //       }
+      //     }
+      //     paths.clear();
+      //     paths.push_back(path);
+      //   }
+      // }
+
       if(!cautious)
         smoothPath(path, s, t);
-
+      pathCost = 0;
+      pathCosts.clear();
       pathCost = calcPathCost(path);
+      // cout << "calculated path cost" << endl;
       pathCalculated = true;
       for (int i=0; i<paths.size(); i++){
         pathCosts.push_back(calcPathCost(paths[i]));
+      }
+      if(name == "hallwayskel"){
+        origPathCost = 0;
+        origPathCosts.clear();
+        if(rs.getID() != Node::invalid_node_index and rt.getID() != Node::invalid_node_index){
+          if(PATH_DEBUG) {
+            cout << signature << "rs:";
+            rs.printNode();
+            cout << endl;
+            cout << signature << "rt:";
+            rt.printNode();
+            cout << endl;
+          }
+          astar rnewsearch(*originalNavGraph, rs, rt, name);
+          if ( rnewsearch.isPathFound()) {
+            origPath1 = rnewsearch.getPathToTarget();
+            origPaths.push_back(origPath1);
+            // cout << "prologue path found " << origPath1.size() << " " << origPaths.size() << endl;
+            origObjectiveSet = false;
+            origPathCompleted = false;
+
+            if(!cautious)
+              smoothPath(origPath1, rs, rt);
+
+            origPathCost += calcOrigPathCost(origPath1);
+            origPathCalculated = true;
+            origPathCosts.push_back(calcOrigPathCost(origPath1));
+          }
+          else{
+            origPaths.push_back(list<int>());
+            origPathCost += 0;
+            origPathCosts.push_back(0);
+          }
+        }
+        else{
+          origPaths.push_back(list<int>());
+          origPathCost += 0;
+          origPathCosts.push_back(0);
+        }
+        if(ts.getID() != Node::invalid_node_index and tt.getID() != Node::invalid_node_index){
+          if(PATH_DEBUG) {
+            cout << signature << "ts:";
+            ts.printNode();
+            cout << endl;
+            cout << signature << "tt:";
+            tt.printNode();
+            cout << endl;
+          }
+          astar tnewsearch(*originalNavGraph, ts, tt, name);
+          if ( tnewsearch.isPathFound()) {
+            origPath2 = tnewsearch.getPathToTarget();
+            origPaths.push_back(origPath2);
+            // cout << "epilogue path found " << origPath2.size() << " " << origPaths.size() << endl;
+            origObjectiveSet = false;
+            origPathCompleted = false;
+
+            if(!cautious)
+              smoothPath(origPath2, ts, tt);
+
+            origPathCost += calcOrigPathCost(origPath2);
+            origPathCalculated = true;
+            origPathCosts.push_back(calcOrigPathCost(origPath2));
+          }
+          else{
+            origPaths.push_back(list<int>());
+            origPathCost += 0;
+            origPathCosts.push_back(0);
+          }
+        }
+        else{
+          origPaths.push_back(list<int>());
+          origPathCost += 0;
+          origPathCosts.push_back(0);
+        }
+        if(rs.getID() != Node::invalid_node_index and tt.getID() != Node::invalid_node_index){
+          if(PATH_DEBUG) {
+            cout << signature << "rs:";
+            rs.printNode();
+            cout << endl;
+            cout << signature << "tt:";
+            tt.printNode();
+            cout << endl;
+          }
+          astar rtnewsearch(*originalNavGraph, rs, tt, name);
+          if ( rtnewsearch.isPathFound()) {
+            origPath3 = rtnewsearch.getPathToTarget();
+            origPaths.push_back(origPath3);
+            // cout << "epilogue path found " << origPath3.size() << " " << origPaths.size() << endl;
+
+            if(!cautious)
+              smoothPath(origPath3, rs, tt);
+
+            origPathCosts.push_back(calcOrigPathCost(origPath3));
+          }
+          else{
+            origPaths.push_back(list<int>());
+            origPathCost += 0;
+            origPathCosts.push_back(0);
+          }
+        }
+        else{
+          origPaths.push_back(list<int>());
+          origPathCost += 0;
+          origPathCosts.push_back(0);
+        }
+        cout << "Plan " << name << " cost = " << pathCost << " origPathCost " << origPathCost << endl;
+      }
+      else{
+        cout << "Plan " << name << " cost = " << pathCost << endl;
       }
     }
     else {
@@ -126,7 +295,7 @@ int PathPlanner::calcOrigPath(bool cautious){
     else {
       if(PATH_DEBUG)
         cout << signature << "Source is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
-      s = getClosestNode(source, target);
+      s = getClosestNode(source, target, false);
     }
     //cout << signature << "Checking if source node is invalid" << endl;
     if ( s.getID() == Node::invalid_node_index )
@@ -140,7 +309,7 @@ int PathPlanner::calcOrigPath(bool cautious){
     else {
       if(PATH_DEBUG)
         cout << signature << "Target is not a valid Node in the navigation graph. Getting closest valid node." << endl; 
-      t = getClosestNode(target, source);
+      t = getClosestNode(target, source, false);
     }
     //cout << signature << "Checking if target node is invalid" << endl;
     if ( t.getID() == Node::invalid_node_index )
@@ -176,7 +345,7 @@ int PathPlanner::calcOrigPath(bool cautious){
 }
 
 void PathPlanner::updateNavGraph(){
-	cout << "Updating nav graph before with the current crowd model" << endl;
+	cout << "Updating nav graph before" << endl;
 	if(crowdModel.densities.size() == 0 and (name == "density" or name == "risk" or name == "flow")){
 		cout << "crowdModel not recieved" << endl;
 	}
@@ -211,13 +380,21 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   int w6 = 1;
   int w7 = 1;
   int w8 = 1;
-  if (name == "smooth"){
+  if (name == "safe"){
     //cout << "Updating smooth nav graph" << endl;
     //double smooth_cost = (oldcost * 5);
-    double smooth_cost = 1;
-    return (w6 * smooth_cost);
+    // double smooth_cost = 1;
+    // return (w6 * smooth_cost);
+    double s_cost = s.getDistWall();
+    double d_cost = d.getDistWall();
+    if(s_cost > 0 or d_cost > 0){
+      return (w1 * oldcost + (w6 * 10/((s_cost + d_cost)/2)));
+    }
+    else{
+      return (w1 * oldcost) * 10;
+    }
   }
-  if (name == "novel"){
+  if (name == "explore"){
     double ns_cost = novelCost(s.getX(), s.getY());
     double nd_cost = novelCost(d.getX(), d.getY());
     /*if (ns_cost > 0 or nd_cost > 0) {
@@ -225,11 +402,178 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     }*/
     //return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
     if (ns_cost > 0 or nd_cost > 0){
-      return (w1 * oldcost) + (w5 * (ns_cost+nd_cost)/2);
+      return (w1 * oldcost) + (w1 * (ns_cost+nd_cost)/2);
     }
     else{
       return (w1 * oldcost);
     }
+  }
+  if (name == "novel"){
+    int sRegion=-1,dRegion=-1;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
+        sRegion = i;
+      }
+      if(regions[i].inRegion(d.getX()/100.0, d.getY()/100.0)){
+        dRegion = i;
+      }
+      if(sRegion >= 0 and dRegion >= 0){
+        break;
+      }
+    }
+
+    double s_door_min_distance = std::numeric_limits<double>::infinity();
+    double s_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(sRegion >= 0){
+      CartesianPoint sPoint = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+      for(int i = 0; i < doors[sRegion].size(); i++) {
+        double doorDistance = doors[sRegion][i].distanceToDoor(sPoint, regions[sRegion]);
+        if (doorDistance < s_door_min_distance){
+          s_door_min_distance = doorDistance;
+        }
+        if(s_door_min_distance <= 0.5){
+          break;
+        }
+      }
+      vector<FORRExit> exits = regions[sRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = sPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < s_exit_min_distance){
+          s_exit_min_distance = exitDistance;
+        }
+        if(s_exit_min_distance <= 0.5){
+          break;
+        }
+      }
+    }
+
+    double d_door_min_distance = std::numeric_limits<double>::infinity();
+    double d_exit_min_distance = std::numeric_limits<double>::infinity();
+    if(dRegion >= 0){
+      CartesianPoint dPoint = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
+      for(int i = 0; i < doors[dRegion].size(); i++) {
+        double doorDistance = doors[dRegion][i].distanceToDoor(dPoint, regions[dRegion]);
+        if (doorDistance < d_door_min_distance){
+          d_door_min_distance = doorDistance;
+        }
+        if(d_door_min_distance <= 0.5){
+          break;
+        }
+      }
+      vector<FORRExit> exits = regions[dRegion].getExits();
+      for(int i = 0 ; i < exits.size(); i++){
+        double exitDistance = dPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
+        if (exitDistance < d_exit_min_distance){
+          d_exit_min_distance = exitDistance;
+        }
+        if(d_exit_min_distance <= 0.5){
+          break;
+        }
+      }
+    }
+    double regioncost;
+    if (sRegion >= 0 and dRegion >= 0){
+      regioncost = (w1 * oldcost) * 10;
+    }
+    else if (sRegion >= 0 and dRegion == -1){
+      if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 7;
+      }
+      else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 5;
+      }
+      else{
+        regioncost = (w1 * oldcost) * 3;
+      }
+    }
+    else if (sRegion ==-1 and dRegion >= 0){
+      if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 7;
+      }
+      else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 5;
+      }
+      else{
+        regioncost = (w1 * oldcost) * 3;
+      }
+    }
+    else{
+      regioncost = (w1 * oldcost) * 1;
+    }
+    CartesianPoint snode = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+    CartesianPoint dnode = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
+    double sHallway=0, dHallway=0;
+    for(int i = 0; i < hallways.size(); i++){
+      if(hallways[i].pointInAggregate(snode)){
+        sHallway++;
+      }
+      if(hallways[i].pointInAggregate(dnode)){
+        dHallway++;
+      }
+      if(sHallway > 0 and dHallway > 0){
+        break;
+      }
+    }
+    double hallwaycost;
+    if (sHallway > 0 and dHallway > 0){
+      hallwaycost = (w1 * oldcost) * 10;
+    }
+    else if (sHallway > 0 or dHallway > 0){
+      hallwaycost = (w1 * oldcost) * 7;
+    }
+    else{
+      hallwaycost = (w1 * oldcost) * 1;
+    }
+    double sconveycost = computeConveyorCost(s.getX(), s.getY());
+    double dconveycost = computeConveyorCost(d.getX(), d.getY());
+    double conveycost;
+    if (sconveycost > 0 and dconveycost > 0){
+      conveycost = (w7 * oldcost * ((sconveycost + dconveycost)/2));
+    }
+    else{
+      conveycost = (w7 * oldcost * 1);
+    }
+    double strailcount = 0;
+    double dtrailcount = 0;
+    //cout << "trails.size() = " << trails.size() << endl;
+    for(int i = 0; i < trails.size(); i++){
+      //cout << "trails[i].size() = " << trails[i].size() << endl;
+      for(int j = 0; j < trails[i].size(); j++){
+        if(trails[i][j].get_distance(snode) <= 0.5){
+          strailcount++;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
+        }
+        if(trails[i][j].get_distance(dnode) <= 0.5){
+          dtrailcount++;
+          //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
+          //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
+        }
+      }
+      if(strailcount > 0 and dtrailcount > 0){
+        break;
+      }
+    }
+    double trailcost;
+    if (strailcount > 0 and dtrailcount > 0){
+      trailcost = (w7 * oldcost * 10);
+    }
+    else if (strailcount > 0 or dtrailcount > 0){
+      trailcost = (w7 * oldcost * 7);
+    }
+    else{
+      trailcost = (w7 * oldcost * 1);
+    }
+    double finalcost = (w1 * oldcost) * 1;
+    if(regioncost > finalcost)
+      finalcost = regioncost;
+    if(hallwaycost > finalcost)
+      finalcost = hallwaycost;
+    if(conveycost > finalcost)
+      finalcost = conveycost;
+    if(trailcost > finalcost)
+      finalcost = trailcost;
+    return finalcost;
   }
   if (name == "density"){
     //cout << "Updating density nav graph" << endl;
@@ -295,12 +639,18 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         if (doorDistance < s_door_min_distance){
           s_door_min_distance = doorDistance;
         }
+        if(s_door_min_distance <= 0.5){
+          break;
+        }
       }
       vector<FORRExit> exits = regions[sRegion].getExits();
       for(int i = 0 ; i < exits.size(); i++){
         double exitDistance = sPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
         if (exitDistance < s_exit_min_distance){
           s_exit_min_distance = exitDistance;
+        }
+        if(s_exit_min_distance <= 0.5){
+          break;
         }
       }
     }
@@ -314,6 +664,9 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         if (doorDistance < d_door_min_distance){
           d_door_min_distance = doorDistance;
         }
+        if(d_door_min_distance <= 0.5){
+          break;
+        }
       }
       vector<FORRExit> exits = regions[dRegion].getExits();
       for(int i = 0 ; i < exits.size(); i++){
@@ -321,32 +674,35 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         if (exitDistance < d_exit_min_distance){
           d_exit_min_distance = exitDistance;
         }
+        if(d_exit_min_distance <= 0.5){
+          break;
+        }
       }
     }
 
     if (sRegion >= 0 and dRegion >= 0){
-      return (w1 * oldcost) * 0.25;
+      return (w1 * oldcost) * 1;
     }
     else if (sRegion >= 0 and dRegion == -1){
       if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.5;
+        return (w1 * oldcost) * 1.5;
       }
       else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.75;
+        return (w1 * oldcost) * 1.75;
       }
       else{
-        return (w1 * oldcost) * 1;
+        return (w1 * oldcost) * 2;
       }
     }
     else if (sRegion ==-1 and dRegion >= 0){
       if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.5;
+        return (w1 * oldcost) * 1.5;
       }
       else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
-        return (w1 * oldcost) * 0.75;
+        return (w1 * oldcost) * 1.75;
       }
       else{
-        return (w1 * oldcost) * 1;
+        return (w1 * oldcost) * 2;
       }
     }
     else{
@@ -355,16 +711,24 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
   }
   if (name == "hallwayer"){
     double sHallway=0, dHallway=0;
+    CartesianPoint snode = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+    CartesianPoint dnode = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
     for(int i = 0; i < hallways.size(); i++){
-      if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
+      if(hallways[i].pointInAggregate(snode)){
         sHallway++;
       }
-      if(hallways[i].pointInAggregate(CartesianPoint(d.getX()/100.0, d.getY()/100.0))){
+      if(hallways[i].pointInAggregate(dnode)){
         dHallway++;
+      }
+      if(sHallway > 0 and dHallway > 0){
+        break;
       }
     }
     if (sHallway > 0 and dHallway > 0){
-      return (w1 * oldcost) * 1/((sHallway+dHallway)/2);
+      return (w1 * oldcost);
+    }
+    else if (sHallway > 0 or dHallway > 0){
+      return (w1 * oldcost * 1.5);
     }
     else{
       return (w1 * oldcost) * 10;
@@ -375,7 +739,7 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
     //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
     if (sconveycost > 0 and dconveycost > 0){
-      return (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
+      return (w7 * oldcost + 1/((sconveycost + dconveycost)/2));
     }
     else{
       return (w7 * oldcost * 10);
@@ -386,25 +750,33 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
     double strailcount = 0;
     double dtrailcount = 0;
     //cout << "trails.size() = " << trails.size() << endl;
+    CartesianPoint snode = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+    CartesianPoint dnode = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
     for(int i = 0; i < trails.size(); i++){
       //cout << "trails[i].size() = " << trails[i].size() << endl;
       for(int j = 0; j < trails[i].size(); j++){
-        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) <= 0.5){
+        if(trails[i][j].get_distance(snode) <= 0.5){
           strailcount++;
           //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
           //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
         }
-        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) <= 0.5){
+        if(trails[i][j].get_distance(dnode) <= 0.5){
           dtrailcount++;
           //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
           //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
         }
       }
+      if(strailcount > 0 and dtrailcount > 0){
+        break;
+      }
     }
     //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
     //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
     if (strailcount > 0 and dtrailcount > 0){
-      return (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
+      return (w7 * oldcost);
+    }
+    else if (strailcount > 0 or dtrailcount > 0){
+      return (w7 * oldcost * 1.5);
     }
     else{
       return (w7 * oldcost * 10);
@@ -428,6 +800,30 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
       flowcost = 0;
     }
     return (w1 * oldcost) + (w2 * (s_cost+d_cost)/2) + (w3 * flowcost) + (w4 * (s_risk_cost+d_risk_cost)/2) + (w5 * (ns_cost+nd_cost)/2) + (w6 * smooth_cost) + (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));*/
+    double distcost = oldcost;
+
+    double novelcost = (w1 * oldcost) * 1;
+
+    double explorecost;
+    double exs_cost = novelCost(s.getX(), s.getY());
+    double exd_cost = novelCost(d.getX(), d.getY());
+    if (exs_cost > 0 or exd_cost > 0){
+      explorecost = (w1 * oldcost) + (w1 * (exs_cost+exd_cost)/2);
+    }
+    else{
+      explorecost = (w1 * oldcost);
+    }
+
+    double safecost;
+    double safes_cost = s.getDistWall();
+    double safed_cost = d.getDistWall();
+    if(safes_cost > 0 or safed_cost > 0){
+      safecost = (w1 * oldcost + (w6 * 10/((safes_cost + safed_cost)/2)));
+    }
+    else{
+      safecost = (w1 * oldcost) * 10;
+    }
+
     int sRegion=-1,dRegion=-1;
     for(int i = 0; i < regions.size() ; i++){
       if(regions[i].inRegion(s.getX()/100.0, s.getY()/100.0)){
@@ -450,12 +846,18 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         if (doorDistance < s_door_min_distance){
           s_door_min_distance = doorDistance;
         }
+        if(s_door_min_distance <= 0.5){
+          break;
+        }
       }
       vector<FORRExit> exits = regions[sRegion].getExits();
       for(int i = 0 ; i < exits.size(); i++){
         double exitDistance = sPoint.get_distance(CartesianPoint(exits[i].getExitPoint().get_x(), exits[i].getExitPoint().get_y()));
         if (exitDistance < s_exit_min_distance){
           s_exit_min_distance = exitDistance;
+        }
+        if(s_exit_min_distance <= 0.5){
+          break;
         }
       }
     }
@@ -469,6 +871,9 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         if (doorDistance < d_door_min_distance){
           d_door_min_distance = doorDistance;
         }
+        if(d_door_min_distance <= 0.5){
+          break;
+        }
       }
       vector<FORRExit> exits = regions[dRegion].getExits();
       for(int i = 0 ; i < exits.size(); i++){
@@ -476,91 +881,144 @@ double PathPlanner::computeNewEdgeCost(Node s, Node d, bool direction, double ol
         if (exitDistance < d_exit_min_distance){
           d_exit_min_distance = exitDistance;
         }
+        if(d_exit_min_distance <= 0.5){
+          break;
+        }
       }
     }
+    double regioncost;
+    double novelregioncost;
+    if (sRegion >= 0 and dRegion >= 0){
+      regioncost = (w1 * oldcost) * 1;
+      novelregioncost = (w1 * oldcost) * 10;
+    }
+    else if (sRegion >= 0 and dRegion == -1){
+      if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 1.5;
+        novelregioncost = (w1 * oldcost) * 7;
+      }
+      else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 1.75;
+        novelregioncost = (w1 * oldcost) * 5;
+      }
+      else{
+        regioncost = (w1 * oldcost) * 2;
+        novelregioncost = (w1 * oldcost) * 3;
+      }
+    }
+    else if (sRegion ==-1 and dRegion >= 0){
+      if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 1.5;
+        novelregioncost = (w1 * oldcost) * 7;
+      }
+      else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
+        regioncost = (w1 * oldcost) * 1.75;
+        novelregioncost = (w1 * oldcost) * 5;
+      }
+      else{
+        regioncost = (w1 * oldcost) * 2;
+        novelregioncost = (w1 * oldcost) * 3;
+      }
+    }
+    else{
+      regioncost = (w1 * oldcost) * 10;
+      novelregioncost = (w1 * oldcost) * 1;
+    }
+    CartesianPoint snode = CartesianPoint(s.getX()/100.0, s.getY()/100.0);
+    CartesianPoint dnode = CartesianPoint(d.getX()/100.0, d.getY()/100.0);
     double sHallway=0, dHallway=0;
     for(int i = 0; i < hallways.size(); i++){
-      if(hallways[i].pointInAggregate(CartesianPoint(s.getX()/100.0, s.getY()/100.0))){
+      if(hallways[i].pointInAggregate(snode)){
         sHallway++;
       }
-      if(hallways[i].pointInAggregate(CartesianPoint(d.getX()/100.0, d.getY()/100.0))){
+      if(hallways[i].pointInAggregate(dnode)){
         dHallway++;
       }
+      if(sHallway > 0 and dHallway > 0){
+        break;
+      }
+    }
+    double hallwaycost;
+    double novelhallwaycost;
+    if (sHallway > 0 and dHallway > 0){
+      hallwaycost = (w1 * oldcost);
+      novelhallwaycost = (w1 * oldcost) * 10;
+    }
+    else if(sHallway > 0 or dHallway > 0){
+      hallwaycost = (w1 * oldcost * 1.5);
+      novelhallwaycost = (w1 * oldcost) * 7;
+    }
+    else{
+      hallwaycost = (w1 * oldcost) * 10;
+      novelhallwaycost = (w1 * oldcost);
     }
     double sconveycost = computeConveyorCost(s.getX(), s.getY());
     double dconveycost = computeConveyorCost(d.getX(), d.getY());
-    //return (w7 * oldcost*pow(0.25,((sconveycost + dconveycost)/2)));
+    double conveycost;
+    double novelconveycost;
+    if (sconveycost > 0 and dconveycost > 0){
+      conveycost = (w7 * oldcost + 1/((sconveycost + dconveycost)/2));
+      novelconveycost = (w7 * oldcost * ((sconveycost + dconveycost)/2));
+    }
+    else{
+      conveycost = (w7 * oldcost * 10);
+      novelconveycost = (w7 * oldcost * 1);
+    }
     double strailcount = 0;
     double dtrailcount = 0;
     //cout << "trails.size() = " << trails.size() << endl;
     for(int i = 0; i < trails.size(); i++){
       //cout << "trails[i].size() = " << trails[i].size() << endl;
       for(int j = 0; j < trails[i].size(); j++){
-        if(trails[i][j].get_distance(CartesianPoint(s.getX()/100.0, s.getY()/100.0)) <= 0.5){
+        if(trails[i][j].get_distance(snode) <= 0.5){
           strailcount++;
           //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
           //cout << "s = " << s.getX()/100.0 << ", " << s.getY()/100.0 << endl;
         }
-        if(trails[i][j].get_distance(CartesianPoint(d.getX()/100.0, d.getY()/100.0)) <= 0.5){
+        if(trails[i][j].get_distance(dnode) <= 0.5){
           dtrailcount++;
           //cout << "trails[i][j] = " << trails[i][j].get_x() << ", " << trails[i][j].get_y() << endl;
           //cout << "d = " << d.getX()/100.0 << ", " << d.getY()/100.0 << endl;
         }
       }
-    }
-    //cout << "strailcount = " << strailcount << " dtrailcount = " << dtrailcount << endl;
-    //return (w8 * oldcost*pow(0.25,((strailcount + dtrailcount)/2)));
-    double finalcost = (w1 * oldcost) * 10;
-    if (sRegion >= 0 and dRegion >= 0){
-      if ((w1 * oldcost) * 0.25 < finalcost){
-        finalcost = (w1 * oldcost) * 0.25;
+      if(strailcount > 0 and dtrailcount > 0){
+        break;
       }
     }
-    else if (sRegion >= 0 and dRegion == -1){
-      if(s_door_min_distance <= 0.5 and s_exit_min_distance <= 0.5){
-        if ((w1 * oldcost) * 0.5 < finalcost){
-          finalcost = (w1 * oldcost) * 0.5;
-        }
-      }
-      else if(s_door_min_distance <= 0.5 or s_exit_min_distance <= 0.5){
-        if ((w1 * oldcost) * 0.75 < finalcost){
-          finalcost = (w1 * oldcost) * 0.75;
-        }
-      }
-      else if ((w1 * oldcost) * 1 < finalcost){
-        finalcost = (w1 * oldcost) * 1;
-      }
-    }
-    else if (sRegion ==-1 and dRegion >= 0){
-      if(d_door_min_distance <= 0.5 and d_exit_min_distance <= 0.5){
-        if ((w1 * oldcost) * 0.5 < finalcost){
-          finalcost = (w1 * oldcost) * 0.5;
-        }
-      }
-      else if(d_door_min_distance <= 0.5 or d_exit_min_distance <= 0.5){
-        if ((w1 * oldcost) * 0.75 < finalcost){
-          finalcost = (w1 * oldcost) * 0.75;
-        }
-      }
-      else if ((w1 * oldcost) * 1 < finalcost){
-        finalcost = (w1 * oldcost) * 1;
-      }
-    }
-    if (sHallway > 0 and dHallway > 0){
-      if ((w1 * oldcost) * 1/((sHallway+dHallway)/2) < finalcost){
-        finalcost = (w1 * oldcost) * 1/((sHallway+dHallway)/2);
-      }
-    }
-    if (sconveycost > 0 and dconveycost > 0){
-      if ((w7 * oldcost * 1/((sconveycost + dconveycost)/2)) < finalcost){
-        finalcost = (w7 * oldcost * 1/((sconveycost + dconveycost)/2));
-      }
-    }
+    double trailcost;
+    double noveltrailcost;
     if (strailcount > 0 and dtrailcount > 0){
-      if ((w7 * oldcost * 1/((strailcount + dtrailcount)/2)) < finalcost){
-        finalcost = (w7 * oldcost * 1/((strailcount + dtrailcount)/2));
-      }
+      trailcost = (w7 * oldcost);
+      noveltrailcost = (w7 * oldcost * 10);
     }
+    else if (strailcount > 0 or dtrailcount > 0){
+      trailcost = (w7 * oldcost * 1.5);
+      noveltrailcost = (w7 * oldcost * 7);
+    }
+    else{
+      trailcost = (w7 * oldcost * 10);
+      noveltrailcost = (w7 * oldcost);
+    }
+    // double finalcost = (w1 * oldcost) * 10;
+    // if(regioncost < finalcost)
+    //   finalcost = regioncost;
+    // if(hallwaycost < finalcost)
+    //   finalcost = hallwaycost;
+    // if(conveycost < finalcost)
+    //   finalcost = conveycost;
+    // if(trailcost < finalcost)
+    //   finalcost = trailcost;
+
+    if(regioncost > novelcost)
+      novelcost = regioncost;
+    if(hallwaycost > novelcost)
+      novelcost = hallwaycost;
+    if(conveycost > novelcost)
+      novelcost = conveycost;
+    if(trailcost > novelcost)
+      novelcost = trailcost;
+    
+    double finalcost = (distcost + novelcost + explorecost + safecost + regioncost + hallwaycost + trailcost + conveycost) / 8.0;
     return finalcost;
   }
 
@@ -688,7 +1146,7 @@ double PathPlanner::novelCost(int nodex, int nodey){
   //cout << "Inside novelCost : Node x = " << (nodex/100.0) << " Node y = " << (nodey/100.0) << endl;
   //cout << "Modified Node x = " << (int)(((nodex/100.0)/(map_width*1.0)) * boxes_width) << " Modified Node y = " << (int)(((nodey/100.0)/(map_height*1.0)) * boxes_height) << endl;
   //cout << "novelCost = " << posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)] << endl;
-  return posHistMapNorm[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
+  return posHistMap[(int)(((nodex/100.0)/(map_width*1.0)) * boxes_width)][(int)(((nodey/100.0)/(map_height*1.0)) * boxes_height)];
 }
 
 double PathPlanner::computeConveyorCost(int nodex, int nodey){
@@ -719,10 +1177,10 @@ double PathPlanner::projection(double flow_angle, double flow_length, double xs,
 
 bool PathPlanner::isAccessible(Node s, Node t) {
   if ( !navGraph->isNode(s) )
-    s = getClosestNode(s, t);
+    s = getClosestNode(s, t, false);
 
   if ( !navGraph->isNode(t) )
-    t = getClosestNode(t, s);
+    t = getClosestNode(t, s, false);
 
   if ( s.getID() == Node::invalid_node_index || t.getID() == Node::invalid_node_index )
     return false;
@@ -756,7 +1214,7 @@ list<pair<int,int> > PathPlanner::getPathXYBetween(int x1, int y1, int x2, int y
   Node s;
   int s_id = navGraph->getNodeID(x1, y1);
   if(s_id == Node::invalid_node_index) {
-    s = getClosestNode(temp_s, temp_t);
+    s = getClosestNode(temp_s, temp_t, false);
 
     if(!navGraph->isNode(s))
       no_source = true;
@@ -774,7 +1232,7 @@ list<pair<int,int> > PathPlanner::getPathXYBetween(int x1, int y1, int x2, int y
   Node t;
   int t_id = navGraph->getNodeID(x2, y2);
   if(t_id == Node::invalid_node_index) {
-    t = getClosestNode(temp_t, temp_s);
+    t = getClosestNode(temp_t, temp_s, false);
 
     if(!navGraph->isNode(t))
       no_target = true;
@@ -927,7 +1385,7 @@ double PathPlanner::calcPathCost(vector<CartesianPoint> waypoints, Position sour
     if(s_id == Node::invalid_node_index) {
       Node temp_s(1, (*it).get_x()*100.0, (*it).get_y()*100.0); 
       Node temp_t(1, (*it).get_x()*100.0, (*it).get_y()*100.0);
-      s = getClosestNode(temp_s, temp_t);
+      s = getClosestNode(temp_s, temp_t, false);
       s_id = navGraph->getNodeID(s.getX(), s.getY());
     }
     p.push_back(s_id);
@@ -959,8 +1417,8 @@ double PathPlanner::estimateCost(int x1, int y1, int x2, int y2) {
 }
 
 double PathPlanner::estimateCost(Node s, Node t, int l){
-  Node sn = getClosestNode(s, t);
-  Node tn = getClosestNode(t, s);
+  Node sn = getClosestNode(s, t, false);
+  Node tn = getClosestNode(t, s, false);
 
   if(tn.getID() < 0 || sn.getID() < 0)
     return INT_MAX;
@@ -1023,61 +1481,575 @@ double PathPlanner::getRemainingPathLength(double x, double y) {
   the robot is probably surrounded by obstacles, therefore this function returns an invalid node.
 
  */
-Node PathPlanner::getClosestNode(Node n, Node ref){
+Node PathPlanner::getClosestNode(Node n, Node ref, bool isTarget){
   const string signature = "PathPlanner::getClosestNode()> ";
-
-  Node temp;
-  double s_radius = navGraph->getProximity();
-  double max_radius = navGraph->getProximity() * 1.5;
-
-  do {
-
+  if(name == "skeleton"){
+    Node temp;
     if(PATH_DEBUG)
-      cout << signature << "Searching for the closest node within " << s_radius << endl;
+      cout << signature << "Searching for any closest node " << endl;
 
-    vector<Node*> nodes = navGraph->getNodesInRegion(n.getX(), n.getY(), s_radius);
-
-    double dist = INT_MAX;
-
-    vector<Node*>::iterator iter;
-    for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
-      double d = Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() );
-
-      if(PATH_DEBUG){
-        cout << "\tChecking ";
-        (*iter)->printNode();
-        cout << endl;
-        cout << "\tDistance between the n and this node: " << d << endl;
+    int nRegion=-1;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0) and regions[i].getMinExits().size() > 0){
+        nRegion = i;
       }
+      if(nRegion >= 0){
+        break;
+      }
+    }
+    if(nRegion >= 0){
+      int x = (int)(regions[nRegion].getCenter().get_x()*100);
+      int y = (int)(regions[nRegion].getCenter().get_y()*100);
+      cout << "Point in region " << nRegion << " x " << x << " y " << y << endl;
+      temp = navGraph->getNode(navGraph->getNodeID(x, y));
+      return temp;
+    }
+    if(isTarget and use_coverage_grid){
+      int vRegion=-1;
+      double vDist=1000000;
+      for(int i = 0; i < regions.size() ; i++){
+        if(coverage_grid[(int)(regions[i].getCenter().get_x())][(int)(regions[i].getCenter().get_y())] != 0 and regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+          double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+          if(dist_to_region < vDist){
+            cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+            vRegion = i;
+            vDist = dist_to_region;
+          }
+        }
+      }
+      if(vRegion >= 0){
+        int x = (int)(regions[vRegion].getCenter().get_x()*100);
+        int y = (int)(regions[vRegion].getCenter().get_y()*100);
+        cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        return temp;
+      }
+      cout << "Not in region or visible to region, searching for close node" << endl;
+      vector<Node*> nodes = navGraph->getNodes();
+      vector<Node*>::iterator iter;
+      // double min_distance = 100000000.0;
+      double max_score = -100000000.0;
+      for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+        double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
+        double neighbors = (*iter)->numNeighbors();
+        double score = d + neighbors;
+        // if(d < min_distance){
+          // min_distance = d;
+        if(score > max_score and coverage_grid[(int)((*iter)->getX()/100.0)][(int)((*iter)->getY()/100.0)] != 0){
+          max_score = score;
+          temp = (*(*iter));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl;
+            cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+          }
+        }
+      }
+      return temp;
+    }
+    else{
+      int vRegion=-1;
+      double vDist=1000000;
+      for(int i = 0; i < regions.size() ; i++){
+        if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+          double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+          if(dist_to_region < vDist){
+            cout << "Region " << i << " visible to point and distance " << dist_to_region << endl;
+            vRegion = i;
+            vDist = dist_to_region;
+          }
+        }
+      }
+      if(vRegion >= 0){
+        int x = (int)(regions[vRegion].getCenter().get_x()*100);
+        int y = (int)(regions[vRegion].getCenter().get_y()*100);
+        cout << "Point visible to region " << vRegion << " x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        return temp;
+      }
+      cout << "Not in region or visible to region, searching for close node" << endl;
+      vector<Node*> nodes = navGraph->getNodes();
+      vector<Node*>::iterator iter;
+      // double min_distance = 100000000.0;
+      double max_score = -100000000.0;
+      for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+        double d = -3.0 * ((Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() ) / 100.0) - (*iter)->getRadius());
+        double neighbors = (*iter)->numNeighbors();
+        double score = d + neighbors;
+        // if(d < min_distance){
+          // min_distance = d;
+        if(score > max_score){
+          max_score = score;
+          temp = (*(*iter));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl;
+            cout << "\tDistance between n and this node: " << d / -3.0 << " this node's num of neighbors: " << neighbors << " score: " << score << endl;
+          }
+        }
+      }
+      return temp;
+    }
+  }
+  else{
+    Node temp;
+    double s_radius = navGraph->getProximity();
+    double max_radius = navGraph->getProximity() * 3;
 
-      double d_t = 0.0;
-      if(ref.getID() != Node::invalid_node_index)
-        d_t = Map::distance((*iter)->getX(), (*iter)->getY(), ref.getX(), ref.getY());
+    do {
 
       if(PATH_DEBUG)
-        cout << "\tDistance between this node to ref: " << d_t << endl;
-      // d + d_t < dist, was the earlier version, not sure why?
-      if (( d < dist ) && !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) && (*iter)->isAccessible()) {
-        //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
-        dist = d + d_t;
-        temp = (*(*iter));
+        cout << signature << "Searching for the closest node within " << s_radius << endl;
+
+      vector<Node*> nodes = navGraph->getNodesInRegion(n.getX(), n.getY(), s_radius);
+
+      double dist = INT_MAX;
+
+      vector<Node*>::iterator iter;
+      for( iter = nodes.begin(); iter != nodes.end(); iter++ ){
+        double d = Map::distance( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY() );
+
+        if(PATH_DEBUG){
+          cout << "\tChecking ";
+          (*iter)->printNode();
+          cout << endl;
+          cout << "\tDistance between the n and this node: " << d << endl;
+        }
+
+        double d_t = 0.0;
+        if(ref.getID() != Node::invalid_node_index)
+          d_t = Map::distance((*iter)->getX(), (*iter)->getY(), ref.getX(), ref.getY());
+
+        if(PATH_DEBUG)
+          cout << "\tDistance between this node to ref: " << d_t << endl;
+
+        if(name != "skeleton" and name != "hallwayskel"){
+          if (( d + d_t < dist ) && !map.isPathObstructed( (*iter)->getX(), (*iter)->getY(), n.getX(), n.getY()) && (*iter)->isAccessible()) {
+            //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
+            dist = d + d_t;
+            temp = (*(*iter));
+            if(PATH_DEBUG) {
+              cout << "\tFound a new candidate!: ";
+              temp.printNode();
+              cout << endl << endl;
+            }
+          }
+        }
+        else{
+          if (( d + d_t < dist ) && (*iter)->isAccessible()) {
+            //cout << "Checking if node is accesible : " << (*iter)->getX() << " " << (*iter)->getY()  << endl;
+            dist = d + d_t;
+            temp = (*(*iter));
+            if(PATH_DEBUG) {
+              cout << "\tFound a new candidate!: ";
+              temp.printNode();
+              cout << endl << endl;
+            }
+          }
+        }
+      }
+
+      if(temp.getID() == Node::invalid_node_index) {
+        s_radius += 0.1 * s_radius;
+        if(PATH_DEBUG)
+          cout << signature << "Didn't find a suitable candidate. Increasing search radius to: " << s_radius << endl;
+      }
+
+    } while(temp.getID() == Node::invalid_node_index && s_radius <= max_radius);
+
+    return temp;
+  }
+}
+
+vector<Node> PathPlanner::getClosestNodes(Node n, Node ref, bool findAny){
+  const string signature = "PathPlanner::getClosestNodes()> ";
+  Node temp, region_temp, lregion_temp, otemp;
+  bool otemp_created = false;
+  if(PATH_DEBUG)
+    cout << signature << "Searching for any closest node " << endl;
+  vector<Node> nodes_for_point;
+  // cout << "node n " << ((int)(n.getX()/100.0)) << " " << ((int)(n.getY()/100.0)) << endl;
+  // cout << "passage_grid " << passage_grid.size() << " " << passage_grid[0].size() << endl;
+  int nPassage = passage_grid[(int)(n.getX()/100.0)][(int)(n.getY()/100.0)];
+  // cout << "Point in passage_grid " << nPassage << " graph_node " << passage_graph_nodes.count(nPassage) << endl;
+  if(passage_graph_nodes.count(nPassage) != 0){
+    // cout << "Point on intersection " << nPassage - 1 << endl;
+    int x = passage_average_values[nPassage - 1][0];
+    int y = passage_average_values[nPassage - 1][1];
+    // cout << "x " << x << " y " << y << endl;
+    temp = navGraph->getNode(navGraph->getNodeID(x, y));
+    // Node placeHolder;
+    if(PATH_DEBUG) {
+      cout << "\tFound a new candidate!: ";
+      temp.printNode();
+      // placeHolder.printNode();
+      // placeHolder.printNode();
+      cout << endl << endl;
+    }
+    nodes_for_point.push_back(temp);
+    // nodes_for_point.push_back(placeHolder);
+    // nodes_for_point.push_back(placeHolder);
+    // otherIntersection.push_back(otemp);
+    // usedOtherIntersection.push_back(otemp_created);
+    // return nodes_for_point;
+  }
+  else if(nPassage > 0){
+    // cout << "Point on passage" << endl;
+    vector<int> nearby_intersections;
+    for(int i = 0; i < passage_graph.size(); i++){
+      if(passage_graph[i][1] == nPassage){
+        if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][0]) == nearby_intersections.end()){
+          nearby_intersections.push_back(passage_graph[i][0]);
+          // cout << "nearby intersection " << passage_graph[i][0] << endl;
+        }
+        if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][2]) == nearby_intersections.end()){
+          nearby_intersections.push_back(passage_graph[i][2]);
+          // cout << "nearby intersection " << passage_graph[i][2] << endl;
+        }
+      }
+    }
+    double dist_to_nearby = 1000000.0;
+    int closest_intersection;
+    for(int i = 0; i < nearby_intersections.size(); i++){
+      double dist_to_int = CartesianPoint(passage_average_values[nearby_intersections[i] - 1][0], passage_average_values[nearby_intersections[i] - 1][1]).get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+      if(dist_to_int < dist_to_nearby){
+        dist_to_nearby = dist_to_int;
+        closest_intersection = nearby_intersections[i] - 1;
+      }
+    }
+    // cout << "closest intersection " << closest_intersection << endl;
+    int x = passage_average_values[closest_intersection][0];
+    int y = passage_average_values[closest_intersection][1];
+    // cout << "x " << x << " y " << y << endl;
+    temp = navGraph->getNode(navGraph->getNodeID(x, y));
+    // Node placeHolder;
+    if(PATH_DEBUG) {
+      cout << "\tFound a new candidate!: ";
+      temp.printNode();
+      // placeHolder.printNode();
+      // placeHolder.printNode();
+      cout << endl << endl;
+    }
+    nodes_for_point.push_back(temp);
+    // nodes_for_point.push_back(placeHolder);
+    // nodes_for_point.push_back(placeHolder);
+    // for(int i = 0; i < nearby_intersections.size(); i++){
+    //   if(nearby_intersections[i] - 1 != closest_intersection){
+    //     int cx = passage_average_values[nearby_intersections[i] - 1][0];
+    //     int cy = passage_average_values[nearby_intersections[i] - 1][1];
+    //     // cout << "cx " << cx << " cy " << cy << endl;
+    //     otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
+    //     otemp_created = true;
+    //     break;
+    //   }
+    // }
+    // otherIntersection.push_back(otemp);
+    // usedOtherIntersection.push_back(otemp_created);
+    // return nodes_for_point;
+  }
+  // cout << "nodes_for_point " << nodes_for_point.size() << endl;
+  // cout << "Find region associated with n" << endl;
+  int nRegion = -1;
+  for(int i = 0; i < regions.size() ; i++){
+    if(regions[i].inRegion(n.getX()/100.0, n.getY()/100.0) and regions[i].getMinExits().size() > 0){
+      // cout << "nRegion " << i << endl;
+      nRegion = i;
+    }
+    if(nRegion >= 0){
+      break;
+    }
+  }
+  if(nRegion == -1){
+    int vRegion = -1;
+    double vDist=1000000;
+    for(int i = 0; i < regions.size() ; i++){
+      if(regions[i].visibleFromRegion(CartesianPoint(n.getX()/100.0, n.getY()/100.0), 20) and regions[i].getMinExits().size() > 0){
+        double dist_to_region = regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+        if(dist_to_region < vDist){
+          // cout << "vRegion " << i << " visible to point and distance " << dist_to_region << endl;
+          vRegion = i;
+          vDist = dist_to_region;
+        }
+      }
+    }
+    nRegion = vRegion;
+  }
+  if(nRegion == -1){
+    int cRegion = -1;
+    double max_score = -100000000.0;
+    for(int i = 0; i < regions.size() ; i++){
+      double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0)) - regions[i].getRadius());
+      double neighbors = regions[i].getMinExits().size();
+      double score = d + neighbors;
+      if(score > max_score){
+        // cout << "cRegion " << i << " with score " << score << endl;
+        cRegion = i;
+        max_score = score;
+      }
+    }
+    nRegion = cRegion;
+  }
+  // cout << "nRegion " << nRegion << endl;
+  if(nRegion >= 0){
+    int rx = (int)(regions[nRegion].getCenter().get_x()*100);
+    int ry = (int)(regions[nRegion].getCenter().get_y()*100);
+    // cout << "Point in region " << nRegion << " rx " << rx << " ry " << ry << " ID " << originalNavGraph->getNodeID(rx, ry) << endl;
+    region_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(rx, ry));
+    vector<int> passage_values = regions[nRegion].getPassageValues();
+    for(int i = 0; i < passage_values.size(); i++){
+      // cout << "passage_values " << passage_values[i] << endl;
+      if(passage_graph_nodes.count(passage_values[i]) != 0){
+        // cout << "nRegion on intersection " << passage_values[i] - 1 << endl;
+        int x = passage_average_values[passage_values[i] - 1][0];
+        int y = passage_average_values[passage_values[i] - 1][1];
+        // cout << "x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
+        if(PATH_DEBUG) {
+          cout << "\tFound a new candidate!: ";
+          temp.printNode();
+          region_temp.printNode();
+          cout << endl << endl;
+        }
+        if(nodes_for_point.size() == 0){
+          nodes_for_point.push_back(temp);
+        }
+        nodes_for_point.push_back(region_temp);
+        nodes_for_point.push_back(region_temp);
+        // otherIntersection.push_back(otemp);
+        // usedOtherIntersection.push_back(otemp_created);
+        // return nodes_for_point;
+        break;
+      }
+    }
+    // cout << "nodes_for_point " << nodes_for_point.size() << endl;
+    if(nodes_for_point.size() < 3){
+      if(passage_values.size() > 0){
+        // cout << "nRegion on passage" << endl;
+        vector<int> nearby_intersections;
+        for(int i = 0; i < passage_graph.size(); i++){
+          for(int j = 0; j < passage_values.size(); j++){
+            if(passage_graph[i][1] == passage_values[j]){
+              if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][0]) == nearby_intersections.end()){
+                nearby_intersections.push_back(passage_graph[i][0]);
+                // cout << "nearby intersection " << passage_graph[i][0] << endl;
+              }
+              if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][2]) == nearby_intersections.end()){
+                nearby_intersections.push_back(passage_graph[i][2]);
+                // cout << "nearby intersection " << passage_graph[i][2] << endl;
+              }
+            }
+          }
+        }
+        double dist_to_nearby = 1000000.0;
+        int closest_intersection;
+        for(int i = 0; i < nearby_intersections.size(); i++){
+          double dist_to_int = CartesianPoint(passage_average_values[nearby_intersections[i] - 1][0], passage_average_values[nearby_intersections[i] - 1][1]).get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+          // cout << "dist_to_int " << dist_to_int << " dist_to_nearby " << dist_to_nearby << endl;
+          if(dist_to_int < dist_to_nearby){
+            dist_to_nearby = dist_to_int;
+            closest_intersection = nearby_intersections[i] - 1;
+          }
+        }
+        // cout << "closest intersection " << closest_intersection << endl;
+        int x = passage_average_values[closest_intersection][0];
+        int y = passage_average_values[closest_intersection][1];
+        // cout << "x " << x << " y " << y << endl;
+        temp = navGraph->getNode(navGraph->getNodeID(x, y));
         if(PATH_DEBUG) {
           cout << "\tFound a new candidate!: ";
           temp.printNode();
           cout << endl << endl;
+          region_temp.printNode();
+          cout << endl << endl;
+          region_temp.printNode();
+          cout << endl << endl;
+        }
+        if(nodes_for_point.size() == 0){
+          nodes_for_point.push_back(temp);
+        }
+        nodes_for_point.push_back(region_temp);
+        nodes_for_point.push_back(region_temp);
+        // for(int i = 0; i < nearby_intersections.size(); i++){
+        //   if(nearby_intersections[i] - 1 != closest_intersection){
+        //     int cx = passage_average_values[nearby_intersections[i] - 1][0];
+        //     int cy = passage_average_values[nearby_intersections[i] - 1][1];
+        //     // cout << "cx " << cx << " cy " << cy << endl;
+        //     otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
+        //     otemp_created = true;
+        //     break;
+        //   }
+        // }
+        // otherIntersection.push_back(otemp);
+        // usedOtherIntersection.push_back(otemp_created);
+        // return nodes_for_point;
+        // cout << "nodes_for_point " << nodes_for_point.size() << endl;
+      }
+      else{
+        // cout << "nRegion on neither intersection nor passage" << endl;
+        priority_queue<RegionNode, vector<RegionNode>, greater<RegionNode> > rn_queue;
+        RegionNode start_rn = RegionNode(regions[nRegion], nRegion, 0);
+        // cout << "nRegion exits " << regions[nRegion].getMinExits().size() << endl;
+        for(int i = 0; i < regions[nRegion].getMinExits().size(); i++){
+          RegionNode neighbor = RegionNode(regions[regions[nRegion].getMinExits()[i].getExitRegion()], regions[nRegion].getMinExits()[i].getExitRegion(), regions[nRegion].getMinExits()[i].getExitDistance());
+          // neighbor.regionSequence.push_back(start_rn);
+          // cout << "neighbor " << i << " ID " << neighbor.regionID << endl;
+          rn_queue.push(neighbor);
+        }
+        vector<RegionNode> already_searched;
+        already_searched.push_back(start_rn);
+        // cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+        RegionNode final_rn;
+        int count = 0;
+        while(rn_queue.size() > 0 and count < 1000){
+          RegionNode current_neighbor = rn_queue.top();
+          // cout << "current_neighbor " << current_neighbor.regionID << " passagevalues " << current_neighbor.region.getPassageValues().size() << " cost " << current_neighbor.nodeCost << endl;
+          already_searched.push_back(current_neighbor);
+          rn_queue.pop();
+          if(current_neighbor.region.getPassageValues().size() > 0){
+            final_rn = current_neighbor;
+            break;
+          }
+          for(int i = 0; i < current_neighbor.region.getMinExits().size(); i++){
+            RegionNode eRegion = RegionNode(regions[current_neighbor.region.getMinExits()[i].getExitRegion()], current_neighbor.region.getMinExits()[i].getExitRegion(), current_neighbor.nodeCost + current_neighbor.region.getMinExits()[i].getExitDistance());
+            // eRegion.regionSequence.push_back(current_neighbor);
+            // cout << "eRegion " << i << " ID " << eRegion.regionID << " cost " << eRegion.nodeCost << endl;
+            if(find(already_searched.begin(), already_searched.end(), eRegion) == already_searched.end()){
+              rn_queue.push(eRegion);
+            }
+          }
+          // cout << "rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+          // if(rn_queue.size() == 0){
+          //   final_rn = current_neighbor;
+          // }
+          count = count + 1;
+        }
+        // cout << "final_rn " << final_rn.regionID << " rn_queue " << rn_queue.size() << " already_searched " << already_searched.size() << endl;
+        if(final_rn.regionID == -1){
+          int newRegion = -1;
+          double max_score = -100000000.0;
+          for(int i = 0; i < regions.size() ; i++){
+            double d = -3.0 * (regions[i].getCenter().get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0)) - regions[i].getRadius());
+            double neighbors = regions[i].getMinExits().size();
+            double score = d + neighbors;
+            if(score > max_score and regions[i].getPassageValues().size() > 0){
+              // cout << "newRegion " << i << " with score " << score << endl;
+              newRegion = i;
+              max_score = score;
+            }
+          }
+          final_rn.regionID = newRegion;
+        }
+        int lx = (int)(regions[final_rn.regionID].getCenter().get_x()*100);
+        int ly = (int)(regions[final_rn.regionID].getCenter().get_y()*100);
+        // cout << "Point in lregion " << final_rn.regionID << " lx " << lx << " ly " << ly << " ID " << originalNavGraph->getNodeID(lx, ly) << endl;
+        lregion_temp = originalNavGraph->getNode(originalNavGraph->getNodeID(lx, ly));
+        vector<int> lpassage_values = regions[final_rn.regionID].getPassageValues();
+        for(int i = 0; i < lpassage_values.size(); i++){
+          // cout << "lpassage_values " << lpassage_values[i] << endl;
+          if(passage_graph_nodes.count(lpassage_values[i]) != 0){
+            // cout << "lRegion on intersection " << lpassage_values[i] - 1 << endl;
+            int x = passage_average_values[lpassage_values[i] - 1][0];
+            int y = passage_average_values[lpassage_values[i] - 1][1];
+            // cout << "x " << x << " y " << y << endl;
+            temp = navGraph->getNode(navGraph->getNodeID(x, y));
+            if(PATH_DEBUG) {
+              cout << "\tFound a new candidate!: ";
+              temp.printNode();
+              cout << endl << endl;
+              region_temp.printNode();
+              cout << endl << endl;
+              lregion_temp.printNode();
+              cout << endl << endl;
+            }
+            if(nodes_for_point.size() == 0){
+              nodes_for_point.push_back(temp);
+            }
+            nodes_for_point.push_back(region_temp);
+            nodes_for_point.push_back(lregion_temp);
+            // otherIntersection.push_back(otemp);
+            // usedOtherIntersection.push_back(otemp_created);
+            // return nodes_for_point;
+            break;
+          }
+        }
+        // cout << "nodes_for_point " << nodes_for_point.size() << endl;
+        if(lpassage_values.size() > 0 and nodes_for_point.size() < 3){
+          // cout << "Region on passage" << endl;
+          vector<int> nearby_intersections;
+          for(int i = 0; i < passage_graph.size(); i++){
+            for(int j = 0; j < lpassage_values.size(); j++){
+              if(passage_graph[i][1] == lpassage_values[j]){
+                if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][0]) == nearby_intersections.end()){
+                  nearby_intersections.push_back(passage_graph[i][0]);
+                  // cout << "nearby intersection " << passage_graph[i][0] << endl;
+                }
+                if(find(nearby_intersections.begin(), nearby_intersections.end(), passage_graph[i][2]) == nearby_intersections.end()){
+                  nearby_intersections.push_back(passage_graph[i][2]);
+                  // cout << "nearby intersection " << passage_graph[i][2] << endl;
+                }
+              }
+            }
+          }
+          double dist_to_nearby = 1000000.0;
+          int closest_intersection;
+          for(int i = 0; i < nearby_intersections.size(); i++){
+            double dist_to_int = CartesianPoint(passage_average_values[nearby_intersections[i] - 1][0], passage_average_values[nearby_intersections[i] - 1][1]).get_distance(CartesianPoint(n.getX()/100.0, n.getY()/100.0));
+            if(dist_to_int < dist_to_nearby){
+              dist_to_nearby = dist_to_int;
+              closest_intersection = nearby_intersections[i] - 1;
+            }
+          }
+          // cout << "closest intersection " << closest_intersection << endl;
+          int x = passage_average_values[closest_intersection][0];
+          int y = passage_average_values[closest_intersection][1];
+          // cout << "x " << x << " y " << y << endl;
+          temp = navGraph->getNode(navGraph->getNodeID(x, y));
+          if(PATH_DEBUG) {
+            cout << "\tFound a new candidate!: ";
+            temp.printNode();
+            cout << endl << endl;
+            region_temp.printNode();
+            cout << endl << endl;
+            lregion_temp.printNode();
+            cout << endl << endl;
+          }
+          if(nodes_for_point.size() == 0){
+            nodes_for_point.push_back(temp);
+          }
+          nodes_for_point.push_back(region_temp);
+          nodes_for_point.push_back(lregion_temp);
+          // cout << "nodes_for_point " << nodes_for_point.size() << endl;
+          // for(int i = 0; i < nearby_intersections.size(); i++){
+          //   if(nearby_intersections[i] - 1 != closest_intersection){
+          //     int cx = passage_average_values[nearby_intersections[i] - 1][0];
+          //     int cy = passage_average_values[nearby_intersections[i] - 1][1];
+          //     // cout << "cx " << cx << " cy " << cy << endl;
+          //     otemp = navGraph->getNode(navGraph->getNodeID(cx, cy));
+          //     otemp_created = true;
+          //     break;
+          //   }
+          // }
+          // otherIntersection.push_back(otemp);
+          // usedOtherIntersection.push_back(otemp_created);
+          // return nodes_for_point;
         }
       }
     }
-
-    if(temp.getID() == Node::invalid_node_index) {
-      s_radius += 0.1 * s_radius;
-      if(PATH_DEBUG)
-        cout << signature << "Didn't find a suitable candidate. Increasing search radius to: " << s_radius << endl;
+  }
+  else{
+    if(nodes_for_point.size() == 0){
+      nodes_for_point.push_back(temp);
     }
-
-  } while(temp.getID() == Node::invalid_node_index && s_radius <= max_radius);
-
-  return temp;
+    nodes_for_point.push_back(region_temp);
+    nodes_for_point.push_back(lregion_temp);
+    // otherIntersection.push_back(otemp);
+    // usedOtherIntersection.push_back(otemp_created);
+    // return nodes_for_point;
+  }
+  // cout << "final nodes_for_point " << nodes_for_point.size() << endl;
+  return nodes_for_point;
 }
 
 /*!

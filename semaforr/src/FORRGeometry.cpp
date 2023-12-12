@@ -49,6 +49,34 @@ bool CartesianPoint::operator==(const CartesianPoint& lhs) const{
   return (abs(this->x - lhs.x) < ERROR && abs(this->y - lhs.y) < ERROR);
 }
 
+/********************************************************************
+                   other operators
+********************************************************************/
+bool CartesianPoint::operator<(const CartesianPoint& lhs) const{
+  if(this->x < lhs.x){
+    return true;
+  }
+  else if(this->y < lhs.y){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+
+bool CartesianPoint::operator>(const CartesianPoint& lhs) const{
+  if(this->x > lhs.x){
+    return true;
+  }
+  else if(this->y > lhs.y){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
 
 /***********************************************************************
                 Line class implementation
@@ -190,6 +218,27 @@ double distance(CartesianPoint first, CartesianPoint second){
 }
 
 
+CartesianPoint get_perpendicular(CartesianPoint point, Line line){
+  // cout << "get_perpendicular " << line.get_value_a() << " " << line.get_value_b() << " " << line.get_value_c() << endl;
+  if(line.get_value_b() != 0 and line.get_value_a() != 0){
+    double orig_slope = -line.get_value_a() / line.get_value_b();
+    double orig_intercept = line.get_value_c() / line.get_value_b();
+    double perp_slope = line.get_value_b() / line.get_value_a();
+    double perp_intercept = point.get_y() - perp_slope * point.get_x();
+    double intersection_x = (perp_intercept - orig_intercept) / (orig_slope - perp_slope);
+    double intersection_y = orig_slope * intersection_x + orig_intercept;
+    // cout << orig_slope << " " << orig_intercept << " " << perp_slope << " " << perp_intercept << " " << intersection_x << " " << intersection_y << endl;
+    return CartesianPoint(intersection_x, intersection_y);
+  }
+  else if(line.get_value_b() == 0){
+    // cout << line.get_value_c() / line.get_value_a() << " " << point.get_y() << endl;
+    return CartesianPoint(line.get_value_c() / line.get_value_a(), point.get_y());
+  }
+  else if(line.get_value_a() == 0){
+    return CartesianPoint(point.get_x(), line.get_value_c() / line.get_value_b());
+  }
+}
+
 // Formula taken from Wikipedia
 double distance(CartesianPoint point, Line line){
   return abs(line.coefficient_a * point.x + line.coefficient_b * point.y - line.coefficient_c) / sqrt (line.coefficient_a*line.coefficient_a + line.coefficient_b*line.coefficient_b);
@@ -197,19 +246,52 @@ double distance(CartesianPoint point, Line line){
 
 
 double distance(CartesianPoint point, LineSegment segment){
-  double tmp_distance;
-  if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) 
-      && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) 
-     ||(point.y > min(segment.end_point_1.y , segment.end_point_2.y) 
-	&& point.y < max(segment.end_point_1.y , segment.end_point_2.y)))
-    // In this case we can reuse distance between point and line function
-    tmp_distance = distance(point, static_cast<Line>(segment));
-  
+  double tmp_distance_1 = -1;
+  double tmp_distance_2 = -1;
+  // if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) || (point.y > min(segment.end_point_1.y , segment.end_point_2.y) && point.y < max(segment.end_point_1.y , segment.end_point_2.y))){
+  //   // In this case we can reuse distance between point and line function
+  //   tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  // }
+  CartesianPoint perpendicular_point = get_perpendicular(point, static_cast<Line>(segment));
+  if(is_point_in_segment(perpendicular_point, segment)){
+    tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  }
+  // else
+  tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2));
+  if(tmp_distance_1 > -1 and tmp_distance_1 < tmp_distance_2)
+    return tmp_distance_1;
   else
-    tmp_distance = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2));
+    return tmp_distance_2;
 
-  return tmp_distance;
+  // return tmp_distance;
 }
+
+double distance_to_intersection(CartesianPoint point, LineSegment segment){
+  // cout << "in distance_to_intersection" << endl;
+  double tmp_distance_1 = -1;
+  double tmp_distance_2 = -1;
+  // if((point.x > min(segment.end_point_1.x , segment.end_point_2.x) && point.x < max(segment.end_point_1.x , segment.end_point_2.x)) || (point.y > min(segment.end_point_1.y , segment.end_point_2.y) && point.y < max(segment.end_point_1.y , segment.end_point_2.y))){
+  //   // In this case we can reuse distance between point and line function
+  //   tmp_distance_1 = distance(point, static_cast<Line>(segment));
+  // }
+  CartesianPoint perpendicular_point = get_perpendicular(point, static_cast<Line>(segment));
+  if(is_point_in_segment(perpendicular_point, segment)){
+    // cout << distance(point, static_cast<Line>(segment)) << " " << distance(perpendicular_point, segment.end_point_1) << endl;
+    tmp_distance_1 = distance(point, static_cast<Line>(segment)) + distance(perpendicular_point, segment.end_point_1);
+  }
+  // cout << "tmp_distance_1 " << tmp_distance_1 << endl;
+  // else
+  // cout << distance(point, segment.end_point_1) << " " << distance(point, segment.end_point_2) << " " << segment.get_length() << endl;
+  tmp_distance_2 = min(distance(point, segment.end_point_1), distance(point, segment.end_point_2)) + segment.get_length();
+  // cout << "tmp_distance_2 " << tmp_distance_2 << endl;
+  if(tmp_distance_1 > -1 and tmp_distance_1 < tmp_distance_2)
+    return tmp_distance_1;
+  else
+    return tmp_distance_2;
+
+  // return tmp_distance;
+}
+
 
 
 bool is_point_on_line(CartesianPoint point, Line line){
@@ -218,6 +300,7 @@ bool is_point_on_line(CartesianPoint point, Line line){
 
 
 bool is_point_in_segment(CartesianPoint point, LineSegment segment){
+  // cout << "is_point_in_segment " << distance(point, segment.end_point_1) << " " << distance(point, segment.end_point_2) << " " << distance(segment.end_point_1, segment.end_point_2) << " " << abs(distance(point, segment.end_point_1) + distance(point, segment.end_point_2) - distance(segment.end_point_1, segment.end_point_2)) << endl;
   // when all else failed I used triangular equation  
   return (abs(distance(point, segment.end_point_1) + distance(point, segment.end_point_2) - distance(segment.end_point_1, segment.end_point_2)) < ERROR);
 }
@@ -251,14 +334,18 @@ CartesianPoint intersection_point(Circle circle, LineSegment line_segment){
   double secondy = m*secondx + b;
   //cout << firstx << " " << firsty << " " << secondx << " " << secondy << endl;
   pair<CartesianPoint, CartesianPoint> endpoints = line_segment.get_endpoints();
-  if(endpoints.first.get_x() < endpoints.second.get_x() && firstx > endpoints.first.get_x() && firstx < endpoints.second.get_x()) {
+  if(endpoints.first.get_x() <= endpoints.second.get_x() && firstx >= endpoints.first.get_x() && firstx <= endpoints.second.get_x()) {
     return CartesianPoint(firstx, firsty);
-  } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx > endpoints.second.get_x() && firstx < endpoints.first.get_x()) {
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx >= endpoints.second.get_x() && firstx <= endpoints.first.get_x()) {
     return CartesianPoint(firstx, firsty);
-  } else if(endpoints.first.get_x() < endpoints.second.get_x() && secondx > endpoints.first.get_x() && secondx < endpoints.second.get_x()) {
+  } else if(endpoints.first.get_x() <= endpoints.second.get_x() && secondx >= endpoints.first.get_x() && secondx <= endpoints.second.get_x()) {
     return CartesianPoint(secondx, secondy);
-  } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx > endpoints.second.get_x() && secondx < endpoints.first.get_x()) {
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx >= endpoints.second.get_x() && secondx <= endpoints.first.get_x()) {
     return CartesianPoint(secondx, secondy);
+  }
+  else{
+    double angle = atan2(endpoints.first.get_y() - cy, endpoints.first.get_x() - cx); 
+    return CartesianPoint (cx + (r * cos(angle)), cy + (r * sin(angle))); 
   }
 }
 
@@ -277,6 +364,37 @@ bool do_intersect(Circle circle, Line line){
     return false;
   else
     return true;
+}
+
+bool do_intersect(Circle circle, LineSegment line_segment){
+  double r = circle.get_radius();
+  double cx = circle.get_center().get_x();
+  double cy = circle.get_center().get_y();
+  double m = line_segment.get_slope();
+  double b = (line_segment.get_value_c() / line_segment.get_value_b());
+  double A = (m*m) + 1;
+  double B = 2*(m*b - m*cy - cx);
+  double C = (cx*cx) + (b*b) + (cy*cy) - (2*b*cy) - (r*r);
+  //cout << r << " " << cx << " " << cy << " " << m << " " << b << " " << A << " " << B << " " << C << endl;
+  // solution of the equation of point of intersection of the line segment and the circle assuming they intersect
+  double firstx = (-B + sqrt( ((B*B) - (4*A*C)) ))/(2*A);
+  double firsty = m*firstx + b;
+  double secondx = (-B - sqrt( ((B*B) - (4*A*C)) ))/(2*A);
+  double secondy = m*secondx + b;
+  //cout << firstx << " " << firsty << " " << secondx << " " << secondy << endl;
+  pair<CartesianPoint, CartesianPoint> endpoints = line_segment.get_endpoints();
+  if(endpoints.first.get_x() <= endpoints.second.get_x() && firstx >= endpoints.first.get_x() && firstx <= endpoints.second.get_x()) {
+    return true;
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && firstx >= endpoints.second.get_x() && firstx <= endpoints.first.get_x()) {
+    return true;
+  } else if(endpoints.first.get_x() <= endpoints.second.get_x() && secondx >= endpoints.first.get_x() && secondx <= endpoints.second.get_x()) {
+    return true;
+  } else if(endpoints.first.get_x() > endpoints.second.get_x() && secondx >= endpoints.second.get_x() && secondx <= endpoints.first.get_x()) {
+    return true;
+  }
+  else{
+    return false; 
+  }
 }
 
 bool do_intersect (Line first, Line second, CartesianPoint& point_of_intersection){
@@ -341,3 +459,91 @@ bool do_intersect(Vector vector1, Vector vector2, CartesianPoint& intersection){
 }
 
 
+//returns true if there is a point that is "visible" by the wall distance vectors.  
+//A point is visible if the distance to the nearest wall distance vector lines is > distance to the point.
+bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit){
+  // cout << "AgentState:canAccessPoint() , robot pos " << laserPos.get_x() << "," << laserPos.get_y() << " target " << point.get_x() << "," << point.get_y() << endl; 
+  // cout << "Number of laser endpoints " << givenLaserEndpoints.size() << endl; 
+  bool canAccessPoint = false;
+  double distLaserPosToPoint = laserPos.get_distance(point);
+  if(distLaserPosToPoint > distanceLimit){
+    // cout << "Cannot access, too far away" << endl;
+    return false;
+  }
+  double point_direction = atan2((point.get_y() - laserPos.get_y()), (point.get_x() - laserPos.get_x()));
+  int index = 0;
+  double min_angle = 100000;
+  for(int i = 0; i < givenLaserEndpoints.size(); i++){
+    //cout << "Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y() << endl;
+    double laser_direction = atan2((givenLaserEndpoints[i].get_y() - laserPos.get_y()), (givenLaserEndpoints[i].get_x() - laserPos.get_x()));
+    double angle_diff = laser_direction - point_direction;
+    if(angle_diff > M_PI)
+      angle_diff = angle_diff - 2*M_PI;
+    if(angle_diff < -M_PI)
+      angle_diff = angle_diff + 2*M_PI;
+    angle_diff = fabs(angle_diff);
+    // cout << "point_direction " << point_direction << " laser_direction " << laser_direction << " angle_diff " << angle_diff << endl;
+    if(angle_diff < min_angle){
+      // cout << "Laser Direction : " << laser_direction << ", Point Direction : " << point_direction << endl;
+      min_angle = angle_diff;
+      index = i;
+    }
+  }
+  while (index-2 < 0){
+    index = index + 1;
+  }
+  while (index+2 > givenLaserEndpoints.size()-1){
+    index = index - 1;
+  }
+  // cout << "Min angle : " << min_angle << ", " << index << endl;
+  int numFree = 0;
+  for(int i = -2; i < 3; i++) {
+    double distLaserEndPointToLaserPos = givenLaserEndpoints[index+i].get_distance(laserPos);
+    // cout << "Distance Laser EndPoint to Laser Pos : " << distLaserEndPointToLaserPos << ", Distance Laser Pos to Point : " << distLaserPosToPoint << endl;
+    if (distLaserEndPointToLaserPos > distLaserPosToPoint) {
+      numFree++;
+    }
+  }
+  // cout << "Number farther than point : " << numFree << endl;
+  if (numFree > 3) {
+    canAccessPoint = true;
+  }
+  else{
+    return false;
+  }
+  //else, not visible
+  //return canAccessPoint;
+  double epsilon = 0.005;
+  bool canSeePoint = false;
+  double ab = laserPos.get_distance(point);
+  for(int i = -2; i < 3; i++) {
+    //cout << "Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y() << endl;
+    double ac = laserPos.get_distance(givenLaserEndpoints[index+i]);
+    double bc = givenLaserEndpoints[index+i].get_distance(point);
+    if(((ab + bc) - ac) < epsilon){
+      // cout << "Distance vector endpoint visible: ("<<givenLaserEndpoints[index+i].get_x()<<","<< givenLaserEndpoints[index+i].get_y()<<")"<<endl; 
+      // cout << "Distance: "<<distance_to_point<<endl;
+      canSeePoint = true;
+      break;
+    }
+  }
+  if(canSeePoint == false){
+    for(int i = 0; i < givenLaserEndpoints.size(); i++){
+      //cout << "Laser endpoint : " << givenLaserEndpoints[i].get_x() << "," << givenLaserEndpoints[i].get_y() << endl;
+      double ac = laserPos.get_distance(givenLaserEndpoints[i]);
+      double bc = givenLaserEndpoints[i].get_distance(point);
+      if(((ab + bc) - ac) < epsilon){
+        // cout << "Distance vector endpoint visible: ("<<givenLaserEndpoints[i].get_x()<<","<< givenLaserEndpoints[i].get_y()<<")"<<endl; 
+        // cout << "Distance: "<<distance_to_point<<endl;
+        canSeePoint = true;
+        break;
+      }
+    }
+  }
+  if(canSeePoint and canAccessPoint){
+    return true;
+  }
+  else{
+    return false;
+  }
+}

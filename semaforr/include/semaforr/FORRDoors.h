@@ -50,7 +50,7 @@ struct Door {
         double endPointAngle = calculateFixedAngle(regionX, regionY, endPoint.getExitPoint().get_x(), endPoint.getExitPoint().get_y());
         double pointAngle = calculateFixedAngle(regionX, regionY, pointX, pointY);
         if(pointAngle <= endPointAngle and pointAngle >= startPointAngle) {
-            return (point.get_distance(region.getCenter()) - regionR);
+            return abs(point.get_distance(region.getCenter()) - regionR);
         }
         else if (point.get_distance(startPoint.getExitPoint()) <= point.get_distance(endPoint.getExitPoint())) {
             return point.get_distance(startPoint.getExitPoint());
@@ -74,6 +74,7 @@ public:
         doors = std::vector< std::vector<Door> >();
     };
     std::vector< std::vector<Door> > getDoors(){return doors;}
+    void setDoors(std::vector< std::vector<Door> > doors_para) { doors = doors_para; }
     ~FORRDoors(){};
 
     void clearAllDoors(){
@@ -148,7 +149,7 @@ public:
                 std::cout << epsilon << std::endl;
                 
                 vector< std::pair<double, FORRExit> >::iterator idx = exitAngles.begin();
-                Door *doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),-1), FORRExit(CartesianPoint(-1,-1),-1), 0);
+                Door *doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0, 0, vector<CartesianPoint>()), FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0, 0, vector<CartesianPoint>()), 0);
                 doorToPush->startPoint = idx->second;    //Put the first exit point in a door object.
                 ++doorToPush->str;                       //Door now has strength 1
                 double doorToPushStartAngle = idx->first;
@@ -172,7 +173,7 @@ public:
                             //std::cout << "regionDoors.size() = " << regionDoors.size() << std::endl;
                         }
 
-                        doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),-1), FORRExit(CartesianPoint(-1,-1),-1), 0); //prepare a new door
+                        doorToPush = new Door(FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0, 0, vector<CartesianPoint>()), FORRExit(CartesianPoint(-1,-1),CartesianPoint(-1,-1),CartesianPoint(-1,-1),-1, 0, 0, vector<CartesianPoint>()), 0); //prepare a new door
                         doorToPush->startPoint = (idx+1)->second;    //set the start position to the new further out point.
                         ++doorToPush->str;
                         doorToPushStartAngle = idx->first;

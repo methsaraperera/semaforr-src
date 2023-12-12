@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <limits>
 #include <utility>
+#include <vector>
 
 // our computation is involving doubles we have to define error
 // we are comfortable with
@@ -56,6 +57,12 @@ class CartesianPoint{
   bool operator==(const CartesianPoint& lhs) const;
 
   /********************************************************************
+                     other operators
+  ********************************************************************/
+  bool operator<(const CartesianPoint& lhs) const;
+  bool operator>(const CartesianPoint& lhs) const;
+
+  /********************************************************************
                        accessors and mutators
   ********************************************************************/
   void set_x(double new_x);
@@ -83,6 +90,8 @@ class CartesianPoint{
   friend bool do_intersect(Vector vector, LineSegment line_segment, CartesianPoint& intersection);
 
   friend bool do_intersect(Vector vector1, Vector vector2, CartesianPoint& intersection);
+
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
 
   /*******************************************************************
                        data members
@@ -139,6 +148,8 @@ class Line{
 
   friend bool is_point_on_line (CartesianPoint point, Line line); 
 
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
+
 
   /*******************************************************************
                        data members
@@ -179,6 +190,10 @@ class LineSegment: public Line{
     if they don't intersect the value is undefined
   */
   friend double distance(CartesianPoint point, LineSegment segment);
+
+  friend double distance_to_intersection(CartesianPoint point, LineSegment segment);
+
+  friend CartesianPoint get_perpendicular(CartesianPoint point, Line line);
   
   friend bool is_point_in_segment(CartesianPoint point, LineSegment segment);
 
@@ -230,6 +245,8 @@ class Vector{
 
   friend bool do_intersect(Vector vector, LineSegment line_segment, CartesianPoint& intersection);
 
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
+
 
   /********************************************************************
                        data members
@@ -250,6 +267,8 @@ class Circle{
   //verify intersection 
   friend bool do_intersect(Circle circle, Line line);
   friend CartesianPoint intersection_point(Circle circle, LineSegment line_segment);
+  friend bool do_intersect(Circle circle, LineSegment line_segment);
+  friend bool canAccessPoint(std::vector<CartesianPoint> givenLaserEndpoints, CartesianPoint laserPos, CartesianPoint point, double distanceLimit);
  private:
   CartesianPoint center;
   double radius;

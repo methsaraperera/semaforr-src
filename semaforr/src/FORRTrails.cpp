@@ -13,7 +13,8 @@ using namespace std;
 //if it does find a trail marker that sees, return the index.  otherwise, return -1
 int FORRTrails::doesTrailHaveVisiblePointToTarget(CartesianPoint target_point, int trail_index, AgentState *agentState){
   for(int j = 0; j < trails[trail_index].size(); j++){
-    if(agentState->canAccessPoint(trails[trail_index][j].wallVectorEndpoints, trails[trail_index][j].coordinates, target_point, 10)){
+    // if(agentState->canAccessPoint(trails[trail_index][j].wallVectorEndpoints, trails[trail_index][j].coordinates, target_point, 5)){
+    if(canAccessPoint(trails[trail_index][j].wallVectorEndpoints, trails[trail_index][j].coordinates, target_point, 5)){
       //target point is visible along trail at trail marker trails[trail_index][j]
       //cout << "Trail at coordinate "<<trails[trail_index][j].coordinates.get_x()<<","<< trails[trail_index][j].coordinates.get_y()<<" can see target"<<endl;
       //cout<< "Target located at: ("<<target_point.get_x()<<","<<target_point.get_y()<<endl;

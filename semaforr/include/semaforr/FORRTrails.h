@@ -63,6 +63,10 @@ class FORRTrails{
   vector< vector< TrailMarker> > getTrails(){ return trails; }
   vector< vector< CartesianPoint > > getTrailsPoints();
 
+  void setTrails(vector< vector< TrailMarker> > trls){
+    trails = trls;
+  }
+
   int getSize(){return trails.size();}
   
   void setChosenTrail(int n){ chosen_trail = n;}

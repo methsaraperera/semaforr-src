@@ -25,18 +25,25 @@ using namespace std;
 
 struct Segment {
 public:
-  Segment(CartesianPoint left, CartesianPoint right){
+  Segment(CartesianPoint left, CartesianPoint right, double step){
     left_point_ = left;
     right_point_ = right;
     angle_ = FindAngle();
+    section_ = FindSection(step);
   }
 
-  Segment(CartesianPoint left, CartesianPoint right, vector <CartesianPoint> leftLaser, vector <CartesianPoint> rightLaser){
+  Segment(CartesianPoint left, CartesianPoint right, vector <CartesianPoint> leftLaser, vector <CartesianPoint> rightLaser, double step){
     left_point_ = left;
     right_point_ = right;
     angle_ = FindAngle();
+    section_ = FindSection(step);
     left_laser_ = leftLaser;
     right_laser_ = rightLaser;
+    segment_data_.push_back(left.get_x());
+    segment_data_.push_back(left.get_y());
+    segment_data_.push_back(right.get_x());
+    segment_data_.push_back(right.get_y());
+    segment_data_.push_back(angle_);
   }
 
 
@@ -47,15 +54,19 @@ public:
   CartesianPoint GetLeftPoint() const {return left_point_;}
   CartesianPoint GetRightPoint() const {return right_point_;}
   double GetAngle() const {return angle_;}
+  int GetSection() const {return section_;}
   vector <CartesianPoint> GetLeftLaser() const {return left_laser_;}
   vector <CartesianPoint> GetRightLaser() const {return right_laser_;}
+  vector<double> getSegmentData() const {return segment_data_;};
 
 private:
   CartesianPoint left_point_;
   CartesianPoint right_point_;
   double angle_;
+  int section_;
   vector <CartesianPoint> left_laser_;
   vector <CartesianPoint> right_laser_;
+  vector<double> segment_data_;
 
   double FindAngle() {
     //double angle = atan2((left_point_.get_y() - right_point_.get_y()),(left_point_.get_x() - right_point_.get_x()))+M_PI;
@@ -76,6 +87,26 @@ private:
       angle += M_PI;
     return angle;
   }
+  int FindSection(double step) {
+    double angle_fix = angle_ * 180/M_PI;
+    int section = -1;
+    if(angle_fix <= step and angle_fix >= 0){
+      section = 0;
+    }
+    else if(angle_fix <= 45+step and angle_fix >= 45-step){
+      section = 1;
+    }
+    else if(angle_fix <= 90+step and angle_fix >= 90-step){
+      section = 2;
+    }
+    else if(angle_fix <= 135+step and angle_fix >= 135-step){
+      section = 3;
+    }
+    else if(angle_fix <= 180 and angle_fix >= 180-step){
+      section = 0;
+    }
+    return section;
+  }
 
 };
 
@@ -91,10 +122,27 @@ class FORRHallways{
 public:
     FORRHallways(double wid, double hgt){
         hallways = vector<Aggregate>();
+        initial_hallways = vector<Aggregate>();
         map_width_ = wid;
         map_height_ = hgt;
+        threshold = 0.7;
+        step = 22.5;
+        hallway_names.push_back("horizontal");
+        hallway_names.push_back("minor_diagonal");
+        hallway_names.push_back("vertical");
+        hallway_names.push_back("major_diagonal");
+        hallway_sections.push_back(vector<Segment>());
+        hallway_sections.push_back(vector<Segment>());
+        hallway_sections.push_back(vector<Segment>());
+        hallway_sections.push_back(vector<Segment>());
     };
     vector<Aggregate> getHallways(){return hallways;}
+    void setHallways(vector< vector<CartesianPoint> > hlws, vector<int> idvals){
+      for(int i = 0; i < hlws.size(); i++){
+        initial_hallways.push_back(Aggregate(hlws[i], idvals[i]));
+      }
+      hallways = initial_hallways;
+    }
     int getWidth(){return map_width_;}
     int getHeight(){return map_height_;}
     ~FORRHallways(){};
@@ -104,50 +152,51 @@ public:
     }
 
     void learnHallways(AgentState *agentState, vector<CartesianPoint> trails_trace, vector< vector<CartesianPoint> > *laser_hist) {
+        vector<CartesianPoint> new_trails_coordinates;
+        vector<vector<CartesianPoint> > new_laser_history;
+
         for(int i = 0; i < trails_trace.size(); i++) {
           trails_coordinates.push_back(trails_trace[i]);
+          new_trails_coordinates.push_back(trails_trace[i]);
         }
         for(int i = 0 ; i < laser_hist->size() ; i++){
           laser_history.push_back((*laser_hist)[i]);
+          new_laser_history.push_back((*laser_hist)[i]);
         }
         agent_state = agentState;
-        double threshold = 0.7;
+        
         vector<Segment> trails_segments;
-        CreateSegments(trails_segments, trails_coordinates, laser_history);
+        CreateSegments(trails_segments, new_trails_coordinates, new_laser_history);
         cout << "num of segments " << trails_segments.size() << endl;
 
-        vector<vector<Segment> > hallway_sections(4);
-        double step = 22.5;
+        // vector<vector<Segment> > hallway_sections(4);
         for(int i = 0; i < trails_segments.size(); i++) {
-          double angle = trails_segments[i].GetAngle() * 180/M_PI;
-          if(angle <= step and angle >= 0){
-            //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
-            hallway_sections[0].push_back(trails_segments[i]);
-            //trails_segments[i].PrintSegment();
-          }
-          else if(angle <= 45+step and angle >= 45-step){
-            //cout << "Section 1 = " << trails_segments[i].GetAngle() << endl;
-            hallway_sections[1].push_back(trails_segments[i]);
-          }
-          else if(angle <= 90+step and angle >= 90-step){
-            //cout << "Section 2 = " << trails_segments[i].GetAngle() << endl;
-            hallway_sections[2].push_back(trails_segments[i]);
-          }
-          else if(angle <= 135+step and angle >= 135-step){
-            //cout << "Section 3 = " << trails_segments[i].GetAngle() << endl;
-            hallway_sections[3].push_back(trails_segments[i]);
-          }
-          else if(angle <= 180 and angle >= 180-step){
-            //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
-            hallway_sections[0].push_back(trails_segments[i]);
-            //trails_segments[i].PrintSegment();
-          }
+          hallway_sections[trails_segments[i].GetSection()].push_back(trails_segments[i]);
+          // double angle = trails_segments[i].GetAngle() * 180/M_PI;
+          // if(angle <= step and angle >= 0){
+          //   //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
+          //   hallway_sections[0].push_back(trails_segments[i]);
+          //   //trails_segments[i].PrintSegment();
+          // }
+          // else if(angle <= 45+step and angle >= 45-step){
+          //   //cout << "Section 1 = " << trails_segments[i].GetAngle() << endl;
+          //   hallway_sections[1].push_back(trails_segments[i]);
+          // }
+          // else if(angle <= 90+step and angle >= 90-step){
+          //   //cout << "Section 2 = " << trails_segments[i].GetAngle() << endl;
+          //   hallway_sections[2].push_back(trails_segments[i]);
+          // }
+          // else if(angle <= 135+step and angle >= 135-step){
+          //   //cout << "Section 3 = " << trails_segments[i].GetAngle() << endl;
+          //   hallway_sections[3].push_back(trails_segments[i]);
+          // }
+          // else if(angle <= 180 and angle >= 180-step){
+          //   //cout << "Section 0 = " << trails_segments[i].GetAngle() << endl;
+          //   hallway_sections[0].push_back(trails_segments[i]);
+          //   //trails_segments[i].PrintSegment();
+          // }
         }
-        vector<string> hallway_names;
-        hallway_names.push_back("horizontal");
-        hallway_names.push_back("minor_diagonal");
-        hallway_names.push_back("vertical");
-        hallway_names.push_back("major_diagonal");
+        
         vector<Aggregate> all_aggregates;
         for(int i = 0; i < hallway_sections.size(); i++) {
           cout << "num of segments in hallway section " << hallway_sections[i].size() << endl;
@@ -163,17 +212,24 @@ public:
             vector<vector<double> > segments_similarities;
             ListSimilarities(segments_similarities, segments_data);
             //ListSimilarities(segments_similarities, segments_normalized);
-            //cout << "num of segments similarities " << segments_similarities.size() << endl;
+            cout << "num of segments similarities " << segments_similarities.size() << endl;
 
             vector<vector<double> > most_similar_segments;
             FindMostSimilarSegments(most_similar_segments, segments_similarities);
-            //cout << "num of most similar segments " << most_similar_segments.size() << endl;
+            cout << "num of most similar segments " << most_similar_segments.size() << endl;
 
             vector<Segment> mean_segments;
             CreateMeanSegments(mean_segments, most_similar_segments, hallway_sections[i], step);
             cout << "num of mean_segments " << mean_segments.size() << endl;
 
             vector<vector<CartesianPoint> > initial_hallway_groups = ProcessHallwayData(mean_segments, map_width_, map_height_, threshold);
+            if(initial_hallways.size() > 0){
+              for(int j = 0; j < initial_hallways.size(); j++){
+                if(initial_hallways[j].getHallwayType() == i){
+                  initial_hallway_groups.push_back(initial_hallways[j].getPoints());
+                }
+              }
+            }
             if(initial_hallway_groups.size()>0){
               /*cout << "Initial Aggregates" << endl;
               for(int j = 0; j < initial_hallway_groups.size(); j++){
@@ -184,7 +240,7 @@ public:
               }
               cout << endl;*/
               vector<vector<CartesianPoint> > merged_hallway_groups = MergeNearbyHallways(initial_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
-              vector<vector<CartesianPoint> > hallway_groups = FillHallways(merged_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
+              // vector<vector<CartesianPoint> > hallway_groups = FillHallways(merged_hallway_groups, trails_coordinates, laser_history, i, step, map_width_, map_height_, threshold);
               /*cout << "Final Aggregates" << endl;
               for(int j = 0; j < hallway_groups.size(); j++){
                 for(int k = 0; k < hallway_groups[j].size(); k++){
@@ -194,12 +250,12 @@ public:
               }
               cout << endl;*/
               //cout << "process agg" << endl;
-              for(int j = 0; j< hallway_groups.size(); j++) {
-                  Aggregate group = Aggregate(hallway_groups.at(j), i);
+              for(int j = 0; j< merged_hallway_groups.size(); j++) {
+                  Aggregate group = Aggregate(merged_hallway_groups.at(j), i);
                   all_aggregates.push_back(group);
               }
-              cout << "Num of hallways " << hallway_groups.size() << endl;
-              hallway_groups.clear();
+              cout << "Num of hallways " << merged_hallway_groups.size() << endl;
+              merged_hallway_groups.clear();
             }
             segments_data.clear();
             segments_similarities.clear();
@@ -214,7 +270,9 @@ public:
           //cout << "finding connections between hallways" << endl;
           for (int i = 0; i < all_aggregates.size()-1; i++){
             for (int j = i + 1; j < all_aggregates.size(); j++){
-              all_aggregates[i].findConnection(all_aggregates[j],i,j);
+              if(all_aggregates[i].getHallwayType() != all_aggregates[j].getHallwayType()){
+                all_aggregates[i].findConnection(all_aggregates[j],i,j);
+              }
             }
           }
           for (int i = 0; i < all_aggregates.size(); i++){
@@ -227,10 +285,15 @@ public:
 
 private:
     vector<Aggregate> hallways;
+    vector<Aggregate> initial_hallways;
     vector<vector<int> > interpolate;
     AgentState *agent_state;
     vector<CartesianPoint> trails_coordinates;
     vector<vector<CartesianPoint> > laser_history;
+    vector<vector<Segment> > hallway_sections;
+    double threshold;
+    double step;
+    vector<string> hallway_names;
 
     int map_height_;
     int map_width_;
@@ -256,9 +319,6 @@ private:
     void UpdateMap(vector<vector<double> > &frequency_map, const vector<Segment> &segments);
     void SmoothMap(vector<vector<double> > &frequency_map, const vector<vector<double> > &heat_map, double threshold);
     void Interpolate(vector<vector<double> > &frequency_map,double left_x, double left_y, double right_x, double right_y);
-    vector<vector<int> > CreateCircularAveragingFilter(int radius);
-    vector<vector<double> > ReturnMatlabFilter();
-    void FilterImage(vector<vector<double> > &filtered, const vector<vector<int> > &original, int radius);
     void BinarizeImage(vector<vector<int> > &binarized,const vector<vector<double> > &original,  double threshold);
     //void ConvertMatrixToImage(const vector<vector<int> > &binary_map, string image_name);
     void doUnion(int x, int y, int x2, int y2, vector<vector<int> > &labeled_image);

@@ -4,6 +4,7 @@
 #include "Edge.h"
 #include <iostream>
 #include <vector> 
+#include "FORRGeometry.h"
 using namespace std; 
 
 class Node {
@@ -12,6 +13,12 @@ protected:
   int id; 
 
   int x, y; 
+
+  double radius;
+
+  double distToWall;
+
+  int intersection_id;
   
   bool inBuffer;           // true if within a wall buffer ( too close to a wall ) 
 
@@ -23,8 +30,8 @@ protected:
   
 public:
 
-  Node(int i = invalid_node_index, int xt = 0, int yt = 0, bool ib = false)
-    : id(i), x(xt), y(yt), inBuffer(ib), accessible(true)
+  Node(int i = invalid_node_index, int xt = 0, int yt = 0, double r = 0, bool ib = false, double dw = 0)
+    : id(i), x(xt), y(yt), radius(r), inBuffer(ib), distToWall(dw), accessible(true)
     {} 
 
   bool operator == (const Node& n) const{
@@ -43,6 +50,10 @@ public:
 
   int getID() const { return id; }
 
+  void setIntersectionID(int i) { intersection_id = i; }
+
+  int getIntersectionID() const { return intersection_id; }
+
   void setX(int x) { this->x = x; }
 
   int getX() const { return x; }
@@ -50,6 +61,14 @@ public:
   void setY(int y) { this->y = y; }
 
   int getY() const { return y; }
+
+  void setRadius(double r) { this->radius = r; }
+
+  double getRadius() const { return radius; }
+
+  void setDistWall(double dw) { this->distToWall = dw; }
+
+  double getDistWall() const { return distToWall; }
 
   bool getInBuffer() const { return inBuffer; }
 

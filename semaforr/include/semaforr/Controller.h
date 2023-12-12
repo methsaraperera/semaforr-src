@@ -18,6 +18,10 @@
 #include "Tier3Advisor.h"
 #include "FORRActionStats.h"
 #include "PathPlanner.h"
+#include "HighwayExplore.h"
+#include "FrontierExplore.h"
+#include "Circumnavigate.h"
+#include "FORRPassages.h"
 
 #include <fstream>
 #include <ros/ros.h>
@@ -36,7 +40,7 @@ typedef std::vector<PathPlanner*>::iterator planner2It;
 class Controller {
 public:
 
-  Controller(string, string, string, string, string);
+  Controller(string, string, string, string, string, string, string);
   
   //main sense decide loop, receives the input messages and calls the FORRDecision function
   FORRAction decide();
@@ -65,6 +69,39 @@ public:
     }
   }
 
+  HighwayExplorer *gethighwayExploration() { return highwayExploration; }
+  FrontierExplorer *getfrontierExploration() { return frontierExploration; }
+
+  bool getHighwayFinished(){
+    if(highwayFinished >= 1){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  bool getFrontierFinished(){
+    if(frontierFinished >= 1){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  int getHighwaysOn(){
+    if(highwaysOn){
+      return 1;
+    }
+    else if(frontiersOn){
+      return 2;
+    }
+    else{
+      return 0;
+    }
+  }
+
 private:
 
   //FORR decision loop and tiers
@@ -76,7 +113,7 @@ private:
   bool tierOneDecision(FORRAction *decision);
 
   //Tier 2 planners are called here
-  void tierTwoDecision(Position current);
+  void tierTwoDecision(Position current, bool selectNextTask);
 
   //Tier 3 advisors are called here
   void tierThreeDecision(FORRAction *decision);
@@ -85,15 +122,22 @@ private:
   void tierThreeAdvisorInfluence();
 
   // learns the spatial model and updates the beliefs
-  void learnSpatialModel(AgentState *agentState);
+  void learnSpatialModel(AgentState *agentState, bool taskStatus, bool earlyLearning);
+  void updateSkeletonGraph(AgentState* agentState);
 
   void initialize_advisors(std::string);
-  void initialize_tasks(std::string);
+  void initialize_tasks(std::string, int length, int height);
   void initialize_params(std::string);
   void initialize_planner(std::string,std::string, int &l, int &h);
+  void initialize_situations(std::string);
+  void initialize_spatial_model(std::string);
   
   // Knowledge component of robot
   Beliefs *beliefs;
+
+  HighwayExplorer *highwayExploration;
+  FrontierExplorer *frontierExploration;
+  Circumnavigate *circumnavigator;
 
   // An ordered list of advisors that are consulted by Controller::FORRDecision
   Tier1Advisor *tier1;
@@ -104,11 +148,12 @@ private:
   // Checks if a given advisor is active
   bool isAdvisorActive(string advisorName);
 
-  double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle;
-  double arrMove[100];
-  double arrRotate[100];
+  double canSeePointEpsilon, laserScanRadianIncrement, robotFootPrint, robotFootPrintBuffer, maxLaserRange, maxForwardActionBuffer, maxForwardActionSweepAngle, highwayDistanceThreshold, highwayTimeThreshold, highwayDecisionThreshold;
+  double arrMove[300];
+  double arrRotate[300];
   int moveArrMax, rotateArrMax;
   int taskDecisionLimit;
+  int planLimit;
   bool trailsOn;
   bool conveyorsOn;
   bool regionsOn;
@@ -116,8 +161,18 @@ private:
   bool hallwaysOn;
   bool barrsOn;
   bool aStarOn;
+  bool situationsOn;
+  bool highwaysOn;
+  bool frontiersOn;
+  bool outofhereOn;
+  bool doorwayOn;
+  bool findawayOn;
+  bool behindOn;
+  bool dontgobackOn;
   bool firstTaskAssigned;
-  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, turn;
+  int highwayFinished;
+  int frontierFinished;
+  bool distance, smooth, novel, density, risk, flow, combined, CUSUM, discount, explore, spatial, hallwayer, trailer, barrier, conveys, safe, skeleton, hallwayskel;
 };
   
 #endif /* CONTROLLER_H */

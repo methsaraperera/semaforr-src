@@ -67,8 +67,8 @@ pair<int,int> FORRConveyors::updateGridFromLine(double x1, double y1, double x2,
 	grid_point.second = -2;
 	//cout << "POints " << x1 << "," << y1 << " ; " << x2 << "," << y2 << endl; 
 	for(double step = 0; step <= 1; step += step_size){
-		tx = (x1 * step) + (x2 * (1-step));
-		ty = (y1 * step) + (y2 * (1-step));
+		tx = (x2 * step) + (x1 * (1-step));
+		ty = (y2 * step) + (y1 * (1-step));
 		//cout << tx << "," << ty << endl; 
 		grid_point = convertToGridCoordinates(tx, ty);
 		//cout << "Grid index : " << grid_point.first << "," << grid_point.second << endl;
