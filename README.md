@@ -1,2 +1,2 @@
-# catkin
-SemaFORR + Menge in the ROS framework
+# SemaFORR
+A cognitively-based system for robot navigation
