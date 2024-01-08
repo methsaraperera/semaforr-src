@@ -940,7 +940,7 @@ void Controller::initialize_spatial_model(string filename){
 // Initialize the controller and setup messaging to ROS
 //
 //
-Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions, string situation_config, string spatial_model_config){
+Controller::Controller(string advisor_config, string params_config, string map_config, string target_set, string map_dimensions){
 
   // Initialize robot parameters from a config file
   initialize_params(params_config);
@@ -964,12 +964,6 @@ Controller::Controller(string advisor_config, string params_config, string map_c
   tier1 = new Tier1Advisor(beliefs);
   firstTaskAssigned = false;
   decisionStats = new FORRActionStats();
-
-  // Initialize situations
-  // initialize_situations(situation_config);
-
-  // Initialize spatial model
-  // initialize_spatial_model(spatial_model_config);
 
   // Initialize highways
   highwayFinished = 0;

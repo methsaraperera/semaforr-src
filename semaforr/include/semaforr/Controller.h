@@ -40,7 +40,7 @@ typedef std::vector<PathPlanner*>::iterator planner2It;
 class Controller {
 public:
 
-  Controller(string, string, string, string, string, string, string);
+  Controller(string, string, string, string, string);
   
   //main sense decide loop, receives the input messages and calls the FORRDecision function
   FORRAction decide();
