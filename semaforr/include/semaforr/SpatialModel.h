@@ -13,7 +13,6 @@
 #include <FORRDoors.h>
 #include <FORRHallways.h>
 #include <FORRBarriers.h>
-#include <FORRSituations.h>
 
 class SpatialModel{
 
@@ -26,7 +25,6 @@ public:
 		doors = new FORRDoors();
 		hallways = new FORRHallways(width, height);
 		barriers = new FORRBarriers();
-		situations = new FORRSituations();
 	};
 
 	FORRRegionList* getRegionList(){return abstract_map;}
@@ -36,7 +34,6 @@ public:
 	FORRDoors* getDoors(){return doors;}
 	FORRHallways* getHallways(){return hallways;}
 	FORRBarriers* getBarriers(){return barriers;}
-	FORRSituations* getSituations(){return situations;}
 
 private:
 	FORRRegionList *abstract_map;
@@ -46,5 +43,4 @@ private:
 	FORRDoors *doors;
 	FORRHallways *hallways;
 	FORRBarriers *barriers;
-	FORRSituations *situations;
 };

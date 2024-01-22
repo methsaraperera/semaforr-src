@@ -235,14 +235,6 @@ void Controller::initialize_params(string filename){
       barrsOn = atof(vstrings[1].c_str());
       ROS_DEBUG_STREAM("barrsOn " << barrsOn);
     }
-    else if (fileLine.find("situationsOn") != std::string::npos) {
-      std::stringstream ss(fileLine);
-      std::istream_iterator<std::string> begin(ss);
-      std::istream_iterator<std::string> end;
-      std::vector<std::string> vstrings(begin, end);
-      situationsOn = atof(vstrings[1].c_str());
-      ROS_DEBUG_STREAM("situationsOn " << situationsOn);
-    }
     else if (fileLine.find("highwaysOn") != std::string::npos) {
       std::stringstream ss(fileLine);
       std::istream_iterator<std::string> begin(ss);
@@ -710,38 +702,6 @@ void Controller::initialize_tasks(string filename, int length, int height){
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Read from the config file and intialize situations
-//
-//
-void Controller::initialize_situations(string filename){
-  string fileLine;
-  std::ifstream file(filename.c_str());
-  ROS_DEBUG_STREAM("Reading read_situation_file:" << filename);
-  //cout << "Inside file in situations " << endl;
-  if(!file.is_open()){
-    ROS_DEBUG("Unable to locate or read situation config file!");
-  }
-  while(getline(file, fileLine)){
-    //cout << "Inside while in situations" << endl;
-    if(fileLine[0] == '#')  // skip comment lines
-      continue;
-    else{
-      std::stringstream ss(fileLine);
-      std::istream_iterator<std::string> begin(ss);
-      std::istream_iterator<std::string> end;
-      std::vector<std::string> vstrings(begin, end);
-      int count = atoi(vstrings[0].c_str());
-      vector<float> values;
-      for (int i=1; i<vstrings.size(); i++){
-        values.push_back(atof(vstrings[i].c_str()));
-      }
-      beliefs->getSpatialModel()->getSituations()->createSituations(count, values);
-      ROS_DEBUG_STREAM("Situation: " << count << endl);
-    }
-  }
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Read from the config file and intialize spatial model
 //
 //
@@ -988,7 +948,6 @@ Controller::Controller(string advisor_config, string params_config, string map_c
 void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan, geometry_msgs::PoseArray crowdpose, geometry_msgs::PoseArray crowdposeall){
   cout << "In update state" << endl;
   beliefs->getAgentState()->setCurrentSensor(current, laser_scan);
-  // beliefs->getSpatialModel()->getSituations()->addObservationToSituations(laser_scan, current, true);
   beliefs->getAgentState()->setCrowdPose(crowdpose);
   beliefs->getAgentState()->setCrowdPoseAll(crowdposeall);
   if(firstTaskAssigned == false){
@@ -1050,10 +1009,6 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
-        if(situationsOn){
-          beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
-          ROS_DEBUG("Finished Learning Situations!!");
-        }
       }
       beliefs->getAgentState()->setGetOutTriggered(false);
       beliefs->getAgentState()->setRepositionTriggered(false);
@@ -1134,10 +1089,6 @@ void Controller::updateState(Position current, sensor_msgs::LaserScan laser_scan
         ROS_DEBUG("Finished Learning Spatial Model!!");
         updateSkeletonGraph(beliefs->getAgentState());
         ROS_DEBUG("Finished Updating Skeleton Graph!!");
-        if(situationsOn){
-          beliefs->getSpatialModel()->getSituations()->learnSituationActions(beliefs->getAgentState(), beliefs->getSpatialModel()->getTrails()->getTrail(beliefs->getSpatialModel()->getTrails()->getSize()-1));
-          ROS_DEBUG("Finished Learning Situations!!");
-        }
         //beliefs->getAgentState()->skipTask();
         // if(beliefs->getAgentState()->getAllAgenda().size() < planLimit +1){
         //   beliefs->getAgentState()->addTask(beliefs->getAgentState()->getCurrentTask()->getTaskX(),beliefs->getAgentState()->getCurrentTask()->getTaskY());
@@ -1193,9 +1144,6 @@ FORRAction Controller::decide() {
       frontierFinished++;
     }
     decidedAction = FORRDecision();
-    if(situationsOn){
-      beliefs->getSpatialModel()->getSituations()->addObservationToSituations(beliefs->getAgentState()->getCurrentLaserScan(), beliefs->getAgentState()->getCurrentPosition(), true, decidedAction);
-    }
   }
   //ROS_DEBUG("After decision made");
   beliefs->getAgentState()->getCurrentTask()->incrementDecisionCount();
@@ -1603,16 +1551,6 @@ bool Controller::tierOneDecision(FORRAction *decision){
       }
     }
     vector<FORRAction> SVetoedActions;
-    if(situationsOn){
-      ROS_INFO("Advisor situation will veto actions");
-      tier1->advisorSituation();
-      vetoedActions = beliefs->getAgentState()->getVetoedActions();
-      for(it = vetoedActions->begin(); it != vetoedActions->end(); it++){
-        if(find(AOVetoedActions.begin(), AOVetoedActions.end(), *it) == AOVetoedActions.end() and find(NOVetoedActions.begin(), NOVetoedActions.end(), *it) == NOVetoedActions.end() and find(DGBVetoedActions.begin(), DGBVetoedActions.end(), *it) == DGBVetoedActions.end()){
-          SVetoedActions.push_back(*it);
-        }
-      }
-    }
     std::stringstream vetoList;
     for(int i = 0; i < AOVetoedActions.size(); i++){
       vetoList << AOVetoedActions[i].type << " " << AOVetoedActions[i].parameter << " 1a;";
@@ -1898,9 +1836,6 @@ void Controller::tierThreeDecision(FORRAction *decision){
   double maxWeight;
   for(mapIt iterator = allComments.begin(); iterator != allComments.end(); iterator++){
     double action_weight = 1.0;
-    if(situationsOn){
-      action_weight = beliefs->getSpatialModel()->getSituations()->getWeightForAction(beliefs->getAgentState(), iterator->first);
-    }
     // cout << "Values are : " << iterator->first.type << " " << iterator->first.parameter << " with value: " << iterator->second << " and weight: " << action_weight << endl;
     if(action_weight * iterator->second > maxAdviceStrength){
       maxAdviceStrength = action_weight * iterator->second;
