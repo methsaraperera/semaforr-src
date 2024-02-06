@@ -136,7 +136,7 @@ void Graph::generateNavGraph() {
   int index = 0;
   for( int x = 0; x < l; x += proximity ){
     for( int y = 0; y < h; y += proximity ){
-      bool inBuf = false;
+      bool inBuf = 0;
       if ( map->isPointInBuffer(x,y) )
         inBuf = true;
       Node * n = new Node(index, x, y, 0, inBuf, map->getDistanceClosestWall(x,y));
