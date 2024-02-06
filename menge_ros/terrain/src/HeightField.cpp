@@ -3,7 +3,7 @@
 License
 
 Menge
-Copyright © and trademark ™ 2012-14 University of North Carolina at Chapel Hill. 
+Copyright Â© and trademark â„¢ 2012-14 University of North Carolina at Chapel Hill. 
 All rights reserved.
 
 Permission to use, copy, modify, and distribute this software and its documentation 
@@ -127,18 +127,18 @@ namespace Terrain {
 		if ( !loadOkay ) {	// load xml file
 			logger << Logger::ERR_MSG << "Could not load height field configuration xml (" << fileName << ") due to xml syntax errors.\n";
 			logger << "\t" << xml.ErrorDesc();
-			return false;
+			return 0;
 		}
 
 		TiXmlElement* rootNode = xml.RootElement();	
 		if( ! rootNode ) {
 			logger << Logger::ERR_MSG << "Height field configuration (" << fileName << ") does not contain a root element.";
-			return false;
+			return 0;
 		}
 
 		if( rootNode->ValueStr () != "HeightField" ) {
 			logger << Logger::ERR_MSG << "Height field configuration (" << fileName << ")'s root element is not \"HeightField\".";
-			return false;
+			return 0;
 		}
 
 		std::string absPath;
